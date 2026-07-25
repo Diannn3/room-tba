@@ -167,6 +167,12 @@ export default defineConfig({
         access: "secret",
         context: "server",
       }),
+      // Public Kubo integration directory. Override locally for fixture/API testing.
+      KUBO_ROOM_TBA_DIRECTORY_URL: envField.string({
+        access: "secret",
+        context: "server",
+        optional: true,
+      }),
       // Supabase JS client (Auth, Realtime, Storage). Separate from DATABASE_URL.
       PUBLIC_SUPABASE_URL: envField.string({
         access: "public",

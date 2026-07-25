@@ -132,6 +132,40 @@ const { title, description, canonicalPath, structuredData = [] } = Astro.props;
     line-height: 1.65;
   }
 
+  /* Wikipedia-style article shell on wide screens: the page's own "On this
+     page" nav becomes a sticky left rail, body copy flows in the right
+     column. Pure CSS so each article keeps its inline TOC markup. */
+  @media (min-width: 68rem) {
+    .wiki-page article.wiki-article {
+      display: grid;
+      grid-template-columns: 15rem minmax(0, 1fr);
+      column-gap: 3rem;
+      align-items: start;
+      max-width: none;
+    }
+
+    .wiki-page article.wiki-article > * {
+      grid-column: 2;
+      min-width: 0;
+    }
+
+    .wiki-page article.wiki-article > .article-hero {
+      grid-column: 1 / -1;
+    }
+
+    .wiki-page article.wiki-article > .toc {
+      /* ponytail: span 99 = "all rows"; implicit grids reject negative
+         lines and no article is near 99 sections. */
+      grid-column: 1;
+      grid-row: 2 / span 99;
+      position: sticky;
+      top: 1.25rem;
+      margin: 2.5rem 0 0;
+      max-height: calc(100vh - 2.5rem);
+      overflow-y: auto;
+    }
+  }
+
   @media (max-width: 36rem) {
     .wiki-page {
       width: min(100% - 1.25rem, 62rem);

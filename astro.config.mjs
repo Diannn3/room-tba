@@ -333,7 +333,11 @@ export default defineConfig({
         isr: {
           expiration: 60 * 60 * 24,
           bypassToken: process.env.ISR_BYPASS_TOKEN,
-          exclude: [/^\/api\//],
+          // /og.png must stay a plain function: Vercel ISR keys its cache on
+          // pathname only, so ?t=/&s=/&k= variants all collapse into one cached
+          // PNG and every entity shares the first-rendered card (#651). The
+          // normal CDN cache (via the route's s-maxage) keys on the full URL.
+          exclude: [/^\/api\//, /^\/og\.png$/],
         },
       }),
 });

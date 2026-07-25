@@ -36,12 +36,25 @@ describeIntegration("editor history revert integration", () => {
     }>("SELECT version, directions FROM buildings WHERE id = $1", [buildingId]);
     const startVersion = original.rows[0]?.version ?? 1;
 
+    // Prime a history row of our own: after a DB reset this building has no
+    // history, and bun's test-file order is not guaranteed, so we cannot rely
+    // on another test file having edited it first (broke when the order
+    // shifted and this file ran right after the reset).
+    const base = `history-base-${Date.now()}`;
+    const primed = await updateBuilding(
+      buildingId,
+      { directions: base },
+      startVersion,
+      "e2e-admin",
+    );
+    expect(primed?.directions).toBe(base);
+
     // Make an edit we will restore over.
     const marker = `history-test-${Date.now()}`;
     const edited = await updateBuilding(
       buildingId,
       { directions: marker },
-      startVersion,
+      primed?.version ?? startVersion + 1,
       "e2e-admin",
     );
     expect(edited?.directions).toBe(marker);
@@ -67,7 +80,9 @@ describeIntegration("editor history revert integration", () => {
     const [latest] = await getEntityHistory("building", buildingId);
     expect(latest.action).toBe("revert");
     expect(latest.summary).toBe("integration revert test");
-  });
+    // Three sequential writes against the remote E2E DB can brush past bun's
+    // 5s default; give the round-trips room like the room test below.
+  }, 30_000);
 
   test("room revert restores the room code (snapshot stores it as `code`)", async () => {
     const { updateRoom } = await import("@lib/services/admin-service");

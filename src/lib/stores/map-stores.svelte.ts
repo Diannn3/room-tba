@@ -14,6 +14,8 @@ export class MapViewStore {
   // map legend so users can declutter the map (#18b).
   showOrgs: boolean = $state(true);
   showPlaces: boolean = $state(true);
+  // Emphasize buildings hosting the user's planner classes; dim other pins.
+  highlightMyBuildings: boolean = $state(false);
 
   toggleEventsOnly = () => {
     this.eventsOnly = !this.eventsOnly;
@@ -27,10 +29,18 @@ export class MapViewStore {
     this.showPlaces = !this.showPlaces;
   };
 
+  toggleHighlightMyBuildings = () => {
+    this.highlightMyBuildings = !this.highlightMyBuildings;
+    // Events-only hides building pins entirely — pointless combined with a
+    // building highlight, so leave that mode when highlighting.
+    if (this.highlightMyBuildings) this.eventsOnly = false;
+  };
+
   showAll = () => {
     this.eventsOnly = false;
     this.showOrgs = true;
     this.showPlaces = true;
+    this.highlightMyBuildings = false;
   };
 }
 

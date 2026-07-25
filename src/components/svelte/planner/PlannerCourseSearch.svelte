@@ -18,21 +18,23 @@
   let loading = $state(false);
   let loadingMore = $state(false);
   let rows = $state<ClassMapValue[]>([]);
-  let total = $state(0);
+  let nextCursor = $state<string | null>(null);
+  let hasMore = $state(false);
   const expanded = new SvelteSet<string>();
 
   // Browse mode (no query) pages through the term 100 at a time (#planner).
   async function loadMore() {
-    if (loadingMore || query.trim()) return;
+    if (loadingMore || query.trim() || !nextCursor) return;
     loadingMore = true;
     try {
       const page = await fetchClassPage({
         termId,
         limit: 100,
-        offset: rows.length,
+        cursor: nextCursor,
       });
       rows = [...rows, ...page.rows];
-      total = page.total;
+      nextCursor = page.nextCursor;
+      hasMore = page.hasMore;
     } catch {
       // keep what we have; the note still offers searching by course code
     } finally {
@@ -54,11 +56,13 @@
         request
           .then((page) => {
             rows = page.rows;
-            total = page.total;
+            nextCursor = page.nextCursor;
+            hasMore = page.hasMore;
           })
           .catch(() => {
             rows = [];
-            total = 0;
+            nextCursor = null;
+            hasMore = false;
           })
           .finally(() => {
             loading = false;
@@ -243,9 +247,9 @@
         {/each}
       </div>
     </div>
-    {#if rows.length < total}
+    {#if hasMore}
       <p class="course-search__note">
-        Showing {rows.length} of {total} sections.
+        Showing the first {rows.length} sections.
         {#if !query.trim()}
           <button
             type="button"

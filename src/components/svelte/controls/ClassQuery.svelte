@@ -18,8 +18,12 @@
   const PAGE_SIZE = 25;
 
   let classes = $state<ClassMapValue[]>([]);
-  let classTotal = $state(0);
-  let classPage = $state(1);
+  // Cursor pagination (#412): pageCursor fetched the current page (null = first
+  // page); prevCursors stacks the cursors behind it so Previous can walk back.
+  let pageCursor = $state<string | null>(null);
+  let prevCursors = $state<(string | null)[]>([]);
+  let classNextCursor = $state<string | null>(null);
+  let classHasMore = $state(false);
   let classesLoading = $state(false);
   let classesError = $state<string | null>(null);
 
@@ -31,30 +35,31 @@
   });
 
   const courseQuery = $derived(normalizeCourseCode(queryStore.queryValue));
-  const classPageCount = $derived(
-    Math.max(1, Math.ceil(classTotal / PAGE_SIZE)),
-  );
-  const currentClassPage = $derived(Math.min(classPage, classPageCount));
+  // Every page behind the current one was full (Next only shows on hasMore).
   const classRangeStart = $derived(
-    classTotal === 0 ? 0 : (currentClassPage - 1) * PAGE_SIZE + 1,
+    classes.length === 0 ? 0 : prevCursors.length * PAGE_SIZE + 1,
   );
   const classRangeEnd = $derived(
-    Math.min(currentClassPage * PAGE_SIZE, classTotal),
+    prevCursors.length * PAGE_SIZE + classes.length,
   );
 
+  // A new query or term invalidates keyset positions: back to the first page.
   $effect(() => {
     courseQuery;
-    classPage = 1;
+    termStore.activeTermId;
+    prevCursors = [];
+    pageCursor = null;
   });
 
   $effect(() => {
     const termId = termStore.activeTermId;
     const prefix = courseQuery;
-    const page = currentClassPage;
+    const cursor = pageCursor;
 
     if (!prefix) {
       classes = [];
-      classTotal = 0;
+      classNextCursor = null;
+      classHasMore = false;
       classesLoading = false;
       classesError = null;
       return;
@@ -66,15 +71,17 @@
       termId,
       courseCodePrefix: prefix,
       limit: PAGE_SIZE,
-      offset: (page - 1) * PAGE_SIZE,
+      cursor,
     })
       .then((result) => {
         classes = result.rows;
-        classTotal = result.total;
+        classNextCursor = result.nextCursor;
+        classHasMore = result.hasMore;
       })
       .catch(() => {
         classes = [];
-        classTotal = 0;
+        classNextCursor = null;
+        classHasMore = false;
         classesError = "Could not load classes for this course.";
       })
       .finally(() => {
@@ -98,8 +105,17 @@
     });
   });
 
-  function goToClassPage(next: number) {
-    classPage = Math.min(Math.max(1, next), classPageCount);
+  function goNextClassPage() {
+    if (!classNextCursor) return;
+    prevCursors = [...prevCursors, pageCursor];
+    pageCursor = classNextCursor;
+  }
+
+  function goPreviousClassPage() {
+    if (prevCursors.length === 0) return;
+    const stack = prevCursors.slice();
+    pageCursor = stack.pop() ?? null;
+    prevCursors = stack;
   }
 
   function openBrowseAll() {
@@ -148,7 +164,8 @@
           type="button"
           class="entity-footer__link"
           onclick={() => {
-            classPage = 1;
+            prevCursors = [];
+            pageCursor = null;
             classesError = null;
           }}
         >
@@ -157,15 +174,14 @@
       </div>
     {:else if classes.length > 0}
       <Classes {classes} />
-      {#if classTotal > PAGE_SIZE}
+      {#if classHasMore || prevCursors.length > 0}
         <EntityPagination
           rangeStart={classRangeStart}
           rangeEnd={classRangeEnd}
-          total={classTotal}
-          prevDisabled={currentClassPage <= 1}
-          nextDisabled={currentClassPage >= classPageCount}
-          onPrevious={() => goToClassPage(currentClassPage - 1)}
-          onNext={() => goToClassPage(currentClassPage + 1)}
+          prevDisabled={prevCursors.length === 0}
+          nextDisabled={!classNextCursor}
+          onPrevious={goPreviousClassPage}
+          onNext={goNextClassPage}
         />
       {/if}
     {:else if looksLikeCourseCode(courseQuery)}

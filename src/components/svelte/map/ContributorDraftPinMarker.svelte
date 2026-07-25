@@ -1,10 +1,5 @@
 <script lang="ts">
-  import Briefcase from "@lucide/svelte/icons/briefcase";
-  import House from "@lucide/svelte/icons/house";
-  import Landmark from "@lucide/svelte/icons/landmark";
-  import Store from "@lucide/svelte/icons/store";
-  import University from "@lucide/svelte/icons/university";
-  import Users from "@lucide/svelte/icons/users";
+  import PinGlyph from "./PinGlyph.svelte";
   import {
     draftPinMapProps,
     type DraftPinPreview,
@@ -44,17 +39,17 @@
       useCentralHoverPreview={false}
     >
       {#if mapProps.icon === "university"}
-        <University size="20" />
+        <PinGlyph name="building" size={20} />
       {:else if mapProps.icon === "house"}
-        <House size="18" />
+        <PinGlyph name="dorm" size={18} />
       {:else if mapProps.icon === "landmark"}
-        <Landmark size="16" />
+        <PinGlyph name="landmark" size={16} />
       {:else if mapProps.icon === "store"}
-        <Store size="16" />
+        <PinGlyph name="establishment" size={16} />
       {:else if mapProps.icon === "users"}
-        <Users size="16" />
+        <PinGlyph name="organization" size={16} />
       {:else}
-        <Briefcase size="16" />
+        <PinGlyph name="office" size={16} />
       {/if}
     </MapEntityPin>
   {/if}

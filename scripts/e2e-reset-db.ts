@@ -76,7 +76,13 @@ const E2E_MIGRATION_FILES = [
   "0039_pre_drizzle_schema_backfill.sql",
 ] as const;
 
-const DRIZZLE_DIR = join(import.meta.dir, "..", "drizzle");
+/**
+ * `import.meta.dir` is Bun-only and Playwright specs import `E2E_FIXTURES` from
+ * this file under Node, so keep it lazy or every spec dies on import.
+ */
+function drizzleDir(): string {
+  return join(import.meta.dir, "..", "drizzle");
+}
 
 /**
  * `update` predates drizzle: 0003 inserts into it, but only 0016 creates it.
@@ -91,7 +97,7 @@ const LEGACY_BOOTSTRAP = "0016_ensure_update_sync_table.sql";
  */
 function e2eMigrationFiles(schema: string | null): string[] {
   if (!schema) return [...E2E_MIGRATION_FILES];
-  const all = readdirSync(DRIZZLE_DIR)
+  const all = readdirSync(drizzleDir())
     .filter((file) => file.endsWith(".sql"))
     .sort();
   return [LEGACY_BOOTSTRAP, ...all];
@@ -104,7 +110,7 @@ function e2eMigrationFiles(schema: string | null): string[] {
  * replaying into a run schema.
  */
 function readMigration(file: string, schema: string | null): string {
-  const sql = readFileSync(join(DRIZZLE_DIR, file), "utf8");
+  const sql = readFileSync(join(drizzleDir(), file), "utf8");
   if (!schema) return sql;
   const uncommented = file.startsWith("0000_")
     ? sql.replaceAll("/*", "").replaceAll("*/", "")

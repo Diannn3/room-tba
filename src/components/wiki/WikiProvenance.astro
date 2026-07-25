@@ -1,0 +1,70 @@
+---
+import { wikiProvenance } from "@lib/wiki-provenance";
+
+type Props = {
+  /** Repo-relative path of the page source, e.g. src/pages/wiki/foo.astro */
+  sourcePath: string;
+};
+
+const { sourcePath } = Astro.props;
+const { authors, revisions, lastEdited, historyUrl, editUrl } =
+  wikiProvenance(sourcePath);
+
+const dateFormat = new Intl.DateTimeFormat("en-PH", { dateStyle: "long" });
+const lastEditedLabel = lastEdited
+  ? dateFormat.format(new Date(lastEdited))
+  : null;
+---
+
+<p class="wiki-provenance">
+  {
+    authors.length > 0 && (
+      <span class="wiki-provenance__authors">
+        By{" "}
+        {authors.map((author, i) => (
+          <>
+            {i > 0 && ", "}
+            {author.github ? (
+              <a
+                class="wiki-link"
+                href={`https://github.com/${author.github}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {author.name}
+              </a>
+            ) : (
+              author.name
+            )}
+          </>
+        ))}
+      </span>
+    )
+  }
+  {
+    lastEditedLabel && (
+      <span>
+        {" · "}Last edited {lastEditedLabel}
+        {" · "}{revisions} {revisions === 1 ? "revision" : "revisions"}
+      </span>
+    )
+  }
+  <span>
+    {" · "}<a class="wiki-link" href={historyUrl} target="_blank" rel="noopener noreferrer">History</a>
+    {" · "}<a class="wiki-link" href={editUrl} target="_blank" rel="noopener noreferrer">Edit on GitHub</a>
+  </span>
+</p>
+
+<style>
+  .wiki-provenance {
+    margin: 1rem 0 0;
+    color: hsl(0, 0%, 46%);
+    font-size: 0.8125rem;
+    line-height: 1.7;
+  }
+
+  .wiki-provenance__authors {
+    font-weight: 650;
+    color: hsl(0, 0%, 32%);
+  }
+</style>

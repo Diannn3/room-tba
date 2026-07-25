@@ -2,6 +2,7 @@
 export const prerender = true;
 
 import WikiLayout from "@layouts/WikiLayout.astro";
+import WikiProvenance from "../../components/wiki/WikiProvenance.astro";
 import { breadcrumbSchema, jsonLd, webpageSchema } from "@lib/site";
 
 const title = "Fork this for your campus | Room TBA Wiki";
@@ -37,6 +38,7 @@ const structuredData = jsonLd(
         Current as of v2.1.x. If the repo has moved, the file paths below are
         still the map — re-check them.
       </p>
+      <WikiProvenance sourcePath="src/pages/wiki/fork-for-your-campus.astro" />
     </header>
 
     <nav class="toc" aria-label="On this page">

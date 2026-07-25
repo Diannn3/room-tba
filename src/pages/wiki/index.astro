@@ -3,6 +3,45 @@ export const prerender = true;
 
 import WikiLayout from "@layouts/WikiLayout.astro";
 import { breadcrumbSchema, jsonLd, webpageSchema } from "@lib/site";
+import { wikiProvenance } from "@lib/wiki-provenance";
+
+const articles = [
+  {
+    href: "/faq",
+    kicker: "Student FAQ · 3 min read",
+    title: "Frequently asked questions",
+    blurb:
+      "Where the 3D building models come from, whether Room TBA is official UPLB, how class and room data is updated, and how to report wrong data. Short, plain-language answers for students.",
+    sourcePath: "src/pages/faq.astro",
+  },
+  {
+    href: "/wiki/fork-for-your-campus",
+    kicker: "For other campuses · 6 min read",
+    title: "Fork this for your campus",
+    blurb:
+      "Room TBA is built for UPLB. Here is what you actually replace to run it for a different campus — the UPLB data and glue to rip out, the config to repoint, and the write-your-own parts (class import).",
+    sourcePath: "src/pages/wiki/fork-for-your-campus.astro",
+  },
+  {
+    href: "/wiki/section-times",
+    kicker: "Class schedules · 12 min read",
+    title: "What times do section names correspond to?",
+    blurb:
+      "Exhaustive glossary: letter ladders, NSTP/HK/GI/residency, MS/PhD numbers, every AMIS type, plus oldest→newest term trends (what moved vs what only looks bigger in Room TBA).",
+    sourcePath: "src/pages/wiki/section-times.astro",
+  },
+].map((article) => {
+  const { authors, lastEdited } = wikiProvenance(article.sourcePath);
+  return {
+    ...article,
+    authors: authors.map((a) => a.name).join(", "),
+    lastEdited: lastEdited
+      ? new Intl.DateTimeFormat("en-PH", { dateStyle: "medium" }).format(
+          new Date(lastEdited),
+        )
+      : null,
+  };
+});
 
 const title = "Wiki | Room TBA";
 const description =
@@ -33,33 +72,23 @@ const structuredData = jsonLd(
 
   <section class="wiki-section" aria-labelledby="articles-heading">
     <h2 id="articles-heading">Articles</h2>
-    <a class="article-card" href="/faq">
-      <span class="article-card__kicker">Student FAQ · 3 min read</span>
-      <strong>Frequently asked questions</strong>
-      <span>
-        Where the 3D building models come from, whether Room TBA is official
-        UPLB, how class and room data is updated, and how to report wrong
-        data. Short, plain-language answers for students.
-      </span>
-    </a>
-    <a class="article-card" href="/wiki/fork-for-your-campus">
-      <span class="article-card__kicker">For other campuses · 6 min read</span>
-      <strong>Fork this for your campus</strong>
-      <span>
-        Room TBA is built for UPLB. Here is what you actually replace to run
-        it for a different campus — the UPLB data and glue to rip out, the
-        config to repoint, and the write-your-own parts (class import).
-      </span>
-    </a>
-    <a class="article-card" href="/wiki/section-times">
-      <span class="article-card__kicker">Class schedules · 12 min read</span>
-      <strong>What times do section names correspond to?</strong>
-      <span>
-        Exhaustive glossary: letter ladders, NSTP/HK/GI/residency, MS/PhD
-        numbers, every AMIS type, plus oldest→newest term trends (what moved
-        vs what only looks bigger in Room TBA).
-      </span>
-    </a>
+    <div class="article-grid">
+      {
+        articles.map((article) => (
+          <a class="article-card" href={article.href}>
+            <span class="article-card__kicker">{article.kicker}</span>
+            <strong>{article.title}</strong>
+            <span>{article.blurb}</span>
+            {article.lastEdited && (
+              <span class="article-card__provenance">
+                Updated {article.lastEdited}
+                {article.authors && ` · ${article.authors}`}
+              </span>
+            )}
+          </a>
+        ))
+      }
+    </div>
   </section>
 
   <section class="wiki-section" aria-labelledby="resources-heading">
@@ -90,11 +119,18 @@ const structuredData = jsonLd(
     font-size: 1.25rem;
   }
 
+  /* Fill the page column instead of hugging the left edge. */
+  .article-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+    gap: 1rem;
+    align-items: stretch;
+  }
+
   .article-card {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    max-width: 42rem;
     padding: 1.25rem;
     border: 1px solid hsl(5, 28%, 82%);
     border-radius: 1rem;
@@ -123,9 +159,16 @@ const structuredData = jsonLd(
     line-height: 1.2;
   }
 
-  .article-card > span:last-child {
+  .article-card > span:nth-of-type(2) {
     color: hsl(0, 0%, 35%);
     line-height: 1.55;
+  }
+
+  .article-card__provenance {
+    margin-top: auto;
+    padding-top: 0.5rem;
+    color: hsl(0, 0%, 48%);
+    font-size: 0.75rem;
   }
 
   .resource-links {

@@ -38,6 +38,7 @@ No account needed to browse. Editors and contributors fix data in the same app (
 | Plan your classes | Planner view to build a draft schedule |
 | Course Planner explainer | [Four-panel, screenshot-ready guide](https://room-tba.uplbtools.me/pubmat/course-planner/) |
 | Final exam time & room | Search course code → finals panel; room panel during finals week |
+| Academic calendar | [/calendar](https://room-tba.uplbtools.me/calendar) — term windows on a year timeline; also via the term picker |
 | Building location | Map, pins, directions, Google Maps |
 | Compare dorm listings | Verified dorms link to their Kubo listing when available |
 | Landmarks, services, orgs & offices | Sidebar directories, distinct map pins, and shareable detail links |

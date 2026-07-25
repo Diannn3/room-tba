@@ -33,6 +33,7 @@ export type SidebarOpenType =
   | "map"
   | "planner"
   | "finals"
+  | "calendar"
   | "contributors"
   | "settings";
 

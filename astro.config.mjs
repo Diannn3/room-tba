@@ -63,6 +63,7 @@ export default defineConfig({
           // Network-first; the in-app planner button covers offline.
           /^\/planner(\/|\?|$)/,
           /^\/final-exams(\/|\?|$)/,
+          /^\/calendar(\/|\?|$)/,
           // Server redirects — must hit network, not offline app shell (#471).
           /^\/messenger(\/|\?|$)/,
           /^\/maintain(\/|\?|$)/,

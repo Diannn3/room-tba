@@ -394,7 +394,5 @@ describeIntegration("proposals service", () => {
         source: "proposal_approved",
       },
     ]);
-    // submit + approve + verify is ~20 round trips to Supabase; the 5s default
-    // leaves no margin from a CI runner. Same allowance as the sibling above.
-  }, 15_000);
+  });
 });

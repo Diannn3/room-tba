@@ -75,6 +75,8 @@ Blocking, advisory, and staging E2E all call [`e2e-reusable.yml`](../.github/wor
 - Every connection pins itself with `SET search_path TO <schema>` right after connect ([`scripts/e2e-schema.ts`](../scripts/e2e-schema.ts), used by [`src/lib/db.ts`](../src/lib/db.ts), the reset script, `integration/`, and `e2e/helpers/db.ts`). The Supabase **session pooler** silently ignores `?options=-csearch_path=…` in the URL and rejects node-postgres `options`, so the URL tricks do not work here.
 - Teardown runs `bun run scripts/e2e-reset-db.ts --drop` under `if: always()`. Cancelled jobs that skip it are covered by the sweeper: each schema is stamped with `COMMENT ON SCHEMA … IS '<iso>'` at creation, and every reset drops stamped `e2e_*` schemas older than 24 h.
 
+Pinning costs one extra round trip per new connection, and several proposal-service tests already sat at bun's 5 s default while doing ~20 round trips to Supabase, so `test:integration` now runs with `--timeout 20000`. CI calls that script instead of repeating the flags.
+
 **Contract:** `E2E_SCHEMA` unset (the local default) = today's behavior against `public`. Set = must match `^e2e_[a-z0-9_]+$`; anything else throws instead of silently falling back to `public`. Never point it at `public`, and never run `e2e:reset-db` without it while CI is live, because unset truncates the shared schema.
 
 ## CI (advisory, non-blocking)

@@ -81,12 +81,20 @@ export {
 import { buildingTypeFilter } from "./filter-stores.svelte.js";
 
 let _currentRoom = $state<RoomData | null>(null);
+let _currentRoomNotFound = $state(false);
 export const currentRoom = {
   get value() {
     return _currentRoom;
   },
+  /** True only after a lookup completed without a match. While null and not
+   * notFound, the room is still being fetched (or a fetch is about to start),
+   * so panels should show a loading state rather than "not found". */
+  get notFound() {
+    return _currentRoomNotFound;
+  },
   async getRoomByCode(code: string) {
     _currentRoom = null;
+    _currentRoomNotFound = false;
     try {
       const localRoom = await getLocalRoomByCode(code);
       if (localRoom === null) {
@@ -102,13 +110,17 @@ export const currentRoom = {
     } catch (e) {
       console.error(e);
       _currentRoom = null;
+    } finally {
+      _currentRoomNotFound = _currentRoom === null;
     }
   },
   async getRoomFromSearch(room: RoomData) {
     _currentRoom = room;
+    _currentRoomNotFound = false;
   },
   setRoom(room: RoomData) {
     _currentRoom = room;
+    _currentRoomNotFound = false;
   },
 };
 

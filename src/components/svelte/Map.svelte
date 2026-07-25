@@ -32,6 +32,9 @@
     termStore,
     syncToastStore,
     transitStore,
+    plannerStore,
+    plannerBuildingsStore,
+    plannerRoomCodes,
   } from "@lib/store.svelte";
   import { untrack } from "svelte";
   import { onMount } from "svelte";
@@ -289,6 +292,9 @@
   });
 
   onMount(() => {
+    // Hydrate saved planner plans so the "My classes" highlight knows the
+    // user's class rooms without the planner screen ever being opened.
+    plannerStore.init();
     void loadSponsors().then((data) => {
       if (data) sponsoredPlacePins = getSponsoredPlacePins(data.sponsors);
     });
@@ -974,6 +980,12 @@
   }
 
   let zoomLevel = $state(0);
+  // Progressive disclosure, Google Maps style: low-priority POI pins (orgs,
+  // offices, landmarks, establishments) only appear once zoomed in enough.
+  // Buildings and dorms always show. Active (searched) and sponsored pins
+  // bypass the gate so deep links and paid placements never vanish.
+  const POI_MIN_ZOOM = 15.5;
+  const poiPinsVisible = $derived(zoomLevel >= POI_MIN_ZOOM);
   const SIDEPANEL_WIDTH = 25.75 * 16;
   const md = new MediaQuery("max-width:48rem");
   let editChromeEl = $state<HTMLElement | null>(null);
@@ -1715,6 +1727,9 @@
         if (!terrainStore.enabled || !sourceErrorMatchesTerrain(event)) return;
         failTerrain(map, TERRAIN_TILE_FAILURE_MESSAGE);
       };
+      // Sync once on bind — zoomLevel starts at 0, and pin/label zoom gates
+      // must reflect the real camera before the first zoom event fires.
+      handleZoom();
       map.on("zoom", handleZoom);
       map.on("error", handleMapError);
       return () => {
@@ -2595,6 +2610,29 @@
     return linkedActiveEventDormIds.has(dormId);
   }
 
+  // "My classes" highlight (#see MapViewStore.highlightMyBuildings): emphasize
+  // buildings hosting the active planner plan's classes, dim every other pin.
+  // Same shape as the event-focus dimming above.
+  const activePlannerRoomCodes = $derived(
+    plannerRoomCodes(plannerStore.activePlan?.sections ?? []),
+  );
+  const classHighlightActive = $derived(
+    mapViewStore.highlightMyBuildings && activePlannerRoomCodes.length > 0,
+  );
+
+  $effect(() => {
+    if (!mapViewStore.highlightMyBuildings) return;
+    void plannerBuildingsStore.load(activePlannerRoomCodes);
+  });
+
+  function isMyClassBuilding(buildingId: number): boolean {
+    return classHighlightActive && plannerBuildingsStore.buildingIds.has(buildingId);
+  }
+
+  function isBuildingDimmedForClassHighlight(buildingId: number): boolean {
+    return classHighlightActive && !plannerBuildingsStore.buildingIds.has(buildingId);
+  }
+
   let linkedActiveEventBuildingIds = $derived.by(() => {
     if (!loaded) return new Set<number>();
     return new Set(
@@ -2973,7 +3011,8 @@
                     active={activeBuildingName === building.buildingName}
                     editable={canDragPin(editKey)}
                     editing={selectedEditKey === editKey}
-                    dimmed={isBuildingDimmedForEventFocus(building.id)}
+                    dimmed={isBuildingDimmedForEventFocus(building.id) ||
+                      isBuildingDimmedForClassHighlight(building.id)}
                     eventLinked={isBuildingEventLinked(building.id)}
                     hovered={hoveredEditKey === editKey}
                     saveState={savingEditKey === editKey
@@ -2984,7 +3023,8 @@
                           ? "failed"
                           : "idle"}
                     labelVisible={zoomLevel >= 17 ||
-                      activeBuildingName === building.buildingName}
+                      activeBuildingName === building.buildingName ||
+                      isMyClassBuilding(building.id)}
                     useCentralHoverPreview={centralHoverPreview}
                     {previewSuppressed}
                     onpointerenter={(event) =>
@@ -3054,7 +3094,8 @@
                     label={dorm.dormName}
                     tone={dorm.isUpManaged ? "dorm" : "privateDorm"}
                     active={activeDormName === dorm.dormName}
-                    dimmed={isDormDimmedForEventFocus(dorm.id)}
+                    dimmed={isDormDimmedForEventFocus(dorm.id) ||
+                      classHighlightActive}
                     eventLinked={isDormEventLinked(dorm.id)}
                     editable={canDragPin(editKey)}
                     editing={selectedEditKey === editKey}
@@ -3082,7 +3123,7 @@
           {/each}
 
           {#each filteredPlaces as place (`place:${place.id}`)}
-            {#if place.lat != null && place.lon != null}
+            {#if place.lat != null && place.lon != null && (poiPinsVisible || sponsoredPlacePins.has(place.name) || (queryStore.category === "place" && queryStore.inputValue === place.name))}
               {@const centralHoverPreview = shouldShowEntityHoverPreview()}
               {@const previewSuppressed =
                 centralHoverPreview &&
@@ -3094,6 +3135,7 @@
                   tone={isLandmarkPlace(place) ? "landmark" : "establishment"}
                   active={queryStore.category === "place" &&
                     queryStore.inputValue === place.name}
+                  dimmed={classHighlightActive && pinSponsorId === undefined}
                   labelVisible={zoomLevel >= 17 ||
                     (queryStore.category === "place" &&
                       queryStore.inputValue === place.name)}
@@ -3121,6 +3163,7 @@
 
         {#if !mapViewStore.eventsOnly}
           {#each filteredOrganizations as { org, lat, lon } (`org:${org.id}`)}
+            {#if poiPinsVisible || activeOrgName === org.name}
             {@const centralHoverPreview = shouldShowEntityHoverPreview()}
             {@const previewSuppressed =
               centralHoverPreview &&
@@ -3132,6 +3175,7 @@
                   ? "organization"
                   : "office"}
                 active={activeOrgName === org.name}
+                dimmed={classHighlightActive}
                 labelVisible={zoomLevel >= 17 || activeOrgName === org.name}
                 useCentralHoverPreview={centralHoverPreview}
                 {previewSuppressed}
@@ -3147,6 +3191,7 @@
                 {/if}
               </MapEntityPin>
             </Marker>
+            {/if}
           {/each}
         {/if}
       </MapLibre>

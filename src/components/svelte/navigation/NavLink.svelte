@@ -112,13 +112,16 @@
       z-index: 999;
       width: max-content;
       font-size: 0.75rem;
-      transition: opacity 0.125s;
     }
     .icon {
       color: hsl(0, 0%, 50%);
     }
+    /* Fade only on hover-in; anywhere else opacity snaps. A transition on the
+       base rule made every inline label (opacity 1) fade out as a fixed-
+       position popup at stale coords when the rail collapsed (#755). */
     &:hover .tooltip {
       opacity: 1;
+      transition: opacity 0.125s;
     }
   }
   .nav-link--expanded {

@@ -44,15 +44,10 @@
   import MapLibreGlDirections from "@maplibre/maplibre-gl-directions";
   import CalendarDays from "@lucide/svelte/icons/calendar-days";
   import X from "@lucide/svelte/icons/x";
-  import House from "@lucide/svelte/icons/house";
-  import Users from "@lucide/svelte/icons/users";
   import Move from "@lucide/svelte/icons/move";
   import Undo2 from "@lucide/svelte/icons/undo-2";
   import Redo2 from "@lucide/svelte/icons/redo-2";
-  import University from "@lucide/svelte/icons/university";
-  import Landmark from "@lucide/svelte/icons/landmark";
-  import Briefcase from "@lucide/svelte/icons/briefcase";
-  import Store from "@lucide/svelte/icons/store";
+  import PinGlyph from "./map/PinGlyph.svelte";
   import EventMapPin from "./map/EventMapPin.svelte";
   import ContributorDraftPinMarker from "./map/ContributorDraftPinMarker.svelte";
   import EventPlacementImageField from "./map-chrome/EventPlacementImageField.svelte";
@@ -2997,7 +2992,7 @@
                     onpointerleave={() =>
                       handleBuildingPinPointerLeave(editKey)}
                   >
-                    <University size="20" />
+                    <PinGlyph name="building" size={20} />
                   </MapEntityPin>
                 </Marker>
               {/key}
@@ -3079,7 +3074,7 @@
                       handleDormPinPointerEnter(dorm, editKey, event)}
                     onpointerleave={() => handleDormPinPointerLeave(editKey)}
                   >
-                    <House size="18" />
+                    <PinGlyph name="dorm" size={18} />
                   </MapEntityPin>
                 </Marker>
               {/key}
@@ -3114,9 +3109,9 @@
                   onpointerleave={handleDetailPinPointerLeave}
                 >
                   {#if isLandmarkPlace(place)}
-                    <Landmark size="16" />
+                    <PinGlyph name="landmark" size={16} />
                   {:else}
-                    <Store size="16" />
+                    <PinGlyph name="establishment" size={16} />
                   {/if}
                 </MapEntityPin>
               </Marker>
@@ -3146,9 +3141,9 @@
                 onpointerleave={handleDetailPinPointerLeave}
               >
                 {#if isStudentOrganization(org.category)}
-                  <Users size="16" />
+                  <PinGlyph name="organization" size={16} />
                 {:else}
-                  <Briefcase size="16" />
+                  <PinGlyph name="office" size={16} />
                 {/if}
               </MapEntityPin>
             </Marker>

@@ -172,8 +172,6 @@ export default defineConfig({
         access: "secret",
         context: "server",
         optional: true,
-        default:
-          "https://kubo.community/api/public/integrations/room-tba/dorms",
       }),
       // Supabase JS client (Auth, Realtime, Storage). Separate from DATABASE_URL.
       PUBLIC_SUPABASE_URL: envField.string({

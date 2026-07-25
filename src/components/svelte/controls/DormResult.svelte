@@ -696,6 +696,15 @@
           />
         {/if}
         <EntityShareCopyLink url={dormShareUrl} entityLabel={dorm.dormName} />
+        {#if kuboDormCta}
+          <EntityExternalLink
+            href={kuboDormCta.href}
+            label={kuboDormCta.label}
+            ariaLabel={kuboDormCta.ariaLabel}
+            class="entity-footer__link--button entity-footer__link--kubo"
+            iconSrc="/kubo-logo.png"
+          />
+        {/if}
         <EntityEditorToggle
           expanded={editing}
           {canPublish}
@@ -844,17 +853,8 @@
           </div>
         {/if}
 
-        {#if dorm.isUpManaged || dorm.facebookLink || kuboDormCta || (!dorm.isUpManaged && dorm.priceRange)}
+        {#if dorm.isUpManaged || dorm.facebookLink || (!dorm.isUpManaged && dorm.priceRange)}
           <div class="entity-dorm-details__links">
-            {#if kuboDormCta}
-              <EntityExternalLink
-                href={kuboDormCta.href}
-                label={kuboDormCta.label}
-                ariaLabel={kuboDormCta.ariaLabel}
-                class="entity-footer__link--button entity-footer__link--kubo"
-                iconSrc="/kubo-logo.png"
-              />
-            {/if}
             {#if dorm.isUpManaged}
               <EntityExternalLink
                 href="https://uplbosa.org"

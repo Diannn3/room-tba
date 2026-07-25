@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/svelte";
-import { beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import DormResultHost from "@test/components/DormResultHost.svelte";
 import type { DormData } from "@lib/types";
 import { queryStore } from "@lib/store.svelte";
@@ -46,6 +46,17 @@ function renderDormResult(testDorm: DormData) {
 describe("DormResult Kubo link", () => {
   beforeEach(() => {
     kuboDormDirectory.set(new Map());
+    // Mounting DormResult triggers loadKuboDormDirectory(); without a stub
+    // the real fetch dials localhost:3000 and kills CI (no dev server).
+    // 503 keeps the store untouched, so the directory set below stays.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(null, { status: 503 })),
+    );
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   test("renders a safe Kubo CTA for an API-confirmed dorm without mobile overflow", () => {
@@ -85,11 +96,16 @@ describe("DormResult Kubo link", () => {
     expect(link.querySelector("img")).toHaveAttribute("src", "/kubo-logo.png");
     expect(link.querySelector("img")).toHaveAttribute("alt", "");
 
+    // The CTA lives in the entity-actions row since the live-directory
+    // change, not in the dorm-details links row.
+    const actions = link.closest<HTMLElement>(".entity-actions");
+    expect(actions).not.toBeNull();
+    expectNoHorizontalOverflow(actions!);
+
     const links = container.querySelector<HTMLElement>(
       ".entity-dorm-details__links",
     );
     expect(links).not.toBeNull();
-    expect(links!.querySelector("a")).toBe(link);
     expectNoHorizontalOverflow(links!);
   });
 

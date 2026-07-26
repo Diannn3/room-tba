@@ -1,9 +1,6 @@
 import type { APIRoute } from "astro";
-import {
-  clampLimitParam,
-  clampOffsetParam,
-  paginationErrorResponse,
-} from "@lib/api/pagination";
+import { decodeClassCursor } from "@lib/api/class-cursor";
+import { clampLimitParam, paginationErrorResponse } from "@lib/api/pagination";
 import {
   checkRateLimit,
   clientIp,
@@ -38,20 +35,29 @@ export const GET = (async ({ request, url }) => {
     return new Response(JSON.stringify(data));
   }
 
+  if (url.searchParams.has("offset")) {
+    return paginationErrorResponse(
+      "offset is no longer supported; page with cursor instead (#412)",
+    );
+  }
+
   const limit = clampLimitParam(url.searchParams.get("limit"), {
-    defaultValue: 50,
+    defaultValue: 25,
     max: 100,
   });
   if (!limit.ok) return paginationErrorResponse(limit.error);
 
-  const offset = clampOffsetParam(url.searchParams.get("offset"));
-  if (!offset.ok) return paginationErrorResponse(offset.error);
+  const cursorRaw = url.searchParams.get("cursor");
+  const cursor = cursorRaw ? decodeClassCursor(cursorRaw) : undefined;
+  if (cursorRaw && !cursor) {
+    return paginationErrorResponse("cursor is not a valid pagination token");
+  }
 
   const data = await queryClasses({
     termId: Number.isFinite(termId) ? termId : undefined,
     courseCodePrefix: courseCode ?? undefined,
     limit: limit.value,
-    offset: offset.value,
+    cursor: cursor ?? undefined,
   });
   return new Response(JSON.stringify(data));
 }) satisfies APIRoute;

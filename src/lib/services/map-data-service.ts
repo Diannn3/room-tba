@@ -1,4 +1,4 @@
-import { and, asc, count, eq, ilike, like, or, sql } from "drizzle-orm";
+import { and, asc, eq, ilike, like, or, sql } from "drizzle-orm";
 import {
   aliasesTable,
   buildingsTable,
@@ -11,6 +11,7 @@ import {
   finalExamsTable,
   roomsTable,
 } from "@drizzle/schema";
+import { encodeClassCursor, type ClassCursor } from "@lib/api/class-cursor";
 import { clampLimitValue } from "@lib/api/pagination";
 import { db } from "@lib/db";
 import { normalizeCourseCode } from "@lib/final-exams/normalize";
@@ -350,41 +351,62 @@ function classListWhere(termId?: number, courseCodePrefix?: string) {
   return filters.length > 0 ? and(...filters) : undefined;
 }
 
-export type ClassQueryPage = {
+export type ClassCursorPage = {
   rows: ClassMapValue[];
-  total: number;
+  nextCursor: string | null;
+  hasMore: boolean;
 };
 
+// courseCode/section are nullable; COALESCE to '' in both ORDER BY and the
+// keyset comparison so a NULL can never make the row tuple incomparable and
+// silently drop rows mid-walk. Matches classes_term_course_section_id_idx.
+const courseCodeSortKey = sql`coalesce(${classesTable.courseCode}, '')`;
+const sectionSortKey = sql`coalesce(${classesTable.section}, '')`;
+
+/** Keyset-paginated class list (#412): no OFFSET, no per-page COUNT(). */
 export async function queryClasses(options: {
   termId?: number;
   courseCodePrefix?: string;
   limit?: number;
-  offset?: number;
-}): Promise<ClassQueryPage> {
+  cursor?: ClassCursor;
+}): Promise<ClassCursorPage> {
   try {
     const limit = clampLimitValue(options.limit, {
-      defaultValue: 50,
+      defaultValue: 25,
       max: 100,
     });
-    const offset = Math.max(options.offset ?? 0, 0);
-    const where = classListWhere(options.termId, options.courseCodePrefix);
-
-    const [{ value: total }] = await db
-      .select({ value: count() })
-      .from(classesTable)
-      .leftJoin(roomsTable, eq(roomsTable.id, classesTable.roomId))
-      .where(where);
-
+    const cursor = options.cursor;
     const rows = await db
       .select(classListSelect)
       .from(classesTable)
       .leftJoin(roomsTable, eq(roomsTable.id, classesTable.roomId))
-      .where(where)
-      .orderBy(asc(classesTable.courseCode), asc(classesTable.section))
-      .limit(limit)
-      .offset(offset);
+      .where(
+        and(
+          classListWhere(options.termId, options.courseCodePrefix),
+          cursor
+            ? sql`(${courseCodeSortKey}, ${sectionSortKey}, ${classesTable.id}) > (${cursor.courseCode}, ${cursor.section}, ${cursor.id})`
+            : undefined,
+        ),
+      )
+      .orderBy(
+        asc(courseCodeSortKey),
+        asc(sectionSortKey),
+        asc(classesTable.id),
+      )
+      .limit(limit + 1);
 
-    return { rows, total: Number(total ?? 0) };
+    const hasMore = rows.length > limit;
+    const page = hasMore ? rows.slice(0, limit) : rows;
+    const last = page.at(-1);
+    const nextCursor =
+      hasMore && last
+        ? encodeClassCursor({
+            courseCode: last.courseCode ?? "",
+            section: last.section ?? "",
+            id: last.id,
+          })
+        : null;
+    return { rows: page, nextCursor, hasMore };
   } catch (e) {
     console.error("Error: ", e);
     throw new Error("Failed to query classes", { cause: e });

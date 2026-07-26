@@ -57,3 +57,79 @@ describeIntegration("room class queries", () => {
     expect(rows[0]?.roomCode).toBe(`${courseCode}-A`);
   });
 });
+
+describeIntegration("queryClasses cursor pagination (#412)", () => {
+  let client: E2eClient;
+  let courseCode: string;
+  let termId: number;
+  const sections = ["A", "B", "C", "D", "E"];
+
+  beforeAll(async () => {
+    client = await connectE2eClient(integrationDatabaseUrl()!);
+    courseCode = `CURTEST${Date.now()}`.slice(0, 16);
+
+    const terms = await client.query<{ id: number }>(
+      "SELECT id FROM terms ORDER BY id DESC LIMIT 1",
+    );
+    termId = terms.rows[0]!.id;
+
+    for (const section of sections) {
+      await client.query(
+        `INSERT INTO classes
+          (course_code, section, type, schedule, course_title, term_id)
+         VALUES ($1, $2, 'LEC', ARRAY['M 08:00AM-09:00AM'], 'Cursor test', $3)`,
+        [courseCode, section, termId],
+      );
+    }
+  });
+
+  afterAll(async () => {
+    if (!client) return;
+    await client.query("DELETE FROM classes WHERE course_code = $1", [
+      courseCode,
+    ]);
+    await client.end();
+  });
+
+  test("walks every row exactly once and stays stable under inserts", async () => {
+    const { queryClasses } = await import("@lib/services/map-data-service");
+    const { decodeClassCursor } = await import("@lib/api/class-cursor");
+
+    const first = await queryClasses({
+      termId,
+      courseCodePrefix: courseCode,
+      limit: 2,
+    });
+    expect(first.rows.map((r) => r.section)).toEqual(["A", "B"]);
+    expect(first.hasMore).toBe(true);
+    expect(first.nextCursor).not.toBeNull();
+
+    // A row inserted before the cursor position must not shift later pages
+    // (the offset-pagination duplicate/skip bug this replaces).
+    await client.query(
+      `INSERT INTO classes
+        (course_code, section, type, schedule, course_title, term_id)
+       VALUES ($1, 'AA', 'LEC', ARRAY['T 08:00AM-09:00AM'], 'Cursor test', $2)`,
+      [courseCode, termId],
+    );
+
+    const second = await queryClasses({
+      termId,
+      courseCodePrefix: courseCode,
+      limit: 2,
+      cursor: decodeClassCursor(first.nextCursor!) ?? undefined,
+    });
+    expect(second.rows.map((r) => r.section)).toEqual(["C", "D"]);
+    expect(second.hasMore).toBe(true);
+
+    const third = await queryClasses({
+      termId,
+      courseCodePrefix: courseCode,
+      limit: 2,
+      cursor: decodeClassCursor(second.nextCursor!) ?? undefined,
+    });
+    expect(third.rows.map((r) => r.section)).toEqual(["E"]);
+    expect(third.hasMore).toBe(false);
+    expect(third.nextCursor).toBeNull();
+  });
+});

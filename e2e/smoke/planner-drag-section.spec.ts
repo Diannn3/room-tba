@@ -39,7 +39,7 @@ test("planner switches a section when a mouse drag ends on its first target move
     },
   ];
   await page.route("**/api/classes?*", (route) =>
-    route.fulfill({ json: { rows, total: rows.length } }),
+    route.fulfill({ json: { rows, nextCursor: null, hasMore: false } }),
   );
   await page.addInitScript(() => {
     const plan = {

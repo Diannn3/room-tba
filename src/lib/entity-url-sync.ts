@@ -53,6 +53,7 @@ const HOME_PATH = "/";
 const SCREEN_PATHS = {
   planner: "/planner",
   finals: "/final-exams",
+  calendar: "/calendar",
 } as const;
 export type ScreenId = keyof typeof SCREEN_PATHS;
 

@@ -37,6 +37,7 @@
   import EditorAdditionModal from "@ui/EditorAdditionModal.svelte";
   import PlannerScreen from "@ui/planner/PlannerScreen.svelte";
   import FinalExamsScreen from "@ui/final-exams/FinalExamsScreen.svelte";
+  import AcademicCalendarScreen from "@ui/calendar/AcademicCalendarScreen.svelte";
   import EntityUrlSync from "@ui/EntityUrlSync.svelte";
   import EntityHoverPreview from "@ui/map/EntityHoverPreview.svelte";
   import "./map-chrome/map-chrome.css";
@@ -60,6 +61,7 @@
     suppressLandingModal?: boolean;
     openPlanner?: boolean;
     openFinals?: boolean;
+    openCalendar?: boolean;
   };
 
   const mobile = new MediaQuery("max-width:48rem");
@@ -68,6 +70,7 @@
     suppressLandingModal = false,
     openPlanner = false,
     openFinals = false,
+    openCalendar = false,
   }: Props = $props();
 
   const updateData = (queryHistory: RecentSearch[]) => {
@@ -198,6 +201,12 @@
     if (openFinals) {
       void termStore.init();
       sidebarStore.changeOpened("finals");
+    }
+
+    // /calendar deep link (prop set by calendar.astro), same shape.
+    if (openCalendar) {
+      void termStore.init();
+      sidebarStore.changeOpened("calendar");
     }
 
     const planParam = urlParams.get("plan");
@@ -409,6 +418,8 @@
       <PlannerScreen />
     {:else if sidebarStore.panelOpen === "finals"}
       <FinalExamsScreen />
+    {:else if sidebarStore.panelOpen === "calendar"}
+      <AcademicCalendarScreen />
     {/if}
   </div>
   {#if toastStore.message}

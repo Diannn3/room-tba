@@ -82,11 +82,11 @@ export function changeOfMatriculationLabel(
   });
 }
 
-function toManilaDateKey(date: Date) {
+export function toManilaDateKey(date: Date) {
   return date.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
 }
 
-function termDateKey(value: string | null | undefined) {
+export function termDateKey(value: string | null | undefined) {
   if (!value) return null;
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
   return toManilaDateKey(new Date(value));

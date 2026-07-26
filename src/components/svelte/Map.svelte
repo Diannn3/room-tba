@@ -986,6 +986,9 @@
   // bypass the gate so deep links and paid placements never vanish.
   const POI_MIN_ZOOM = 15.5;
   const poiPinsVisible = $derived(zoomLevel >= POI_MIN_ZOOM);
+  $effect(() => {
+    mapViewStore.poiPinsZoomVisible = poiPinsVisible;
+  });
   const SIDEPANEL_WIDTH = 25.75 * 16;
   const md = new MediaQuery("max-width:48rem");
   let editChromeEl = $state<HTMLElement | null>(null);

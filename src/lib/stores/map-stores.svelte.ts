@@ -16,6 +16,9 @@ export class MapViewStore {
   showPlaces: boolean = $state(true);
   // Emphasize buildings hosting the user's planner classes; dim other pins.
   highlightMyBuildings: boolean = $state(false);
+  /** Org/place pins are also zoom-gated in Map.svelte. The legend reads this
+   * so its toggles cannot claim "Shown" while the gate is hiding them. */
+  poiPinsZoomVisible: boolean = $state(true);
 
   toggleEventsOnly = () => {
     this.eventsOnly = !this.eventsOnly;

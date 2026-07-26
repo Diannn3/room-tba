@@ -136,6 +136,13 @@ const { title, description, canonicalPath, structuredData = [] } = Astro.props;
      page" nav becomes a sticky left rail, body copy flows in the right
      column. Pure CSS so each article keeps its inline TOC markup. */
   @media (min-width: 68rem) {
+    /* The rail eats 15rem + 3rem out of the same box the prose sits in, which
+       squeezed wide tables into clipping while margin sat empty. Give the page
+       back what the rail takes. */
+    .wiki-page:has(article.wiki-article) {
+      width: min(80rem, calc(100% - 2rem));
+    }
+
     .wiki-page article.wiki-article {
       display: grid;
       grid-template-columns: 15rem minmax(0, 1fr);

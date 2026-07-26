@@ -82,6 +82,9 @@
 <style>
   .nav-link {
     position: relative;
+    /* The href variant is an <a>, so it inherited the global anchor underline
+       and read differently from its button siblings (Wiki, Discord, Donate). */
+    text-decoration: none;
     padding: 0.5rem 0rem;
     display: flex;
     align-items: center;

@@ -23,6 +23,15 @@
 
   let { embedded = false, trigger = "icon" }: Props = $props();
 
+  /** Org/place pins answer to the toggle AND a zoom gate, so "Shown" alone
+   * would lie when the user is zoomed out past it. */
+  function legendState(on: boolean): string {
+    if (!on) return "Hidden — tap to toggle.";
+    return mapViewStore.poiPinsZoomVisible
+      ? "Shown — tap to toggle."
+      : "Shown when you zoom in — tap to toggle.";
+  }
+
   const panelId = "legend";
   const open = $derived(floatingControlPanelStore.openPanel === panelId);
   const showPanel = $derived(embedded || open);
@@ -222,7 +231,7 @@
               <span class="legend-copy">
                 <span class="legend-label">Orgs, units &amp; offices</span>
                 <span class="legend-description">
-                  {mapViewStore.showOrgs ? "Shown" : "Hidden"} — tap to toggle.
+                  {legendState(mapViewStore.showOrgs)}
                 </span>
               </span>
             </button>
@@ -237,7 +246,7 @@
               <span class="legend-copy">
                 <span class="legend-label">Landmarks &amp; establishments</span>
                 <span class="legend-description">
-                  {mapViewStore.showPlaces ? "Shown" : "Hidden"} — tap to toggle.
+                  {legendState(mapViewStore.showPlaces)}
                 </span>
               </span>
             </button>

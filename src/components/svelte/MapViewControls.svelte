@@ -361,9 +361,15 @@
   }
 
   .control:disabled {
-    color: hsl(0, 0%, 75%);
+    color: hsl(0, 0%, 52%);
     cursor: default;
     background-color: transparent;
+  }
+
+  /* The kicker's 0.72 opacity stacked on the disabled grey left the label at
+     1.76:1, so the row read as blank rather than disabled. */
+  .control:disabled .control-kicker {
+    opacity: 1;
   }
 
   .north-btn {

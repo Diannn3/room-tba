@@ -66,6 +66,17 @@ export function getKuboDormCta(
   const match = directory.get(dormId);
   if (!match) return null;
 
+  // Trust boundary: Kubo's feed has served placeholder roomTbaDormIds that
+  // collide with real dorms (2026-07-25, demo rows mapped onto Men's RH and
+  // New Dormitory RH). An id match alone must not render a reservation CTA;
+  // the names have to agree too.
+  if (!dormNamesMatch(match.name, dormName)) {
+    console.warn(
+      `Kubo directory: dorm id ${dormId} name mismatch ("${match.name}" vs "${dormName}"); CTA suppressed`,
+    );
+    return null;
+  }
+
   if (match.reservationStatus === "accepting" && match.reservationUrl) {
     return {
       href: match.reservationUrl,
@@ -114,6 +125,23 @@ export async function loadKuboDormDirectory(
   });
 
   return loadPromise;
+}
+
+// ponytail: loose containment after normalization; "Residence Hall" folds to
+// "RH" so registrar-style names match. Upgrade to an explicit id->slug
+// allowlist if Kubo's data quality stays rough.
+function normalizeDormName(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+    .replace(/residencehall/g, "rh");
+}
+
+export function dormNamesMatch(kuboName: string, dormName: string): boolean {
+  const a = normalizeDormName(kuboName);
+  const b = normalizeDormName(dormName);
+  if (!a || !b) return false;
+  return a === b || a.includes(b) || b.includes(a);
 }
 
 function toDirectory(records: KuboDormRecord[]): KuboDormDirectory {

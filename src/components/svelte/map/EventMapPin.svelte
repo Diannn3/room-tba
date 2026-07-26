@@ -1,6 +1,6 @@
 <script lang="ts">
-  import CalendarDays from "@lucide/svelte/icons/calendar-days";
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
+  import PinGlyph from "./PinGlyph.svelte";
   import { fade } from "svelte/transition";
 
   type EventPinVariant = "single" | "group";
@@ -78,7 +78,7 @@
     <img class="event-pin-media" src={imageSrc} alt="" width="40" height="40" loading="lazy" decoding="async" />
   {:else}
     <span class="event-pin-icon" aria-hidden="true">
-      <CalendarDays size={14} />
+      <PinGlyph name="event" size={14} />
     </span>
   {/if}
   <span class="event-date-badge" aria-hidden="true">{dateLabel}</span>

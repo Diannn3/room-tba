@@ -39,6 +39,7 @@
   import PlannerScreen from "@ui/planner/PlannerScreen.svelte";
   import FinalExamsScreen from "@ui/final-exams/FinalExamsScreen.svelte";
   import AcademicCalendarScreen from "@ui/calendar/AcademicCalendarScreen.svelte";
+  import TodayScreen from "@ui/today/TodayScreen.svelte";
   import EntityUrlSync from "@ui/EntityUrlSync.svelte";
   import EntityHoverPreview from "@ui/map/EntityHoverPreview.svelte";
   import "./map-chrome/map-chrome.css";
@@ -61,6 +62,7 @@
   type Props = {
     initialSearch?: InitialSearchState;
     suppressLandingModal?: boolean;
+    openToday?: boolean;
     openPlanner?: boolean;
     openFinals?: boolean;
     openCalendar?: boolean;
@@ -70,6 +72,7 @@
   const {
     initialSearch,
     suppressLandingModal = false,
+    openToday = false,
     openPlanner = false,
     openFinals = false,
     openCalendar = false,
@@ -213,6 +216,12 @@
     if (openCalendar) {
       void termStore.init();
       sidebarStore.changeOpened("calendar");
+    }
+
+    // /today deep link (prop set by today.astro), same shape.
+    if (openToday) {
+      void termStore.init();
+      sidebarStore.changeOpened("today");
     }
 
     const planParam = urlParams.get("plan");
@@ -421,6 +430,8 @@
           </div>
         </div>
       </div>
+    {:else if sidebarStore.panelOpen === "today"}
+      <TodayScreen />
     {:else if sidebarStore.panelOpen === "planner"}
       <PlannerScreen />
     {:else if sidebarStore.panelOpen === "finals"}

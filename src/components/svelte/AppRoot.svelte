@@ -58,6 +58,7 @@
   type MetadataProps = {
     initialSearch?: InitialSearchState;
     suppressLandingModal?: boolean;
+    openToday?: boolean;
     openPlanner?: boolean;
     openFinals?: boolean;
     openCalendar?: boolean;
@@ -508,6 +509,7 @@
 <Entry
   initialSearch={metadata.initialSearch}
   suppressLandingModal={metadata.suppressLandingModal ?? false}
+  openToday={metadata.openToday ?? false}
   openPlanner={metadata.openPlanner ?? false}
   openFinals={metadata.openFinals ?? false}
   openCalendar={metadata.openCalendar ?? false}

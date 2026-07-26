@@ -1,4 +1,5 @@
 <script lang="ts">
+  import CalendarClock from "@lucide/svelte/icons/calendar-clock";
   import CalendarDays from "@lucide/svelte/icons/calendar-days";
   import FileCheck from "@lucide/svelte/icons/file-check";
   import BookText from "@lucide/svelte/icons/book-text";
@@ -335,6 +336,17 @@
           {/each}
         </div>
       {/if}
+
+      <NavLink
+        onclick={() => {
+          sidebarStore.changeOpened("today");
+        }}
+        active={sidebarStore.panelOpen === "today"}
+        expanded={labeled}
+        tooltip="Today"
+      >
+        <CalendarClock size={20} />
+      </NavLink>
 
       <NavLink
         onclick={() => {

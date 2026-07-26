@@ -1,5 +1,5 @@
 <script lang="ts">
-  import LoadingIndicator from "@ui/LoadingIndicator.svelte";
+  import EntitySkeleton from "@ui/EntitySkeleton.svelte";
   import {
     adminAuthStore,
     queryStore,
@@ -487,7 +487,11 @@
       groupByBuilding
     />
   {:else if division}
-    <LoadingIndicator block label="Loading rooms for {division.divisionName}…" />
+    <EntitySkeleton
+      variant="rooms"
+      heading="Rooms under this division"
+      label="Loading rooms for {division.divisionName}…"
+    />
   {/if}
 </div>
 

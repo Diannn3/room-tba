@@ -81,12 +81,24 @@ export {
 import { buildingTypeFilter } from "./filter-stores.svelte.js";
 
 let _currentRoom = $state<RoomData | null>(null);
+let _currentRoomNotFound = $state(false);
+let roomLoadGeneration = 0;
 export const currentRoom = {
   get value() {
     return _currentRoom;
   },
+  /** True only after a lookup completed without a match. While null and not
+   * notFound, the room is still being fetched (or a fetch is about to start),
+   * so panels should show a loading state rather than "not found". */
+  get notFound() {
+    return _currentRoomNotFound;
+  },
   async getRoomByCode(code: string) {
+    // Overlapping lookups: only the newest may write. Otherwise a slow
+    // earlier fetch lands last and stamps notFound from a stale result.
+    const generation = ++roomLoadGeneration;
     _currentRoom = null;
+    _currentRoomNotFound = false;
     try {
       const localRoom = await getLocalRoomByCode(code);
       if (localRoom === null) {
@@ -94,21 +106,31 @@ export const currentRoom = {
         const remoteRoomReq = await getJSONFetch<{ data: RoomData }>(
           `/api/rooms?code=${codeParam}`,
         );
-        const remoteRoom = remoteRoomReq.data;
-        _currentRoom = remoteRoom;
+        if (generation !== roomLoadGeneration) return;
+        _currentRoom = remoteRoomReq.data;
         return;
       }
+      if (generation !== roomLoadGeneration) return;
       _currentRoom = localRoom;
     } catch (e) {
       console.error(e);
+      if (generation !== roomLoadGeneration) return;
       _currentRoom = null;
+    } finally {
+      if (generation === roomLoadGeneration) {
+        _currentRoomNotFound = _currentRoom === null;
+      }
     }
   },
   async getRoomFromSearch(room: RoomData) {
+    roomLoadGeneration++;
     _currentRoom = room;
+    _currentRoomNotFound = false;
   },
   setRoom(room: RoomData) {
+    roomLoadGeneration++;
     _currentRoom = room;
+    _currentRoomNotFound = false;
   },
 };
 
@@ -145,9 +167,12 @@ import {
   TermStore,
   RoomClassesStore,
   ClassVenuesStore,
+  PlannerBuildingsStore,
 } from "./data-stores.svelte";
 import { PlannerStore } from "./planner-store.svelte";
 import { TransitStore } from "./transit-store.svelte";
+
+export { plannerRoomCodes } from "./data-stores.svelte";
 
 class LocationStore {
   coords: [number, number] | null = $state(null);
@@ -926,6 +951,7 @@ export const queryStore = new QueryStore();
 export const termStore = new TermStore();
 export const roomClassesStore = new RoomClassesStore();
 export const classVenuesStore = new ClassVenuesStore();
+export const plannerBuildingsStore = new PlannerBuildingsStore();
 export const plannerStore = new PlannerStore(() => termStore.activeTermId);
 export const scheduleRouteStore = new ScheduleRouteStore();
 export const offlineStore = new OfflineStore();

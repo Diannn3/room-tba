@@ -10,7 +10,7 @@ Production-grade test pyramid for CI and local development.
 | `bun run test:components` | Vitest store + Svelte component tests |
 | `bun run test:integration` | HTTP + service tests (E2E DB; service-only without preview) |
 | `bun run test:integration:live` | Same as CI: `build:e2e` → preview → integration (incl. HTTP) |
-| `bun run e2e:reset-db` | Truncate + seed E2E Supabase (host guard) |
+| `bun run e2e:reset-db` | Truncate + seed E2E Supabase (host + schema guard) |
 | `bun run e2e` | Playwright blocking suite |
 | `bun run e2e:advisory` | Playwright advisory (non-blocking in CI) |
 | `bun run e2e:staging` | Live staging smoke |
@@ -65,6 +65,19 @@ gh pr edit <number> --add-label run/e2e   # re-run integration + E2E + advisory
 ```
 
 Workflows: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml), [`.github/workflows/e2e.yml`](../.github/workflows/e2e.yml), [`.github/workflows/e2e-advisory.yml`](../.github/workflows/e2e-advisory.yml), [`.github/workflows/e2e-staging.yml`](../.github/workflows/e2e-staging.yml), [`.github/workflows/bundle-advisory.yml`](../.github/workflows/bundle-advisory.yml).
+
+### One schema per run (`E2E_SCHEMA`)
+
+Blocking, advisory, and staging E2E all call [`e2e-reusable.yml`](../.github/workflows/e2e-reusable.yml) against the **same** Supabase project, so before #773 they reset and wrote each other's tables: sub-second flakes in DB-touching integration suites whenever two runs overlapped. Each run now gets its own Postgres schema in that project:
+
+- The reusable workflow sets job-level `E2E_SCHEMA=e2e_<run_id>_<run_attempt>`, so reset, `build:e2e`, the preview server, integration, and Playwright all see it.
+- `e2e:reset-db` creates the schema, replays **every** `drizzle/*.sql` in filename order into it (a fresh schema has no history, so nothing needs registering by hand when you add a migration), then seeds the usual fixtures.
+- Every connection pins itself with `SET search_path TO <schema>` right after connect ([`scripts/e2e-schema.ts`](../scripts/e2e-schema.ts), used by [`src/lib/db.ts`](../src/lib/db.ts), the reset script, `integration/`, and `e2e/helpers/db.ts`). The Supabase **session pooler** silently ignores `?options=-csearch_path=…` in the URL and rejects node-postgres `options`, so the URL tricks do not work here.
+- Teardown runs `bun run scripts/e2e-reset-db.ts --drop` under `if: always()`. Cancelled jobs that skip it are covered by the sweeper: each schema is stamped with `COMMENT ON SCHEMA … IS '<iso>'` at creation, and every reset drops stamped `e2e_*` schemas older than 24 h.
+
+Pinning costs one extra round trip per new connection, and several proposal-service tests already sat at bun's 5 s default while doing ~20 round trips to Supabase, so `test:integration` now runs with `--timeout 20000`. CI calls that script instead of repeating the flags.
+
+**Contract:** `E2E_SCHEMA` unset (the local default) = today's behavior against `public`. Set = must match `^e2e_[a-z0-9_]+$`; anything else throws instead of silently falling back to `public`. Never point it at `public`, and never run `e2e:reset-db` without it while CI is live, because unset truncates the shared schema.
 
 ## CI (advisory, non-blocking)
 

@@ -75,6 +75,7 @@ const E2E_MIGRATION_FILES = [
   "0038_sponsor_impressions.sql",
   "0039_classes_keyset_index.sql",
   "0040_pre_drizzle_schema_backfill.sql",
+  "0041_add_announcements.sql",
 ] as const;
 
 /**
@@ -212,6 +213,7 @@ async function main() {
 
     await client.query(`
       TRUNCATE TABLE
+        announcements,
         sponsor_impressions,
         planner_plans,
         editor_history,
@@ -359,6 +361,7 @@ async function main() {
       "organizations",
       "places",
       "jeepney_routes",
+      "announcements",
     ]) {
       await client.query(
         `INSERT INTO update (table_name, sync_key) VALUES ($1, gen_random_uuid())

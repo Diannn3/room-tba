@@ -1,5 +1,6 @@
 import type { DBData } from "@lib/context";
 import type {
+  AnnouncementData,
   BuildingData,
   ClassMapValue,
   CollegeData,
@@ -201,6 +202,34 @@ export async function getLocalPlaces(): Promise<PlaceData[] | undefined> {
         updated_at AS "updatedAt"
       FROM places;
       `)) as Results<PlaceData>;
+    return data.rows;
+  } catch (e) {
+    console.error("Error: ", e);
+    return undefined;
+  }
+}
+
+export async function getLocalAnnouncements(): Promise<
+  AnnouncementData[] | undefined
+> {
+  try {
+    const localDB = getDB();
+    await localDB.waitReady;
+    const data = (await localDB.query(`
+      SELECT
+        id,
+        title,
+        body,
+        severity,
+        starts_on AS "startsOn",
+        ends_on AS "endsOn",
+        link_url AS "linkUrl",
+        author,
+        created_at AS "createdAt",
+        version,
+        updated_at AS "updatedAt"
+      FROM announcements;
+      `)) as Results<AnnouncementData>;
     return data.rows;
   } catch (e) {
     console.error("Error: ", e);
@@ -585,6 +614,11 @@ export const getOrganizations = getEntity<OrgData>(
 export const getPlaces = getEntity<PlaceData>("places", getLocalPlaces);
 
 export const getEvents = getEntity<EventData>("events", getLocalEvents);
+
+export const getAnnouncements = getEntity<AnnouncementData>(
+  "announcements",
+  getLocalAnnouncements,
+);
 
 export const getClasses = getEntity<ClassMapValue>("classes", getLocalClasses);
 

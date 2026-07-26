@@ -1,4 +1,5 @@
 import type {
+  AnnouncementData,
   BuildingData,
   CollegeData,
   DivisionData,
@@ -441,6 +442,63 @@ export async function syncPlaces(
   if (trustedRemote) {
     updateSyncKeyFromLs("places", checker.newKey ?? "");
   }
+}
+
+export async function syncAnnouncements(
+  checker: TableSyncInfo,
+  remoteAnnouncements: AnnouncementData[],
+  trustedRemote = false,
+) {
+  if (await shouldSkipValidSync(checker, "announcements")) return;
+  if (checker.newKey === null) return;
+  if (!trustedRemote) return;
+
+  const localDB = getDB();
+  await localDB.waitReady;
+  // `/api/announcements` serves only live rows, so rows that expired or were
+  // deleted server-side must leave the cache too — replace, don't upsert.
+  try {
+    await localDB.query("DELETE FROM announcements;");
+  } catch (e) {
+    console.error(e);
+  }
+  for (const a of remoteAnnouncements) {
+    try {
+      await localDB.query(
+        `
+        INSERT INTO announcements (id, title, body, severity, starts_on, ends_on, link_url, author, created_at, version, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        ON CONFLICT (id) DO UPDATE SET
+        title = EXCLUDED.title,
+        body = EXCLUDED.body,
+        severity = EXCLUDED.severity,
+        starts_on = EXCLUDED.starts_on,
+        ends_on = EXCLUDED.ends_on,
+        link_url = EXCLUDED.link_url,
+        author = EXCLUDED.author,
+        created_at = EXCLUDED.created_at,
+        version = EXCLUDED.version,
+        updated_at = EXCLUDED.updated_at;
+        `,
+        [
+          a.id,
+          a.title,
+          a.body,
+          a.severity,
+          a.startsOn,
+          a.endsOn,
+          a.linkUrl,
+          a.author,
+          a.createdAt,
+          a.version,
+          a.updatedAt,
+        ],
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  updateSyncKeyFromLs("announcements", checker.newKey ?? "");
 }
 
 export async function syncJeepneyRoutes(

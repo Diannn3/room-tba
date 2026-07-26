@@ -6,6 +6,7 @@ export const modalOptions = [
   "leaderboard",
   "coverage",
   "changelog",
+  "announcements",
   "review",
   "student-orgs",
   "settings",

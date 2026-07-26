@@ -22,6 +22,7 @@ const REQUIRED_TABLES = [
   "event_route_stops",
   "organizations",
   "places",
+  "announcements",
   "aliases",
   "update",
   "admin_users",
@@ -29,7 +30,7 @@ const REQUIRED_TABLES = [
   "edit_proposals",
 ];
 
-const REQUIRED_SYNC_ROWS = ["organizations", "places"];
+const REQUIRED_SYNC_ROWS = ["organizations", "places", "announcements"];
 
 async function main() {
   const databaseUrl = process.env.DATABASE_URL?.trim();

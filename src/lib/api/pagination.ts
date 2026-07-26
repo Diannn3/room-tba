@@ -42,12 +42,6 @@ export function clampLimitParam(
   return { ok: true, value: clampLimitValue(parsed.value, options) };
 }
 
-export function clampOffsetParam(raw: string | null): PaginationParamResult {
-  const parsed = parseNonNegativeInteger("offset", raw);
-  if (!parsed.ok) return parsed;
-  return { ok: true, value: parsed.value ?? 0 };
-}
-
 export function paginationErrorResponse(error: string) {
   return new Response(JSON.stringify({ error }), {
     status: 400,

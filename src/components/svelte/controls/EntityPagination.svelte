@@ -5,7 +5,8 @@
   type Props = {
     rangeStart: number;
     rangeEnd: number;
-    total: number;
+    /** Omit when unknown (cursor pagination, #412): label degrades to the range. */
+    total?: number | null;
     prevDisabled?: boolean;
     nextDisabled?: boolean;
     onPrevious: () => void;
@@ -16,7 +17,7 @@
   let {
     rangeStart,
     rangeEnd,
-    total,
+    total = null,
     prevDisabled = false,
     nextDisabled = false,
     onPrevious,
@@ -36,7 +37,8 @@
     <ChevronLeft size={16} aria-hidden="true" />
   </button>
   <span class="entity-pagination__label">
-    {rangeStart}–{rangeEnd} of {total}
+    {rangeStart}–{rangeEnd}{#if total != null}
+      of {total}{/if}
   </span>
   <button
     type="button"

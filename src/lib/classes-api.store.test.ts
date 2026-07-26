@@ -9,20 +9,26 @@ import type { ClassQueryPage } from "@lib/classes-api";
 const { getJSONFetch } = vi.hoisted(() => ({ getJSONFetch: vi.fn() }));
 vi.mock("@lib/local/data/utils", () => ({ getJSONFetch }));
 
-import { fetchClassPage } from "@lib/classes-api";
+import { fetchAllClasses, fetchClassPage } from "@lib/classes-api";
 
-const calledUrl = () => new URL(getJSONFetch.mock.calls[0][0], "http://x");
+const calledUrl = (call = 0) =>
+  new URL(getJSONFetch.mock.calls[call][0], "http://x");
 
 describe("fetchClassPage", () => {
   beforeEach(() => {
     getJSONFetch.mockReset();
-    getJSONFetch.mockResolvedValue({ rows: [], total: 0 });
+    getJSONFetch.mockResolvedValue({
+      rows: [],
+      nextCursor: null,
+      hasMore: false,
+    });
   });
 
   it("hits /api/classes and encodes every provided option", async () => {
     const result: ClassQueryPage = {
       rows: [{ courseCode: "CMSC 128" }],
-      total: 1,
+      nextCursor: "b3BhcXVl",
+      hasMore: true,
     };
     getJSONFetch.mockResolvedValueOnce(result);
 
@@ -30,7 +36,7 @@ describe("fetchClassPage", () => {
       termId: 1252,
       courseCodePrefix: "CMSC",
       limit: 10,
-      offset: 20,
+      cursor: "cHJldi1wYWdl",
     });
 
     const url = calledUrl();
@@ -38,15 +44,16 @@ describe("fetchClassPage", () => {
     expect(url.searchParams.get("term_id")).toBe("1252");
     expect(url.searchParams.get("course_code")).toBe("CMSC");
     expect(url.searchParams.get("limit")).toBe("10");
-    expect(url.searchParams.get("offset")).toBe("20");
+    expect(url.searchParams.get("cursor")).toBe("cHJldi1wYWdl");
     expect(page).toEqual(result);
   });
 
-  it("defaults limit to 25 and offset to 0", async () => {
+  it("defaults limit to 25 and sends no cursor or offset", async () => {
     await fetchClassPage({ termId: 1252 });
     const p = calledUrl().searchParams;
     expect(p.get("limit")).toBe("25");
-    expect(p.get("offset")).toBe("0");
+    expect(p.has("cursor")).toBe(false);
+    expect(p.has("offset")).toBe(false);
   });
 
   it("omits term_id when null and a blank course code", async () => {
@@ -66,5 +73,47 @@ describe("fetchClassPage", () => {
     await expect(fetchClassPage({ termId: 1252 })).rejects.toThrow(
       "network down",
     );
+  });
+});
+
+describe("fetchAllClasses", () => {
+  beforeEach(() => {
+    getJSONFetch.mockReset();
+  });
+
+  it("walks the cursor chain until hasMore is false", async () => {
+    getJSONFetch
+      .mockResolvedValueOnce({
+        rows: [{ courseCode: "HK 12", section: "A" }],
+        nextCursor: "cGFnZTI",
+        hasMore: true,
+      })
+      .mockResolvedValueOnce({
+        rows: [{ courseCode: "HK 12", section: "B" }],
+        nextCursor: null,
+        hasMore: false,
+      });
+
+    const all = await fetchAllClasses({
+      termId: 1252,
+      courseCodePrefix: "HK 12",
+    });
+
+    expect(all.rows.map((r) => r.section)).toEqual(["A", "B"]);
+    expect(all.hasMore).toBe(false);
+    expect(getJSONFetch).toHaveBeenCalledTimes(2);
+    expect(calledUrl(0).searchParams.has("cursor")).toBe(false);
+    expect(calledUrl(1).searchParams.get("cursor")).toBe("cGFnZTI");
+  });
+
+  it("stops on an empty page even if the server claims more", async () => {
+    getJSONFetch.mockResolvedValue({
+      rows: [],
+      nextCursor: "bG9vcA",
+      hasMore: true,
+    });
+    const all = await fetchAllClasses({ termId: 1252 });
+    expect(all.rows).toEqual([]);
+    expect(getJSONFetch).toHaveBeenCalledTimes(1);
   });
 });

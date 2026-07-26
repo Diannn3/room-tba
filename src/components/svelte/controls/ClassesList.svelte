@@ -16,8 +16,12 @@
   const PAGE_SIZE = 25;
 
   let classes = $state<ClassMapValue[]>([]);
-  let total = $state(0);
-  let page = $state(1);
+  // Cursor pagination (#412): pageCursor fetched the current page (null = first
+  // page); prevCursors stacks the cursors behind it so Previous can walk back.
+  let pageCursor = $state<string | null>(null);
+  let prevCursors = $state<(string | null)[]>([]);
+  let nextCursor = $state<string | null>(null);
+  let hasMore = $state(false);
   let loading = $state(false);
   let loadError = $state<string | null>(null);
   let filterText = $state("");
@@ -26,18 +30,25 @@
     termStore.init();
   });
 
-  const pageCount = $derived(Math.max(1, Math.ceil(total / PAGE_SIZE)));
-  const currentPage = $derived(Math.min(page, pageCount));
+  // Every page behind the current one was full (Next only shows on hasMore).
   const rangeStart = $derived(
-    total === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1,
+    classes.length === 0 ? 0 : prevCursors.length * PAGE_SIZE + 1,
   );
-  const rangeEnd = $derived(Math.min(currentPage * PAGE_SIZE, total));
+  const rangeEnd = $derived(prevCursors.length * PAGE_SIZE + classes.length);
   const coursePrefix = $derived(filterText.trim());
+
+  // A new term or filter invalidates keyset positions: back to the first page.
+  $effect(() => {
+    termStore.activeTermId;
+    coursePrefix;
+    prevCursors = [];
+    pageCursor = null;
+  });
 
   $effect(() => {
     const termId = termStore.activeTermId;
     const prefix = coursePrefix;
-    const activePage = currentPage;
+    const cursor = pageCursor;
 
     loading = true;
     loadError = null;
@@ -45,15 +56,17 @@
       termId,
       courseCodePrefix: prefix || undefined,
       limit: PAGE_SIZE,
-      offset: (activePage - 1) * PAGE_SIZE,
+      cursor,
     })
       .then((result) => {
         classes = result.rows;
-        total = result.total;
+        nextCursor = result.nextCursor;
+        hasMore = result.hasMore;
       })
       .catch(() => {
         classes = [];
-        total = 0;
+        nextCursor = null;
+        hasMore = false;
         loadError =
           "Could not load classes. Check your connection and try again.";
       })
@@ -62,13 +75,21 @@
       });
   });
 
-  function goToPage(next: number) {
-    page = Math.min(Math.max(1, next), pageCount);
+  function goNext() {
+    if (!nextCursor) return;
+    prevCursors = [...prevCursors, pageCursor];
+    pageCursor = nextCursor;
+  }
+
+  function goPrevious() {
+    if (prevCursors.length === 0) return;
+    const stack = prevCursors.slice();
+    pageCursor = stack.pop() ?? null;
+    prevCursors = stack;
   }
 
   function onFilterInput(event: Event) {
     filterText = (event.currentTarget as HTMLInputElement).value;
-    page = 1;
   }
 
   function closeList() {
@@ -160,15 +181,14 @@
     {/if}
   </div>
 
-  {#if !loading && !loadError && total > PAGE_SIZE}
+  {#if !loading && !loadError && (hasMore || prevCursors.length > 0)}
     <EntityPagination
       {rangeStart}
       {rangeEnd}
-      {total}
-      prevDisabled={currentPage <= 1}
-      nextDisabled={currentPage >= pageCount}
-      onPrevious={() => goToPage(currentPage - 1)}
-      onNext={() => goToPage(currentPage + 1)}
+      prevDisabled={prevCursors.length === 0}
+      nextDisabled={!nextCursor}
+      onPrevious={goPrevious}
+      onNext={goNext}
     />
   {/if}
 </div>

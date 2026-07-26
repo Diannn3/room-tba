@@ -813,24 +813,22 @@ class ScheduleRouteStore {
     termId: number | null,
   ): Promise<ClassMapValue[]> {
     const pageSize = 100;
-    let offset = 0;
+    let cursor: string | null = null;
     const classes: ClassMapValue[] = [];
 
     while (true) {
-      const params = new URLSearchParams({
-        limit: String(pageSize),
-        offset: String(offset),
-      });
+      const params = new URLSearchParams({ limit: String(pageSize) });
       if (termId != null) params.set("term_id", String(termId));
+      if (cursor) params.set("cursor", cursor);
 
       const page = await getJSONFetch<ClassQueryPage>(
         `/api/classes?${params.toString()}`,
       );
       classes.push(...page.rows);
-      if (classes.length >= page.total || page.rows.length === 0) {
+      if (!page.hasMore || !page.nextCursor || page.rows.length === 0) {
         return classes;
       }
-      offset += page.rows.length;
+      cursor = page.nextCursor;
     }
   }
 

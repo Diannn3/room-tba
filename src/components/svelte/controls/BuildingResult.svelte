@@ -894,17 +894,15 @@
       </div>
     </section>
   {/if}
-  {#key buildingRooms}
-    {#if buildingRooms}
-      <ResultDisplay filteredRooms={buildingRooms} {classCounts} />
-    {:else if building}
-      <EntitySkeleton
-        variant="rooms"
-        heading="Rooms in the building"
-        label="Loading rooms for {building.buildingName}…"
-      />
-    {/if}
-  {/key}
+  {#if buildingRooms}
+    <ResultDisplay filteredRooms={buildingRooms} {classCounts} />
+  {:else if building}
+    <EntitySkeleton
+      variant="rooms"
+      heading="Rooms in the building"
+      label="Loading rooms for {building.buildingName}…"
+    />
+  {/if}
 </div>
 
 <style>

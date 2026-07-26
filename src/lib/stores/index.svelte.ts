@@ -82,6 +82,7 @@ import { buildingTypeFilter } from "./filter-stores.svelte.js";
 
 let _currentRoom = $state<RoomData | null>(null);
 let _currentRoomNotFound = $state(false);
+let roomLoadGeneration = 0;
 export const currentRoom = {
   get value() {
     return _currentRoom;
@@ -93,6 +94,9 @@ export const currentRoom = {
     return _currentRoomNotFound;
   },
   async getRoomByCode(code: string) {
+    // Overlapping lookups: only the newest may write. Otherwise a slow
+    // earlier fetch lands last and stamps notFound from a stale result.
+    const generation = ++roomLoadGeneration;
     _currentRoom = null;
     _currentRoomNotFound = false;
     try {
@@ -102,23 +106,29 @@ export const currentRoom = {
         const remoteRoomReq = await getJSONFetch<{ data: RoomData }>(
           `/api/rooms?code=${codeParam}`,
         );
-        const remoteRoom = remoteRoomReq.data;
-        _currentRoom = remoteRoom;
+        if (generation !== roomLoadGeneration) return;
+        _currentRoom = remoteRoomReq.data;
         return;
       }
+      if (generation !== roomLoadGeneration) return;
       _currentRoom = localRoom;
     } catch (e) {
       console.error(e);
+      if (generation !== roomLoadGeneration) return;
       _currentRoom = null;
     } finally {
-      _currentRoomNotFound = _currentRoom === null;
+      if (generation === roomLoadGeneration) {
+        _currentRoomNotFound = _currentRoom === null;
+      }
     }
   },
   async getRoomFromSearch(room: RoomData) {
+    roomLoadGeneration++;
     _currentRoom = room;
     _currentRoomNotFound = false;
   },
   setRoom(room: RoomData) {
+    roomLoadGeneration++;
     _currentRoom = room;
     _currentRoomNotFound = false;
   },

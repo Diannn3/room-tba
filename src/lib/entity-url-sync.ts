@@ -51,11 +51,17 @@ const HOME_PATH = "/";
 // notes: bare island props, trailing slash, and the SW denylist in
 // astro.config.mjs must cover each path here).
 const SCREEN_PATHS = {
+  today: "/today",
   planner: "/planner",
   finals: "/final-exams",
   calendar: "/calendar",
 } as const;
 export type ScreenId = keyof typeof SCREEN_PATHS;
+
+/** Keeps callers from re-listing the screens; adding one only touches SCREEN_PATHS. */
+export function isScreenId(value: string): value is ScreenId {
+  return Object.hasOwn(SCREEN_PATHS, value);
+}
 
 /**
  * Only schedule-bearing surfaces carry ?term=. Establishments, offices/units,
@@ -177,7 +183,7 @@ export function createEntityUrlSync(context: EntityUrlSyncContext) {
     applyingFromHistory = true;
     try {
       termStore.applyFromUrl();
-      // Back/forward into or out of /planner, /final-exams toggles that screen.
+      // Back/forward into or out of /today, /planner, /final-exams toggles it.
       context.setScreen(
         SCREEN_BY_NORMALIZED_PATH.get(currentPathname()) ?? null,
       );

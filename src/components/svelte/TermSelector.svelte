@@ -1,12 +1,13 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import CalendarDays from "@lucide/svelte/icons/calendar-days";
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
   import GraduationCap from "@lucide/svelte/icons/graduation-cap";
   import { termFullLabel } from "@lib/term-label";
   import { formatTermDateRange } from "@lib/term-calendar";
   import { trapFocus } from "@lib/focus-trap";
   import { portal } from "@lib/portal";
-  import { mapToolsStore, termStore } from "@lib/store.svelte";
+  import { mapToolsStore, sidebarStore, termStore } from "@lib/store.svelte";
   import {
     registerEphemeralOverlayDismisser,
     openEphemeralOverlay,
@@ -109,6 +110,11 @@
     closePanel();
   }
 
+  function openCalendar() {
+    closePanel();
+    sidebarStore.changeOpened("calendar");
+  }
+
   $effect(() => {
     if (!open || !panelEl) return;
     return trapFocus(panelEl, { onEscape: closePanel });
@@ -195,6 +201,14 @@
               {/if}
             </button>
           {/each}
+          <button
+            type="button"
+            class="term-picker-calendar-link"
+            onclick={openCalendar}
+          >
+            <CalendarDays size={14} aria-hidden="true" />
+            View academic calendar
+          </button>
         </div>
       {/if}
     </div>
@@ -251,6 +265,14 @@
               {/if}
             </button>
           {/each}
+          <button
+            type="button"
+            class="term-picker-calendar-link"
+            onclick={openCalendar}
+          >
+            <CalendarDays size={14} aria-hidden="true" />
+            View academic calendar
+          </button>
         </div>
       {/if}
     </div>
@@ -430,5 +452,35 @@
   .term-picker-option--active .term-picker-option__count,
   .term-picker-option--active .term-picker-option__meta {
     color: hsl(5, 53%, 32%);
+  }
+
+  .term-picker-calendar-link {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 0.125rem;
+    padding: 0.5rem 0.625rem;
+    border: none;
+    border-top: 1px solid hsl(0, 0%, 90%);
+    border-radius: 0 0 0.625rem 0.625rem;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: hsl(5, 53%, 32%);
+  }
+
+  .term-picker-calendar-link:hover,
+  .term-picker-calendar-link:focus-visible {
+    background: hsl(5, 53%, 98%);
+  }
+
+  .term-picker-calendar-link:focus-visible {
+    outline: 2px solid hsl(5, 53%, 32%);
+    outline-offset: -2px;
   }
 </style>

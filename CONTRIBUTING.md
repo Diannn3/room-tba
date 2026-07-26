@@ -101,6 +101,21 @@ Open http://localhost:4321. More setup help: [docs/developer-guide.md](docs/deve
 
 **Production:** features merge to `staging` first. Release to production is a separate **`staging` → `main`** PR (maintainers).
 
+### What CI does on your PR
+
+If you forked the repo, GitHub will not give your pull request access to our
+secrets. That is a GitHub security rule, not a judgement about your change.
+
+- **`verify`** (lint, unit tests, component tests, build) runs normally. This is
+  the check to watch.
+- **`migrations`** reports a skip notice, because the schema check needs
+  database credentials your fork cannot see.
+- **The end-to-end suites do not run.** A maintainer runs them from a branch on
+  this repo before merging.
+
+If you have push access here, branch directly on this repo instead of forking
+and the full stack runs.
+
 ### Picking up a campus issue
 
 If someone filed a `data` or `qa` issue without code:

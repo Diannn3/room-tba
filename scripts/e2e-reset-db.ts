@@ -80,6 +80,7 @@ const E2E_MIGRATION_FILES = [
   "0040_pre_drizzle_schema_backfill.sql",
   "0041_add_announcements.sql",
   "0042_add_class_acad_org.sql",
+  "0043_room_position_source.sql",
 ] as const;
 
 /**

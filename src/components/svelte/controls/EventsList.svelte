@@ -1,4 +1,5 @@
 <script lang="ts">
+  import EntitySkeleton from "@ui/EntitySkeleton.svelte";
   import LoadingIndicator from "@ui/LoadingIndicator.svelte";
   import CalendarDays from "@lucide/svelte/icons/calendar-days";
   import MapPin from "@lucide/svelte/icons/map-pin";
@@ -111,11 +112,9 @@
       <span class="events-tab skeleton-tab"></span>
       <span class="events-tab skeleton-tab"></span>
     </div>
-    <div class="events-list skeleton-list" aria-hidden="true">
-      {#each [1, 2, 3] as row (row)}
-        <div class="skeleton-row"></div>
-      {/each}
-    </div>
+    <!-- Header LoadingIndicator already announces the load; empty label keeps
+         the skeleton out of the accessibility tree. -->
+    <EntitySkeleton variant="events" label="" />
   {:else}
     <EntityPanelHeader
       closeAriaLabel="Close campus events list"
@@ -272,17 +271,6 @@
     width: 6rem;
     height: 2rem;
     border-radius: 0.75rem;
-    background: #f4f4f5;
-  }
-
-  .skeleton-list {
-    display: grid;
-    gap: 0.65rem;
-  }
-
-  .skeleton-row {
-    height: 5rem;
-    border-radius: 0.875rem;
     background: #f4f4f5;
   }
 

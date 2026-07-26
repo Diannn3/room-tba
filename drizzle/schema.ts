@@ -13,6 +13,7 @@ import {
   uuid,
   pgEnum,
   jsonb,
+  index,
   uniqueIndex,
   date,
   time,
@@ -241,6 +242,13 @@ export const classesTable = pgTable(
       foreignColumns: [roomsTable.id],
       name: "class_room",
     }),
+    // Keyset pagination for /api/classes (#412); see 0039_classes_keyset_index.sql
+    index("classes_term_course_section_id_idx").on(
+      table.termId,
+      sql`(COALESCE(${table.courseCode}, ''))`,
+      sql`(COALESCE(${table.section}, ''))`,
+      table.id,
+    ),
   ],
 );
 

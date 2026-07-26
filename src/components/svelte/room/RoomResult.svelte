@@ -1,5 +1,5 @@
 <script lang="ts">
-  import LoadingIndicator from "@ui/LoadingIndicator.svelte";
+  import EntitySkeleton from "@ui/EntitySkeleton.svelte";
   import { onMount } from "svelte";
   import {
     adminAuthStore,
@@ -859,9 +859,7 @@
       <TermSelector />
       <p class="entity-schedule__scope">{ROOM_SCHEDULE_SCOPE_NOTE}</p>
       {#if roomClassesStore.loading}
-        <p class="entity-schedule__empty">
-          <LoadingIndicator label="Loading classes…" />
-        </p>
+        <EntitySkeleton variant="classes" label="Loading classes…" />
       {:else if roomClassesStore.classes.length > 0}
         <Classes
           classes={roomClassesStore.classes}
@@ -891,16 +889,16 @@
         {/if}
         <p class="entity-schedule__scope">{FINALS_SCOPE_NOTE}</p>
         {#if finalExamsLoading}
-          <p class="entity-schedule__empty">
-            <LoadingIndicator label="Loading final exams…" />
-          </p>
+          <EntitySkeleton variant="exams" label="Loading final exams…" />
         {:else}
           <FinalExamsList exams={finalExams} />
         {/if}
       </section>
     {/if}
-  {:else}
+  {:else if currentRoom.notFound}
     <p>Room not found.</p>
+  {:else}
+    <EntitySkeleton variant="room-detail" label="Loading room…" />
   {/if}
 </div>
 

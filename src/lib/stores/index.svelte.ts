@@ -81,12 +81,24 @@ export {
 import { buildingTypeFilter } from "./filter-stores.svelte.js";
 
 let _currentRoom = $state<RoomData | null>(null);
+let _currentRoomNotFound = $state(false);
+let roomLoadGeneration = 0;
 export const currentRoom = {
   get value() {
     return _currentRoom;
   },
+  /** True only after a lookup completed without a match. While null and not
+   * notFound, the room is still being fetched (or a fetch is about to start),
+   * so panels should show a loading state rather than "not found". */
+  get notFound() {
+    return _currentRoomNotFound;
+  },
   async getRoomByCode(code: string) {
+    // Overlapping lookups: only the newest may write. Otherwise a slow
+    // earlier fetch lands last and stamps notFound from a stale result.
+    const generation = ++roomLoadGeneration;
     _currentRoom = null;
+    _currentRoomNotFound = false;
     try {
       const localRoom = await getLocalRoomByCode(code);
       if (localRoom === null) {
@@ -94,21 +106,31 @@ export const currentRoom = {
         const remoteRoomReq = await getJSONFetch<{ data: RoomData }>(
           `/api/rooms?code=${codeParam}`,
         );
-        const remoteRoom = remoteRoomReq.data;
-        _currentRoom = remoteRoom;
+        if (generation !== roomLoadGeneration) return;
+        _currentRoom = remoteRoomReq.data;
         return;
       }
+      if (generation !== roomLoadGeneration) return;
       _currentRoom = localRoom;
     } catch (e) {
       console.error(e);
+      if (generation !== roomLoadGeneration) return;
       _currentRoom = null;
+    } finally {
+      if (generation === roomLoadGeneration) {
+        _currentRoomNotFound = _currentRoom === null;
+      }
     }
   },
   async getRoomFromSearch(room: RoomData) {
+    roomLoadGeneration++;
     _currentRoom = room;
+    _currentRoomNotFound = false;
   },
   setRoom(room: RoomData) {
+    roomLoadGeneration++;
     _currentRoom = room;
+    _currentRoomNotFound = false;
   },
 };
 
@@ -791,24 +813,22 @@ class ScheduleRouteStore {
     termId: number | null,
   ): Promise<ClassMapValue[]> {
     const pageSize = 100;
-    let offset = 0;
+    let cursor: string | null = null;
     const classes: ClassMapValue[] = [];
 
     while (true) {
-      const params = new URLSearchParams({
-        limit: String(pageSize),
-        offset: String(offset),
-      });
+      const params = new URLSearchParams({ limit: String(pageSize) });
       if (termId != null) params.set("term_id", String(termId));
+      if (cursor) params.set("cursor", cursor);
 
       const page = await getJSONFetch<ClassQueryPage>(
         `/api/classes?${params.toString()}`,
       );
       classes.push(...page.rows);
-      if (classes.length >= page.total || page.rows.length === 0) {
+      if (!page.hasMore || !page.nextCursor || page.rows.length === 0) {
         return classes;
       }
-      offset += page.rows.length;
+      cursor = page.nextCursor;
     }
   }
 

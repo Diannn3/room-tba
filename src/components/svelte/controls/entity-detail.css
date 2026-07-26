@@ -438,12 +438,6 @@
   text-decoration: underline;
 }
 
-.entity-loading-note {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: #71717a;
-}
-
 .entity-merge-prompt {
   display: flex;
   flex-direction: column;

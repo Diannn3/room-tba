@@ -3,6 +3,10 @@
 -- captured by a migration, so replaying the chain into an empty schema (an E2E
 -- run schema, a fork, a fresh local DB) produced a structure the app rejects.
 -- Every statement is a no-op where the live shape already matches.
+-- Fail fast rather than queue behind a slow query: these ALTERs take
+-- ACCESS EXCLUSIVE on live tables, and every read would stack behind them.
+SET lock_timeout = '3s';
+--> statement-breakpoint
 DO $$
 BEGIN
   CREATE TYPE "building_type" AS ENUM ('admin', 'non-admin');

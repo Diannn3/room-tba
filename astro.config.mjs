@@ -17,6 +17,12 @@ const e2eNodeAdapter = process.env.ASTRO_E2E_NODE === "1";
 export default defineConfig({
   site: campusSite.url,
 
+  // Astro's HTML compressor drops the newline+indent that prettier inserts
+  // after a closing inline tag, welding words together in prose: "activity
+  // type(LEC" instead of "activity type (LEC". The saved bytes are not worth
+  // corrupting the wiki and FAQ copy.
+  compressHTML: false,
+
   integrations: [
     svelte(),
     AstroPWA({

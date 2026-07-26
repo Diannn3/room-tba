@@ -59,14 +59,13 @@ describeIntegration("room class queries", () => {
 });
 
 describeIntegration("queryClasses cursor pagination (#412)", () => {
-  let client: pg.Client;
+  let client: E2eClient;
   let courseCode: string;
   let termId: number;
   const sections = ["A", "B", "C", "D", "E"];
 
   beforeAll(async () => {
-    client = new pg.Client({ connectionString: integrationDatabaseUrl()! });
-    await client.connect();
+    client = await connectE2eClient(integrationDatabaseUrl()!);
     courseCode = `CURTEST${Date.now()}`.slice(0, 16);
 
     const terms = await client.query<{ id: number }>(

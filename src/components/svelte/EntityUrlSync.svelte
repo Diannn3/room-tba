@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { getAppData } from "@lib/context";
-  import { createEntityUrlSync } from "@lib/entity-url-sync";
+  import { createEntityUrlSync, isScreenId } from "@lib/entity-url-sync";
   import { openCampusBrowse } from "@lib/browse-campus";
   import { getTransitStopIndex } from "@lib/transit-urls";
   import {
@@ -88,12 +88,7 @@
       editMode: mapEditStore.enabled,
       termId: termStore.activeTermId,
       defaultTermId: termStore.defaultTermId,
-      screen:
-        sidebarStore.panelOpen === "planner" ||
-        sidebarStore.panelOpen === "finals" ||
-        sidebarStore.panelOpen === "calendar"
-          ? sidebarStore.panelOpen
-          : null,
+      screen: isScreenId(sidebarStore.panelOpen) ? sidebarStore.panelOpen : null,
       transitRouteId: jeepneyStore.selectedRouteId,
       transitStopIndex: jeepneyStore.selectedStopIndex,
       transitRoute: transitStore.getRoute(jeepneyStore.selectedRouteId),

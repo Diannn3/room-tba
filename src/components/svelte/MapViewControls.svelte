@@ -6,8 +6,15 @@
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
   import Box from "@lucide/svelte/icons/box";
   import CalendarDays from "@lucide/svelte/icons/calendar-days";
+  import GraduationCap from "@lucide/svelte/icons/graduation-cap";
   import MapIcon from "@lucide/svelte/icons/map";
-  import { mapStore, mapViewStore, terrainStore } from "@lib/store.svelte";
+  import {
+    mapStore,
+    mapViewStore,
+    plannerStore,
+    terrainStore,
+  } from "@lib/store.svelte";
+  import { onMount } from "svelte";
   import { THREE_D_PITCH, isMap2DPitch } from "@constants/map-dimension";
   import {
     enterFlatMapDimension,
@@ -36,12 +43,26 @@
   let bearing = $state(0);
   let pitch = $state(0);
 
+  // Hydrate saved plans so the "My classes" toggle knows whether the user has
+  // any planned classes (init is idempotent, localStorage only).
+  onMount(() => plannerStore.init());
+
   const northRotation = $derived(-NORTH_ICON_OFFSET - bearing);
   const is2D = $derived(isMap2DPitch(pitch));
   const pinModeTitle = $derived(
     mapViewStore.eventsOnly
       ? "Showing event pins only. Switch to all pins."
       : "Showing all pins. Switch to event pins only.",
+  );
+  const hasPlannerClasses = $derived(
+    (plannerStore.activePlan?.sections.length ?? 0) > 0,
+  );
+  const classHighlightTitle = $derived(
+    !hasPlannerClasses
+      ? "Add classes in the Planner to highlight their buildings."
+      : mapViewStore.highlightMyBuildings
+        ? "Highlighting your class buildings. Switch back to normal pins."
+        : "Highlight the buildings your planned classes are in.",
   );
   const cameraModeTitle = $derived(
     is2D
@@ -142,6 +163,29 @@
         </span>
       </span>
     </button>
+
+    <div class="divider"></div>
+
+    <button
+      class="control mode-toggle class-highlight-toggle"
+      class:active={mapViewStore.highlightMyBuildings}
+      onclick={mapViewStore.toggleHighlightMyBuildings}
+      disabled={!hasPlannerClasses}
+      title={classHighlightTitle}
+      aria-label={classHighlightTitle}
+      aria-pressed={mapViewStore.highlightMyBuildings}
+    >
+      <GraduationCap size={18} aria-hidden="true" />
+      <span class="control-copy">
+        <span class="control-kicker">My classes</span>
+        <span class="control-value">
+          {mapViewStore.highlightMyBuildings ? "Highlighted" : "Off"}
+        </span>
+      </span>
+    </button>
+    {#if !hasPlannerClasses}
+      <p class="control-hint">Add classes in the Planner first.</p>
+    {/if}
 
     <div class="divider"></div>
 
@@ -403,6 +447,29 @@
   .pin-toggle:hover {
     border-color: hsl(5, 34%, 68%);
     background-color: hsl(0, 78%, 97%);
+  }
+
+  .class-highlight-toggle {
+    border-color: hsl(5, 34%, 78%);
+    background-color: hsl(0, 100%, 99%);
+  }
+
+  .class-highlight-toggle:hover:not(:disabled) {
+    border-color: hsl(5, 34%, 68%);
+    background-color: hsl(0, 78%, 97%);
+  }
+
+  .class-highlight-toggle:disabled {
+    border-color: hsl(0, 0%, 88%);
+    background-color: hsl(0, 0%, 98%);
+  }
+
+  .control-hint {
+    margin: 0;
+    padding: 0 0.25rem;
+    color: hsl(0, 0%, 45%);
+    font-size: 0.625rem;
+    line-height: 1.3;
   }
 
   .camera-toggle {

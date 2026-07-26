@@ -6,7 +6,7 @@ import {
   afterAll,
   beforeEach,
 } from "bun:test";
-import pg from "pg";
+import { connectE2eClient, type E2eClient } from "../../scripts/e2e-schema";
 import { integrationDatabaseUrl, skipWithoutE2eDb } from "../helpers/env";
 
 const describeIntegration = skipWithoutE2eDb() ? describe.skip : describe;
@@ -14,7 +14,7 @@ const describeIntegration = skipWithoutE2eDb() ? describe.skip : describe;
 const PREFIX = "e2e-digest";
 
 describeIntegration("digest service integration (#272 follow-up)", () => {
-  let client: pg.Client;
+  let client: E2eClient;
 
   const cleanup = async () => {
     await client.query("DELETE FROM admin_users WHERE username LIKE $1", [
@@ -25,8 +25,7 @@ describeIntegration("digest service integration (#272 follow-up)", () => {
   beforeAll(async () => {
     const url = integrationDatabaseUrl();
     if (!url) return;
-    client = new pg.Client({ connectionString: url });
-    await client.connect();
+    client = await connectE2eClient(url);
   });
 
   afterAll(async () => {

@@ -31,6 +31,7 @@
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import ChevronRight from "@lucide/svelte/icons/chevron-right";
   import CloudDownload from "@lucide/svelte/icons/cloud-download";
+  import Coffee from "@lucide/svelte/icons/coffee";
   import Keyboard from "@lucide/svelte/icons/keyboard";
   import Cookie from "@lucide/svelte/icons/cookie";
   import { MediaQuery } from "svelte/reactivity";
@@ -453,6 +454,9 @@
               modalStore.openModal("landing", { landingTab: "campus" })}
           >
             <Users size={20} />
+          </NavLink>
+          <NavLink href="/donate" expanded={labeled} tooltip="Donate">
+            <Coffee size={20} />
           </NavLink>
           {#if !adminAuthStore.isLoggedIn}
             <NavLink

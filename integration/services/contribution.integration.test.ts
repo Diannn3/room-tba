@@ -6,7 +6,7 @@ import {
   expect,
   test,
 } from "bun:test";
-import pg from "pg";
+import { connectE2eClient, type E2eClient } from "../../scripts/e2e-schema";
 import {
   integrationDatabaseUrl,
   PREVIEW_BASE,
@@ -20,7 +20,7 @@ const describeIntegration = skipWithoutE2eDb() ? describe.skip : describe;
 const PREFIX = "e2e-contribution";
 
 describeIntegration("contribution ledger", () => {
-  let client: pg.Client;
+  let client: E2eClient;
   let visibleUserId: number;
 
   async function cleanup() {
@@ -39,8 +39,7 @@ describeIntegration("contribution ledger", () => {
   beforeAll(async () => {
     const url = integrationDatabaseUrl();
     if (!url) return;
-    client = new pg.Client({ connectionString: url });
-    await client.connect();
+    client = await connectE2eClient(url);
   });
 
   beforeEach(async () => {

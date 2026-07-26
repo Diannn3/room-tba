@@ -1,18 +1,17 @@
 import { describe, expect, test, beforeAll, afterAll } from "bun:test";
-import pg from "pg";
+import { connectE2eClient, type E2eClient } from "../../scripts/e2e-schema";
 import { integrationDatabaseUrl, skipWithoutE2eDb } from "../helpers/env";
 
 const describeIntegration = skipWithoutE2eDb() ? describe.skip : describe;
 
 describeIntegration("editor history revert integration", () => {
   let buildingId: number;
-  let client: pg.Client;
+  let client: E2eClient;
 
   beforeAll(async () => {
     const url = integrationDatabaseUrl();
     if (!url) return;
-    client = new pg.Client({ connectionString: url });
-    await client.connect();
+    client = await connectE2eClient(url);
     const { rows } = await client.query<{ id: number }>(
       `SELECT id FROM buildings WHERE building_name = 'E2E Test Hall' LIMIT 1`,
     );

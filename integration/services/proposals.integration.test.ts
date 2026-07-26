@@ -14,6 +14,7 @@ import {
   skipWithoutE2eDb,
   integrationDatabaseUrl,
 } from "../helpers/env";
+import { connectE2eClient } from "../../scripts/e2e-schema";
 
 const describeIntegration = skipWithoutE2eDb() ? describe.skip : describe;
 
@@ -48,11 +49,7 @@ describeIntegration("admin PATCH HTTP", () => {
     const cookie = await loginViaApi(E2E_FIXTURES.users.admin);
     expect(cookie).toBeTruthy();
 
-    const pg = await import("pg");
-    const client = new pg.default.Client({
-      connectionString: integrationDatabaseUrl()!,
-    });
-    await client.connect();
+    const client = await connectE2eClient(integrationDatabaseUrl()!);
     const { rows } = await client.query<{ version: number }>(
       "SELECT version FROM buildings WHERE id = 1",
     );
@@ -71,11 +68,7 @@ describeIntegration("admin PATCH HTTP", () => {
 describeIntegration("room service", () => {
   test("updateRoom bumps version", async () => {
     if (!integrationDatabaseUrl()) return;
-    const pg = await import("pg");
-    const client = new pg.default.Client({
-      connectionString: integrationDatabaseUrl()!,
-    });
-    await client.connect();
+    const client = await connectE2eClient(integrationDatabaseUrl()!);
     const { rows } = await client.query<{ version: number }>(
       "SELECT version FROM rooms WHERE id = 1",
     );
@@ -96,11 +89,7 @@ describeIntegration("room service", () => {
 describeIntegration("proposals service", () => {
   test("submit room proposal", async () => {
     if (!integrationDatabaseUrl()) return;
-    const pg = await import("pg");
-    const client = new pg.default.Client({
-      connectionString: integrationDatabaseUrl()!,
-    });
-    await client.connect();
+    const client = await connectE2eClient(integrationDatabaseUrl()!);
     const { rows } = await client.query<{ version: number }>(
       "SELECT version FROM rooms WHERE id = 1",
     );
@@ -122,11 +111,7 @@ describeIntegration("proposals service", () => {
 
   test("anonymous proposal cannot use a registered contributor's name", async () => {
     if (!integrationDatabaseUrl()) return;
-    const pg = await import("pg");
-    const client = new pg.default.Client({
-      connectionString: integrationDatabaseUrl()!,
-    });
-    await client.connect();
+    const client = await connectE2eClient(integrationDatabaseUrl()!);
     const { rows } = await client.query<{
       version: number;
       username: string;
@@ -159,11 +144,7 @@ describeIntegration("proposals service", () => {
     if (!integrationDatabaseUrl()) return;
     const marker = `QA-255 revise ${Date.now()}`;
     const revisedDirections = `${marker} revised`;
-    const pg = await import("pg");
-    const client = new pg.default.Client({
-      connectionString: integrationDatabaseUrl()!,
-    });
-    await client.connect();
+    const client = await connectE2eClient(integrationDatabaseUrl()!);
     const { rows } = await client.query<{
       version: number;
       id: number;
@@ -208,10 +189,7 @@ describeIntegration("proposals service", () => {
       directions: revisedDirections,
     });
 
-    const verifyClient = new pg.default.Client({
-      connectionString: integrationDatabaseUrl()!,
-    });
-    await verifyClient.connect();
+    const verifyClient = await connectE2eClient(integrationDatabaseUrl()!);
     const count = await verifyClient.query<{ count: string }>(
       "SELECT count(*) FROM edit_proposals WHERE submitter_user_id = $1 AND proposed_patch->>'directions' = $2",
       [contributor.id, revisedDirections],
@@ -229,11 +207,7 @@ describeIntegration("proposals service", () => {
     expect(contributorCookie).toBeTruthy();
     expect(otherCookie).toBeTruthy();
 
-    const pg = await import("pg");
-    const client = new pg.default.Client({
-      connectionString: integrationDatabaseUrl()!,
-    });
-    await client.connect();
+    const client = await connectE2eClient(integrationDatabaseUrl()!);
     const { rows } = await client.query<{ version: number }>(
       "SELECT version FROM rooms WHERE id = 1",
     );
@@ -274,11 +248,7 @@ describeIntegration("proposals service", () => {
   test("stale proposal approval returns 409 and rolls back its review claim", async () => {
     if (!integrationDatabaseUrl()) return;
     await requirePreview(PREVIEW_BASE);
-    const pg = await import("pg");
-    const client = new pg.default.Client({
-      connectionString: integrationDatabaseUrl()!,
-    });
-    await client.connect();
+    const client = await connectE2eClient(integrationDatabaseUrl()!);
     const { rows } = await client.query<{ version: number }>(
       "SELECT version FROM rooms WHERE id = 1",
     );
@@ -308,10 +278,7 @@ describeIntegration("proposals service", () => {
     expect(cookie).toBeTruthy();
     expect((await approveProposalHttp(proposal.id, cookie!)).status).toBe(409);
 
-    const verifyClient = new pg.default.Client({
-      connectionString: integrationDatabaseUrl()!,
-    });
-    await verifyClient.connect();
+    const verifyClient = await connectE2eClient(integrationDatabaseUrl()!);
     const proposalRow = await verifyClient.query<{
       status: string;
       reviewed_by: string | null;
@@ -332,11 +299,7 @@ describeIntegration("proposals service", () => {
     if (!integrationDatabaseUrl()) return;
     await requirePreview(PREVIEW_BASE);
 
-    const pg = await import("pg");
-    const client = new pg.default.Client({
-      connectionString: integrationDatabaseUrl()!,
-    });
-    await client.connect();
+    const client = await connectE2eClient(integrationDatabaseUrl()!);
     const { rows } = await client.query<{ version: number }>(
       "SELECT version FROM rooms WHERE id = 1",
     );
@@ -366,11 +329,7 @@ describeIntegration("proposals service", () => {
 
   test("approval appends one ledger row for a signed-in contributor", async () => {
     if (!integrationDatabaseUrl()) return;
-    const pg = await import("pg");
-    const client = new pg.default.Client({
-      connectionString: integrationDatabaseUrl()!,
-    });
-    await client.connect();
+    const client = await connectE2eClient(integrationDatabaseUrl()!);
     const { rows } = await client.query<{
       version: number;
       contributor_id: number;
@@ -418,10 +377,7 @@ describeIntegration("proposals service", () => {
       role: "admin",
     });
 
-    const verifyClient = new pg.default.Client({
-      connectionString: integrationDatabaseUrl()!,
-    });
-    await verifyClient.connect();
+    const verifyClient = await connectE2eClient(integrationDatabaseUrl()!);
     const ledger = await verifyClient.query<{
       user_id: number;
       proposal_id: number;

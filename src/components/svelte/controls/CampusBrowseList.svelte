@@ -1,4 +1,5 @@
 <script lang="ts">
+  import EntitySkeleton from "@ui/EntitySkeleton.svelte";
   import LoadingIndicator from "@ui/LoadingIndicator.svelte";
   import ChevronRight from "@lucide/svelte/icons/chevron-right";
   import EntityEmptyState from "./EntityEmptyState.svelte";
@@ -436,6 +437,10 @@
           </li>
         {/each}
       </ul>
+    {:else if !loaded && activeTab !== "jeepney"}
+      <!-- Header LoadingIndicator already announces the load; empty label keeps
+           the skeleton out of the accessibility tree. -->
+      <EntitySkeleton variant="directory" label="" />
     {:else if loaded}
       <EntityEmptyState
         title={emptyState.title}

@@ -15,6 +15,7 @@
   import type { BuildingData, RoomData } from "@lib/types";
   import ResultDisplay from "./ResultDisplay.svelte";
   import EntityShareCopyLink from "./EntityShareCopyLink.svelte";
+  import EntityBackToList from "./EntityBackToList.svelte";
   import EntityGoogleMapsLink from "./EntityGoogleMapsLink.svelte";
   import EntityStreetAddress from "./EntityStreetAddress.svelte";
   import EntityDirectionsChip from "./EntityDirectionsChip.svelte";
@@ -595,6 +596,7 @@
 <div class="entity-detail building-query-wrapper">
   {#if building}
     <header class="entity-header">
+      <EntityBackToList tab="buildings" label="Back to buildings" />
       <div class="entity-header__title-row">
         <h2 class="entity-header__title">{building.buildingName}</h2>
         <span class="entity-header__badge">{buildingTypeLabel}</span>
@@ -744,7 +746,8 @@
                     id="building-directions-editor"
                     bind:value={directionsDraft}
                     disabled={savingField !== null}
-                    rows="3"></textarea>
+                    rows="3"
+                  ></textarea>
                 {/snippet}
               </EntityEditorField>
 

@@ -1,18 +1,17 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import pg from "pg";
+import { connectE2eClient, type E2eClient } from "../../scripts/e2e-schema";
 import { integrationDatabaseUrl, skipWithoutE2eDb } from "../helpers/env";
 
 const describeIntegration = skipWithoutE2eDb() ? describe.skip : describe;
 
 describeIntegration("room class queries", () => {
-  let client: pg.Client;
+  let client: E2eClient;
   let courseCode: string;
   let roomIds: number[] = [];
   let termId: number;
 
   beforeAll(async () => {
-    client = new pg.Client({ connectionString: integrationDatabaseUrl()! });
-    await client.connect();
+    client = await connectE2eClient(integrationDatabaseUrl()!);
     courseCode = `ROOMTEST${Date.now()}`.slice(0, 16);
 
     const terms = await client.query<{ id: number }>(

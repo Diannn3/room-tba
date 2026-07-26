@@ -6,7 +6,7 @@ import {
   afterAll,
   beforeEach,
 } from "bun:test";
-import pg from "pg";
+import { connectE2eClient, type E2eClient } from "../../scripts/e2e-schema";
 import bcrypt from "bcrypt";
 import { integrationDatabaseUrl, skipWithoutE2eDb } from "../helpers/env";
 
@@ -18,7 +18,7 @@ const PASSWORD = "e2e-test-password-12345";
 describeIntegration(
   "account management service integration (#456/#272 follow-up)",
   () => {
-    let client: pg.Client;
+    let client: E2eClient;
     let passwordUserId: number;
     let oauthUserId: number;
 
@@ -43,8 +43,7 @@ describeIntegration(
     beforeAll(async () => {
       const url = integrationDatabaseUrl();
       if (!url) return;
-      client = new pg.Client({ connectionString: url });
-      await client.connect();
+      client = await connectE2eClient(url);
     });
 
     afterAll(async () => {

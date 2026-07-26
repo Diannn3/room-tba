@@ -1,5 +1,5 @@
 import { describe, expect, test, beforeAll, afterAll } from "bun:test";
-import pg from "pg";
+import { connectE2eClient, type E2eClient } from "../../scripts/e2e-schema";
 import { integrationDatabaseUrl, skipWithoutE2eDb } from "../helpers/env";
 
 const describeIntegration = skipWithoutE2eDb() ? describe.skip : describe;
@@ -10,7 +10,7 @@ const EMAIL_NEW = "e2e-google-new@example.com";
 const EMAIL_LINK = "e2e-google-link@example.com";
 
 describeIntegration("linkOrCreateContributorFromSupabase (#456)", () => {
-  let client: pg.Client;
+  let client: E2eClient;
 
   const cleanup = async () => {
     await client.query(
@@ -22,8 +22,7 @@ describeIntegration("linkOrCreateContributorFromSupabase (#456)", () => {
   beforeAll(async () => {
     const url = integrationDatabaseUrl();
     if (!url) return;
-    client = new pg.Client({ connectionString: url });
-    await client.connect();
+    client = await connectE2eClient(url);
     await cleanup();
   });
 

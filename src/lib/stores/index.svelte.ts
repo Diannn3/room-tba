@@ -145,9 +145,12 @@ import {
   TermStore,
   RoomClassesStore,
   ClassVenuesStore,
+  PlannerBuildingsStore,
 } from "./data-stores.svelte";
 import { PlannerStore } from "./planner-store.svelte";
 import { TransitStore } from "./transit-store.svelte";
+
+export { plannerRoomCodes } from "./data-stores.svelte";
 
 class LocationStore {
   coords: [number, number] | null = $state(null);
@@ -928,6 +931,7 @@ export const queryStore = new QueryStore();
 export const termStore = new TermStore();
 export const roomClassesStore = new RoomClassesStore();
 export const classVenuesStore = new ClassVenuesStore();
+export const plannerBuildingsStore = new PlannerBuildingsStore();
 export const plannerStore = new PlannerStore(() => termStore.activeTermId);
 export const scheduleRouteStore = new ScheduleRouteStore();
 export const offlineStore = new OfflineStore();

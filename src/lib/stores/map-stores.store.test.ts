@@ -84,6 +84,23 @@ describe("MapViewStore", () => {
     expect(store.showOrgs).toBe(true);
     expect(store.showPlaces).toBe(true);
   });
+
+  test("highlightMyBuildings toggles and leaves events-only mode", () => {
+    const store = new MapViewStore();
+    store.toggleEventsOnly();
+    store.toggleHighlightMyBuildings();
+    expect(store.highlightMyBuildings).toBe(true);
+    expect(store.eventsOnly).toBe(false);
+    store.toggleHighlightMyBuildings();
+    expect(store.highlightMyBuildings).toBe(false);
+  });
+
+  test("showAll clears the class-building highlight", () => {
+    const store = new MapViewStore();
+    store.toggleHighlightMyBuildings();
+    store.showAll();
+    expect(store.highlightMyBuildings).toBe(false);
+  });
 });
 
 describe("Building3DStore", () => {

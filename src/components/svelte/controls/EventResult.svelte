@@ -1,5 +1,5 @@
 <script lang="ts">
-  import LoadingIndicator from "@ui/LoadingIndicator.svelte";
+  import EntitySkeleton from "@ui/EntitySkeleton.svelte";
   import ExternalLink from "@lucide/svelte/icons/external-link";
   import MapPin from "@lucide/svelte/icons/map-pin";
   import Route from "@lucide/svelte/icons/route";
@@ -1023,7 +1023,7 @@
       </section>
     {/if}
   {:else}
-    <p><LoadingIndicator label="Loading event…" /></p>
+    <EntitySkeleton variant="detail" label="Loading event…" />
   {/if}
 </div>
 

@@ -86,7 +86,10 @@ jobs:
       - name: Build
         if: github.actor != 'dependabot[bot]'
         env:
-          DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
+          # Fork PRs get no secrets, and the build only needs this variable to
+          # exist for env-schema validation — nothing queries at build time.
+          # Without the fallback every outside contribution fails here (#790).
+          DATABASE_URL: ${{ secrets.E2E_DATABASE_URL || 'postgresql://placeholder:placeholder@127.0.0.1:5432/placeholder' }}
           DD_GIT_COMMIT_SHA: ${{ github.sha }}
           DD_GIT_REPOSITORY_URL: https://github.com/${{ github.repository }}
           DD_GIT_BRANCH: ${{ github.ref_name }}
@@ -111,7 +114,15 @@ jobs:
       - name: Install dependencies
         run: mkdir -p node_modules && bun install --frozen-lockfile
 
+      # A fork PR has no database credentials, so this check cannot run. Say so
+      # plainly and pass, rather than failing on infrastructure the contributor
+      # has no way to fix (#790). A maintainer runs it on the mirrored branch.
       - name: Schema tables present
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         env:
           DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
         run: bun run check:migrations
+
+      - name: Schema check skipped (fork PR)
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+        run: echo "::notice::Skipped — fork PRs cannot access database secrets. A maintainer will run this before merge."

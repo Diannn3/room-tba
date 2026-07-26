@@ -6,14 +6,14 @@ import {
   expect,
   test,
 } from "bun:test";
-import pg from "pg";
+import { connectE2eClient, type E2eClient } from "../../scripts/e2e-schema";
 import { integrationDatabaseUrl, skipWithoutE2eDb } from "../helpers/env";
 
 const describeIntegration = skipWithoutE2eDb() ? describe.skip : describe;
 const PREFIX = "e2e-editor-credits";
 
 describeIntegration("editor credits service (#274)", () => {
-  let client: pg.Client;
+  let client: E2eClient;
 
   async function cleanup() {
     await client.query(
@@ -31,8 +31,7 @@ describeIntegration("editor credits service (#274)", () => {
   beforeAll(async () => {
     const url = integrationDatabaseUrl();
     if (!url) return;
-    client = new pg.Client({ connectionString: url });
-    await client.connect();
+    client = await connectE2eClient(url);
   });
 
   beforeEach(async () => {

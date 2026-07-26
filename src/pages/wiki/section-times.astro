@@ -2,6 +2,7 @@
 export const prerender = true;
 
 import WikiLayout from "@layouts/WikiLayout.astro";
+import WikiProvenance from "../../components/wiki/WikiProvenance.astro";
 import { breadcrumbSchema, jsonLd, webpageSchema } from "@lib/site";
 
 const title = "What times do UPLB section names correspond to? | Room TBA Wiki";
@@ -456,6 +457,7 @@ const structuredData = jsonLd(
         (87.5%). Term-trend pass: July 16, 2026 · AMIS caches 1231→1261 + prod
         row counts.
       </p>
+      <WikiProvenance sourcePath="src/pages/wiki/section-times.astro" />
     </header>
 
     <nav class="toc" aria-label="On this page">

@@ -35,13 +35,18 @@ describeIntegration("HTTP redirects", () => {
     expect(Array.isArray(body)).toBe(true);
   });
 
-  test("GET /api/classes caps inflated limits", async () => {
+  test("GET /api/classes caps inflated limits and returns the cursor shape", async () => {
     const res = await fetch(`${PREVIEW_BASE}/api/classes?limit=1000000`);
     expect(res.status).toBe(200);
-    const body = (await res.json()) as { rows: unknown[]; total: number };
+    const body = (await res.json()) as {
+      rows: unknown[];
+      nextCursor: string | null;
+      hasMore: boolean;
+    };
     expect(Array.isArray(body.rows)).toBe(true);
     expect(body.rows.length).toBeLessThanOrEqual(100);
-    expect(typeof body.total).toBe("number");
+    expect(typeof body.hasMore).toBe("boolean");
+    expect("nextCursor" in body).toBe(true);
   });
 
   test("GET /api/classes rejects invalid pagination params", async () => {
@@ -49,6 +54,22 @@ describeIntegration("HTTP redirects", () => {
     expect(res.status).toBe(400);
     const body = (await res.json()) as { error: string };
     expect(body.error).toContain("limit");
+  });
+
+  test("GET /api/classes rejects the removed offset param", async () => {
+    const res = await fetch(`${PREVIEW_BASE}/api/classes?offset=25`);
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toContain("cursor");
+  });
+
+  test("GET /api/classes rejects a garbage cursor", async () => {
+    const res = await fetch(
+      `${PREVIEW_BASE}/api/classes?cursor=${encodeURIComponent("!!nope!!")}`,
+    );
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { error: string };
+    expect(body.error).toContain("cursor");
   });
 
   test("POST /api/sponsor-event accepts a valid beacon", async () => {

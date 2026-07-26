@@ -1,5 +1,5 @@
 <script lang="ts">
-  import LoadingIndicator from "@ui/LoadingIndicator.svelte";
+  import EntitySkeleton from "@ui/EntitySkeleton.svelte";
   import {
     adminAuthStore,
     mapEditStore,
@@ -15,6 +15,7 @@
   import type { BuildingData, RoomData } from "@lib/types";
   import ResultDisplay from "./ResultDisplay.svelte";
   import EntityShareCopyLink from "./EntityShareCopyLink.svelte";
+  import EntityBackToList from "./EntityBackToList.svelte";
   import EntityGoogleMapsLink from "./EntityGoogleMapsLink.svelte";
   import EntityStreetAddress from "./EntityStreetAddress.svelte";
   import EntityDirectionsChip from "./EntityDirectionsChip.svelte";
@@ -160,12 +161,18 @@
   // would only fire once and leave a stale list. Key the load on building id
   // and discard in-flight fetches from a previous selection (#340).
   let roomLoadGeneration = 0;
+  let lastRoomLoadId: number | null = null;
 
   $effect(() => {
     const id = building?.id;
     if (id == null) {
       buildingRooms = null;
+      lastRoomLoadId = null;
       return;
+    }
+    if (id !== lastRoomLoadId) {
+      buildingRooms = null;
+      lastRoomLoadId = id;
     }
     const gen = ++roomLoadGeneration;
     void (async () => {
@@ -197,13 +204,23 @@
   // room list preview doesn't fire N+1 /api/classes calls (#342). Re-fetches
   // when the building or the active term changes; null while loading/offline.
   let classCountGeneration = 0;
+  let lastClassCountKey: string | null = null;
 
   $effect(() => {
     const id = building?.id;
     const termId = termStore.activeTermId;
     if (id == null) {
       classCounts = null;
+      lastClassCountKey = null;
       return;
+    }
+    // Stale counts from the previous building (or term) would drive the
+    // hostsClasses badge and per-room chips until the new fetch lands —
+    // reset so they fall back to their no-data states in the meantime.
+    const key = `${id}:${termId ?? ""}`;
+    if (key !== lastClassCountKey) {
+      classCounts = null;
+      lastClassCountKey = key;
     }
     const gen = ++classCountGeneration;
     void (async () => {
@@ -579,6 +596,7 @@
 <div class="entity-detail building-query-wrapper">
   {#if building}
     <header class="entity-header">
+      <EntityBackToList tab="buildings" label="Back to buildings" />
       <div class="entity-header__title-row">
         <h2 class="entity-header__title">{building.buildingName}</h2>
         <span class="entity-header__badge">{buildingTypeLabel}</span>
@@ -630,10 +648,16 @@
           {canPublish}
           showSubmitterName={!canPublish && !adminAuthStore.isLoggedIn}
           submitterNameId="building-submitter-name"
-          historyEntity={building ? { entityType: "building", entityId: building.id, version: building.version } : null}
+          historyEntity={building
+            ? {
+                entityType: "building",
+                entityId: building.id,
+                version: building.version,
+              }
+            : null}
           bind:submitterName={submitterNameDraft}
           {proposalStatus}
-          activeProposalId={activeProposalId}
+          {activeProposalId}
           onWithdrawn={() => {
             activeProposalId = null;
             proposalStatus = null;
@@ -722,7 +746,8 @@
                     id="building-directions-editor"
                     bind:value={directionsDraft}
                     disabled={savingField !== null}
-                    rows="3"></textarea>
+                    rows="3"
+                  ></textarea>
                 {/snippet}
               </EntityEditorField>
 
@@ -853,7 +878,7 @@
       {/if}
     {/if}
   {:else}
-    <p class="entity-loading-note"><LoadingIndicator label="Loading building…" /></p>
+    <EntitySkeleton variant="detail" label="Loading building…" />
   {/if}
 
   {#if buildingOrgs.length > 0}
@@ -872,11 +897,14 @@
       </div>
     </section>
   {/if}
-
   {#if buildingRooms}
     <ResultDisplay filteredRooms={buildingRooms} {classCounts} />
   {:else if building}
-    <LoadingIndicator block label="Loading rooms for {building.buildingName}…" />
+    <EntitySkeleton
+      variant="rooms"
+      heading="Rooms in the building"
+      label="Loading rooms for {building.buildingName}…"
+    />
   {/if}
 </div>
 

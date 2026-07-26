@@ -1,5 +1,5 @@
 <script lang="ts">
-  import LoadingIndicator from "@ui/LoadingIndicator.svelte";
+  import EntitySkeleton from "@ui/EntitySkeleton.svelte";
   import {
     adminAuthStore,
     queryStore,
@@ -27,6 +27,7 @@
   } from "@lib/local/data/utils";
   import ResultDisplay from "./ResultDisplay.svelte";
   import EntityShareCopyLink from "./EntityShareCopyLink.svelte";
+  import EntityBackToList from "./EntityBackToList.svelte";
   import EntityExternalLink from "./EntityExternalLink.svelte";
   import EntityLastUpdated from "../EntityLastUpdated.svelte";
   import { getDivisionShareUrl } from "@lib/share-links";
@@ -203,7 +204,8 @@
     if (!current) return true;
     return (
       nameDraft.trim() === current.divisionName &&
-      collegeDraft === (current.collegeId === null ? "" : String(current.collegeId))
+      collegeDraft ===
+        (current.collegeId === null ? "" : String(current.collegeId))
     );
   });
 
@@ -222,7 +224,10 @@
       patch.divisionName = trimmedName;
     }
 
-    if (collegeDraft !== (current.collegeId === null ? "" : String(current.collegeId))) {
+    if (
+      collegeDraft !==
+      (current.collegeId === null ? "" : String(current.collegeId))
+    ) {
       patch.collegeId = collegeDraft === "" ? null : Number(collegeDraft);
     }
 
@@ -359,6 +364,7 @@
 <div class="entity-detail division-query-wrapper">
   {#if division}
     <header class="entity-header">
+      <EntityBackToList tab="divisions" label="Back to divisions" />
       <h2 class="entity-header__title">{division.divisionName}</h2>
       {#if parentCollege}
         <p class="entity-header__context">
@@ -413,7 +419,13 @@
           {canPublish}
           showSubmitterName={!canPublish && !adminAuthStore.isLoggedIn}
           submitterNameId="division-submitter-name"
-          historyEntity={division ? { entityType: "division", entityId: division.id, version: division.version } : null}
+          historyEntity={division
+            ? {
+                entityType: "division",
+                entityId: division.id,
+                version: division.version,
+              }
+            : null}
           bind:submitterName={submitterNameDraft}
           successMessage={divisionSavedMessage(savedField)}
           errorMessage={fieldError}
@@ -487,7 +499,11 @@
       groupByBuilding
     />
   {:else if division}
-    <LoadingIndicator block label="Loading rooms for {division.divisionName}…" />
+    <EntitySkeleton
+      variant="rooms"
+      heading="Rooms under this division"
+      label="Loading rooms for {division.divisionName}…"
+    />
   {/if}
 </div>
 

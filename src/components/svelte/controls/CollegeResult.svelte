@@ -1,5 +1,5 @@
 <script lang="ts">
-  import LoadingIndicator from "@ui/LoadingIndicator.svelte";
+  import EntitySkeleton from "@ui/EntitySkeleton.svelte";
   import {
     adminAuthStore,
     queryStore,
@@ -27,6 +27,7 @@
   import type { CollegeData, RoomData } from "@lib/types";
   import ResultDisplay from "./ResultDisplay.svelte";
   import EntityShareCopyLink from "./EntityShareCopyLink.svelte";
+  import EntityBackToList from "./EntityBackToList.svelte";
   import EntityExternalLink from "./EntityExternalLink.svelte";
   import EntityLastUpdated from "../EntityLastUpdated.svelte";
   import { getCollegeShareUrl } from "@lib/share-links";
@@ -328,6 +329,7 @@
 <div class="entity-detail college-query-wrapper">
   {#if college}
     <header class="entity-header">
+      <EntityBackToList tab="colleges" label="Back to colleges" />
       <h2 class="entity-header__title">{college.collegeName}</h2>
       <div class="entity-actions">
         <EntityShareCopyLink
@@ -366,7 +368,13 @@
           {canPublish}
           showSubmitterName={!canPublish && !adminAuthStore.isLoggedIn}
           submitterNameId="college-submitter-name"
-          historyEntity={college ? { entityType: "college", entityId: college.id, version: college.version } : null}
+          historyEntity={college
+            ? {
+                entityType: "college",
+                entityId: college.id,
+                version: college.version,
+              }
+            : null}
           bind:submitterName={submitterNameDraft}
           {proposalStatus}
           {activeProposalId}
@@ -453,7 +461,11 @@
       groupByBuilding
     />
   {:else if college}
-    <LoadingIndicator block label="Loading rooms for {college.collegeName}…" />
+    <EntitySkeleton
+      variant="rooms"
+      heading="Rooms under this college"
+      label="Loading rooms for {college.collegeName}…"
+    />
   {/if}
 </div>
 

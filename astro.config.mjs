@@ -17,6 +17,12 @@ const e2eNodeAdapter = process.env.ASTRO_E2E_NODE === "1";
 export default defineConfig({
   site: campusSite.url,
 
+  // Astro's HTML compressor drops the newline+indent that prettier inserts
+  // after a closing inline tag, welding words together in prose: "activity
+  // type(LEC" instead of "activity type (LEC". The saved bytes are not worth
+  // corrupting the wiki and FAQ copy.
+  compressHTML: false,
+
   integrations: [
     svelte(),
     AstroPWA({
@@ -63,6 +69,7 @@ export default defineConfig({
           // Network-first; the in-app planner button covers offline.
           /^\/planner(\/|\?|$)/,
           /^\/final-exams(\/|\?|$)/,
+          /^\/calendar(\/|\?|$)/,
           // Server redirects — must hit network, not offline app shell (#471).
           /^\/messenger(\/|\?|$)/,
           /^\/maintain(\/|\?|$)/,
@@ -166,6 +173,12 @@ export default defineConfig({
       DATABASE_URL: envField.string({
         access: "secret",
         context: "server",
+      }),
+      // Public Kubo integration directory. Override locally for fixture/API testing.
+      KUBO_ROOM_TBA_DIRECTORY_URL: envField.string({
+        access: "secret",
+        context: "server",
+        optional: true,
       }),
       // Supabase JS client (Auth, Realtime, Storage). Separate from DATABASE_URL.
       PUBLIC_SUPABASE_URL: envField.string({
@@ -327,7 +340,11 @@ export default defineConfig({
         isr: {
           expiration: 60 * 60 * 24,
           bypassToken: process.env.ISR_BYPASS_TOKEN,
-          exclude: [/^\/api\//],
+          // /og.png must stay a plain function: Vercel ISR keys its cache on
+          // pathname only, so ?t=/&s=/&k= variants all collapse into one cached
+          // PNG and every entity shares the first-rendered card (#651). The
+          // normal CDN cache (via the route's s-maxage) keys on the full URL.
+          exclude: [/^\/api\//, /^\/og\.png$/],
         },
       }),
 });

@@ -35,8 +35,14 @@
   import DormEditorPanel from "@ui/controls/DormEditorPanel.svelte";
   import EntityLastUpdated from "../EntityLastUpdated.svelte";
   import EntityShareCopyLink from "./EntityShareCopyLink.svelte";
+  import EntityBackToList from "./EntityBackToList.svelte";
   import EntityExternalLink from "./EntityExternalLink.svelte";
   import { getDormShareUrl } from "@lib/share-links";
+  import {
+    getKuboDormCta,
+    kuboDormDirectory,
+    loadKuboDormDirectory,
+  } from "@lib/kubo-dorms";
   type DormEditableField =
     | "dormName"
     | "shortName"
@@ -99,6 +105,13 @@
   let mergingEntity = $state(false);
   const canPublish = $derived(adminAuthStore.canPublish);
   const dormShareUrl = $derived(dorm ? getDormShareUrl(dorm) : "");
+  const kuboDormCta = $derived(
+    dorm ? getKuboDormCta($kuboDormDirectory, dorm.id, dorm.dormName) : null,
+  );
+
+  $effect(() => {
+    if (dorm) void loadKuboDormDirectory();
+  });
 
   const fieldLabels: Record<DormEditableField, string> = {
     dormName: "Dorm name",
@@ -128,6 +141,7 @@
         amenities.length > 0 ||
         dorm.isUpManaged ||
         dorm.facebookLink ||
+        kuboDormCta ||
         (!dorm.isUpManaged && dorm.priceRange)),
     ),
   );
@@ -556,20 +570,31 @@
       }
       patch.dormName = trimmedName;
     }
-    if (!fieldIsUnchanged("shortName", current)) patch.shortName = shortNameDraft.trim() || null;
-    if (!fieldIsUnchanged("description", current)) patch.description = descriptionDraft.trim() || null;
+    if (!fieldIsUnchanged("shortName", current))
+      patch.shortName = shortNameDraft.trim() || null;
+    if (!fieldIsUnchanged("description", current))
+      patch.description = descriptionDraft.trim() || null;
     if (!fieldIsUnchanged("gender", current)) patch.gender = genderDraft;
-    if (!fieldIsUnchanged("isUpManaged", current)) patch.isUpManaged = isUpManagedDraft;
+    if (!fieldIsUnchanged("isUpManaged", current))
+      patch.isUpManaged = isUpManagedDraft;
     if (!fieldIsUnchanged("capacity", current)) {
-      patch.capacity = capacityDraft.trim() === "" ? null : Number(capacityDraft);
+      patch.capacity =
+        capacityDraft.trim() === "" ? null : Number(capacityDraft);
     }
-    if (!fieldIsUnchanged("priceRange", current)) patch.priceRange = priceRangeDraft.trim() || null;
-    if (!fieldIsUnchanged("managingOffice", current)) patch.managingOffice = managingOfficeDraft.trim() || null;
-    if (!fieldIsUnchanged("contactEmail", current)) patch.contactEmail = contactEmailDraft.trim() || null;
-    if (!fieldIsUnchanged("contactPhone", current)) patch.contactPhone = linesToList(contactPhoneDraft);
-    if (!fieldIsUnchanged("amenities", current)) patch.amenities = linesToList(amenitiesDraft);
-    if (!fieldIsUnchanged("facebookLink", current)) patch.facebookLink = facebookLinkDraft.trim() || null;
-    if (!fieldIsUnchanged("osmLink", current)) patch.osmLink = osmLinkDraft.trim() || null;
+    if (!fieldIsUnchanged("priceRange", current))
+      patch.priceRange = priceRangeDraft.trim() || null;
+    if (!fieldIsUnchanged("managingOffice", current))
+      patch.managingOffice = managingOfficeDraft.trim() || null;
+    if (!fieldIsUnchanged("contactEmail", current))
+      patch.contactEmail = contactEmailDraft.trim() || null;
+    if (!fieldIsUnchanged("contactPhone", current))
+      patch.contactPhone = linesToList(contactPhoneDraft);
+    if (!fieldIsUnchanged("amenities", current))
+      patch.amenities = linesToList(amenitiesDraft);
+    if (!fieldIsUnchanged("facebookLink", current))
+      patch.facebookLink = facebookLinkDraft.trim() || null;
+    if (!fieldIsUnchanged("osmLink", current))
+      patch.osmLink = osmLinkDraft.trim() || null;
 
     savingField = "dormName" as DormEditableField;
     savedField = null;
@@ -625,6 +650,7 @@
 <div class="entity-detail">
   {#if dorm}
     <header class="entity-header">
+      <EntityBackToList tab="dorms" label="Back to dormitories" />
       <div class="entity-header__title-row">
         <h2 class="entity-header__title">
           {dorm.dormName}
@@ -681,6 +707,15 @@
           />
         {/if}
         <EntityShareCopyLink url={dormShareUrl} entityLabel={dorm.dormName} />
+        {#if kuboDormCta}
+          <EntityExternalLink
+            href={kuboDormCta.href}
+            label={kuboDormCta.label}
+            ariaLabel={kuboDormCta.ariaLabel}
+            class="entity-footer__link--button entity-footer__link--kubo"
+            iconSrc="/kubo-logo.png"
+          />
+        {/if}
         <EntityEditorToggle
           expanded={editing}
           {canPublish}
@@ -732,7 +767,7 @@
           {savedField}
           {fieldError}
           {proposalStatus}
-          activeProposalId={activeProposalId}
+          {activeProposalId}
           onWithdrawn={() => {
             activeProposalId = null;
             proposalStatus = null;

@@ -19,11 +19,10 @@ const externalCommunityLinks = COMMUNITY_LINKS.filter(
     <span class="site-footer__group">
       {LEGAL_LINKS.map((link) => <a href={link.href}>{link.label}</a>)}
       <a href="/sponsors">Sponsors</a>
-      <a href="/donate">Donate</a>
+      <a href={DONATE_URL}>Donate</a>
     </span>
     <span class="site-footer__sep" aria-hidden="true">&middot;</span>
     <span class="site-footer__group">
-      <a href={DONATE_URL}>Donate</a>
       <a href={UPLB_TOOLS_URL} target="_blank" rel="noopener noreferrer">
         UPLB Tools
       </a>

@@ -38,7 +38,9 @@ No account needed to browse. Editors and contributors fix data in the same app (
 | Plan your classes | Planner view to build a draft schedule |
 | Course Planner explainer | [Four-panel, screenshot-ready guide](https://room-tba.uplbtools.me/pubmat/course-planner/) |
 | Final exam time & room | Search course code → finals panel; room panel during finals week |
+| Academic calendar | [/calendar](https://room-tba.uplbtools.me/calendar) — term windows on a year timeline; also via the term picker |
 | Building location | Map, pins, directions, Google Maps |
+| Compare dorm listings | Verified dorms link to their Kubo listing when available |
 | Landmarks, services, orgs & offices | Sidebar directories, distinct map pins, and shareable detail links |
 | Offline / bad signal | PWA + local cache; tiles if already loaded |
 | Campus events | Events on map with routes |
@@ -129,6 +131,12 @@ bun dev
 ```
 
 Open **http://localhost:4321**. Without `DATABASE_URL`, the dev server starts but pages that hit the DB will 500. That is expected.
+
+To test the optional Kubo dorm link, the CTA directory loads lazily from Kubo
+through Room TBA's cached proxy and starts empty, so no button appears until the
+API confirms a matching Room TBA dorm ID. Set `KUBO_ROOM_TBA_DIRECTORY_URL` to
+a local fixture server to test **Reserve on Kubo**, **Join waitlist on Kubo**,
+**View on Kubo**, and an unmapped dorm without Kubo production access.
 
 ### Linting and formatting
 

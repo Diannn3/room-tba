@@ -60,6 +60,7 @@
     suppressLandingModal?: boolean;
     openPlanner?: boolean;
     openFinals?: boolean;
+    openCalendar?: boolean;
   };
   const metadata: MetadataProps = $props();
 
@@ -509,4 +510,5 @@
   suppressLandingModal={metadata.suppressLandingModal ?? false}
   openPlanner={metadata.openPlanner ?? false}
   openFinals={metadata.openFinals ?? false}
+  openCalendar={metadata.openCalendar ?? false}
 />

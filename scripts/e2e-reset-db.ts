@@ -1,11 +1,16 @@
 /**
  * Reset E2E Supabase database and seed fixtures for integration + Playwright.
  * Refuses to run unless DATABASE_URL host contains the E2E project ref.
+ *
+ * With `E2E_SCHEMA` set the reset targets that schema instead of `public`
+ * (#773): create it, replay the whole migration chain into it, seed, and let
+ * `--drop` tear it down. Unset keeps the shared-`public` behavior.
  */
 import bcrypt from "bcrypt";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import pg from "pg";
+import type pg from "pg";
+import { connectE2eClient, E2E_SCHEMA_PATTERN, e2eSchema } from "./e2e-schema";
 import { loadEnv } from "./load-env";
 
 loadEnv();
@@ -34,12 +39,14 @@ export const E2E_FIXTURES = {
   dormLon: 121.242,
 } as const;
 
-function assertE2eDatabase(url: string) {
+/** Guard the target: E2E project, and an `e2e_*` schema when one is requested. */
+function assertE2eDatabase(url: string): string | null {
   if (!url.includes(E2E_PROJECT_REF)) {
     throw new Error(
       `Refusing to reset DB: host must include E2E project ref ${E2E_PROJECT_REF}.`,
     );
   }
+  return e2eSchema();
 }
 
 /** Idempotent migrations needed before truncate/seed on the shared E2E project. */
@@ -66,15 +73,91 @@ const E2E_MIGRATION_FILES = [
   "0036_add_building_cr_facilities.sql",
   "0037_editor_credits_profiles.sql",
   "0038_sponsor_impressions.sql",
+  "0039_classes_keyset_index.sql",
+  "0040_pre_drizzle_schema_backfill.sql",
 ] as const;
 
-async function applyE2eMigrations(client: pg.Client) {
-  for (const file of E2E_MIGRATION_FILES) {
-    const sql = readFileSync(
-      join(import.meta.dir, "..", "drizzle", file),
-      "utf8",
-    );
-    await client.query(sql);
+/**
+ * `import.meta.dir` is Bun-only and Playwright specs import `E2E_FIXTURES` from
+ * this file under Node, so keep it lazy or every spec dies on import.
+ */
+function drizzleDir(): string {
+  return join(import.meta.dir, "..", "drizzle");
+}
+
+/**
+ * `update` predates drizzle: 0003 inserts into it, but only 0016 creates it.
+ * 0016 is idempotent, so a fresh schema just applies it up front as well.
+ */
+const LEGACY_BOOTSTRAP = "0016_ensure_update_sync_table.sql";
+
+/**
+ * A fresh run schema is empty, so replay the full chain (filename order = apply
+ * order, so no list to keep in sync when a migration lands). The shared `public`
+ * schema already has 0000–0016, so it only needs the incremental list.
+ */
+function e2eMigrationFiles(schema: string | null): string[] {
+  if (!schema) return [...E2E_MIGRATION_FILES];
+  const all = readdirSync(drizzleDir())
+    .filter((file) => file.endsWith(".sql"))
+    .sort();
+  return [LEGACY_BOOTSTRAP, ...all];
+}
+
+/**
+ * Two drizzle quirks stand between the chain and an empty schema: 0000 is an
+ * introspection snapshot whose DDL sits inside a block comment, and a few files
+ * hard-qualify our own tables/enums as `"public"."x"`. Both only matter when
+ * replaying into a run schema.
+ */
+function readMigration(file: string, schema: string | null): string {
+  const sql = readFileSync(join(drizzleDir(), file), "utf8");
+  if (!schema) return sql;
+  const uncommented = file.startsWith("0000_")
+    ? sql.replaceAll("/*", "").replaceAll("*/", "")
+    : sql;
+  return uncommented.replaceAll('"public".', `"${schema}".`);
+}
+
+async function applyE2eMigrations(
+  client: pg.Client,
+  files: string[],
+  schema: string | null,
+) {
+  for (const file of files) {
+    try {
+      await client.query(readMigration(file, schema));
+    } catch (error) {
+      throw new Error(`Migration ${file} failed: ${(error as Error).message}`, {
+        cause: error,
+      });
+    }
+  }
+}
+
+const STALE_SCHEMA_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Drop run schemas whose job was cancelled or killed before teardown. Postgres
+ * does not record schema creation time, so each run stamps its own schema
+ * comment with an ISO timestamp.
+ */
+async function sweepStaleSchemas(client: pg.Client) {
+  const { rows } = await client.query<{
+    nspname: string;
+    stamp: string | null;
+  }>(
+    `SELECT nspname, obj_description(oid, 'pg_namespace') AS stamp
+       FROM pg_namespace WHERE nspname LIKE 'e2e\\_%'`,
+  );
+  const cutoff = Date.now() - STALE_SCHEMA_MS;
+  for (const { nspname, stamp } of rows) {
+    const created = stamp ? Date.parse(stamp) : Number.NaN;
+    // ponytail: an unstamped e2e_* schema was made by hand, so leave it alone.
+    if (!E2E_SCHEMA_PATTERN.test(nspname)) continue;
+    if (!Number.isFinite(created) || created >= cutoff) continue;
+    await client.query(`DROP SCHEMA IF EXISTS ${nspname} CASCADE`);
+    console.log(`Swept stale E2E schema ${nspname} (stamped ${stamp}).`);
   }
 }
 
@@ -86,21 +169,46 @@ async function main() {
   if (!databaseUrl) {
     throw new Error("E2E_DATABASE_URL or DATABASE_URL is required");
   }
-  assertE2eDatabase(databaseUrl);
+  const schema = assertE2eDatabase(databaseUrl);
+
+  // CI teardown (`--drop`): never touches `public`, so unset E2E_SCHEMA is a no-op.
+  if (process.argv.includes("--drop")) {
+    if (!schema) {
+      console.log("E2E_SCHEMA unset, nothing to drop.");
+      return;
+    }
+    const dropper = await connectE2eClient(databaseUrl);
+    try {
+      await dropper.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
+      console.log(`Dropped E2E schema ${schema}.`);
+    } finally {
+      await dropper.end();
+    }
+    return;
+  }
 
   const password =
     process.env.E2E_ADMIN_PASSWORD?.trim() || DEFAULT_E2E_PASSWORD;
   const passwordHash = await bcrypt.hash(password, 12);
 
-  const client = new pg.Client({ connectionString: databaseUrl });
-  await client.connect();
+  const client = await connectE2eClient(databaseUrl);
 
   const E2E_RESET_LOCK = 447265; // serialize concurrent CI resets on shared E2E DB
 
   try {
     await client.query("SELECT pg_advisory_lock($1)", [E2E_RESET_LOCK]);
 
-    await applyE2eMigrations(client);
+    if (schema) {
+      // `SET search_path` (done on connect) tolerates a missing schema, so the
+      // create can happen here; every statement below then lands in `schema`.
+      await client.query(`CREATE SCHEMA IF NOT EXISTS ${schema}`);
+      await client.query(
+        `COMMENT ON SCHEMA ${schema} IS '${new Date().toISOString()}'`,
+      );
+      await sweepStaleSchemas(client);
+    }
+
+    await applyE2eMigrations(client, e2eMigrationFiles(schema), schema);
 
     await client.query(`
       TRUNCATE TABLE
@@ -262,6 +370,7 @@ async function main() {
     console.log(
       JSON.stringify({
         ok: true,
+        schema: schema ?? "public",
         buildingId,
         dormId,
         roomId,

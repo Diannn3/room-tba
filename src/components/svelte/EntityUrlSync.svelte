@@ -90,7 +90,8 @@
       defaultTermId: termStore.defaultTermId,
       screen:
         sidebarStore.panelOpen === "planner" ||
-        sidebarStore.panelOpen === "finals"
+        sidebarStore.panelOpen === "finals" ||
+        sidebarStore.panelOpen === "calendar"
           ? sidebarStore.panelOpen
           : null,
       transitRouteId: jeepneyStore.selectedRouteId,

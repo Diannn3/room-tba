@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import pg from "pg";
+import { connectE2eClient } from "../../scripts/e2e-schema";
 import { integrationDatabaseUrl, skipWithoutE2eDb } from "../helpers/env";
 
 const describeIntegration = skipWithoutE2eDb() ? describe.skip : describe;
@@ -9,8 +9,7 @@ describeIntegration("merge service", () => {
     const url = integrationDatabaseUrl();
     if (!url) return;
 
-    const client = new pg.Client({ connectionString: url });
-    await client.connect();
+    const client = await connectE2eClient(url);
 
     const source = await client.query<{ id: number; version: number }>(
       `INSERT INTO buildings (building_name, lat, lon, type, directions, version)
@@ -36,8 +35,7 @@ describeIntegration("merge service", () => {
     });
     expect(merged.id).toBe(targetId);
 
-    const verify = new pg.Client({ connectionString: url });
-    await verify.connect();
+    const verify = await connectE2eClient(url);
     const gone = await verify.query("SELECT id FROM buildings WHERE id = $1", [
       sourceId,
     ]);

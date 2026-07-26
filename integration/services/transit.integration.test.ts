@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 import { integrationDatabaseUrl, skipWithoutE2eDb } from "../helpers/env";
+import { connectE2eClient } from "../../scripts/e2e-schema";
 
 const describeIntegration = skipWithoutE2eDb() ? describe.skip : describe;
 
@@ -11,11 +12,7 @@ describeIntegration("jeepney stop service", () => {
     // (scripts/e2e-reset-db.ts) must survive because the Playwright deep-link
     // spec (e2e/browse/transit-stop-panel.spec.ts) runs after this suite on
     // the same database and navigates to /transit/e2e-route/e2e-stop.
-    const pg = await import("pg");
-    const client = new pg.default.Client({
-      connectionString: integrationDatabaseUrl()!,
-    });
-    await client.connect();
+    const client = await connectE2eClient(integrationDatabaseUrl()!);
     await client.query(
       "DELETE FROM jeepney_stops WHERE route_id = $1 AND name <> $2",
       ["e2e-route", "E2E Stop"],

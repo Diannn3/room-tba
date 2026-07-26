@@ -1,4 +1,4 @@
-import pg from "pg";
+import { connectE2eClient, type E2eClient } from "../../scripts/e2e-schema";
 import { loadEnv } from "../../scripts/load-env";
 
 loadEnv();
@@ -15,12 +15,11 @@ export function e2eDatabaseUrl(): string | null {
 }
 
 export async function withE2eClient<T>(
-  fn: (client: pg.Client) => Promise<T>,
+  fn: (client: E2eClient) => Promise<T>,
 ): Promise<T | null> {
   const url = e2eDatabaseUrl();
   if (!url) return null;
-  const client = new pg.Client({ connectionString: url });
-  await client.connect();
+  const client = await connectE2eClient(url);
   try {
     return await fn(client);
   } finally {

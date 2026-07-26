@@ -14,6 +14,8 @@ jobs:
     env:
       DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
       E2E_DATABASE_URL: ${{ secrets.E2E_DATABASE_URL }}
+      # #773: own schema per run so blocking/advisory/staging stop racing.
+      E2E_SCHEMA: e2e_${{ github.run_id }}_${{ github.run_attempt }}
       E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
       E2E_ADMIN_SESSION_SECRET: ${{ secrets.E2E_ADMIN_SESSION_SECRET }}
       ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
@@ -57,7 +59,7 @@ jobs:
 
       - name: Integration tests
         if: inputs.suite == 'blocking'
-        run: PREVIEW_BASE_URL=http://127.0.0.1:4321 bun test ./integration --preload ./integration/preload.ts --concurrency 1
+        run: PREVIEW_BASE_URL=http://127.0.0.1:4321 bun run test:integration
 
       - name: Restart preview after integration
         if: inputs.suite == 'blocking'
@@ -91,6 +93,11 @@ jobs:
       - name: Advisory failure notice
         if: failure() && inputs.suite == 'advisory'
         run: echo "::warning::Advisory E2E failed — review Playwright report (non-blocking)"
+
+      - name: Drop E2E schema
+        if: always()
+        continue-on-error: true # stale schemas are swept on the next reset anyway
+        run: bun run scripts/e2e-reset-db.ts --drop
 
       - name: Upload report
         if: failure()

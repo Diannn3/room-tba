@@ -7,17 +7,59 @@ import { breadcrumbSchema, jsonLd, webpageSchema } from "@lib/site";
 
 const title = "Taking the UPCAT at UP Los Baños | Room TBA Wiki";
 const description =
-  "A first-timer's guide to the UPCAT at UPLB on August 1 and 2, 2026: what the test permit does and does not tell you, how to get on campus, and how to load the campus map before mobile data gets congested.";
+  "A first-timer's guide to the UPCAT at UPLB on August 1 and 2, 2026: what the test permit does and does not tell you, what to bring, how to get on campus, and how to load the campus map before mobile data gets congested.";
 
 /** What the UP Office of Admissions says the permit carries. */
 const permitFields = [
   { field: "Identification number", note: "Your examinee number. Bring it written down somewhere else too." },
   { field: "Place", note: "The test center. At UPLB this is a campus, not a room." },
   { field: "Date", note: "Which of the two exam days is yours. Check it now, not on the morning." },
-  { field: "Time", note: "When to report. Being early is the whole strategy." },
+  { field: "Time", note: "Your session, either the 6:30 am morning session or the 12:30 pm afternoon session." },
   { field: "PIN", note: "Used with your identification number." },
   { field: "Name", note: "Must match the ID you bring." },
   { field: "High school", note: "The school you are testing from." },
+] as const;
+
+/** UP General Information Bulletin, upcat.up.edu.ph/htmls/aboutupcat.html */
+const bringItems = [
+  "Your test permit, printed. You present it and hand it in to test personnel.",
+  "Your school ID, or any valid government-issued ID.",
+  "At least two good quality pencils.",
+  "A sharpener.",
+  "A rubber eraser.",
+  "Water.",
+  "Snacks.",
+] as const;
+
+const bannedItems = [
+  "Cellphones",
+  "Smartwatches",
+  "Calculating devices",
+  "Cameras",
+] as const;
+
+/**
+ * UPLB OVCCA traffic advisory for the previous cycle (exam held August 2 and 3,
+ * 2025). Listed for expectation-setting only. NOT a prediction for 2026.
+ */
+const lastCycleBuildings = [
+  "IBS",
+  "CAS (two locations)",
+  "CDC",
+  "IMS (New Math building)",
+  "PHYSCI",
+  "CEAT",
+  "ASI",
+  "EE",
+  "IAS",
+  "CVM",
+] as const;
+
+const lastCycleGates = [
+  "Main Gate",
+  "Jamboree Gate",
+  "Central Experiment Station (CES) Gate",
+  "Institute of Animal Science (IAS) Gate",
 ] as const;
 
 const permitOmissions = [
@@ -127,7 +169,7 @@ const cannotAnswer = [
   {
     question: "Which buildings are being used?",
     answer:
-      "Not published. Guessing from where classes normally meet would be a guess, and a wrong one puts you on the far side of a large campus.",
+      "Not published for this cycle. Last cycle UPLB used ten scattered locations, so expect to be sent to one of many buildings rather than to a single hall. Which one is yours is not knowable in advance.",
   },
   {
     question: "Is that canteen open on exam day?",
@@ -172,9 +214,11 @@ const structuredData = jsonLd(
         UPCAT for AY 2027 to 2028 is on <strong>August 1 and 2, 2026</strong>, a
         Saturday and a Sunday. Campus figures on this page are a census of the
         Room TBA production database on July 27, 2026: 52 buildings, 530 rooms,
-        2 jeepney routes, 27 stops, 49 places, 79 name aliases. UPLB
-        campus-specific exam instructions were <strong>not published</strong> at
-        the time of writing.
+        2 jeepney routes, 27 stops, 49 places, 79 name aliases. Exam details
+        come from the UP General Information Bulletin. UPLB campus-specific
+        instructions (venue, gates, reporting point) were
+        <strong>not published</strong> at the time of writing; last cycle they
+        appeared one day before the exam.
       </p>
       <WikiProvenance sourcePath="src/pages/wiki/upcat-at-uplb.astro" />
     </header>
@@ -185,7 +229,9 @@ const structuredData = jsonLd(
         <li><a href="#start-here">The short version</a></li>
         <li><a href="#offline">Load the campus map before you arrive</a></li>
         <li><a href="#permit">What the permit says, and what it does not</a></li>
+        <li><a href="#bring">What to bring, and what is banned</a></li>
         <li><a href="#not-published">What UPLB has not published yet</a></li>
+        <li><a href="#last-cycle">What last cycle looked like at UPLB</a></li>
         <li><a href="#getting-there">Getting to campus and moving around it</a></li>
         <li><a href="#finding-the-building">Finding a building once someone names it</a></li>
         <li><a href="#parent">For the parent who waits</a></li>
@@ -207,8 +253,15 @@ const structuredData = jsonLd(
           same morning.
         </li>
         <li>
-          <strong>Check which of the two days is yours.</strong> The permit
-          carries the date. August 1 is a Saturday, August 2 is a Sunday.
+          <strong>Check which day and which session is yours.</strong> The
+          permit carries both. There is a 6:30 am morning session and a 12:30 pm
+          afternoon session. August 1 is a Saturday, August 2 is a Sunday.
+        </li>
+        <li>
+          <strong>The test runs about five hours.</strong> Bring water and
+          snacks, which UP explicitly tells you to bring. Leave your phone and
+          your smartwatch with your parent, because both are banned during the
+          test.
         </li>
         <li>
           <strong>Watch for the UPLB advisory.</strong> The campus-specific
@@ -257,10 +310,12 @@ const structuredData = jsonLd(
         installing Room TBA to your home screen, do that first, then download.
       </p>
       <p class="figure-note">
-        One honest limit: the offline copy is the <em>map app</em>. This wiki
+        Two honest limits. The offline copy is the <em>map app</em>; this wiki
         page is served fresh from the network and is not part of the offline
         bundle, so read it or screenshot it now rather than planning to open it
-        from the queue.
+        from the queue. And cellphones are banned during the test itself, so the
+        map helps you get there and helps whoever is waiting for you, not you
+        inside the room.
       </p>
     </aside>
 
@@ -311,11 +366,74 @@ const structuredData = jsonLd(
         finer.
       </p>
       <p class="figure-note">
-        UP Los Baños appears under Region 4-A on the UP Office of Admissions
-        list of UPCAT test centers. That page carries no year, so read it as a
-        standing list of centers rather than a confirmed roster for this
-        particular cycle. For scale: the previous cycle, UPCAT 2026, used 117
-        testing centers nationwide.
+        On the UP Office of Admissions list of UPCAT test centers, the entire
+        entry under Region 4-A (CALABARZON) reads
+        <strong>"UP Los Baños, LAGUNA"</strong>. That is all of it. No street,
+        no building. It is also the only Laguna entry on the list. That page
+        carries no year, so read it as a standing list of centers rather than a
+        confirmed roster for this particular cycle. For scale, the previous
+        cycle used 117 testing centers nationwide.
+      </p>
+
+      <h3 id="reporting-time">What time to be there</h3>
+      <p>
+        Read your permit first and follow it over anything on this page. If you
+        need a number to plan around before then, note that the two official UP
+        pages currently disagree with each other:
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Source</th>
+              <th scope="col">Says to be there by</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>General Information Bulletin</strong>, which names the August 2026 dates directly</td>
+              <td>6:00 am (morning), 12:00 nn (afternoon)</td>
+            </tr>
+            <tr>
+              <td><strong>upcat.up.edu.ph homepage</strong>, older generic copy</td>
+              <td>6:30 am (morning), 12:00 nn (afternoon)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        The sessions themselves start at 6:30 am and 12:30 pm. The bulletin is
+        the page written for this cycle, so plan for
+        <strong>6:00 am or 12:00 nn</strong> and treat the earlier arrival as
+        the safe one. Arriving early costs you nothing. Arriving late can cost
+        you the exam.
+      </p>
+    </section>
+
+    <section aria-labelledby="bring">
+      <h2 id="bring">What to bring, and what is banned</h2>
+      <p>
+        From the UP General Information Bulletin. The test runs about five
+        hours, which is why water and snacks are on the list rather than
+        optional extras.
+      </p>
+      <h3 id="bring-list">Bring</h3>
+      <ul class="break-list">
+        {bringItems.map((item) => (
+          <li>{item}</li>
+        ))}
+      </ul>
+      <h3 id="banned-list">Not allowed during the test</h3>
+      <ul class="break-list">
+        {bannedItems.map((item) => (
+          <li>{item}</li>
+        ))}
+      </ul>
+      <p>
+        Plan for the phone rule in advance. Decide before you leave the house
+        who holds the phone during the exam, and agree on a meeting landmark
+        with whoever brought you, because you will not be able to call them when
+        you come out.
       </p>
     </section>
 
@@ -335,7 +453,15 @@ const structuredData = jsonLd(
         <li>Parking, drop-off arrangements, or a designated waiting area for parents.</li>
         <li>Any shuttle service between a drop-off point and the venue.</li>
       </ul>
-      <p><strong>Who actually publishes this, and where to watch:</strong></p>
+      <p>
+        One caveat on that list, because it matters. The UPLB websites sit
+        behind a bot check that refused every automated attempt we made to read
+        them, so "we could not find it" here means we could not find it through
+        search, not that we read the pages and saw nothing.
+        <strong>Open them yourself in a normal browser.</strong> That is not a
+        formality; it is the actual next step.
+      </p>
+      <p><strong>Who publishes this, and where to watch:</strong></p>
       <ul class="break-list">
         <li>
           <strong>UPLB Office of the University Registrar</strong>, at
@@ -344,15 +470,26 @@ const structuredData = jsonLd(
           only days before the exam.
         </li>
         <li>
+          <strong>UPLB Office of the Vice Chancellor for Community Affairs
+          (OVCCA)</strong>, which is who published the campus traffic and gate
+          advisory last cycle.
+        </li>
+        <li>
           <strong>UP Office of Admissions</strong>, at
           <a class="wiki-link" href="https://upcat.up.edu.ph" target="_blank" rel="noopener noreferrer">upcat.up.edu.ph</a>
           and on its Facebook page, for system-wide instructions.
         </li>
       </ul>
       <p>
+        <strong>Expect this late.</strong> Last cycle the UPLB traffic advisory
+        went out on August 1, 2025 for an exam on August 2. One day. So keep
+        checking right up to the night before, and do not read silence today as
+        a sign that nothing is coming.
+      </p>
+      <p>
         If someone hands you a screenshot naming a venue, check it against one
-        of those two before you act on it. Screenshots of last year's advisory
-        circulate every year.
+        of those sources before you act on it. Last year's advisory circulates
+        again every year, and it looks exactly as official as this year's.
       </p>
       <p class="figure-note">
         Are you a UPLB student, staff member, or volunteer holding the official
@@ -361,6 +498,50 @@ const structuredData = jsonLd(
         link to the official post, is a genuinely useful ten minutes.
       </p>
     </aside>
+
+    <section aria-labelledby="last-cycle">
+      <h2 id="last-cycle">What last cycle looked like at UPLB</h2>
+      <p class="warning-line">
+        Everything in this section describes the <strong>previous</strong> exam,
+        held August 2 and 3, 2025. It is here to set your expectations about the
+        shape of the day. It is <strong>not</strong> a prediction, and none of
+        these buildings or gates is confirmed for 2026. Do not go to any of them
+        because you read it here.
+      </p>
+      <p>
+        UPLB published a campus traffic advisory for that exam. The useful thing
+        it reveals is structural, and it is very likely to hold again:
+        <strong>UPLB does not run the UPCAT in one hall.</strong> The advisory
+        marked testing centers at ten separate locations spread across the
+        campus:
+      </p>
+      <ul class="chip-list">
+        {lastCycleBuildings.map((b) => (
+          <li>{b}</li>
+        ))}
+      </ul>
+      <p>
+        It also named four gates as entrances and exits, and closed a list of
+        interior campus roads for the weekend:
+      </p>
+      <ul class="chip-list">
+        {lastCycleGates.map((g) => (
+          <li>{g}</li>
+        ))}
+      </ul>
+      <p>
+        UPLB reported welcoming close to <strong>10,000 examinees</strong> over
+        those two days. That is the number to keep in mind when you think about
+        traffic at the gate, queues, and whether mobile data will work.
+      </p>
+      <p>
+        <strong>What to take from this.</strong> Assume you will be told a
+        building name and sent walking, possibly a long way, and that the road
+        you expected to drive down may be closed. That is the exact situation
+        this app is for. It is also why the building name you are given is worth
+        typing into the search bar the moment you hear it.
+      </p>
+    </section>
 
     <section aria-labelledby="getting-there">
       <h2 id="getting-there">Getting to campus and moving around it</h2>
@@ -634,9 +815,15 @@ const structuredData = jsonLd(
       <h2 id="sources">Sources</h2>
       <ul class="break-list">
         <li>
+          <a class="wiki-link" href="https://upcat.up.edu.ph/htmls/aboutupcat.html" target="_blank" rel="noopener noreferrer">UP General Information Bulletin</a>
+          for the permit contents, the session times, the arrival times, what to
+          bring, the prohibited items, and the five-hour duration. This is the
+          page that names the August 2026 dates directly, so prefer it over the
+          homepage where the two disagree.
+        </li>
+        <li>
           <a class="wiki-link" href="https://upcat.up.edu.ph" target="_blank" rel="noopener noreferrer">upcat.up.edu.ph</a>
-          for what the test permit carries, the centralized reporting location
-          rule, and seat assignment.
+          for the centralized reporting location rule and seat assignment.
         </li>
         <li>
           <a class="wiki-link" href="https://upcat.up.edu.ph/htmls/upcat_testcenters.html" target="_blank" rel="noopener noreferrer">UPCAT test centers list</a>,
@@ -652,6 +839,18 @@ const structuredData = jsonLd(
         <li>
           <a class="wiki-link" href="https://our.uplb.edu.ph" target="_blank" rel="noopener noreferrer">UPLB Office of the University Registrar</a>
           for UPLB campus instructions, when they are published.
+        </li>
+        <li>
+          The UPLB OVCCA traffic advisory for the previous cycle (exam of August
+          2 and 3, 2025) for the last-cycle testing locations, gates, and road
+          closures, and
+          <a class="wiki-link" href="https://uplb.edu.ph/all-news/pahinungod-spearheads-pencil-donation-drive-at-upcat-2026-in-uplb/" target="_blank" rel="noopener noreferrer">UPLB news</a>
+          for the roughly 10,000 examinees figure. Both describe last cycle, not
+          this one.
+        </li>
+        <li>
+          <a class="wiki-link" href="https://www.philstar.com/nation/2025/08/02/2462559/lists-117-upcat-testing-centers-nationwide" target="_blank" rel="noopener noreferrer">Philstar</a>
+          for the 117 testing centers used in the previous cycle.
         </li>
         <li>
           Campus figures on this page come from the Room TBA production
@@ -741,6 +940,35 @@ const structuredData = jsonLd(
     background: hsl(0, 0%, 94%);
     color: hsl(5, 40%, 30%);
     font-size: 0.85em;
+  }
+
+  .wiki-article .warning-line {
+    padding: 0.75rem 0.9rem;
+    border: 1px solid hsl(38, 60%, 78%);
+    border-radius: 0.65rem;
+    background: hsl(45, 75%, 96%);
+    color: hsl(0, 0%, 22%);
+    font-size: 0.9375rem;
+    line-height: 1.65;
+  }
+
+  .chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    max-width: 46rem;
+    margin: 0.85rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .chip-list li {
+    padding: 0.3rem 0.6rem;
+    border: 1px solid hsl(0, 0%, 87%);
+    border-radius: 0.5rem;
+    background: hsl(0, 0%, 98%);
+    color: hsl(0, 0%, 30%);
+    font-size: 0.875rem;
   }
 
   .break-list {

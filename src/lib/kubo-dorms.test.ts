@@ -114,6 +114,30 @@ describe("getKuboDormCta", () => {
     expect(getKuboDormCta(new Map(), 13, "Westbrook Residences")).toBeNull();
   });
 
+  test("suppresses the CTA when the id-matched record names a different dorm", () => {
+    // Live incident 2026-07-25: Kubo served demo rows whose roomTbaDormIds
+    // pointed at real dorms ("Maple Court Residence" on Men's RH id).
+    const record = {
+      ...acceptingDirectory.dorms[0],
+      roomTbaDormId: 1,
+      name: "Maple Court Residence",
+    };
+    expect(
+      getKuboDormCta(new Map([[1, record]]), 1, "Men's Residence Hall"),
+    ).toBeNull();
+  });
+
+  test.each([
+    ["Scholar's Dormitory", "Scholars Dormitory"],
+    ["New Dormitory Residence Hall", "New Dormitory RH"],
+    ["Arable Premier", "Arable Premier Residences"],
+  ])("accepts name variant %s vs %s", (kuboName, dormName) => {
+    const record = { ...acceptingDirectory.dorms[0], name: kuboName };
+    expect(
+      getKuboDormCta(new Map([[15, record]]), 15, dormName),
+    ).not.toBeNull();
+  });
+
   test("starts empty so an unconfirmed link is never shown", () => {
     let directory: KuboDormDirectory | undefined;
     const unsubscribe = kuboDormDirectory.subscribe((value) => {

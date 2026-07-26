@@ -8,10 +8,15 @@ describeIntegration("jeepney stop service", () => {
   beforeAll(async () => {
     // A previous run's soft-removed stop still holds sort_order 0 and the
     // (route_id, sort_order) unique constraint would reject reusing it.
+    // Only clear leftovers from earlier test runs: the seeded "E2E Stop"
+    // (scripts/e2e-reset-db.ts) must survive because the Playwright deep-link
+    // spec (e2e/browse/transit-stop-panel.spec.ts) runs after this suite on
+    // the same database and navigates to /transit/e2e-route/e2e-stop.
     const client = await connectE2eClient(integrationDatabaseUrl()!);
-    await client.query("DELETE FROM jeepney_stops WHERE route_id = $1", [
-      "e2e-route",
-    ]);
+    await client.query(
+      "DELETE FROM jeepney_stops WHERE route_id = $1 AND name <> $2",
+      ["e2e-route", "E2E Stop"],
+    );
     await client.end();
   });
 

@@ -31,6 +31,7 @@ export interface QueryStoreState {
 
 export type SidebarOpenType =
   | "map"
+  | "today"
   | "planner"
   | "finals"
   | "calendar"

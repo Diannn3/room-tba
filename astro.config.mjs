@@ -70,6 +70,7 @@ export default defineConfig({
           /^\/planner(\/|\?|$)/,
           /^\/final-exams(\/|\?|$)/,
           /^\/calendar(\/|\?|$)/,
+          /^\/today(\/|\?|$)/,
           // Server redirects — must hit network, not offline app shell (#471).
           /^\/messenger(\/|\?|$)/,
           /^\/maintain(\/|\?|$)/,

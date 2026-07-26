@@ -127,9 +127,11 @@ export async function loadKuboDormDirectory(
   return loadPromise;
 }
 
-// ponytail: loose containment after normalization; "Residence Hall" folds to
-// "RH" so registrar-style names match. Upgrade to an explicit id->slug
-// allowlist if Kubo's data quality stays rough.
+// Exact match after normalization: "Residence Hall" folds to "RH" so
+// registrar-style spellings still agree. Containment is deliberately NOT
+// allowed — prod has sibling dorms where one name contains the other
+// ("Forestry Residence Hall" inside "New Forestry Residence Hall"), so a
+// placeholder id from Kubo could otherwise light up the wrong building.
 function normalizeDormName(value: string): string {
   return value
     .toLowerCase()
@@ -141,7 +143,7 @@ export function dormNamesMatch(kuboName: string, dormName: string): boolean {
   const a = normalizeDormName(kuboName);
   const b = normalizeDormName(dormName);
   if (!a || !b) return false;
-  return a === b || a.includes(b) || b.includes(a);
+  return a === b;
 }
 
 function toDirectory(records: KuboDormRecord[]): KuboDormDirectory {

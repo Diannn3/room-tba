@@ -130,12 +130,21 @@ describe("getKuboDormCta", () => {
   test.each([
     ["Scholar's Dormitory", "Scholars Dormitory"],
     ["New Dormitory Residence Hall", "New Dormitory RH"],
-    ["Arable Premier", "Arable Premier Residences"],
-  ])("accepts name variant %s vs %s", (kuboName, dormName) => {
+  ])("accepts spelling variant %s vs %s", (kuboName, dormName) => {
     const record = { ...acceptingDirectory.dorms[0], name: kuboName };
     expect(
       getKuboDormCta(new Map([[15, record]]), 15, dormName),
     ).not.toBeNull();
+  });
+
+  test.each([
+    // Prod really has both of these; one name contains the other, so a
+    // placeholder id would otherwise render a CTA for the wrong building.
+    ["Forestry Residence Hall", "New Forestry Residence Hall"],
+    ["Arable Premier", "Arable Premier Residences"],
+  ])("rejects the near-miss %s vs %s", (kuboName, dormName) => {
+    const record = { ...acceptingDirectory.dorms[0], name: kuboName };
+    expect(getKuboDormCta(new Map([[15, record]]), 15, dormName)).toBeNull();
   });
 
   test("starts empty so an unconfirmed link is never shown", () => {

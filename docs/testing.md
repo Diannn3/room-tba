@@ -83,7 +83,7 @@ Pinning costs one extra round trip per new connection, and several proposal-serv
 
 - **E2E advisory**: axe, touch drag, offline, jeepney, etc. (gated like blocking)
 - **Bundle advisory**: PWA JS size budget (gated like blocking)
-- **Staging smoke**: read-only Playwright against live `staging.room-tba.uplbtools.me` (non-blocking)
+- **Staging smoke**: read-only Playwright against live `staging.room-tba.uplb.tools` (non-blocking)
 
 ## Databases
 

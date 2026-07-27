@@ -9,7 +9,7 @@
  */
 
 export const campusSite = {
-  url: "https://room-tba.uplbtools.me",
+  url: "https://room-tba.uplb.tools",
   name: "Room TBA",
   title: "Room TBA | Find Rooms, Buildings, Colleges, and Divisions at UPLB",
   description:
@@ -41,7 +41,7 @@ export const campusMap: {
 };
 
 export const campusCommunity = {
-  orgUrl: "https://uplbtools.me",
+  orgUrl: "https://uplb.tools",
   githubUrl: "https://github.com/uplbtools/room-tba",
   discordUrl: "https://discord.uplbtools.me",
   osaOrganizationsUrl: "https://uplbosa.org/orgs",

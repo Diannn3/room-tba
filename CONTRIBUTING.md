@@ -13,7 +13,7 @@ Thanks for helping UPLB students find rooms. You do **not** need to clone this r
 | [Good first issues](https://github.com/uplbtools/room-tba/issues?q=is%3Aopen+label%3A%22good+first+issue%22) | New devs | Smaller coding tasks | Yes |
 | [Maintainers / AI agents](#maintainers-and-agents) | Core team, Cursor | See [AGENTS.md](AGENTS.md) | Yes |
 
-**Community:** [Discord](https://discord.uplbtools.me) · [Messenger (contribute)](https://messenger.uplbtools.me/contribute) · [UPLB Tools](https://uplbtools.me)
+**Community:** [Discord](https://discord.uplbtools.me) · [Messenger (contribute)](https://messenger.uplbtools.me/contribute) · [UPLB Tools](https://uplb.tools)
 
 ---
 

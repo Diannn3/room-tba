@@ -12,7 +12,7 @@ jobs:
   staging-smoke:
     runs-on: ubuntu-latest
     env:
-      STAGING_BASE_URL: https://staging.room-tba.uplbtools.me
+      STAGING_BASE_URL: https://staging.room-tba.uplb.tools
     steps:
       - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2

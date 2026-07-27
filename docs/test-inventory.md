@@ -264,7 +264,7 @@ Layout guards at 320px / 768px where noted. Included in `bun run test:components
 
 ## E2E staging (Playwright) — 3 files
 
-`bun run e2e:staging` — read-only against `staging.room-tba.uplbtools.me`.
+`bun run e2e:staging` — read-only against `staging.room-tba.uplb.tools`.
 
 - `e2e/staging/data-fidelity.spec.ts`
 - `e2e/staging/live-boot.spec.ts`

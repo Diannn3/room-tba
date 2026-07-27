@@ -4,14 +4,14 @@
 
 **Saan sa UPLB ang \___?**
 
-[![Live app](https://img.shields.io/badge/open-room, tba.uplbtools.me-maroon?style=for-the-badge)](https://room-tba.uplbtools.me)
+[![Live app](https://img.shields.io/badge/open-room, tba.uplb.tools-maroon?style=for-the-badge)](https://room-tba.uplb.tools)
 [![MIT](https://img.shields.io/badge/license-MIT-brightgreen?style=flat-square)](LICENSE)
 [![Bun](https://img.shields.io/badge/bun-1.3+-black?style=flat-square&logo=bun)](https://bun.sh)
 [![Astro](https://img.shields.io/badge/Astro-7-BC52EE?style=flat-square&logo=astro)](https://astro.build)
 
 _Schedules, buildings, jeepney routes, and "where is PSLH 1?" on one campus map._
 
-[Open the map](https://room-tba.uplbtools.me) · [Wiki](https://room-tba.uplbtools.me/wiki) · [FAQ](https://room-tba.uplbtools.me/faq) · [Report wrong data](https://github.com/uplbtools/room-tba/issues/new/choose) · [Changelog](https://room-tba.uplbtools.me/changelog)
+[Open the map](https://room-tba.uplb.tools) · [Wiki](https://room-tba.uplb.tools/wiki) · [FAQ](https://room-tba.uplb.tools/faq) · [Report wrong data](https://github.com/uplbtools/room-tba/issues/new/choose) · [Changelog](https://room-tba.uplb.tools/changelog)
 
 </div>
 
@@ -37,9 +37,9 @@ No account needed to browse. Editors and contributors fix data in the same app (
 | Browse all classes | Status bar → Browse classes; search by course code |
 | Plan your classes | Planner view to build a draft schedule |
 | What do I have today | Today view (`/today`): your plan's classes for today, tomorrow, and the rest of the week |
-| Course Planner explainer | [Four-panel, screenshot-ready guide](https://room-tba.uplbtools.me/pubmat/course-planner/) |
+| Course Planner explainer | [Four-panel, screenshot-ready guide](https://room-tba.uplb.tools/pubmat/course-planner/) |
 | Final exam time & room | Search course code → finals panel; room panel during finals week |
-| Academic calendar | [/calendar](https://room-tba.uplbtools.me/calendar) — term windows on a year timeline; also via the term picker |
+| Academic calendar | [/calendar](https://room-tba.uplb.tools/calendar) — term windows on a year timeline; also via the term picker |
 | Building location | Map, pins, directions, Google Maps |
 | Compare dorm listings | Verified dorms link to their Kubo listing when available |
 | Landmarks, services, orgs & offices | Sidebar directories, distinct map pins, and shareable detail links |
@@ -47,7 +47,7 @@ No account needed to browse. Editors and contributors fix data in the same app (
 | Campus events | Events on map with routes |
 | Jeepney routes | Route overlays |
 | 3D view | Buildings + Makiling terrain (online) |
-| Common questions | [Student FAQ](https://room-tba.uplbtools.me/faq) (3D models, data sources, offline) |
+| Common questions | [Student FAQ](https://room-tba.uplb.tools/faq) (3D models, data sources, offline) |
 | Understand section names | Wiki guide to the A–H / S–Z class time blocks |
 
 <details>
@@ -250,7 +250,7 @@ Org: [uplbtools](https://github.com/uplbtools) · Campus tool, not an official U
 
 Room TBA is funded by curated campus-relevant sponsors and one-time donations. Revenue supports core team incentives (40%), contributor payouts (30%), and operational expenses (30%).
 
-**[Donate](https://room-tba.uplbtools.me/donate)** · **[Become a sponsor](https://room-tba.uplbtools.me/sponsors)** · [Funding model](docs/funding-model.md) · [Ad policy](docs/ad-policy.md)
+**[Donate](https://room-tba.uplb.tools/donate)** · **[Become a sponsor](https://room-tba.uplb.tools/sponsors)** · [Funding model](docs/funding-model.md) · [Ad policy](docs/ad-policy.md)
 
 ---
 
@@ -258,7 +258,7 @@ Room TBA is funded by curated campus-relevant sponsors and one-time donations. R
 
 MIT lets you fork this and run it for a different school. This is not a "swap the logo and ship" fork — a lot of the app is UPLB data and UPLB-specific glue. You keep the engine (map UI, search, offline cache, editor, planner, the Drizzle schema) and replace the UPLB parts.
 
-Full guide with every file path and the painful parts: **[Fork this for your campus](https://room-tba.uplbtools.me/wiki/fork-for-your-campus)** in the wiki.
+Full guide with every file path and the painful parts: **[Fork this for your campus](https://room-tba.uplb.tools/wiki/fork-for-your-campus)** in the wiki.
 
 The short version of what you replace:
 
@@ -285,6 +285,6 @@ After you think you've replaced everything, run `bun run fork:check` — it scan
 
 <div align="center">
 
-**[room-tba.uplbtools.me](https://room-tba.uplbtools.me)**
+**[room-tba.uplb.tools](https://room-tba.uplb.tools)**
 
 </div>

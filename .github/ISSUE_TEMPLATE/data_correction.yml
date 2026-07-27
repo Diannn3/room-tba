@@ -8,7 +8,7 @@ body:
     value: |
       **No pull request required.** A developer or maintainer will implement the fix. Thank you for keeping campus data accurate.
 
-      Prefer the [in-app suggest flow](https://room-tba.uplbtools.me) if you have contributor access.
+      Prefer the [in-app suggest flow](https://room-tba.uplb.tools) if you have contributor access.
 
       Collecting **campus gate coordinates** for a batch? Use the [gate coordinates spreadsheet workflow](https://github.com/uplbtools/room-tba/blob/staging/CONTRIBUTING.md#campus-gate-coordinates) instead.
   - type: dropdown

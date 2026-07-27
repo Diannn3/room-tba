@@ -107,8 +107,8 @@ When the user asks to **ship** a feature or fix, they mean the **full integratio
 
 | Stage              | PR                                                                                  | After merge                                              |
 | ------------------ | ----------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| **1: Integration** | `<feature-branch>` → **`staging`** (or equivalent PR landing the work on `staging`) | Staging preview deploy (`staging.room-tba.uplbtools.me`) |
-| **2: Release**     | **`staging` → `main`**                                                              | Production deploy (`room-tba.uplbtools.me`)              |
+| **1: Integration** | `<feature-branch>` → **`staging`** (or equivalent PR landing the work on `staging`) | Staging preview deploy (`staging.room-tba.uplb.tools`) |
+| **2: Release**     | **`staging` → `main`**                                                              | Production deploy (`room-tba.uplb.tools`)              |
 
 **Before each merge (both stages):**
 
@@ -178,7 +178,7 @@ git push origin staging
 - Push to **`staging`** when the user asks to land work on integration, ship to staging, or says push (and context is not a release to prod).
 - **Do not push to `main`** except via the **`staging` → `main`** release PR (or an explicit hotfix the user requested).
 - **Never `vercel deploy, prod`** unless `git branch, show-current` is `main` and matches `origin/main`. Staging integration uses `git push origin staging` only.
-- After pushing `staging`, Vercel builds the staging preview (`staging.room-tba.uplbtools.me`). Preview env must have **`DATABASE_URL`** (same Supabase as production) or the build fails at prerender.
+- After pushing `staging`, Vercel builds the staging preview (`staging.room-tba.uplb.tools`). Preview env must have **`DATABASE_URL`** (same Supabase as production) or the build fails at prerender.
 
 Feature branches remain appropriate for large or review-heavy work: `feat/…` → PR to `staging` → merge → delete branch.
 
@@ -397,7 +397,7 @@ When the agent session has **browser automation** (Cursor agentic browser, Playw
 | Map chrome at 320px / 768px viewport                                          | Subjective visual design judgment    |
 | Capture `pageerror` / console errors after navigation                         | Long editor save/conflict sessions   |
 | Dismiss landing modal, wait for bootstrap (`campus-browse-chips`, map canvas) | Production account-specific data     |
-| Staging or prod smoke after deploy (`room-tba.uplbtools.me`)                  |                                      |
+| Staging or prod smoke after deploy (`room-tba.uplb.tools`)                  |                                      |
 
 **Practices:**
 
@@ -521,7 +521,7 @@ CRS/AMIS `term_id` values are **chronological within the academic year**: the nu
 
 ## Vercel CLI and environment ops
 
-The project deploys on Vercel (`stimmie/saan-ang-room`, see `.vercel/project.json`). Production: `room-tba.uplbtools.me`. Staging preview: `staging.room-tba.uplbtools.me`. Git remote may redirect `smmariquit/room-tba` → **`uplbtools/room-tba`**: use `gh` against **`uplbtools/room-tba`** (`gh pr create`, `gh secret set`, `gh issue view`, etc.).
+The project deploys on Vercel (`stimmie/saan-ang-room`, see `.vercel/project.json`). Production: `room-tba.uplb.tools`. Staging preview: `staging.room-tba.uplb.tools`. Git remote may redirect `smmariquit/room-tba` → **`uplbtools/room-tba`**: use `gh` against **`uplbtools/room-tba`** (`gh pr create`, `gh secret set`, `gh issue view`, etc.).
 
 ### CLI default for agents
 
@@ -545,8 +545,8 @@ Maintainer sessions have **GitHub CLI** and **Vercel CLI** ready. Prefer the CLI
 
 | Git branch       | Vercel target    | URL (approx.)                   |
 | ---------------- | ---------------- | ------------------------------- |
-| `main`           | **Production**   | `room-tba.uplbtools.me`         |
-| `staging`        | **Preview** only | `staging.room-tba.uplbtools.me` |
+| `main`           | **Production**   | `room-tba.uplb.tools`         |
+| `staging`        | **Preview** only | `staging.room-tba.uplb.tools` |
 | feature branches | **Preview**      | `*.vercel.app`                  |
 
 Code reaches production **only** when `staging → main` is merged (release PR), then Vercel builds **`main`**. Confirm Vercel → Project → Settings → Git has **Production Branch = `main`**.
@@ -598,7 +598,7 @@ gh pr checks <number> --repo uplbtools/room-tba
 
 | Trap                                                 | Reality                                                                                                                                                                                                                                                                    |
 | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Map renders flat (no 3D building extrusions) locally | `PUBLIC_MAPTILER_KEY` unset → `loadCampusMapStyle` returns the raster fallback (`E2E_FALLBACK_MAP_STYLE`). **Not a regression**; prod has the key; local `.env` usually doesn't. Verify prod on `room-tba.uplbtools.me` (loads `api.maptiler.com/tiles/v3-openmaptiles`). |
+| Map renders flat (no 3D building extrusions) locally | `PUBLIC_MAPTILER_KEY` unset → `loadCampusMapStyle` returns the raster fallback (`E2E_FALLBACK_MAP_STYLE`). **Not a regression**; prod has the key; local `.env` usually doesn't. Verify prod on `room-tba.uplb.tools` (loads `api.maptiler.com/tiles/v3-openmaptiles`). |
 | Fork PR `verify` fails: `DATABASE_URL is missing`    | Fork PRs **can't read Actions secrets**; the build's prerender has no DB. For trivial fork docs, `gh pr merge --admin` (staging is unprotected). Real fork code needs a maintainer-run build.                                                                             |
 | Dependabot PR CI fails the same way                  | Dependabot uses the **Dependabot** secret store, not Actions; mirror the secret there, or the CI workflow skips secret-dependent jobs for `github.actor == 'dependabot[bot]'`.                                                                                            |
 

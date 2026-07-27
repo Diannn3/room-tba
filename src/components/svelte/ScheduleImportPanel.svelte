@@ -280,9 +280,12 @@
   }
 
   .schedule-import-panel__weekday {
-    flex: 1 1 auto;
-    min-width: 2.5rem;
-    padding: 0.3125rem 0.375rem;
+    /* Sized to the label. Growing to fill the row turned three-letter days
+       into oversized pills. */
+    flex: 0 0 auto;
+    min-width: 2.75rem;
+    padding: 0.3125rem 0.625rem;
+    text-align: center;
     border-radius: 999px;
     border: 1px solid var(--map-chrome-border, hsl(0, 0%, 58%));
     background: hsl(0, 0%, 98%);

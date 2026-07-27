@@ -13,10 +13,10 @@ describe("community-links", () => {
   test("volunteer Messenger defaults to contribute short link", () => {
     expect(MESSENGER_URL).toBe(MESSENGER_CONTRIBUTE_URL);
     expect(MESSENGER_CONTRIBUTE_URL).toBe(
-      "https://room-tba.uplbtools.me/messenger/contribute",
+      "https://room-tba.uplb.tools/messenger/contribute",
     );
     expect(MESSENGER_MAINTAIN_URL).toBe(
-      "https://room-tba.uplbtools.me/messenger/maintain",
+      "https://room-tba.uplb.tools/messenger/maintain",
     );
     expect(MESSENGER_SHORT_CONTRIBUTE_URL).toBe(
       "https://messenger.uplbtools.me/contribute",

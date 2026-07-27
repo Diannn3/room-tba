@@ -6,7 +6,7 @@ Audit of the ten most recently updated production Vercel projects under `stimmie
 
 | Project | URL | Perf | A11y | BP | SEO |
 | --- | --- | ---: | ---: | ---: | ---: |
-| room-tba | room-tba.uplbtools.me | 32 | 90 | 96 | 100 |
+| room-tba | room-tba.uplb.tools | 32 | 90 | 96 | 100 |
 | uplbtools-me | www.uplbtools.me | 65 | 93 | 100 | 100 |
 | web-mobile | web.stimmie.dev | 71 | 100 | 96 | 100 |
 | stimmie-dev | www.stimmie.dev | 79 | 96 | 96 | 100 |
@@ -43,7 +43,7 @@ Audit of the ten most recently updated production Vercel projects under `stimmie
 Re-run after deploy:
 
 ```sh
-npx lighthouse https://room-tba.uplbtools.me --view
+npx lighthouse https://room-tba.uplb.tools --view
 ```
 
 ## Notes

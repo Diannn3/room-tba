@@ -13,6 +13,7 @@
   import LeaderboardModal from "./LeaderboardModal.svelte";
   import CoverageModal from "./CoverageModal.svelte";
   import ChangelogModal from "./ChangelogModal.svelte";
+  import AnnouncementsModal from "./AnnouncementsModal.svelte";
   import ProposalReviewPanel from "../ProposalReviewPanel.svelte";
   import StudentOrgsModal from "./StudentOrgsModal.svelte";
   import SettingsModal from "./SettingsModal.svelte";
@@ -46,6 +47,7 @@
     if (modalStore.type === "leaderboard") return "Contributor leaderboard";
     if (modalStore.type === "coverage") return "Campus data coverage";
     if (modalStore.type === "changelog") return "What's new";
+    if (modalStore.type === "announcements") return "Announcements";
     if (modalStore.type === "review") return "Review suggested edits";
     if (modalStore.type === "student-orgs") return "Student organizations";
     if (modalStore.type === "settings") return "Settings";
@@ -88,7 +90,9 @@
         ? 'landing-modal-container'
         : modalStore.type === 'leaderboard' || modalStore.type === 'coverage'
           ? 'leaderboard-modal-container'
-          : modalStore.type === 'changelog' || modalStore.type === 'review'
+          : modalStore.type === 'changelog' ||
+              modalStore.type === 'announcements' ||
+              modalStore.type === 'review'
             ? 'modal-content--large'
             : modalStore.type === 'settings' ||
                 modalStore.type === 'jeepney-route' ||
@@ -149,6 +153,15 @@
           <X size={20} aria-hidden="true" />
         </IconButton>
         <ChangelogModal />
+      {:else if modalStore.type === "announcements"}
+        <IconButton
+          class="modal-content__close-icon"
+          label="Close announcements"
+          onclick={closeDialog}
+        >
+          <X size={20} aria-hidden="true" />
+        </IconButton>
+        <AnnouncementsModal />
       {:else if modalStore.type === "review"}
         <IconButton
           class="modal-content__close-icon"

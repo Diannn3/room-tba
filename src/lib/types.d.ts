@@ -1,4 +1,5 @@
 import {
+  announcementsTable,
   buildingsTable,
   dormsTable,
   eventLocationsTable,
@@ -119,6 +120,7 @@ type DormData = typeof dormsTable.$inferSelect;
 
 type OrgData = typeof organizationsTable.$inferSelect;
 type PlaceData = typeof placesTable.$inferSelect;
+type AnnouncementData = typeof announcementsTable.$inferSelect;
 
 type Term = typeof termsTable.$inferSelect;
 

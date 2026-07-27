@@ -19,6 +19,7 @@
 import { getTableConfig, type PgTable } from "drizzle-orm/pg-core";
 import {
   aliasesTable,
+  announcementsTable,
   buildingsTable,
   classesTable,
   collegesTable,
@@ -132,6 +133,7 @@ const SYNCED_TABLES: PgTable[] = [
   jeepneyRoutesTable,
   jeepneyStopsTable,
   aliasesTable,
+  announcementsTable,
 ];
 
 /** Relax server types for the cache: no enums, timestamps stored as text

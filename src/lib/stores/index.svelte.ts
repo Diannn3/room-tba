@@ -171,6 +171,7 @@ import {
 } from "./data-stores.svelte";
 import { PlannerStore } from "./planner-store.svelte";
 import { TransitStore } from "./transit-store.svelte";
+import { AnnouncementsStore } from "./announcements-store.svelte";
 
 export { plannerRoomCodes } from "./data-stores.svelte";
 
@@ -972,6 +973,7 @@ export const terrainStore = new TerrainStore();
 export const trailStore = new TrailStore();
 export const jeepneyStore = new JeepneyStore();
 export const transitStore = new TransitStore();
+export const announcementsStore = new AnnouncementsStore();
 export const appBootstrapStore = new AppBootstrapStore();
 export const syncToastStore = new SyncToastStore();
 export const building3DStore = new Building3DStore();

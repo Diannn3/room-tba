@@ -1,3 +1,16 @@
+# [2.5.0](https://github.com/uplbtools/room-tba/compare/v2.4.0...v2.5.0) (2026-07-27)
+
+
+### Bug Fixes
+
+* **og:** drop the redundant wordmark headline on the default card ([53ddf10](https://github.com/uplbtools/room-tba/commit/53ddf10584d4d9641b175be3e33581471fa71a09))
+
+
+### Features
+
+* **announcements:** in-app announcements panel with unread badge ([85c6acd](https://github.com/uplbtools/room-tba/commit/85c6acd22f484d61ab388acc37313d69811f6dc5)), closes [#777](https://github.com/uplbtools/room-tba/issues/777) [#777](https://github.com/uplbtools/room-tba/issues/777)
+* **today:** add a Today screen for the day's planned classes ([f2a1174](https://github.com/uplbtools/room-tba/commit/f2a11743ba1c0eb32491cc18a178b149f204214f)), closes [#774](https://github.com/uplbtools/room-tba/issues/774)
+
 # [2.4.0](https://github.com/uplbtools/room-tba/compare/v2.3.1...v2.4.0) (2026-07-26)
 
 

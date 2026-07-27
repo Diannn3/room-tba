@@ -1,3 +1,11 @@
+## [2.5.1](https://github.com/uplbtools/room-tba/compare/v2.5.0...v2.5.1) (2026-07-27)
+
+
+### Bug Fixes
+
+* **pwa:** stop a stale service worker from leaving a blank page ([b4c7c58](https://github.com/uplbtools/room-tba/commit/b4c7c5817b04fa763bd666c4d0fc01e0b5376e8e))
+* **ui:** stop settings buttons stretching to full panel width ([defd445](https://github.com/uplbtools/room-tba/commit/defd445b84afabafa4466187ea778e4b5fdda3b8))
+
 # [2.4.0](https://github.com/uplbtools/room-tba/compare/v2.3.1...v2.4.0) (2026-07-26)
 
 

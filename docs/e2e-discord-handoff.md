@@ -130,7 +130,7 @@ Job-level filter inside reusable callers is not visible to `workflow_run`: use *
 ### Staging live URL (`playwright.staging.config.ts`)
 
 - **testDir:** `e2e/staging`
-- **baseURL:** `STAGING_BASE_URL` → `https://staging.room-tba.uplbtools.me`
+- **baseURL:** `STAGING_BASE_URL` → `https://staging.room-tba.uplb.tools`
 - **No webServer** (hits deployed staging)
 - **Count:** **6 tests** (1 skipped)
 
@@ -188,7 +188,7 @@ Advisory job: Playwright step only (after reset + build); integration skipped.
 | **E2E advisory** failed on PR | `#development` | No | **Yes, one line** | `⚠️ E2E advisory failed (non-blocking) on PR #447: {run_url}` |
 | **E2E staging** failed on **push** to staging | `#development` | Yes | **Yes** | `❌ Staging E2E failed after merge to staging @ {short_sha}` |
 | **E2E staging** failed **nightly** cron | `#development` | Yes | **Digest-style** | `🌙 Nightly staging E2E failed on staging @ {short_sha}`: suppress if same `{sha}` already notified in last 24h |
-| **Staging smoke** failed | `#deploys` | No | **Yes** | `⚠️ Staging smoke failed (live URL): staging.room-tba.uplbtools.me` |
+| **Staging smoke** failed | `#deploys` | No | **Yes** | `⚠️ Staging smoke failed (live URL): staging.room-tba.uplb.tools` |
 | **Bundle advisory** failed | `#development` | No | Optional / muted | Only if you want bundle noise; recommend **silent** or weekly digest |
 | E2E passed after prior failure on same PR | `#development` |: | **Optional** | `✅ E2E recovered on PR #447`: only if bot tracks last conclusion per PR |
 | Draft PR |: |: | **Silent** | Workflows don’t run |

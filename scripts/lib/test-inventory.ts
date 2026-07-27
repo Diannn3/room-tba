@@ -228,7 +228,7 @@ ${mdList(inv.e2eAdvisory)}
 
 ## E2E staging (Playwright) — ${inv.e2eStaging.length} files
 
-\`bun run e2e:staging\` — read-only against \`staging.room-tba.uplbtools.me\`.
+\`bun run e2e:staging\` — read-only against \`staging.room-tba.uplb.tools\`.
 
 ${mdList(inv.e2eStaging)}
 

@@ -10,8 +10,8 @@ Canonical reference: [AGENTS.md § Vercel CLI and environment ops](../../AGENTS.
 ## Project
 
 - Vercel: `stimmie/saan-ang-room` (`.vercel/project.json`)
-- Production: `room-tba.uplbtools.me` ← **`main` only**
-- Staging preview: `staging.room-tba.uplbtools.me` ← **`staging` branch**
+- Production: `room-tba.uplb.tools` ← **`main` only**
+- Staging preview: `staging.room-tba.uplb.tools` ← **`staging` branch**
 - GitHub org: `uplbtools/room-tba`
 
 Use **`gh`** and **`vercel`** CLI by default; do not send maintainers to dashboards when CLI works.

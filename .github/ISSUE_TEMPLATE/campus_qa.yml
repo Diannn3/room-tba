@@ -14,7 +14,7 @@ body:
     attributes:
       label: URL tested
       description: Production or staging link, or describe how you opened the app
-      placeholder: https://room-tba.uplbtools.me
+      placeholder: https://room-tba.uplb.tools
   - type: input
     id: device
     attributes:

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { campusCommunity } from "../../campus.config";
   import type { InitialSearchState } from "@lib/app-data";
   import {
     type AppContextData,
@@ -128,6 +129,15 @@
 
   function dismissStaticLoadingShell() {
     document.getElementById("app-loading-shell")?.remove();
+  }
+
+  function handleRenderError(error: unknown) {
+    // Logged, not swallowed: this is the blank-screen path, so we want it in
+    // the console and in RUM even though the boundary now renders a fallback.
+    console.error("App render failed", error);
+    // The shell may still be up if the crash happened before bootstrap
+    // finished, and it would cover the fallback with a stuck spinner.
+    dismissStaticLoadingShell();
   }
 
   const EMPTY_DB_DATA: DBData = {
@@ -506,11 +516,119 @@
   });
 </script>
 
-<Entry
-  initialSearch={metadata.initialSearch}
-  suppressLandingModal={metadata.suppressLandingModal ?? false}
-  openToday={metadata.openToday ?? false}
-  openPlanner={metadata.openPlanner ?? false}
-  openFinals={metadata.openFinals ?? false}
-  openCalendar={metadata.openCalendar ?? false}
-/>
+<!-- The bootstrap try/catch only covers data loading. An error thrown while
+     rendering happens after the loading shell is already dismissed, which
+     unmounts the tree and leaves blank white with no explanation. -->
+<svelte:boundary onerror={handleRenderError}>
+  <Entry
+    initialSearch={metadata.initialSearch}
+    suppressLandingModal={metadata.suppressLandingModal ?? false}
+    openToday={metadata.openToday ?? false}
+    openPlanner={metadata.openPlanner ?? false}
+    openFinals={metadata.openFinals ?? false}
+    openCalendar={metadata.openCalendar ?? false}
+  />
+
+  {#snippet failed(error, reset)}
+    <div class="app-crash" role="alert">
+      <div class="app-crash__card">
+        <p class="app-crash__title">Something broke while drawing the map</p>
+        <p class="app-crash__body">
+          Your saved campus data is still on this device. Try again, and if it
+          keeps happening please report it so we can fix the cause.
+        </p>
+        <div class="app-crash__actions">
+          <button
+            type="button"
+            class="app-crash__button app-crash__button--primary"
+            onclick={reset}
+          >
+            Try again
+          </button>
+          <button
+            type="button"
+            class="app-crash__button"
+            onclick={() => location.reload()}
+          >
+            Reload page
+          </button>
+          <a
+      class="app-crash__button"
+      href={`${campusCommunity.githubUrl}/issues/new`}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+            Report
+          </a>
+        </div>
+        <p class="app-crash__detail">{String(error)}</p>
+      </div>
+    </div>
+  {/snippet}
+</svelte:boundary>
+
+<style>
+  .app-crash {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background: hsl(5, 22%, 96%);
+  }
+
+  .app-crash__card {
+    max-width: 26rem;
+    text-align: center;
+  }
+
+  .app-crash__title {
+    margin: 0;
+    color: hsl(5, 12%, 16%);
+    font-size: 1.0625rem;
+    font-weight: 700;
+  }
+
+  .app-crash__body {
+    margin: 0.5rem 0 0;
+    color: hsl(5, 12%, 42%);
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .app-crash__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1.25rem;
+  }
+
+  .app-crash__button {
+    padding: 0.6rem 1rem;
+    border: 1px solid hsl(5, 28%, 78%);
+    border-radius: 0.625rem;
+    background: hsl(0, 0%, 100%);
+    color: hsl(5, 12%, 16%);
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .app-crash__button--primary {
+    border-color: transparent;
+    background: hsl(5, 53%, 32%);
+    color: hsl(0, 0%, 100%);
+  }
+
+  .app-crash__detail {
+    margin: 1rem 0 0;
+    color: hsl(5, 12%, 52%);
+    font-size: 0.75rem;
+    word-break: break-word;
+  }
+</style>

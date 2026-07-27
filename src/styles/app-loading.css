@@ -131,6 +131,55 @@
   }
 }
 
+/* Shown when the app island never hydrates, so a failed boot reads as a
+   fixable problem instead of a blank white page. */
+.app-boot-error__card {
+  position: relative;
+  z-index: 1;
+  max-width: 26rem;
+  text-align: center;
+}
+
+.app-boot-error__title {
+  margin: 0;
+  color: var(--app-loading-ink);
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.app-boot-error__body {
+  margin: 0.5rem 0 0;
+  color: var(--app-loading-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.app-boot-error__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 1.25rem;
+}
+
+.app-boot-error__button {
+  padding: 0.6rem 1rem;
+  border: 1px solid hsl(5, 28%, 78%);
+  border-radius: 0.625rem;
+  background: hsl(0, 0%, 100%);
+  color: var(--app-loading-ink);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.app-boot-error__button--primary {
+  border-color: transparent;
+  background: var(--app-loading-accent);
+  color: hsl(0, 0%, 100%);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .app-loading-hero {
     animation: none;

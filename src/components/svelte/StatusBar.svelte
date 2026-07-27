@@ -4,7 +4,6 @@
   import TriangleAlert from "@lucide/svelte/icons/triangle-alert";
   import LoaderCircle from "@lucide/svelte/icons/loader-circle";
   import { onMount } from "svelte";
-  import { registerSW } from "virtual:pwa-register";
   import {
     appBootstrapStore,
     syncToastStore,
@@ -58,17 +57,16 @@
     window.addEventListener("online", onOnline);
     window.addEventListener("offline", onOffline);
 
-    const updateSW = registerSW({
-      immediate: true,
-      onNeedRefresh() {
-        syncToastStore.markNeedRefresh();
-      },
-      onRegisteredSW(swScriptUrl) {
-        console.log("SW registered: ", swScriptUrl);
-      },
-    });
+    // Registration itself lives in src/pwa.ts, outside this island, so a
+    // broken app bundle cannot block the worker update that would fix it.
+    // It may have flagged an update before this component mounted.
+    if (document.documentElement.dataset.pwaNeedRefresh === "true") {
+      syncToastStore.markNeedRefresh();
+    }
+    const onNeedRefresh = () => syncToastStore.markNeedRefresh();
+    window.addEventListener("pwa:need-refresh", onNeedRefresh);
     syncToastStore.setRefreshHandler(() => {
-      void updateSW(true);
+      window.dispatchEvent(new Event("pwa:apply-update"));
     });
     void loadSponsors().then((data) => {
       if (data) goldSponsor = getGoldSponsor(data.sponsors);
@@ -76,6 +74,7 @@
     return () => {
       window.removeEventListener("online", onOnline);
       window.removeEventListener("offline", onOffline);
+      window.removeEventListener("pwa:need-refresh", onNeedRefresh);
     };
   });
 

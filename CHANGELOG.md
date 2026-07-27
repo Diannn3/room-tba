@@ -1,3 +1,11 @@
+## [2.5.2](https://github.com/uplbtools/room-tba/compare/v2.5.1...v2.5.2) (2026-07-27)
+
+
+### Bug Fixes
+
+* **seo:** point the site at room-tba.uplb.tools ([e3a0533](https://github.com/uplbtools/room-tba/commit/e3a0533ab72aa8a95393e59de9d4c1561957317d))
+* **transit:** make route stops clickable ([0032762](https://github.com/uplbtools/room-tba/commit/00327629f62faac9645987194adb6a89b7c0a60c))
+
 # [2.4.0](https://github.com/uplbtools/room-tba/compare/v2.3.1...v2.4.0) (2026-07-26)
 
 

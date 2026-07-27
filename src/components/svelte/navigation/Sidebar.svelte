@@ -1,4 +1,5 @@
 <script lang="ts">
+  import CalendarClock from "@lucide/svelte/icons/calendar-clock";
   import CalendarDays from "@lucide/svelte/icons/calendar-days";
   import FileCheck from "@lucide/svelte/icons/file-check";
   import BookText from "@lucide/svelte/icons/book-text";
@@ -18,9 +19,11 @@
   import University from "@lucide/svelte/icons/university";
   import UserPlus from "@lucide/svelte/icons/user-plus";
   import Users from "@lucide/svelte/icons/users";
+  import Megaphone from "@lucide/svelte/icons/megaphone";
   import { openBrowseClasses, openCampusBrowse } from "@lib/browse-campus";
   import {
     adminAuthStore,
+    announcementsStore,
     jeepneyStore,
     modalStore,
     queryStore,
@@ -104,6 +107,7 @@
     }
     return "buildings";
   });
+  const unreadAnnouncements = $derived(announcementsStore.unread);
   const mapCategoriesOpen = $derived(sidebarStore.panelOpen === "map");
   const contributorsOpen = $derived(sidebarStore.panelOpen === "contributors");
   const settingsOpen = $derived(sidebarStore.panelOpen === "settings");
@@ -335,6 +339,17 @@
 
       <NavLink
         onclick={() => {
+          sidebarStore.changeOpened("today");
+        }}
+        active={sidebarStore.panelOpen === "today"}
+        expanded={labeled}
+        tooltip="Today"
+      >
+        <CalendarClock size={20} />
+      </NavLink>
+
+      <NavLink
+        onclick={() => {
           sidebarStore.changeOpened("planner");
         }}
         active={sidebarStore.panelOpen === "planner"}
@@ -357,6 +372,27 @@
 
       <NavLink href="/wiki" expanded={labeled} tooltip="Wiki">
         <Library size={20} />
+      </NavLink>
+
+      <NavLink
+        onclick={() => {
+          modalStore.openModal("announcements");
+        }}
+        active={false}
+        expanded={labeled}
+        tooltip="Announcements"
+      >
+        <span class="nav-badge-anchor">
+          <Megaphone size={20} />
+          {#if unreadAnnouncements > 0}
+            <span
+              class="nav-badge"
+              aria-label={`${unreadAnnouncements} unread announcements`}
+            >
+              {unreadAnnouncements > 9 ? "9+" : unreadAnnouncements}
+            </span>
+          {/if}
+        </span>
       </NavLink>
     </div>
   </div>
@@ -606,6 +642,28 @@
 
   div.map-categories {
       margin-bottom:1rem;
+  }
+
+  /* Unread count sits on the icon so it stays visible in the collapsed rail. */
+  .nav-badge-anchor {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .nav-badge {
+    position: absolute;
+    top: -0.375rem;
+    right: -0.5rem;
+    min-width: 1rem;
+    padding: 0 0.1875rem;
+    box-sizing: border-box;
+    border-radius: 0.625rem;
+    background: hsl(5, 53%, 32%);
+    color: white;
+    font-size: 0.625rem;
+    font-weight: 700;
+    line-height: 1rem;
+    text-align: center;
   }
 
   .sidebar-home {

@@ -42,7 +42,10 @@ function clamp(value: string | null, max: number): string {
 
 export const GET: APIRoute = async ({ url }) => {
   // Exact-URL content is passed by the page: t=title, s=subtitle, k=kicker.
-  const title = clamp(url.searchParams.get("t"), 90) || "Room TBA";
+  // No title param means a page that did not name itself (the homepage).
+  // The wordmark badge already brands the card, so repeating "Room TBA" as
+  // the headline made it appear three times: site name, badge, headline.
+  const title = clamp(url.searchParams.get("t"), 90);
   const subtitle = clamp(url.searchParams.get("s"), 96);
   const kicker = clamp(url.searchParams.get("k"), 40);
 
@@ -161,23 +164,26 @@ export const GET: APIRoute = async ({ url }) => {
             maxWidth: 1040,
           },
         },
-        h(
-          "div",
-          {
-            style: {
-              // block + lineClamp keeps entity names inside the card.
-              display: "block",
-              lineClamp: 2,
-              fontSize: title.length > 42 ? 60 : title.length > 30 ? 72 : 86,
-              fontWeight: 700,
-              lineHeight: 1.04,
-              letterSpacing: "-0.03em",
-              color: WHITE,
-              textShadow: "0 3px 10px rgba(0, 0, 0, 0.55)",
-            },
-          },
-          title,
-        ),
+        title
+          ? h(
+              "div",
+              {
+                style: {
+                  // block + lineClamp keeps entity names inside the card.
+                  display: "block",
+                  lineClamp: 2,
+                  fontSize:
+                    title.length > 42 ? 60 : title.length > 30 ? 72 : 86,
+                  fontWeight: 700,
+                  lineHeight: 1.04,
+                  letterSpacing: "-0.03em",
+                  color: WHITE,
+                  textShadow: "0 3px 10px rgba(0, 0, 0, 0.55)",
+                },
+              },
+              title,
+            )
+          : h("div", { style: { display: "flex" } }),
         subtitle
           ? h(
               "div",

@@ -159,6 +159,32 @@ export const placesTable = pgTable("places", {
   updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
 });
 
+// Editorial notices shown in-app (#777). Severity is varchar + a TS allowlist
+// rather than a pg enum so a new severity does not need a migration, matching
+// places/organizations. `starts_on`/`ends_on` are campus wall-clock times like
+// events (see src/lib/event-time.ts).
+export const announcementsTable = pgTable("announcements", {
+  id: integer().primaryKey().generatedByDefaultAsIdentity({
+    name: "announcements_id_seq",
+    startWith: 1,
+    increment: 1,
+    minValue: 1,
+    maxValue: 2147483647,
+    cache: 1,
+  }),
+  title: text().notNull(),
+  body: text().notNull(),
+  severity: varchar({ length: 16 }).default("info").notNull(),
+  startsOn: timestamp("starts_on", { mode: "string" }).defaultNow().notNull(),
+  /** Null = open-ended (runs until an editor sets an end or deletes it). */
+  endsOn: timestamp("ends_on", { mode: "string" }),
+  linkUrl: text("link_url"),
+  author: text(),
+  createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),
+  version: integer().default(1).notNull(),
+  updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
+});
+
 export const collegesTable = pgTable("colleges", {
   id: integer().primaryKey().generatedByDefaultAsIdentity({
     name: "colleges_id_seq",

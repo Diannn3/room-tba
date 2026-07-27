@@ -17,7 +17,8 @@ export function getSyncKeysFromLs(): {
       "final_exams": "",
       "events": "",
       "organizations": "",
-      "places": ""
+      "places": "",
+      "announcements": ""
     }`,
     );
     return null;
@@ -46,7 +47,8 @@ export function getSyncKeysFromLs(): {
       "final_exams": "",
       "events": "",
       "organizations": "",
-      "places": ""
+      "places": "",
+      "announcements": ""
     }`,
     );
     return null;

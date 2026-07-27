@@ -82,6 +82,7 @@ export function changeOfMatriculationLabel(
   });
 }
 
+/** YYYY-MM-DD for `date` as seen in Asia/Manila — the app's notion of "today". */
 export function toManilaDateKey(date: Date) {
   return date.toLocaleDateString("en-CA", { timeZone: "Asia/Manila" });
 }

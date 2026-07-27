@@ -410,4 +410,27 @@ ALTER TABLE "aliases" ADD COLUMN IF NOT EXISTS "source" varchar(32);
 ALTER TABLE "aliases" ADD COLUMN IF NOT EXISTS "confidence" varchar(16) DEFAULT 'unverified' NOT NULL;
 ALTER TABLE "aliases" ADD COLUMN IF NOT EXISTS "created_at" text DEFAULT CURRENT_TIMESTAMP NOT NULL;
 ALTER TABLE "aliases" ADD COLUMN IF NOT EXISTS "building_name" text;
+CREATE TABLE IF NOT EXISTS "announcements" (
+  "id" integer PRIMARY KEY,
+  "title" text NOT NULL,
+  "body" text NOT NULL,
+  "severity" varchar(16) DEFAULT 'info' NOT NULL,
+  "starts_on" text DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  "ends_on" text,
+  "link_url" text,
+  "author" text,
+  "created_at" text DEFAULT CURRENT_TIMESTAMP NOT NULL,
+  "version" integer DEFAULT 1 NOT NULL,
+  "updated_at" text DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+ALTER TABLE "announcements" ADD COLUMN IF NOT EXISTS "title" text;
+ALTER TABLE "announcements" ADD COLUMN IF NOT EXISTS "body" text;
+ALTER TABLE "announcements" ADD COLUMN IF NOT EXISTS "severity" varchar(16) DEFAULT 'info' NOT NULL;
+ALTER TABLE "announcements" ADD COLUMN IF NOT EXISTS "starts_on" text DEFAULT CURRENT_TIMESTAMP NOT NULL;
+ALTER TABLE "announcements" ADD COLUMN IF NOT EXISTS "ends_on" text;
+ALTER TABLE "announcements" ADD COLUMN IF NOT EXISTS "link_url" text;
+ALTER TABLE "announcements" ADD COLUMN IF NOT EXISTS "author" text;
+ALTER TABLE "announcements" ADD COLUMN IF NOT EXISTS "created_at" text DEFAULT CURRENT_TIMESTAMP NOT NULL;
+ALTER TABLE "announcements" ADD COLUMN IF NOT EXISTS "version" integer DEFAULT 1 NOT NULL;
+ALTER TABLE "announcements" ADD COLUMN IF NOT EXISTS "updated_at" text DEFAULT CURRENT_TIMESTAMP NOT NULL;
 `;

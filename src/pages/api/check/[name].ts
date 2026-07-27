@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 export const prerender = false;
 
 const PATHS = [
+  "announcements",
   "buildings",
   "colleges",
   "divisions",

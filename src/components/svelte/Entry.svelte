@@ -17,6 +17,7 @@
     plannerStore,
     termStore,
     sidebarStore,
+    announcementsStore,
   } from "@lib/store.svelte";
   import { decodeSharePlan } from "@lib/planner/share-codec";
   import { resolveSharedPlan } from "@lib/planner/import-shared";
@@ -38,6 +39,7 @@
   import PlannerScreen from "@ui/planner/PlannerScreen.svelte";
   import FinalExamsScreen from "@ui/final-exams/FinalExamsScreen.svelte";
   import AcademicCalendarScreen from "@ui/calendar/AcademicCalendarScreen.svelte";
+  import TodayScreen from "@ui/today/TodayScreen.svelte";
   import EntityUrlSync from "@ui/EntityUrlSync.svelte";
   import EntityHoverPreview from "@ui/map/EntityHoverPreview.svelte";
   import "./map-chrome/map-chrome.css";
@@ -52,6 +54,7 @@
   import { shouldAutoOpenLandingModal } from "@lib/landing-modal-auto-open";
   import Sidebar from "./navigation/Sidebar.svelte";
   import StagingBanner from "./StagingBanner.svelte";
+  import AnnouncementBar from "./AnnouncementBar.svelte";
   import KeyboardShortcutsPopup from "./map-chrome/KeyboardShortcutsPopup.svelte";
   import { MediaQuery } from "svelte/reactivity";
   import type { RecentSearch } from "@lib/types";
@@ -59,6 +62,7 @@
   type Props = {
     initialSearch?: InitialSearchState;
     suppressLandingModal?: boolean;
+    openToday?: boolean;
     openPlanner?: boolean;
     openFinals?: boolean;
     openCalendar?: boolean;
@@ -68,6 +72,7 @@
   const {
     initialSearch,
     suppressLandingModal = false,
+    openToday = false,
     openPlanner = false,
     openFinals = false,
     openCalendar = false,
@@ -89,6 +94,10 @@
     // app root: /planner renders without the map-only location control that
     // used to hydrate auth, so direct planner visits were treated as guests.
     void adminAuthStore.hydrate();
+
+    // Cache-first: the sidebar badge and the critical bar need announcements
+    // before the user opens anything.
+    announcementsStore.init();
 
     const recentSearchesLS = localStorage.getItem("recent-search");
     try {
@@ -207,6 +216,12 @@
     if (openCalendar) {
       void termStore.init();
       sidebarStore.changeOpened("calendar");
+    }
+
+    // /today deep link (prop set by today.astro), same shape.
+    if (openToday) {
+      void termStore.init();
+      sidebarStore.changeOpened("today");
     }
 
     const planParam = urlParams.get("plan");
@@ -368,6 +383,7 @@
 <div class="app-layout" class:edit-mode={mapEditStore.enabled}>
   <Map />
   <StagingBanner />
+  <AnnouncementBar />
   <div class="ui-layer">
     <Sidebar />
     {#if ["map", "contributors", "settings"].includes(sidebarStore.panelOpen)}
@@ -414,6 +430,8 @@
           </div>
         </div>
       </div>
+    {:else if sidebarStore.panelOpen === "today"}
+      <TodayScreen />
     {:else if sidebarStore.panelOpen === "planner"}
       <PlannerScreen />
     {:else if sidebarStore.panelOpen === "finals"}

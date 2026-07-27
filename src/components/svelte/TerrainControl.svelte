@@ -261,7 +261,10 @@
 
   .terrain-toggle,
   .reset-btn {
-    display: flex;
+    /* inline-flex, not flex: a block-level flex container stretched these to
+       the full panel width for a two-word label. */
+    display: inline-flex;
+    align-self: flex-start;
     align-items: center;
     justify-content: center;
     gap: 0.375rem;

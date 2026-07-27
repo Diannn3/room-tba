@@ -107,7 +107,7 @@ const shareTitle = ogTitle ?? title;
          Synchronous in <head>, before paint: no flash, and the change
          listener keeps it live across resizes (devtools/QA responsive mode). -->
     <script is:inline define:vars={{ desktopOnlyUrl }}>
-      (function () {
+      (() => {
         var html = document.documentElement;
         var mql = window.matchMedia("(min-width: 48.0625rem)");
         var link = null;
@@ -127,7 +127,7 @@ const shareTitle = ogTitle ?? title;
         }
 
         apply(mql.matches);
-        mql.addEventListener("change", function (event) {
+        mql.addEventListener("change", (event) => {
           apply(event.matches);
         });
       })();
@@ -202,9 +202,116 @@ const shareTitle = ogTitle ?? title;
         </div>
       ) : null
     }
+    <script is:inline>
+      // AppRoot is client:only, so the page has no server-rendered fallback:
+      // if its chunk never loads (stale service worker, dropped connection,
+      // parse error) the page sits on the loading shell forever, and if the
+      // shell was already dismissed the user gets blank white with nothing to
+      // act on. Watch for an island that never got children and put a
+      // recoverable message on screen instead.
+      //
+      // Kept out of an Astro expression on purpose: inside `{cond ? (...) :
+      // null}` the script body is parsed as JSX and every `{` breaks it.
+      (() => {
+        var TIMEOUT_MS = 15000;
+
+        // Only the app pages mount AppRoot, so this both scopes the watchdog
+        // and avoids firing on a static page's unrelated island.
+        function appIsland() {
+          return document.querySelector('astro-island[component-url*="AppRoot"]');
+        }
+
+        function hydrated() {
+          var island = appIsland();
+          return !island || island.children.length > 0;
+        }
+
+            function resetAppData() {
+              var jobs = [];
+              try {
+                if (navigator.serviceWorker) {
+                  jobs.push(
+                    navigator.serviceWorker
+                      .getRegistrations()
+                      .then((regs) => Promise.all(
+                          regs.map((r) => r.unregister()),
+                        )),
+                  );
+                }
+                if (window.caches) {
+                  jobs.push(
+                    caches.keys().then((keys) => Promise.all(
+                        keys.map((k) => caches.delete(k)),
+                      )),
+                  );
+                }
+              } catch (err) {
+                console.error("Reset failed", err);
+              }
+              Promise.all(jobs)
+                .catch((err) => {
+                  console.error("Reset failed", err);
+                })
+                .then(() => {
+                  location.reload();
+                });
+            }
+
+            function fail(reason) {
+              if (hydrated()) return;
+              if (document.getElementById("app-boot-error")) return;
+              console.error("Room TBA failed to start:", reason);
+
+              var shell = document.getElementById("app-loading-shell");
+              if (shell) shell.remove();
+
+              var box = document.createElement("div");
+              box.id = "app-boot-error";
+              box.className = "app-loading-shell";
+              box.setAttribute("role", "alert");
+              box.innerHTML =
+                '<div class="app-boot-error__card">' +
+                '<p class="app-boot-error__title">Room TBA did not finish loading</p>' +
+                '<p class="app-boot-error__body">This is usually a bad connection or an outdated copy of the app saved on this device.</p>' +
+                '<div class="app-boot-error__actions">' +
+                '<button type="button" id="app-boot-reload" class="app-boot-error__button app-boot-error__button--primary">Reload</button>' +
+                '<button type="button" id="app-boot-reset" class="app-boot-error__button">Clear saved copy and reload</button>' +
+                "</div></div>";
+              document.body.appendChild(box);
+
+              document
+                .getElementById("app-boot-reload")
+                .addEventListener("click", () => {
+                  location.reload();
+                });
+              document
+                .getElementById("app-boot-reset")
+                .addEventListener("click", resetAppData);
+            }
+
+            // A module script that 404s or fails to parse fires an error event
+            // on the element itself, which does not bubble: catch on capture.
+            window.addEventListener(
+              "error",
+              (event) => {
+                var el = event.target;
+                if (el && el !== window && el.tagName === "SCRIPT") {
+                  fail("script failed to load: " + (el.src || "inline"));
+                }
+              },
+              true,
+            );
+
+            setTimeout(() => {
+              fail("island never hydrated after " + TIMEOUT_MS + "ms");
+            }, TIMEOUT_MS);
+          })();
+    </script>
     <slot />
     <Analytics />
     <script>
+      // Not inside the app island on purpose: see src/pwa.ts.
+      import "../pwa";
       import { initDatadogRum } from "@lib/datadog-rum";
       initDatadogRum();
     </script>

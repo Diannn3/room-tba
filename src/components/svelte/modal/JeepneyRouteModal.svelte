@@ -25,6 +25,20 @@
     jeepneyStore.openRouteOnMap(route.id);
     modalStore.closeModal();
   }
+
+  function showStop(index: number) {
+    if (!route) return;
+    // openStop bails when no route is selected on the map, and openRouteOnMap
+    // clears the stop when the route changes, so the route has to come first.
+    // The side-panel copy (routeId set) is already showing this route, and its
+    // container swaps to JeepneyStopPanel on its own, so there is nothing to
+    // select and no modal to dismiss.
+    if (routeId === null) {
+      jeepneyStore.openRouteOnMap(route.id);
+      modalStore.closeModal();
+    }
+    jeepneyStore.openStop(index);
+  }
 </script>
 
 {#if route}
@@ -69,8 +83,14 @@
       <ol class="jeepney-modal__stops">
         {#each route.stops as stop, i (`${route.id}-${i}`)}
           <li>
-            <span class="jeepney-modal__stop-index">{i + 1}</span>
-            <span class="jeepney-modal__stop-name">{stop.name}</span>
+            <button
+              type="button"
+              class="jeepney-modal__stop"
+              onclick={() => showStop(i)}
+            >
+              <span class="jeepney-modal__stop-index">{i + 1}</span>
+              <span class="jeepney-modal__stop-name">{stop.name}</span>
+            </button>
           </li>
         {/each}
       </ol>
@@ -221,16 +241,31 @@
     flex-direction: column;
   }
 
+  /* Stays the positioning context for the connector line and the index badge;
+     the button inside is the actual row. */
   .jeepney-modal__stops li {
     position: relative;
     display: flex;
+  }
+
+  /* Global `button { all: unset }` means every box property is re-stated. */
+  .jeepney-modal__stop {
+    display: flex;
     align-items: center;
     gap: 0.625rem;
+    width: 100%;
     min-height: 2rem;
-    padding-left: 2.125rem;
+    padding: 0.125rem 0.25rem 0.125rem 2.125rem;
+    border-radius: 0.375rem;
     font-size: 0.875rem;
     font-weight: 500;
+    text-align: left;
     color: hsl(0, 0%, 10%);
+    cursor: pointer;
+  }
+
+  .jeepney-modal__stop:hover {
+    background: color-mix(in srgb, var(--route-color, #7b1113) 10%, white);
   }
 
   .jeepney-modal__stops li::before {

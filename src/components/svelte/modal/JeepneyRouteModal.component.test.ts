@@ -29,6 +29,35 @@ describe("JeepneyRouteModal", () => {
     expectNoHorizontalOverflow(container);
   });
 
+  test("clicking a stop selects its route on the map, then the stop", () => {
+    const route = JEEPNEY_ROUTES[0];
+    jeepneyStore.modalRouteId = route.id;
+    jeepneyStore.selectedRouteId = null;
+    render(JeepneyRouteModal);
+
+    const stopIndex = 2;
+    screen
+      .getByRole("button", { name: new RegExp(route.stops[stopIndex].name) })
+      .click();
+
+    // Order matters: openStop bails when no route is selected, and selecting a
+    // different route clears the stop.
+    expect(jeepneyStore.selectedRouteId).toBe(route.id);
+    expect(jeepneyStore.selectedStopIndex).toBe(stopIndex);
+  });
+
+  test("the side panel copy opens the stop without re-selecting the route", () => {
+    const route = JEEPNEY_ROUTES[0];
+    jeepneyStore.openRouteOnMap(route.id);
+    render(JeepneyRouteModal, { props: { routeId: route.id } });
+
+    screen
+      .getByRole("button", { name: new RegExp(route.stops[1].name) })
+      .click();
+
+    expect(jeepneyStore.selectedStopIndex).toBe(1);
+  });
+
   test("shows an empty state when the route id is unknown", () => {
     jeepneyStore.modalRouteId = "does-not-exist";
     render(JeepneyRouteModal);

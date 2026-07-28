@@ -54,7 +54,7 @@ Portaled popovers use `use:portal` so they are not trapped in the bottom-chrome 
 - **Bottom band:** unified bottom chrome tray (`.bottom-chrome` in `Entry.svelte`); attribution leading, status center, compact Map tools + Legend chips plus location/propose actions trailing; one shared surface. The Map tools chip opens `MapToolsFlyout` (`mapToolsStore`) with the travel tools; while Travel time is active its minutes legend stacks above the tray as the bottom band's first child.
 - **Ephemeral:** toast and modals
 
-MapLibre attribution is disabled on the map canvas (`attributionControl={false}`). Required basemap credits live in `MapAttribution` on the bottom band so they stay visible above the mobile detail sheet.
+MapLibre attribution is disabled on the map canvas (`attributionControl={false}`). Required basemap credits live in `MapAttribution` on the bottom band so they stay visible above the mobile detail sheet. `© OpenStreetMap` and `© MapTiler` stay visible without a click; OpenMapTiles and the longer OSM wording sit behind the info control.
 
 ## CSS anchors (on `.app-layout`)
 

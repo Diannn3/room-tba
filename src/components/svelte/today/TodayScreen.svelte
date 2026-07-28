@@ -13,7 +13,6 @@
   } from "@lib/store.svelte";
   import { buildAgenda } from "@lib/today-agenda";
   import { formatTermDateRange, isDateWithinTerm } from "@lib/term-calendar";
-  import TermSelector from "@ui/TermSelector.svelte";
 
   const reducedMotion = new MediaQuery("(prefers-reduced-motion: reduce)");
 
@@ -22,7 +21,8 @@
   // Read-only over the planner's saved plan for the active term (#774).
   const sections = $derived(plannerStore.activePlan?.sections ?? []);
   const hasPlan = $derived(sections.length > 0);
-  const days = $derived(buildAgenda(sections));
+  const activeSections = $derived(offTermNote ? [] : sections);
+  const days = $derived(buildAgenda(activeSections));
 
   // A plan for a term that is not in session would otherwise read as "you have
   // nothing all week"; say which window the term actually covers instead.
@@ -74,9 +74,6 @@
       <span>Back to map</span>
     </button>
     <h1 class="today-title" id="today-screen-title">Today</h1>
-    {#if termStore.terms.length > 0}
-      <TermSelector variant="chip" />
-    {/if}
   </header>
 
   {#if offTermNote}

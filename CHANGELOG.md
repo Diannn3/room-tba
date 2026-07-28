@@ -1,3 +1,10 @@
+## [2.6.1](https://github.com/uplbtools/room-tba/compare/v2.6.0...v2.6.1) (2026-07-28)
+
+
+### Bug Fixes
+
+* **ui:** improve mobile modal readability and add online counter ([#832](https://github.com/uplbtools/room-tba/issues/832)) ([c4d3de1](https://github.com/uplbtools/room-tba/commit/c4d3de15edf58710ed6cefb9131f114d405bf784))
+
 # [2.4.0](https://github.com/uplbtools/room-tba/compare/v2.3.1...v2.4.0) (2026-07-26)
 
 

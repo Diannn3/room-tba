@@ -1,3 +1,10 @@
+# [2.6.0](https://github.com/uplbtools/room-tba/compare/v2.5.2...v2.6.0) (2026-07-28)
+
+
+### Features
+
+* **route:** shareable walking routes between two campus places ([#829](https://github.com/uplbtools/room-tba/issues/829)) ([dd17473](https://github.com/uplbtools/room-tba/commit/dd1747313eadbfeeab864c0407a398cf649a40fd)), closes [#651](https://github.com/uplbtools/room-tba/issues/651)
+
 # [2.4.0](https://github.com/uplbtools/room-tba/compare/v2.3.1...v2.4.0) (2026-07-26)
 
 

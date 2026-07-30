@@ -15,7 +15,13 @@
     isLandmarkPlaceCategory,
     placeDirectoryLabel,
   } from "@constants/place-categories";
-  import { jeepneyStore, queryStore, transitStore } from "@lib/store.svelte";
+  import { jeepneyStore, queryStore, sidePanelStore, transitStore } from "@lib/store.svelte";
+    import CollegeResult from "./CollegeResult.svelte";
+    import BuildingResult from "./BuildingResult.svelte";
+    import DivisionResult from "./DivisionResult.svelte";
+    import OrgResult from "./OrgResult.svelte";
+    import DormResult from "./DormResult.svelte";
+    import PlaceResult from "./PlaceResult.svelte";
 
   const appData = getAppData();
   const { buildings, colleges, divisions, dorms, organizations, places, loaded } =
@@ -288,6 +294,10 @@
       value: name,
     });
     queryStore.inputValue = name;
+    sidePanelStore.openPanel({
+        type: "search-result",
+        component: BuildingResult
+    })
   }
 
   function openCollege(name: string) {
@@ -297,6 +307,10 @@
       value: name,
     });
     queryStore.inputValue = name;
+    sidePanelStore.openPanel({
+        type: "search-result",
+        component: CollegeResult
+    })
   }
 
   function openDivision(name: string) {
@@ -306,6 +320,10 @@
       value: name,
     });
     queryStore.inputValue = name;
+    sidePanelStore.openPanel({
+        type: "search-result",
+        component: DivisionResult
+    })
   }
 
   function openOrg(name: string) {
@@ -315,6 +333,10 @@
       value: name,
     });
     queryStore.inputValue = name;
+    sidePanelStore.openPanel({
+        type: "search-result",
+        component: OrgResult
+    })
   }
 
   function openDorm(name: string) {
@@ -324,6 +346,10 @@
       value: name,
     });
     queryStore.inputValue = name;
+    sidePanelStore.openPanel({
+        type: "search-result",
+        component: DormResult
+    })
   }
 
   function openPlace(name: string) {
@@ -333,6 +359,10 @@
       value: name,
     });
     queryStore.inputValue = name;
+    sidePanelStore.openPanel({
+        type: "search-result",
+        component: PlaceResult
+    })
   }
 
   const filteredJeepneyRoutes = $derived.by(() => {
@@ -349,10 +379,12 @@
 
   function openJeepneyRoute(id: string) {
     jeepneyStore.openRouteOnMap(id);
+
   }
 
   function closeList() {
     queryStore.clearQuery();
+    sidePanelStore.closePanel();
   }
 
   function onFilterInput(event: Event) {

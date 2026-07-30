@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { BuildingData, EventData } from "@lib/types";
-  import { queryStore, type QueryStoreState } from "@lib/store.svelte";
+  import { queryStore, sidePanelStore, type QueryStoreState } from "@lib/store.svelte";
   import {
     entityHoverPreviewStore,
     buildingPreviewFromRow,
@@ -17,6 +17,14 @@
   import University from "@lucide/svelte/icons/university";
   import Users from "@lucide/svelte/icons/users";
   import X from "@lucide/svelte/icons/x";
+    import CollegeResult from "@ui/controls/CollegeResult.svelte";
+    import BuildingResult from "@ui/controls/BuildingResult.svelte";
+    import DivisionResult from "@ui/controls/DivisionResult.svelte";
+    import RoomResult from "@ui/room/RoomResult.svelte";
+    import DormResult from "@ui/controls/DormResult.svelte";
+    import PlaceResult from "@ui/controls/PlaceResult.svelte";
+    import EventResult from "@ui/controls/EventResult.svelte";
+    import OrgResult from "@ui/controls/OrgResult.svelte";
 
   let {
     value,
@@ -42,6 +50,32 @@
       value,
       eventSlug,
     });
+    const getResultComponent = () => {
+        switch (category) {
+            case "building":
+                return BuildingResult;
+            case "college":
+                return CollegeResult;
+            case "division":
+                return DivisionResult;
+            case "room":
+                return RoomResult;
+            case "dorm":
+                return DormResult;
+            case "organization":
+                return OrgResult;
+            case "event":
+                return EventResult;
+            case "place":
+                return PlaceResult;
+            default:
+                return null;
+        }
+    }
+    sidePanelStore.openPanel({
+        type: "search-result",
+        component: getResultComponent()
+    })
     queryStore.inputValue = value;
   }
 

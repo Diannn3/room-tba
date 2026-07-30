@@ -8,6 +8,7 @@ import type {
   QueryStoreState,
   RecentSearch,
   SidebarOpenType,
+  SidePanelMetaData,
 } from "./store-types";
 
 export class ModalStore {
@@ -175,22 +176,6 @@ export class ToastStore {
   };
 }
 
-export class MainControlsStore {
-  collapsed: boolean = $state(false);
-
-  toggle = () => {
-    this.collapsed = !this.collapsed;
-  };
-
-  expand = () => {
-    this.collapsed = false;
-  };
-
-  collapse = () => {
-    this.collapsed = true;
-  };
-}
-
 export class FloatingControlPanelStore {
   openPanel: FloatingControlPanel | null = $state(null);
 
@@ -236,5 +221,33 @@ export class SidebarStore {
 
   closeRail = () => {
     this.railOpen = false;
+  };
+}
+
+export class SidePanelStore {
+  state = $state<SidePanelMetaData | null>(null);
+  active = $state<boolean>(false);
+  collapsed: boolean = $state(false);
+
+  openPanel(state: SidePanelMetaData) {
+    this.state = state;
+    this.active = true;
+  }
+
+  closePanel = () => {
+    this.active = false;
+    this.state = null;
+  };
+
+  toggleVisibility = () => {
+    this.collapsed = !this.collapsed;
+  };
+
+  expand = () => {
+    this.collapsed = false;
+  };
+
+  collapse = () => {
+    this.collapsed = true;
   };
 }

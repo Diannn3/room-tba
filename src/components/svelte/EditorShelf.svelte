@@ -14,6 +14,7 @@
     mapEditStore,
     modalStore,
     proposalsStore,
+    sidePanelStore,
     toastStore,
   } from "@lib/store.svelte";
   import { beginEventPlacement } from "@lib/event-placement";
@@ -75,7 +76,9 @@
 
   function handleReviewQueue() {
     onclose?.();
-    modalStore.openModal("review");
+    sidePanelStore.openPanel({
+        type: "admin-suggestions"
+    })
   }
 
   function addEventLabel() {

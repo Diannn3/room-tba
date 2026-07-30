@@ -391,6 +391,7 @@
           locationStore.clearDestination();
         }
       }
+      sidePanelStore.closePanel();
     }
   }
 </script>

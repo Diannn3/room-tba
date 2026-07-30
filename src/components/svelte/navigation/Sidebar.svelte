@@ -42,7 +42,8 @@
   import CircleQuestionMark from "@lucide/svelte/icons/circle-question-mark";
   import { LogIn, LogOut } from "@lucide/svelte";
   import NavLink from "./NavLink.svelte";
-
+  import ClassesList from "@ui/controls/ClassesList.svelte";
+  import CampusBrowseList from "@ui/controls/CampusBrowseList.svelte";
   const entityButtonsInfo: {
     id: string;
     label: string;
@@ -62,7 +63,11 @@
   ];
   function handleBrowse(id: string) {
     if (id === "classes") {
-      openBrowseClasses(queryStore, sidePanelStore);
+      openBrowseClasses(queryStore);
+      sidePanelStore.openPanel({
+        type: "browsing-entities",
+        component: ClassesList,
+      });
       return;
     }
     if (id === "jeepney") {
@@ -78,12 +83,18 @@
         value: "Campus events",
       });
       queryStore.inputValue = "";
-      sidePanelStore.expand();
+      sidePanelStore.openPanel({
+        type: "browsing-events",
+      });
+
       return;
     }
     openCampusBrowse(queryStore, sidePanelStore, id);
+    sidePanelStore.openPanel({
+      type: "browsing-entities",
+      component: CampusBrowseList,
+    });
   }
-
   // Selecting anything auto-closes the mobile rail; the hamburger reopens it.
   $effect(() => {
     if (queryStore.category !== null) sidebarStore.closeRail();
@@ -529,7 +540,7 @@
       <div class="nav-support">
         <NavLink
           onclick={() => {
-              sidebarStore.changeOpened("settings")
+            sidebarStore.changeOpened("settings");
           }}
           active={settingsOpen}
           expanded={labeled}
@@ -641,7 +652,7 @@
   }
 
   div.map-categories {
-      margin-bottom:1rem;
+    margin-bottom: 1rem;
   }
 
   /* Unread count sits on the icon so it stays visible in the collapsed rail. */

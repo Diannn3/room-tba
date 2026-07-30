@@ -3,6 +3,7 @@
   import { SvelteSet } from "svelte/reactivity";
   import {
     adminAuthStore,
+    mapStore,
     proposalsStore,
     toastStore,
   } from "@lib/store.svelte";
@@ -36,7 +37,9 @@
 
   // Approve a single proposal: POST + apply the published entity to local
   // state. No toast/refresh — callers (single action, batch) decide those.
-  async function approveOne(id: number): Promise<{ ok: boolean; error?: string }> {
+  async function approveOne(
+    id: number,
+  ): Promise<{ ok: boolean; error?: string }> {
     const res = await fetch(`/api/admin/proposals/${id}/approve`, {
       method: "POST",
       credentials: "same-origin",
@@ -200,91 +203,99 @@
           disabled={selectedIds.size === 0 || batchRunning}
           onclick={runBatchApprove}
         >
-          {batchRunning
-            ? "Approving…"
-            : `Approve ${selectedIds.size} selected`}
+          {batchRunning ? "Approving…" : `Approve ${selectedIds.size} selected`}
         </button>
       </div>
       <ul class="entity-review-list">
         {#each proposalsStore.proposals as proposal (proposal.id)}
-          <li class="entity-review-item">
-            <div class="entity-review-meta">
-              <label class="entity-review-select">
-                <input
-                  type="checkbox"
-                  checked={selectedIds.has(proposal.id)}
-                  onchange={() => toggleSelected(proposal.id)}
-                  aria-label={`Select ${proposal.entityLabel} for batch approve`}
-                />
-              </label>
-              <span class="entity-review-entity">
-                {proposal.entityLabel}
-                <small>({proposal.entityType})</small>
-              </span>
-              <span class="entity-review-submitter">
-                <Avatar name={proposal.submitterName} size={20} />
-                {proposal.submitterName}
-              </span>
-            </div>
-            {#if proposal.currentVersion != null && proposal.currentVersion !== proposal.baseVersion}
-              <p class="entity-review-stale" role="alert">
-                Published data changed since this was submitted. Compare
-                carefully — approving may conflict.
-              </p>
-            {/if}
-            <ul class="entity-review-changes">
-              {#each buildFieldDiffs(proposal.currentValues ?? null, proposal.proposedPatch) as diff (diff.field)}
-                <li class="entity-review-diff">
-                  <span class="entity-review-diff-label">{diff.label}</span>
-                  <span class="entity-review-diff-values">
-                    <span
-                      class="entity-review-diff-old"
-                      class:entity-review-diff-before={diff.before != null}
-                      >{proposal.currentValues == null &&
-                      proposal.entityType.startsWith("create_")
-                        ? "New entry"
-                        : (diff.before ?? "—")}</span
-                    >
-                    <span aria-hidden="true">→</span>
-                    <span class="entity-review-diff-after"
-                      >{diff.after ?? "—"}</span
-                    >
-                  </span>
-                </li>
-              {/each}
-            </ul>
-            {#if bundledRoomsSummary(proposal.entityType as ProposalEntityType, proposal.proposedPatch as Record<string, unknown>)}
-              <p class="entity-review-bundled">
-                {bundledRoomsSummary(
-                  proposal.entityType as ProposalEntityType,
-                  proposal.proposedPatch as Record<string, unknown>,
-                )}
-              </p>
-            {/if}
-            {#if proposal.status === "needs_changes" && proposal.adminNote}
-              <p class="entity-review-note">
-                Previous note: {proposal.adminNote}
-              </p>
-            {/if}
-            <EntityEditorFormField
-              label="Note to contributor"
-              inputId="proposal-note-{proposal.id}"
-            >
-              {#snippet control()}
-                <textarea
-                  id="proposal-note-{proposal.id}"
-                  rows="2"
-                  bind:value={noteById[proposal.id]}
-                  placeholder="Optional for reject; required to request changes."
-                ></textarea>
-              {/snippet}
-            </EntityEditorFormField>
-            <EntityReviewActions
-              disabled={actingId === proposal.id}
-              onapprove={() => runAction(proposal.id, "approve")}
-              onrequestChanges={() => runAction(proposal.id, "request-changes")}
-              onreject={() => runAction(proposal.id, "reject")}
-            />
+          <li>
+            <button class="entity-review-item" onclick={() => {
+                if (proposal.proposedPatch["lat"] && proposal.proposedPatch["lon"]) {
+                    mapStore.mapInstance?.flyTo({
+                        center: [proposal.proposedPatch["lon"], proposal.proposedPatch["lat"]],
+                        zoom: 18
+                    })
+                }
+            }}>
+              <div class="entity-review-meta">
+                <label class="entity-review-select">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(proposal.id)}
+                    onchange={() => toggleSelected(proposal.id)}
+                    aria-label={`Select ${proposal.entityLabel} for batch approve`}
+                  />
+                </label>
+                <span class="entity-review-entity">
+                  {proposal.entityLabel}
+                  <small>({proposal.entityType})</small>
+                </span>
+                <span class="entity-review-submitter">
+                  <Avatar name={proposal.submitterName} size={20} />
+                  {proposal.submitterName}
+                </span>
+              </div>
+              {#if proposal.currentVersion != null && proposal.currentVersion !== proposal.baseVersion}
+                <p class="entity-review-stale" role="alert">
+                  Published data changed since this was submitted. Compare
+                  carefully — approving may conflict.
+                </p>
+              {/if}
+              <ul class="entity-review-changes">
+                {#each buildFieldDiffs(proposal.currentValues ?? null, proposal.proposedPatch) as diff (diff.field)}
+                  <li class="entity-review-diff">
+                    <span class="entity-review-diff-label">{diff.label}</span>
+                    <span class="entity-review-diff-values">
+                      <span
+                        class="entity-review-diff-old"
+                        class:entity-review-diff-before={diff.before != null}
+                        >{proposal.currentValues == null &&
+                        proposal.entityType.startsWith("create_")
+                          ? "New entry"
+                          : (diff.before ?? "—")}</span
+                      >
+                      <span aria-hidden="true">→</span>
+                      <span class="entity-review-diff-after"
+                        >{diff.after ?? "—"}</span
+                      >
+                    </span>
+                  </li>
+                {/each}
+              </ul>
+              {#if bundledRoomsSummary(proposal.entityType as ProposalEntityType, proposal.proposedPatch as Record<string, unknown>)}
+                <p class="entity-review-bundled">
+                  {bundledRoomsSummary(
+                    proposal.entityType as ProposalEntityType,
+                    proposal.proposedPatch as Record<string, unknown>,
+                  )}
+                </p>
+              {/if}
+              {#if proposal.status === "needs_changes" && proposal.adminNote}
+                <p class="entity-review-note">
+                  Previous note: {proposal.adminNote}
+                </p>
+              {/if}
+              <EntityEditorFormField
+                label="Note to contributor"
+                inputId="proposal-note-{proposal.id}"
+              >
+                {#snippet control()}
+                  <textarea
+                    id="proposal-note-{proposal.id}"
+                    rows="2"
+                    bind:value={noteById[proposal.id]}
+                    placeholder="Optional for reject; required to request changes."
+                  ></textarea>
+                {/snippet}
+              </EntityEditorFormField>
+              <EntityReviewActions
+                disabled={actingId === proposal.id}
+                onapprove={() => runAction(proposal.id, "approve")}
+                onrequestChanges={() =>
+                  runAction(proposal.id, "request-changes")}
+                onreject={() => runAction(proposal.id, "reject")}
+              />
+            </button>
           </li>
         {/each}
       </ul>

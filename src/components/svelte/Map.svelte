@@ -10,6 +10,7 @@
   // maplibre at its self-contained CSP worker bundle instead.
   maplibregl.setWorkerUrl(maplibreWorkerUrl);
   import { getAppActions, getAppData } from "@lib/context";
+
   import {
     queryStore,
     locationStore,
@@ -148,6 +149,11 @@
     submitCreateProposal,
     submitPinPositionProposal,
   } from "@lib/proposals/client";
+    import BuildingResult from "./controls/BuildingResult.svelte";
+    import PlaceResult from "./controls/PlaceResult.svelte";
+    import OrgResult from "./controls/OrgResult.svelte";
+    import DormResult from "./controls/DormResult.svelte";
+    import EventResult from "./controls/EventResult.svelte";
   const data = getAppData();
   const appActions = getAppActions();
   const { buildings, dorms, events, organizations, places, loaded } =
@@ -264,7 +270,10 @@
       value: place.name,
     });
     queryStore.inputValue = place.name;
-    sidePanelStore.expand();
+    sidePanelStore.openPanel({
+        type: "search-result",
+        component: PlaceResult
+    })
   }
 
   // Event titles are not unique, so resolve the selected event by its slug when
@@ -2247,7 +2256,7 @@
     });
   });
 
-  function handleMarkerClick(buildingName: string) {
+  function handleBuildingMarkerClick(buildingName: string) {
     if (eventPlacementStore.active) return;
     if (isMapEditEnabled() && selectedEditKey !== null) return;
     if (buildingName === queryStore.inputValue) return;
@@ -2257,6 +2266,10 @@
       value: buildingName,
     });
     queryStore.inputValue = buildingName;
+    sidePanelStore.openPanel({
+        type: "search-result",
+        component: BuildingResult
+    })
   }
 
   function handleDormMarkerClick(dormName: string) {
@@ -2269,6 +2282,10 @@
       value: dormName,
     });
     queryStore.inputValue = dormName;
+    sidePanelStore.openPanel({
+        type: "search-result",
+        component: DormResult
+    })
   }
 
   function handleOrgMarkerClick(name: string) {
@@ -2287,7 +2304,10 @@
       value: name,
     });
     queryStore.inputValue = name;
-    sidePanelStore.expand();
+    sidePanelStore.openPanel({
+        type: "search-result",
+        component: OrgResult
+    })
   }
 
   function handleEventMarkerClick(event: EventData) {
@@ -2301,6 +2321,11 @@
       eventSlug: event.slug,
     });
     queryStore.inputValue = event.title;
+    sidePanelStore.openPanel({
+        type: "search-result",
+        component: EventResult
+    })
+    alert("event marker clicked");
   }
 
   function toggleEventMarkerGroup(groupKey: string) {
@@ -2999,7 +3024,7 @@
                 <Marker
                   lngLat={[position.lon, position.lat]}
                   draggable={canDragPin(editKey)}
-                  onclick={() => handleMarkerClick(building.buildingName)}
+                  onclick={() => handleBuildingMarkerClick(building.buildingName)}
                   ondragstart={() => beginMarkerDrag(editKey)}
                   ondragend={(e) =>
                     handleBuildingDragEnd(

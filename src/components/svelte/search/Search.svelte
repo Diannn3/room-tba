@@ -4,7 +4,6 @@
   import { fade } from "svelte/transition";
   import Menu from "@lucide/svelte/icons/menu";
   import ShieldCheck from "@lucide/svelte/icons/shield-check";
-  import { getAppData } from "@lib/context";
   import { getMapChromeVisibility } from "@lib/map-chrome";
   import {
     adminAuthStore,
@@ -13,10 +12,9 @@
     proposalsStore,
     queryStore,
     sidebarStore,
+    sidePanelStore,
   } from "@lib/store.svelte";
   import Suggestions from "./Suggestions.svelte";
-  import TermSelector from "@ui/TermSelector.svelte";
-  import MapDimensionToggle from "@ui/MapDimensionToggle.svelte";
   import MapChromeToggleButton from "@ui/map-chrome/MapChromeToggleButton.svelte";
   import { observeBlockHeight } from "@lib/layout-css-vars";
   import { registerSearchFocus } from "@lib/search-focus";
@@ -31,9 +29,6 @@
   let searchFocused = $state(false);
   const mobile = new MediaQuery("max-width:48rem");
   const reducedMotion = new MediaQuery("(prefers-reduced-motion: reduce)");
-
-  const appData = getAppData();
-  const { loaded } = $derived(appData());
   const chrome = $derived(getMapChromeVisibility());
 
   $effect(() => {
@@ -87,6 +82,7 @@
     queryStore.clearQuery();
     draftInput = "";
     searchElement?.focus();
+    sidePanelStore.closePanel();
   }
 
   const clearSelectionLabel = $derived(
@@ -647,138 +643,4 @@
     max-height: min(50dvh, 18rem);
   }
 
-  .map-search-chrome__chips {
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 0.375rem;
-    box-sizing: border-box;
-    min-width: 0;
-    width: 100%;
-    max-width: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-    overscroll-behavior-x: contain;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    padding: 0.3125rem 0.625rem 0.3125rem;
-    border-top: 1px solid var(--map-chrome-divider, hsl(5 12% 88%));
-    transition: border-radius var(--motion-duration-micro)
-      var(--motion-ease-out);
-  }
-
-  .map-search-chrome__chips > :global(*) {
-    flex-shrink: 0;
-    min-width: 0;
-  }
-
-  .search-root:not(.mobile-shell) .map-search-chrome__chips {
-    border-bottom-left-radius: calc(var(--map-chrome-radius, 1rem) - 1px);
-    border-bottom-right-radius: calc(var(--map-chrome-radius, 1rem) - 1px);
-  }
-
-  .search-root.events-panel-open:not(.mobile-shell) .map-search-chrome__chips,
-  .search-root.transit-panel-open:not(.mobile-shell) .map-search-chrome__chips {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-
-  .map-search-chrome__chips::-webkit-scrollbar {
-    display: none;
-  }
-
-  .map-search-chrome__chips :global(.building-filter-bar) {
-    flex: 0 0 auto;
-    min-width: 0;
-    padding: 0;
-  }
-
-  .map-search-chrome__chips :global(.term-selector) {
-    flex: 0 0 auto;
-    min-width: 0;
-    max-width: min(100%, 18rem);
-  }
-
-  .map-search-chrome__chips :global(.transit-filter-chip) {
-    flex: 0 0 auto;
-    min-width: 0;
-  }
-
-  .map-search-chrome__chips :global(.term-filter-chip) {
-    flex: 0 0 auto;
-    min-width: 0;
-  }
-
-  .map-search-chrome__transit-routes {
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
-    min-width: 0;
-    width: 100%;
-    max-width: 100%;
-    padding: 0.3125rem 0.625rem 0.375rem;
-    border-top: 1px solid var(--map-chrome-divider, hsl(5 12% 88%));
-  }
-
-  .search-root.transit-panel-open:not(.mobile-shell) .map-search-chrome__chips,
-  .search-root.transit-panel-open:not(.mobile-shell)
-    .map-search-chrome__transit-routes {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-
-  .search-root.transit-panel-open:not(.mobile-shell)
-    .map-search-chrome__transit-routes {
-    border-bottom-left-radius: calc(var(--map-chrome-radius, 1rem) - 1px);
-    border-bottom-right-radius: calc(var(--map-chrome-radius, 1rem) - 1px);
-  }
-
-  .map-search-chrome__events {
-    display: flex;
-    flex-direction: column;
-    box-sizing: border-box;
-    min-width: 0;
-    width: 100%;
-    max-width: 100%;
-    min-height: 0;
-    max-height: min(50dvh, 22rem);
-    overflow-x: clip;
-    overflow-y: hidden;
-    overscroll-behavior: contain;
-    border-top: 1px solid var(--map-chrome-divider, hsl(5 12% 88%));
-    padding: 0.1875rem 0.625rem 0.4375rem;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .search-root.events-panel-open:not(.mobile-shell) .map-search-chrome__events {
-    border-bottom-left-radius: calc(var(--map-chrome-radius, 1rem) - 1px);
-    border-bottom-right-radius: calc(var(--map-chrome-radius, 1rem) - 1px);
-  }
-
-  .map-search-chrome__events :global(.events-section) {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    flex: 1 1 auto;
-    gap: 0;
-  }
-
-  .map-search-chrome__events :global(.section-actions--inline) {
-    flex: 0 0 auto;
-    gap: 0.375rem;
-  }
-
-  .map-search-chrome__events :global(.event-list) {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 auto;
-    min-height: 0;
-    gap: 0.375rem;
-    margin-top: 0.25rem;
-    padding-top: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-  }
 </style>

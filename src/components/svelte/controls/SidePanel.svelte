@@ -1,24 +1,12 @@
 <script lang="ts">
   import { queryStore, sidePanelStore, jeepneyStore } from "@lib/store.svelte";
-  import BuildingResult from "./BuildingResult.svelte";
-  import CollegeResult from "./CollegeResult.svelte";
-  import DivisionResult from "./DivisionResult.svelte";
-  import DormResult from "./DormResult.svelte";
-  import OrgResult from "./OrgResult.svelte";
-  import PlaceResult from "./PlaceResult.svelte";
   import EventsList from "./EventsList.svelte";
-  import EventResult from "./EventResult.svelte";
-  import RoomResult from "@ui/room/RoomResult.svelte";
-  import ClassQuery from "./ClassQuery.svelte";
-  import ClassesList from "./ClassesList.svelte";
-  import CampusBrowseList from "./CampusBrowseList.svelte";
-  import JeepneyStopPanel from "./JeepneyStopPanel.svelte";
-  import JeepneyRouteModal from "@ui/modal/JeepneyRouteModal.svelte";
   import SponsorBanner from "@ui/SponsorBanner.svelte";
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import ChevronRight from "@lucide/svelte/icons/chevron-right";
   import { MediaQuery } from "svelte/reactivity";
   import { resolveSheetDragReleaseIntent } from "@lib/sheet-drag-intent";
+    import ProposalReviewPanel from "@ui/ProposalReviewPanel.svelte";
 
   const mobile = new MediaQuery("max-width:48rem");
   // Entity detail views only — never list/browse panels (docs/ad-policy.md).
@@ -164,8 +152,10 @@
   const sheetTransition = $derived(isDragging ? "none" : "");
 
 </script>
-{#if (queryStore.category !== null || jeepneyStore.selectedStopIndex !== null) && !(mobile.current && sidePanelStore.collapsed)}
-      <div class="drawer" class:is-collapsed={sidePanelStore.collapsed}>
+{#if sidePanelStore.active && sidePanelStore.state}
+      <div class="drawer"
+        class:is-collapsed={sidePanelStore.collapsed}
+      >
         <div
           class="drawer-sheet"
           style:transform={sheetTransform}
@@ -194,43 +184,26 @@
             {/if}
           </button>
           <div class="drawer-card">
+              <!-- aria-hidden={sidePanelStore.collapsed} -->
             <div
               id="side-panel-details"
               class="side-panel-details map-chrome-scroll"
-              aria-hidden={sidePanelStore.collapsed}
             >
-              {#if jeepneyStore.selectedStopIndex !== null}
+                {#if sidePanelStore.state.type === "browsing-entities" || sidePanelStore.state.type === "search-result"}
+                        <sidePanelStore.state.component />
+                    {:else if sidePanelStore.state.type === "browsing-events"}
+                        <EventsList />
+                    {:else if sidePanelStore.state.type === "admin-suggestions"}
+                        <ProposalReviewPanel />
+                {/if}
+              <!-- {#if jeepneyStore.selectedStopIndex !== null}
                 <JeepneyStopPanel />
               {:else if jeepneyStore.selectedRouteId !== null && queryStore.category === "browse" && queryStore.queryValue === "jeepney"}
                 <JeepneyRouteModal
                   routeId={jeepneyStore.selectedRouteId}
                   onback={() => jeepneyStore.clearRoute()}
                 />
-              {:else if queryStore.category === "building"}
-                <BuildingResult />
-              {:else if queryStore.category === "college"}
-                <CollegeResult />
-              {:else if queryStore.category === "division"}
-                <DivisionResult />
-              {:else if queryStore.category === "room"}
-                <RoomResult />
-              {:else if queryStore.category === "class"}
-                <ClassQuery />
-              {:else if queryStore.category === "classes"}
-                <ClassesList />
-              {:else if queryStore.category === "browse"}
-                <CampusBrowseList />
-              {:else if queryStore.category === "dorm"}
-                <DormResult />
-              {:else if queryStore.category === "organization"}
-                <OrgResult />
-              {:else if queryStore.category === "place"}
-                <PlaceResult />
-              {:else if queryStore.category === "event"}
-                <EventResult />
-              {:else if queryStore.category === "events"}
-                <EventsList />
-              {/if}
+                {/if} -->
               {#if showSponsorBanner}
                 <SponsorBanner />
               {/if}
@@ -343,12 +316,12 @@
 
     .drawer {
       position: fixed;
-      top: var(--mobile-detail-sheet-top-inset);
+      top: auto;
       right: var(--map-ui-padding, 0.375rem);
       left: var(--map-ui-padding, 0.375rem);
       bottom: var(--side-panel-bottom-inset);
       width: auto;
-      height: auto;
+      height: 50%;
       max-height: none;
       display: flex;
       flex-direction: column;

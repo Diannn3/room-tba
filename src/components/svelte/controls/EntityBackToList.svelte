@@ -2,6 +2,7 @@
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import { openCampusBrowse, type CampusBrowseTab } from "@lib/browse-campus";
   import { queryStore, sidePanelStore } from "@lib/store.svelte";
+    import CampusBrowseList from "./CampusBrowseList.svelte";
 
   type Props = {
     /** Which campus browse list to reopen. */
@@ -16,7 +17,13 @@
 <button
   type="button"
   class="entity-back-to-list"
-  onclick={() => openCampusBrowse(queryStore, sidePanelStore, tab)}
+  onclick={() => {
+      openCampusBrowse(queryStore, sidePanelStore, tab);
+      sidePanelStore.openPanel({
+          type: "browsing-entities",
+          component: CampusBrowseList
+      })
+  }}
 >
   <ChevronLeft size={15} aria-hidden="true" />
   {label}

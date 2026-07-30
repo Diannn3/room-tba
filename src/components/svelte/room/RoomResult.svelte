@@ -8,6 +8,7 @@
     modalStore,
     queryStore,
     roomClassesStore,
+    sidePanelStore,
     termStore,
     toastStore,
   } from "@lib/store.svelte";
@@ -48,6 +49,7 @@
   import Classes from "./Classes.svelte";
   import FinalExamsList from "./FinalExamsList.svelte";
     import TermSelector from "@ui/TermSelector.svelte";
+    import BuildingResult from "@ui/controls/BuildingResult.svelte";
 
   type RoomEditableField =
     | "roomCode"
@@ -394,6 +396,10 @@
       category: "building",
       value: buildingName,
     });
+    sidePanelStore.openPanel({
+        type: "search-result",
+        component: BuildingResult
+    })
   }
 
   const allFieldsUnchanged = $derived.by(() => {

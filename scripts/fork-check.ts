@@ -72,6 +72,7 @@ const markers: Marker[] = [
 const allowList = [
   /scripts\/fork-check\.ts$/,
   /src\/pages\/wiki\/fork-for-your-campus\.astro$/,
+  /docs\/fork-data-guide\.md$/,
 ];
 
 type Hit = { file: string; line: number; text: string; hint: string };

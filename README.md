@@ -269,6 +269,8 @@ MIT lets you fork this and run it for a different school. This is not a "swap th
 
 Full guide with every file path and the painful parts: **[Fork this for your campus](https://room-tba.uplb.tools/wiki/fork-for-your-campus)** in the wiki.
 
+**See it working first:** `bun run seed:sample` loads a small fictional campus (6 buildings, 12 rooms, 2 terms of classes) into an empty database so the app runs before you have any real data, and `bun run import:classes-generic -- your-classes.csv` imports your registrar's export from a documented flat CSV/JSON shape. Walkthrough: [docs/fork-data-guide.md](docs/fork-data-guide.md).
+
 The short version of what you replace:
 
 | File | What to change |
@@ -277,10 +279,10 @@ The short version of what you replace:
 | `src/constants/map-terrain.ts` | Terrain source (Makiling) — disable if your campus is flat. Bounds and camera come from `campus.config.ts`. |
 | `public/room_info.json` | UPLB building seed → your buildings |
 | `src/constants/jeepney-routes.ts` + geometries | Delete if no campus transit overlay |
-| `scripts/import-amis-classes.ts` and friends | UPLB data sources (AMIS, OUR finals, OSA). Write your own importer for your registrar's export. |
+| `scripts/import-amis-classes.ts` and friends | UPLB data sources (AMIS, OUR finals, OSA). Use `bun run import:classes-generic` with your registrar's export instead ([guide](docs/fork-data-guide.md)). |
 | Supabase DB contents | Every row is UPLB. Schema stays; data goes. |
 
-The hard part is class schedules. Room TBA pulls from AMIS, which is UPLB's system. You do not have AMIS — you need an importer for whatever your registrar gives you, pointed at the `classes` table, rerun each term. The existing import scripts are a template for the shape, not the source.
+The hard part is class schedules. Room TBA pulls from AMIS, which is UPLB's system. You do not have AMIS — flatten whatever your registrar gives you into the generic importer's CSV/JSON shape ([docs/fork-data-guide.md](docs/fork-data-guide.md)) and rerun it each term. `data/sample-campus/classes.csv` is the worked example.
 
 After you think you've replaced everything, run `bun run fork:check` — it scans for hardcoded UPLB strings you missed and reports file:line hits. Wire it into your fork's CI so a stray UPLB string does not sneak back in on a merge from upstream.
 

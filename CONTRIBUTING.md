@@ -87,6 +87,8 @@ bun dev
 
 Open http://localhost:4321. More setup help: [docs/developer-guide.md](docs/developer-guide.md).
 
+Empty database? `bun run seed:sample` loads a small fictional campus (buildings, rooms, two terms of classes) so the app has something to show — see [docs/fork-data-guide.md](docs/fork-data-guide.md).
+
 ### Workflow
 
 1. Find or file an issue ([coding task template](https://github.com/uplbtools/room-tba/issues/new?template=coding_task.yml) or [good first issue](https://github.com/uplbtools/room-tba/issues?q=is%3Aopen+label%3A%22good+first+issue%22)).

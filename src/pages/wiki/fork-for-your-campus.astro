@@ -200,21 +200,21 @@ bunx drizzle-kit push</code></pre>
         day-to-day and how volunteers contribute without touching the DB.
       </p>
       <p>
-        <strong>A seed script.</strong> For a first bulk load (every building,
-        every room, every class), write a script that reads your registrar's
-        export and upserts into Postgres. Use
-        <code>scripts/import-amis-classes.ts</code> as a <em>template for the
-        shape</em> — Drizzle upsert by natural key, term handling, the
-        class/room join — not the AMIS fetch. Your data source is different.
-        The import scripts read from files under <code>data/</code> (gitignored)
-        and write to <code>DATABASE_URL</code>; copy that pattern.
+        <strong>A seed script.</strong> Run <code>bun run seed:sample</code>
+        first — it loads a small fictional campus
+        (<code>data/sample-campus/</code>) into an empty database so the whole
+        app works before you have any real data. For your first real bulk load,
+        replace the sample JSON with your campus and reuse
+        <code>scripts/seed-sample-campus.ts</code> — Drizzle upsert, safe to
+        rerun. Walkthrough: <code>docs/fork-data-guide.md</code>.
       </p>
       <p>
-        Class schedules are the hard part. Room TBA pulls from AMIS, which is
-        UPLB's system. You do not have AMIS. You need whatever export your
-        registrar or SAIS equivalent gives you — CSV, JSON, a scraped portal,
-        a PDF someone has to retype. Write one importer for it, point it at the
-        <code>classes</code> table, and rerun it each term.
+        Class schedules are the recurring part. Room TBA pulls from AMIS, which
+        is UPLB's system. You do not have AMIS — flatten whatever export your
+        registrar or SAIS equivalent gives you (CSV, JSON, a scraped portal, a
+        PDF someone has to retype) into the documented shape of
+        <code>bun run import:classes-generic</code> and rerun it each term.
+        <code>data/sample-campus/classes.csv</code> is the worked example.
       </p>
       <p>
         After you change the Drizzle schema at all, regenerate the offline

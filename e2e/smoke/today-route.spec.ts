@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { suppressLandingModal } from "../helpers/app";
+import { suppressLandingModal, waitForAppBoot } from "../helpers/app";
 import { openAppSidebar } from "../helpers/map-tools";
 import { E2E_FIXTURES } from "../../scripts/e2e-reset-db";
 
@@ -101,6 +101,22 @@ test.describe("today day route", () => {
     await expect(page.getByRole("dialog", { name: "Today" })).toBeVisible();
     await expect(page.getByText(/15 min walk\s*·\s*1\.2 km/)).toBeVisible({
       timeout: 15_000,
+    });
+  });
+
+  test("status-bar chip routes today's classes from the map", async ({
+    page,
+  }) => {
+    await prepareDayRoutePage(page);
+    await page.goto("/");
+    await waitForAppBoot(page);
+
+    // Hidden-not-disabled surface: it only exists with routable classes today.
+    const chip = page.getByRole("button", { name: "Route my day" });
+    await expect(chip).toBeVisible({ timeout: 30_000 });
+    await chip.click();
+    await expect(page.locator(".schedule-route-stop-pin")).toHaveCount(2, {
+      timeout: 30_000,
     });
   });
 

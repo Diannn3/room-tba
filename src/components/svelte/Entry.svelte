@@ -59,6 +59,7 @@
   import StagingBanner from "./StagingBanner.svelte";
   import AnnouncementBar from "./AnnouncementBar.svelte";
   import KeyboardShortcutsPopup from "./map-chrome/KeyboardShortcutsPopup.svelte";
+  import DayRouteChip from "./DayRouteChip.svelte";
   import OnlineCounter from "./OnlineCounter.svelte";
   import { MediaQuery } from "svelte/reactivity";
   import type { RecentSearch } from "@lib/types";
@@ -449,6 +450,7 @@
                 </div>
               {/if}
               <div class="bottom-chrome__triggers">
+                <DayRouteChip />
                 <OnlineCounter />
                 <MapLegend trigger="chip" />
                 <LocationButton embedded />

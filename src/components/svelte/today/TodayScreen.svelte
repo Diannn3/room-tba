@@ -17,6 +17,7 @@
     termStore,
   } from "@lib/store.svelte";
   import { buildAgenda } from "@lib/today-agenda";
+  import { routableTodayWeekday, routeToday } from "@lib/today-route";
   import { formatTermDateRange, isDateWithinTerm } from "@lib/term-calendar";
 
   const reducedMotion = new MediaQuery("(prefers-reduced-motion: reduce)");
@@ -42,15 +43,14 @@
     sidebarStore.changeOpened("map");
   }
 
-  // One-tap day route (#839): today's agenda mapped onto the schedule-route
-  // weekday plumbing the Map tools flyout already uses.
+  // One-tap day route (#839): predicate + action shared with the status-bar
+  // chip via today-route.ts, mapped onto the schedule-route weekday plumbing
+  // the Map tools flyout already uses.
   const today = $derived(days[0] ?? null);
   const todayWeekday = $derived(
     today?.dayIndex == null ? null : (WEEKDAYS[today.dayIndex] ?? null),
   );
-  const canRouteToday = $derived(
-    hasPlan && todayWeekday !== null && (today?.entries.length ?? 0) > 0,
-  );
+  const canRouteToday = $derived(routableTodayWeekday() !== null);
   const routeHint = $derived.by(() => {
     if (canRouteToday) return null;
     if (!hasPlan) return "Add classes in the Planner first.";
@@ -65,17 +65,12 @@
   let routing = $state(false);
 
   async function routeMyDay() {
-    if (routing || !todayWeekday) return;
+    if (routing) return;
     routing = true;
     try {
-      // Always re-import: the store may hold a stale plan (or nothing) when
-      // the Map tools schedule panel was never opened this session.
-      const imported = await scheduleRouteStore.importFromPlanner();
-      if (!imported) return;
-      scheduleRouteStore.routeDay(todayWeekday);
       // Leave the overlay only when a route actually drew; failures keep the
       // agenda visible with the store's toast explaining why.
-      if (scheduleRouteStore.routedWeekday === todayWeekday) close();
+      if (await routeToday()) close();
     } finally {
       routing = false;
     }

@@ -45,7 +45,7 @@ No account needed to browse. Editors and contributors fix data in the same app (
 | Personal schedule route | Build a plan in Planner → Map tools → Schedule → pick a day, route stops |
 | Browse all classes | Status bar → Browse classes; search by course code |
 | Plan your classes | Planner view to build a draft schedule |
-| What do I have today | Today view (`/today`): your plan's classes for today, tomorrow, and the rest of the week |
+| What do I have today | Today view (`/today`): your plan's classes for today, tomorrow, and the rest of the week; one tap routes the day on the map with total walking time and distance (`/today?route=1`) |
 | Course Planner explainer | [Four-panel, screenshot-ready guide](https://room-tba.uplb.tools/pubmat/course-planner/) |
 | Final exam time & room | Search course code → finals panel; room panel during finals week |
 | Academic calendar | [/calendar](https://room-tba.uplb.tools/calendar) — term windows on a year timeline; also via the term picker |

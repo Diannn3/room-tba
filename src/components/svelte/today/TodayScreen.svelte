@@ -1,13 +1,18 @@
 <script lang="ts">
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import MapPin from "@lucide/svelte/icons/map-pin";
+  import Route from "@lucide/svelte/icons/route";
   import { fly } from "svelte/transition";
   import { MediaQuery } from "svelte/reactivity";
+  import { formatDistance, formatDuration } from "@lib/campus-route";
   import { trapFocus } from "@lib/focus-trap";
   import { fullScreenReveal } from "@lib/motion";
+  import { WEEKDAYS } from "@lib/schedule-import/types";
   import {
+    locationStore,
     plannerStore,
     queryStore,
+    scheduleRouteStore,
     sidebarStore,
     termStore,
   } from "@lib/store.svelte";
@@ -36,6 +41,54 @@
   function close() {
     sidebarStore.changeOpened("map");
   }
+
+  // One-tap day route (#839): today's agenda mapped onto the schedule-route
+  // weekday plumbing the Map tools flyout already uses.
+  const today = $derived(days[0] ?? null);
+  const todayWeekday = $derived(
+    today?.dayIndex == null ? null : (WEEKDAYS[today.dayIndex] ?? null),
+  );
+  const canRouteToday = $derived(
+    hasPlan && todayWeekday !== null && (today?.entries.length ?? 0) > 0,
+  );
+  const routeHint = $derived.by(() => {
+    if (canRouteToday) return null;
+    if (!hasPlan) return "Add classes in the Planner first.";
+    if (todayWeekday === null) return "No classes on Sundays.";
+    return "No classes to route today.";
+  });
+  const routedToday = $derived(
+    todayWeekday !== null &&
+      scheduleRouteStore.routedWeekday === todayWeekday &&
+      locationStore.routeWaypoints !== null,
+  );
+  let routing = $state(false);
+
+  async function routeMyDay() {
+    if (routing || !todayWeekday) return;
+    routing = true;
+    try {
+      // Always re-import: the store may hold a stale plan (or nothing) when
+      // the Map tools schedule panel was never opened this session.
+      const imported = await scheduleRouteStore.importFromPlanner();
+      if (!imported) return;
+      scheduleRouteStore.routeDay(todayWeekday);
+      // Leave the overlay only when a route actually drew; failures keep the
+      // agenda visible with the store's toast explaining why.
+      if (scheduleRouteStore.routedWeekday === todayWeekday) close();
+    } finally {
+      routing = false;
+    }
+  }
+
+  // /today?route=1 deep link (flag set by Entry.svelte before this mounts).
+  // Consumed only once terms have loaded: the plan is keyed by the active
+  // term, so at mount canRouteToday is still false and the flag would drop.
+  $effect(() => {
+    if (!scheduleRouteStore.pendingDayRoute || !termStore.loaded) return;
+    scheduleRouteStore.pendingDayRoute = false;
+    if (canRouteToday) void routeMyDay();
+  });
 
   function openRoom(roomCode: string) {
     if (!roomCode) return;
@@ -79,6 +132,26 @@
   {#if offTermNote}
     <p class="today-note" role="note">{offTermNote}</p>
   {/if}
+
+  <div class="today-route">
+    <button
+      type="button"
+      class="today-route__button"
+      disabled={!canRouteToday || routing}
+      onclick={routeMyDay}
+    >
+      <Route size={16} aria-hidden="true" />
+      {routing ? "Routing…" : "Route my day"}
+    </button>
+    {#if routeHint}
+      <span class="today-route__hint">{routeHint}</span>
+    {:else if routedToday && scheduleRouteStore.routeTotals}
+      <span class="today-route__totals">
+        {formatDuration(scheduleRouteStore.routeTotals.seconds)} walk ·
+        {formatDistance(scheduleRouteStore.routeTotals.meters)}
+      </span>
+    {/if}
+  </div>
 
   <div class="today-body">
     {#if !hasPlan}
@@ -198,6 +271,55 @@
     max-width: 52rem;
     font-size: 0.8125rem;
     color: hsl(0, 0%, 40%);
+  }
+
+  .today-route {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    max-width: 52rem;
+  }
+
+  .today-route__button {
+    all: unset;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.4375rem 0.875rem;
+    border: 1px solid hsl(5, 53%, 32%);
+    border-radius: 999px;
+    background: hsl(5, 53%, 32%);
+    color: #fff;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .today-route__button:hover:not(:disabled) {
+    background: hsl(5, 53%, 38%);
+  }
+
+  .today-route__button:focus-visible {
+    outline: 2px solid hsl(5, 53%, 32%);
+    outline-offset: 2px;
+  }
+
+  .today-route__button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .today-route__hint,
+  .today-route__totals {
+    font-size: 0.8125rem;
+    color: hsl(0, 0%, 40%);
+  }
+
+  .today-route__totals {
+    font-weight: 600;
+    color: hsl(5, 53%, 22%);
   }
 
   .today-body {

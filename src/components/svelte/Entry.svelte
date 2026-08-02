@@ -3,6 +3,7 @@
   import type { InitialSearchState } from "@lib/app-data";
   import { getAppData } from "@lib/context";
   import { findCampusPointBySlug } from "@lib/route-links";
+  import { campusTransit } from "../../campus.config";
   import {
     modalStore,
     queryStore,
@@ -184,7 +185,9 @@
     // Jeepney deep link: ?jeepney=<routeId>[&stop=<index>] opens the route on
     // the map (and focuses a stop when given). Shared from the route modal /
     // stop panel copy-link.
-    const jeepneyRouteId = urlParams.get("jeepney");
+    const jeepneyRouteId = campusTransit.enabled
+      ? urlParams.get("jeepney")
+      : null;
     if (jeepneyRouteId) {
       openCampusBrowse(queryStore, sidePanelStore, "jeepney");
       jeepneyStore.openRouteOnMap(jeepneyRouteId);

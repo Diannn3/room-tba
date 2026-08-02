@@ -12,6 +12,7 @@ import { join } from "node:path";
 import type pg from "pg";
 import { connectE2eClient, E2E_SCHEMA_PATTERN, e2eSchema } from "./e2e-schema";
 import { loadEnv } from "./load-env";
+import { campusTestFixtures } from "../src/campus.config";
 
 loadEnv();
 
@@ -33,10 +34,12 @@ export const E2E_FIXTURES = {
     contributor: "e2e-contributor",
     disabled: "e2e-disabled",
   },
-  buildingLat: 14.1655,
-  buildingLon: 121.2412,
-  dormLat: 14.166,
-  dormLon: 121.242,
+  // Reference coordinates come from campus.config.ts so a fork's E2E pins
+  // land inside its own campus bounds.
+  buildingLat: campusTestFixtures.buildingLat,
+  buildingLon: campusTestFixtures.buildingLon,
+  dormLat: campusTestFixtures.dormLat,
+  dormLon: campusTestFixtures.dormLon,
 } as const;
 
 /** Guard the target: E2E project, and an `e2e_*` schema when one is requested. */
@@ -321,7 +324,8 @@ async function main() {
     );
     await client.query(
       `INSERT INTO jeepney_stops (route_id, name, description, lat, lon, sort_order)
-       VALUES ('e2e-route', 'E2E Stop', 'E2E jeepney stop', 14.1655, 121.2412, 1)`,
+       VALUES ('e2e-route', 'E2E Stop', 'E2E jeepney stop', $1, $2, 1)`,
+      [E2E_FIXTURES.buildingLat, E2E_FIXTURES.buildingLon],
     );
 
     await client.query(

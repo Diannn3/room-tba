@@ -88,9 +88,9 @@
   import {
     CAMPUS_DEFAULT_CAMERA,
     CAMPUS_MAX_BOUNDS,
-    MAKILING_TERRAIN_CAMERA,
-    MAKILING_TERRAIN_MAX_BOUNDS,
-    MAKILING_TERRAIN_SOURCE_BOUNDS,
+    TERRAIN_CAMERA,
+    TERRAIN_MAX_BOUNDS,
+    TERRAIN_SOURCE_BOUNDS,
     TERRAIN_HILLSHADE_BEFORE_LAYER_ID,
     TERRAIN_HILLSHADE_LAYER_ID,
     TERRAIN_SOURCE_ID,
@@ -813,7 +813,7 @@
       map.addSource(TERRAIN_SOURCE_ID, {
         type: "raster-dem",
         url: getTerrainTileJsonUrl(),
-        bounds: MAKILING_TERRAIN_SOURCE_BOUNDS,
+        bounds: TERRAIN_SOURCE_BOUNDS,
         maxzoom: 14,
         tileSize: 512,
       });
@@ -1772,7 +1772,7 @@
         setTerrainHillshadeVisible(map, true);
         syncBuildingLayersForDimension(map, isMap2DPitch(map.getPitch()), true);
         if (!terrainModeWasEnabled) {
-          flyToCamera(map, MAKILING_TERRAIN_CAMERA);
+          flyToCamera(map, TERRAIN_CAMERA);
         }
         terrainModeWasEnabled = true;
         terrainStore.markActive();
@@ -1832,7 +1832,7 @@
     if (!map) return;
 
     const bounds = terrainEnabled
-      ? MAKILING_TERRAIN_MAX_BOUNDS
+      ? TERRAIN_MAX_BOUNDS
       : CAMPUS_MAX_BOUNDS;
 
     const applyBounds = () => {
@@ -1851,7 +1851,7 @@
     const resetNonce = terrainStore.resetNonce;
     if (!map || !terrainStore.enabled || resetNonce === 0) return;
 
-    flyToCamera(map, MAKILING_TERRAIN_CAMERA);
+    flyToCamera(map, TERRAIN_CAMERA);
   });
 
   $effect(() => {
@@ -2178,7 +2178,7 @@
       } else if (category === null) {
         flyToCamera(
           map,
-          isTerrainEnabled ? MAKILING_TERRAIN_CAMERA : CAMPUS_DEFAULT_CAMERA,
+          isTerrainEnabled ? TERRAIN_CAMERA : CAMPUS_DEFAULT_CAMERA,
         );
         if (directions) directions.clear();
       } else if (category === "room") {

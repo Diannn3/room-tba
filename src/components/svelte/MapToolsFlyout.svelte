@@ -8,6 +8,7 @@
   import MapViewControls from "@ui/MapViewControls.svelte";
   import MapLegend from "@ui/MapLegend.svelte";
   import TerrainControl from "@ui/TerrainControl.svelte";
+  import { TERRAIN_ENABLED } from "@constants/map-terrain";
   import TrailControl from "@ui/TrailControl.svelte";
   import JeepneyMenu from "@ui/JeepneyMenu.svelte";
   import ScheduleImportPanel from "@ui/ScheduleImportPanel.svelte";
@@ -25,7 +26,9 @@
   const sections: { id: MapToolsSection; label: string }[] = [
     { id: "view", label: "View" },
     { id: "legend", label: "Legend" },
-    { id: "terrain", label: "Terrain" },
+    ...(TERRAIN_ENABLED
+      ? [{ id: "terrain" as const, label: "Terrain" }]
+      : []),
     { id: "trail", label: "Makiling Trail" },
     { id: "schedule", label: "Schedule" },
   ];

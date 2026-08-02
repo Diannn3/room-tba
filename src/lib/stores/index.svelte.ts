@@ -1,6 +1,7 @@
 // src/lib/store.svelte.ts
 
 import { CAMPUS_BOUNDS } from "@constants/map-terrain";
+import { campusTransit } from "../../campus.config";
 import { getJSONFetch, getLocalRoomByCode } from "../local/data/utils.js";
 import type { BuildingTypeFilter } from "@constants/building-types";
 import { orderDayStops, type Weekday } from "../schedule-import/day-stops.js";
@@ -318,6 +319,7 @@ class JeepneyStore {
   };
 
   enableLayer = () => {
+    if (!campusTransit.enabled) return;
     this.layerActive = true;
     mapToolsStore.close();
     deactivateMapModesExcept("routes");
@@ -335,6 +337,7 @@ class JeepneyStore {
   };
 
   selectRoute = (id: string) => {
+    if (!campusTransit.enabled) return;
     if (!this.layerActive) {
       this.enableLayer();
     }
@@ -356,6 +359,7 @@ class JeepneyStore {
 
   /** Activate the layer with `id` selected (no toggle, unlike selectRoute). */
   openRouteOnMap = (id: string) => {
+    if (!campusTransit.enabled) return;
     this.enableLayer();
     if (this.selectedRouteId !== id) this.closeStop();
     this.selectedRouteId = id;
@@ -363,6 +367,7 @@ class JeepneyStore {
   };
 
   openRouteModal = (id: string) => {
+    if (!campusTransit.enabled) return;
     this.modalRouteId = id;
     modalStore.openModal("jeepney-route");
   };

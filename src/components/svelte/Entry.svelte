@@ -17,6 +17,7 @@
     jeepneyStore,
     appBootstrapStore,
     plannerStore,
+    scheduleRouteStore,
     termStore,
     sidebarStore,
     announcementsStore,
@@ -58,6 +59,7 @@
   import StagingBanner from "./StagingBanner.svelte";
   import AnnouncementBar from "./AnnouncementBar.svelte";
   import KeyboardShortcutsPopup from "./map-chrome/KeyboardShortcutsPopup.svelte";
+  import DayRouteChip from "./DayRouteChip.svelte";
   import OnlineCounter from "./OnlineCounter.svelte";
   import { MediaQuery } from "svelte/reactivity";
   import type { RecentSearch } from "@lib/types";
@@ -203,15 +205,16 @@
 
     // /route/<from>/<to> sends its two endpoints here as slugs. Resolving them
     // against loaded campus data (rather than passing coordinates in the URL)
-    // keeps the link stable when an editor moves a pin.
+    // keeps the link stable when an editor moves a pin. On /today the same
+    // param means "route my day" instead (handled below).
     const routeParam = urlParams.get("route");
-    if (routeParam) {
+    if (routeParam && !openToday) {
       const [fromSlug, toSlug] = routeParam.split(",");
       const waypoints = [fromSlug, toSlug]
         .map((slug) => (slug ? findCampusPointBySlug(appData(), slug) : null))
         .filter((point): point is [number, number] => point !== null);
       if (waypoints.length === 2) {
-        locationStore.setWaypoints(waypoints);
+        locationStore.setRouteWaypoints(waypoints);
       }
       window.history.replaceState({}, "", window.location.pathname);
     }
@@ -242,6 +245,10 @@
     if (openToday) {
       void termStore.init();
       sidebarStore.changeOpened("today");
+      // /today?route=1 routes today's classes once the screen mounts (#839).
+      if (routeParam === "1") {
+        scheduleRouteStore.pendingDayRoute = true;
+      }
     }
 
     const planParam = urlParams.get("plan");
@@ -443,6 +450,7 @@
                 </div>
               {/if}
               <div class="bottom-chrome__triggers">
+                <DayRouteChip />
                 <OnlineCounter />
                 <MapLegend trigger="chip" />
                 <LocationButton embedded />

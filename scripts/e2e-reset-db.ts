@@ -329,6 +329,13 @@ async function main() {
        VALUES ('E2E 101', 'AB', 'LEC', ARRAY['MWF 08:00AM-09:00AM'], $1, 'E2E Course', $2, 1)`,
       [roomId, E2E_FIXTURES.termId],
     );
+    // Second class on the same days so a planned day has the two routable
+    // stops the day route needs (e2e/smoke/today-route.spec.ts, #839).
+    await client.query(
+      `INSERT INTO classes (course_code, section, type, schedule, room_id, course_title, term_id, version)
+       VALUES ('E2E 102', 'AB', 'LEC', ARRAY['MWF 09:00AM-10:00AM'], $1, 'E2E Course 2', $2, 1)`,
+      [roomId, E2E_FIXTURES.termId],
+    );
 
     await client.query(
       `INSERT INTO final_exams (term_id, course_code, section, course_title, room_id, exam_date, starts_at, ends_at, source, version)

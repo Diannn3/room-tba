@@ -44,6 +44,7 @@
     trackSponsorImpression,
   } from "@lib/sponsor-tracking";
   import { fade } from "svelte/transition";
+  import { sumRouteLegs } from "@lib/campus-route";
   import MapLibreGlDirections from "@maplibre/maplibre-gl-directions";
   import CalendarDays from "@lucide/svelte/icons/calendar-days";
   import X from "@lucide/svelte/icons/x";
@@ -1861,6 +1862,12 @@
           directions = new MapLibreGlDirections(mapStore.mapInstance, {
             api: "https://routing.openstreetmap.de/routed-foot/route/v1",
             profile: "foot",
+          });
+          // Walking totals for the routed day (#839): the OSRM response the
+          // map already fetched carries per-leg distance/duration.
+          directions.on("fetchroutesend", (event) => {
+            const legs = event.data?.directions?.routes?.[0]?.legs;
+            scheduleRouteStore.setRouteTotals(legs ? sumRouteLegs(legs) : null);
           });
         }
       };

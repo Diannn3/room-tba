@@ -79,6 +79,7 @@ const E2E_MIGRATION_FILES = [
   "0039_classes_keyset_index.sql",
   "0040_pre_drizzle_schema_backfill.sql",
   "0041_add_announcements.sql",
+  "0042_add_class_acad_org.sql",
 ] as const;
 
 /**
@@ -332,6 +333,22 @@ async function main() {
       `INSERT INTO classes (course_code, section, type, schedule, room_id, course_title, term_id, version)
        VALUES ('E2E 101', 'AB', 'LEC', ARRAY['MWF 08:00AM-09:00AM'], $1, 'E2E Course', $2, 1)`,
       [roomId, E2E_FIXTURES.termId],
+    );
+    // Second class on the same days so a planned day has the two routable
+    // stops the day route needs (e2e/smoke/today-route.spec.ts, #839).
+    await client.query(
+      `INSERT INTO classes (course_code, section, type, schedule, room_id, course_title, term_id, version)
+       VALUES ('E2E 102', 'AB', 'LEC', ARRAY['MWF 09:00AM-10:00AM'], $1, 'E2E Course 2', $2, 1)`,
+      [roomId, E2E_FIXTURES.termId],
+    );
+
+    // Room TBA section (#846): no room, uncurated acad_org, so the probable-
+    // location hint resolves via course history (section AB above meets in
+    // the seeded building).
+    await client.query(
+      `INSERT INTO classes (course_code, section, type, schedule, room_id, course_title, term_id, acad_group, acad_org, version)
+       VALUES ('E2E 101', 'C', 'LEC', ARRAY['TTh 10:00AM-11:00AM'], NULL, 'E2E Course', $1, 'E2E', 'LBE2E', 1)`,
+      [E2E_FIXTURES.termId],
     );
 
     await client.query(

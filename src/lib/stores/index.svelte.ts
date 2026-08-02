@@ -4,6 +4,7 @@ import { CAMPUS_BOUNDS } from "@constants/map-terrain";
 import { campusTransit } from "../../campus.config";
 import { getJSONFetch, getLocalRoomByCode } from "../local/data/utils.js";
 import type { BuildingTypeFilter } from "@constants/building-types";
+import type { RouteTotals } from "../campus-route.js";
 import { orderDayStops, type Weekday } from "../schedule-import/day-stops.js";
 import { matchImportedScheduleRows } from "../schedule-import/match-classes.js";
 import type { ClassQueryPage } from "../classes-api.js";
@@ -745,6 +746,10 @@ class ScheduleRouteStore {
   matches = $state<ScheduleMatchResult[]>([]);
   selectedWeekday = $state<Weekday>("M");
   routedWeekday: Weekday | null = $state(null);
+  /** Walking totals for the routed day, from the map's OSRM response (#839). */
+  routeTotals: RouteTotals | null = $state(null);
+  /** One-shot /today?route=1 deep link: route today's classes on mount (#839). */
+  pendingDayRoute = $state(false);
   focusedStopIndex: number | null = $state(null);
   matching = $state(false);
   importError: string | null = $state(null);
@@ -902,12 +907,22 @@ class ScheduleRouteStore {
 
   clearRoute = () => {
     this.routedWeekday = null;
+    this.routeTotals = null;
     this.focusedStopIndex = null;
     locationStore.clearRouteWaypoints();
   };
 
+  /**
+   * Map.svelte forwards these from the directions fetch; a 2-point
+   * destination route fires the same event, so only a routed day keeps them.
+   */
+  setRouteTotals = (totals: RouteTotals | null) => {
+    this.routeTotals = this.routedWeekday === null ? null : totals;
+  };
+
   routeDay = (weekday: Weekday = this.selectedWeekday) => {
     this.selectedWeekday = weekday;
+    this.routeTotals = null;
     this.persist();
     const stops = orderDayStops(this.matches, weekday);
     const stopCoords = stops

@@ -44,8 +44,9 @@ No account needed to browse. Editors and contributors fix data in the same app (
 | Room schedule this sem | Term filter + timetable |
 | Personal schedule route | Build a plan in Planner → Map tools → Schedule → pick a day, route stops |
 | Browse all classes | Status bar → Browse classes; search by course code |
+| Section with no room yet | "No assigned room" rows hint the offering department and where the course usually meets (#846) |
 | Plan your classes | Planner view to build a draft schedule |
-| What do I have today | Today view (`/today`): your plan's classes for today, tomorrow, and the rest of the week |
+| What do I have today | Today view (`/today`): your plan's classes for today, tomorrow, and the rest of the week; one tap routes the day on the map with total walking time and distance (`/today?route=1`) |
 | Course Planner explainer | [Four-panel, screenshot-ready guide](https://room-tba.uplb.tools/pubmat/course-planner/) |
 | Final exam time & room | Search course code → finals panel; room panel during finals week |
 | Academic calendar | [/calendar](https://room-tba.uplb.tools/calendar) — term windows on a year timeline; also via the term picker |
@@ -186,6 +187,7 @@ Install the [Biome VS Code extension](https://marketplace.visualstudio.com/items
 | `bun run import:osa-orgs` | Add the current public OSA organization directory (`DATABASE_URL`; safe to rerun) |
 | `bun run import:campus-offices` | Add missing campus offices and units (`DATABASE_URL`; safe to rerun) |
 | `bun run import:amis-classes` | Upsert AMIS classes (`docs/amis-com-refresh-runbook.md`) |
+| `bun run backfill:acad-orgs` | Rerun the AMIS import over the 9 cached term JSONs to fill `classes.acad_group`/`acad_org` (#846) |
 | `bun run import:final-exams` | Import OUR finals JSON into Postgres (`DATABASE_URL`; see `docs/final-exams-data-source.md`) |
 
 Legacy **`data/info.db`** SQLite is only for old seed/export scripts (`bun:sqlite`, not runtime). Production uses Supabase Postgres via `DATABASE_URL`. Archived SQLite migrations live in `drizzle-migrations/`: do not edit; active schema is `drizzle/`.
@@ -271,6 +273,8 @@ Full guide with every file path and the painful parts: **[Fork this for your cam
 
 Start with `bun run fork:init` — it asks for your campus name, URL, map center/bounds/zoom, and whether you want the 3D terrain and transit overlays, then rewrites `src/campus.config.ts` for you (refuses a dirty git tree unless `--force`).
 
+**See it working first:** `bun run seed:sample` loads a small fictional campus (6 buildings, 12 rooms, 2 terms of classes) into an empty database so the app runs before you have any real data, and `bun run import:classes-generic -- your-classes.csv` imports your registrar's export from a documented flat CSV/JSON shape. Walkthrough: [docs/fork-data-guide.md](docs/fork-data-guide.md).
+
 The short version of what you replace:
 
 | File | What to change |
@@ -278,10 +282,10 @@ The short version of what you replace:
 | `src/campus.config.ts` | **The single config file** (`bun run fork:init` writes it). Site name, URL, title, description, map center/bounds/camera, terrain (`campusTerrain.enabled` off = flat map), transit overlay (`campusTransit.enabled` + menu label), E2E fixture coordinates, community links. The files below import from here. |
 | `public/room_info.json` | UPLB building seed → your buildings |
 | `src/constants/jeepney-routes.ts` + geometries | Your transit routes/stops, or set `campusTransit.enabled: false` to hide the overlay everywhere |
-| `scripts/import-amis-classes.ts` and friends | UPLB data sources (AMIS, OUR finals, OSA). Write your own importer for your registrar's export. |
+| `scripts/import-amis-classes.ts` and friends | UPLB data sources (AMIS, OUR finals, OSA). Use `bun run import:classes-generic` with your registrar's export instead ([guide](docs/fork-data-guide.md)). |
 | Supabase DB contents | Every row is UPLB. Schema stays; data goes. |
 
-The hard part is class schedules. Room TBA pulls from AMIS, which is UPLB's system. You do not have AMIS — you need an importer for whatever your registrar gives you, pointed at the `classes` table, rerun each term. The existing import scripts are a template for the shape, not the source.
+The hard part is class schedules. Room TBA pulls from AMIS, which is UPLB's system. You do not have AMIS — flatten whatever your registrar gives you into the generic importer's CSV/JSON shape ([docs/fork-data-guide.md](docs/fork-data-guide.md)) and rerun it each term. `data/sample-campus/classes.csv` is the worked example.
 
 After you think you've replaced everything, run `bun run fork:check` — it scans for hardcoded UPLB strings you missed and reports file:line hits. Wire it into your fork's CI so a stray UPLB string does not sneak back in on a merge from upstream.
 

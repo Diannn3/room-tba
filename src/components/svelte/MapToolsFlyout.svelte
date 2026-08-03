@@ -2,8 +2,13 @@
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
   import ChevronRight from "@lucide/svelte/icons/chevron-right";
   import Layers from "@lucide/svelte/icons/layers";
+  import Timer from "@lucide/svelte/icons/timer";
   import { fade } from "svelte/transition";
-  import { mapToolsStore, type MapToolsSection } from "@lib/store.svelte";
+  import {
+    mapToolsStore,
+    travelTimeStore,
+    type MapToolsSection,
+  } from "@lib/store.svelte";
   import { panelFadeIn, panelFadeOut } from "@lib/motion";
   import MapViewControls from "@ui/MapViewControls.svelte";
   import MapLegend from "@ui/MapLegend.svelte";
@@ -47,6 +52,12 @@
     return mapToolsStore.expandedSections.has(id);
   }
 
+  function toggleTravelTime() {
+    travelTimeStore.toggle();
+    // Hand the map back so the user can tap an origin right away.
+    if (travelTimeStore.active) mapToolsStore.close();
+  }
+
   $effect(() => {
     if (!mapToolsStore.open || !panelEl) return;
     return trapFocus(panelEl, { onEscape: () => mapToolsStore.close() });
@@ -76,6 +87,24 @@
         title="Map tools"
         onclose={() => mapToolsStore.close()}
       >
+        <button
+          type="button"
+          class="map-tools-flyout__tool"
+          class:map-tools-flyout__tool--active={travelTimeStore.active}
+          aria-pressed={travelTimeStore.active}
+          onclick={toggleTravelTime}
+        >
+          <Timer size={18} aria-hidden="true" />
+          <span class="map-tools-flyout__tool-copy">
+            <span class="map-tools-flyout__tool-label">Travel time</span>
+            <span class="map-tools-flyout__tool-description">
+              {travelTimeStore.active
+                ? "On — tap the map to pick a start point"
+                : "Color paths by walking minutes from a point"}
+            </span>
+          </span>
+        </button>
+
         {#each sections as section (section.id)}
           <div class="accordion-section">
             <button
@@ -157,5 +186,51 @@
     display: grid;
     gap: 0.25rem;
     min-width: 0;
+  }
+
+  .map-tools-flyout__tool {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid transparent;
+    border-radius: 0.5rem;
+    background: none;
+    padding: 0.375rem 0.5rem;
+    text-align: left;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .map-tools-flyout__tool:hover {
+    background-color: hsl(5, 20%, 95%);
+  }
+
+  .map-tools-flyout__tool:focus-visible {
+    outline: 2px solid hsl(5, 53%, 32%);
+    outline-offset: 2px;
+  }
+
+  .map-tools-flyout__tool--active {
+    border-color: hsl(5, 53%, 32%);
+    background-color: hsl(5, 30%, 95%);
+  }
+
+  .map-tools-flyout__tool-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  .map-tools-flyout__tool-label {
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+
+  .map-tools-flyout__tool-description {
+    font-size: 0.6875rem;
+    line-height: 1.25;
+    color: hsl(0, 0%, 40%);
   }
 </style>

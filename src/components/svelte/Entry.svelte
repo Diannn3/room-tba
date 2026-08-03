@@ -14,6 +14,7 @@
     adminAuthStore,
     mapEditStore,
     mapToolsStore,
+    travelTimeStore,
     editorChromeStore,
     jeepneyStore,
     appBootstrapStore,
@@ -33,6 +34,8 @@
   import LocationButton from "@ui/LocationButton.svelte";
   import MapAttribution from "@ui/MapAttribution.svelte";
   import MapLegend from "@ui/MapLegend.svelte";
+  import MapToolsFlyout from "@ui/MapToolsFlyout.svelte";
+  import TravelTimeLegend from "@ui/TravelTimeLegend.svelte";
   import StatusBar from "@ui/StatusBar.svelte";
   import Toast from "@ui/Toast.svelte";
   import Building3DViewer from "@ui/Building3DViewer.svelte";
@@ -393,6 +396,8 @@
         editorChromeStore.closeAdditionModal();
       } else if (mapToolsStore.open) {
         mapToolsStore.close();
+      } else if (travelTimeStore.active) {
+        travelTimeStore.disable();
       } else if (jeepneyStore.selectedStopIndex !== null) {
         jeepneyStore.closeStop();
       } else if (queryStore.inputValue !== "" || queryStore.type === "result") {
@@ -433,6 +438,9 @@
       <div class="inner-layer">
         <MainControls />
         <div class="bottom-band">
+          {#if travelTimeStore.active}
+            <TravelTimeLegend />
+          {/if}
           <div class="bottom-chrome" bind:this={bottomChromeEl}>
             <div class="bottom-chrome__bar">
               <div class="bottom-chrome__leading">
@@ -455,6 +463,7 @@
               <div class="bottom-chrome__triggers">
                 <DayRouteChip />
                 <OnlineCounter />
+                <MapToolsFlyout />
                 <MapLegend trigger="chip" />
                 <LocationButton embedded />
               </div>

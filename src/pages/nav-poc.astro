@@ -1,0 +1,309 @@
+---
+/**
+ * Proof of concept for live walking guidance (#nav).
+ *
+ * Drives the real nav core from `src/lib/nav/` against a simulated walk, so the
+ * behaviour can be reviewed and screenshotted without standing on campus with a
+ * phone. Every number on screen comes from the shipped pure functions; nothing
+ * here is mocked except the GPS trace itself.
+ *
+ * Not linked from anywhere and noindex: this is a review artifact, not a page.
+ */
+export const prerender = true;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Live guidance PoC | Room TBA</title>
+  </head>
+  <body>
+    <div class="phone">
+      <!-- Stand-in for the map surface; the PoC is about the guidance chrome. -->
+      <div class="map-stub">
+        <svg viewBox="0 0 320 400" aria-hidden="true">
+          <path d="M40 340 L200 340 L200 90" class="route-line-casing" />
+          <path d="M40 340 L200 340 L200 90" class="route-line" />
+          <rect x="168" y="40" width="64" height="52" rx="4" class="dest-building" />
+          <circle cx="40" cy="340" r="7" class="user-dot" id="user-dot" />
+        </svg>
+        <p class="map-note">Map surface stands in for MapLibre. Guidance chrome is the PoC.</p>
+      </div>
+
+      <!-- Turn banner: top slot, above the search card, mirroring StagingBanner. -->
+      <div class="nav-banner" id="nav-banner">
+        <div class="nav-banner__arrow" id="nav-arrow">↑</div>
+        <div class="nav-banner__text">
+          <strong id="nav-instruction">Head east on the service road</strong>
+          <span id="nav-distance">in 100 m</span>
+        </div>
+      </div>
+
+      <div class="nav-strip" id="nav-strip">
+        <span id="nav-remaining">210 m left</span>
+        <span class="nav-strip__sep">·</span>
+        <span id="nav-eta">3 min</span>
+        <span class="nav-strip__state" id="nav-state">on route</span>
+      </div>
+
+      <!-- Indoor handoff: appears on arrival, the part a general map cannot do. -->
+      <div class="indoor-card" id="indoor-card" hidden>
+        <div class="indoor-card__head">
+          <span class="indoor-card__badge">Inside the building</span>
+          <strong id="indoor-room">PSD401</strong>
+        </div>
+        <p class="indoor-card__line" id="indoor-line"></p>
+        <p class="indoor-card__source" id="indoor-source"></p>
+      </div>
+
+      <div class="controls">
+        <button type="button" id="btn-play" data-testid="poc-play">Simulate walk</button>
+        <button type="button" id="btn-off" data-testid="poc-off">Wander off route</button>
+        <button type="button" id="btn-arrive" data-testid="poc-arrive">Jump to arrival</button>
+      </div>
+    </div>
+
+    <script>
+      import {
+        activeCue,
+        arrivalPhase,
+        buildCues,
+        computeProgress,
+        cumulativeDistances,
+        formatCueDistance,
+        isOffRoute,
+        type LngLat,
+      } from "../lib/nav/route-progress";
+      import { indoorInstruction } from "../lib/nav/room-code";
+
+      // An L-shaped campus route: east along a service road, then north to the
+      // Physical Sciences building.
+      const ROUTE: LngLat[] = [
+        [121.2422, 14.1651],
+        [121.2431, 14.1651],
+        [121.2431, 14.1661],
+      ];
+      const CUM = cumulativeDistances(ROUTE);
+      const TOTAL = CUM[CUM.length - 1] as number;
+
+      const STEPS = [
+        { maneuver: "depart", modifier: null, meters: 97 },
+        { maneuver: "turn", modifier: "left", meters: 111 },
+        { maneuver: "arrive", modifier: null, meters: 0 },
+      ];
+
+      // Same landmark-labelling idea the SEO route page already uses: OSRM has
+      // no street names for campus footpaths, so name the thing you can see.
+      const LANDMARKS: Record<string, string> = {
+        depart: "Head east on the service road",
+        turn: "Turn left at the Physical Sciences car park",
+        arrive: "Arrive at Physical Sciences Building",
+      };
+      const CUES = buildCues(STEPS, (s) => LANDMARKS[s.maneuver] ?? s.maneuver);
+
+      const ARROWS: Record<string, string> = { left: "←", right: "→", straight: "↑" };
+      const WALK_MPS = 1.35; // average walking pace
+
+      const el = (id: string) => document.getElementById(id)!;
+      let wasOff = false;
+
+      /** Interpolate a position `along` metres down the route, for the sim. */
+      function positionAlong(along: number): LngLat {
+        const clamped = Math.max(0, Math.min(TOTAL, along));
+        for (let i = 0; i < ROUTE.length - 1; i++) {
+          const segStart = CUM[i] as number;
+          const segEnd = CUM[i + 1] as number;
+          if (clamped <= segEnd || i === ROUTE.length - 2) {
+            const t = segEnd === segStart ? 0 : (clamped - segStart) / (segEnd - segStart);
+            const a = ROUTE[i] as LngLat;
+            const b = ROUTE[i + 1] as LngLat;
+            return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+          }
+        }
+        return ROUTE[0] as LngLat;
+      }
+
+      /** Move the dot on the SVG stub to match the route fraction. */
+      function paintDot(fraction: number) {
+        const legOne = (CUM[1] as number) / TOTAL;
+        const dot = el("user-dot");
+        if (fraction <= legOne) {
+          const t = legOne === 0 ? 0 : fraction / legOne;
+          dot.setAttribute("cx", String(40 + (200 - 40) * t));
+          dot.setAttribute("cy", "340");
+        } else {
+          const t = (fraction - legOne) / (1 - legOne);
+          dot.setAttribute("cx", "200");
+          dot.setAttribute("cy", String(340 - (340 - 90) * t));
+        }
+      }
+
+      /** One frame of guidance, driven entirely by the shipped nav core. */
+      function render(position: LngLat, accuracy: number | null) {
+        const progress = computeProgress(position, ROUTE, CUM);
+        if (!progress) return;
+
+        const off = isOffRoute(progress.offsetMeters, wasOff, accuracy);
+        wasOff = off;
+        const phase = arrivalPhase(progress.remainingMeters);
+        const cue = activeCue(progress.alongMeters, CUES);
+
+        el("nav-remaining").textContent = `${Math.round(progress.remainingMeters)} m left`;
+        el("nav-eta").textContent = `${Math.max(1, Math.round(progress.remainingMeters / WALK_MPS / 60))} min`;
+
+        const state = el("nav-state");
+        state.textContent = off ? "off route" : "on route";
+        state.classList.toggle("is-off", off);
+
+        const banner = el("nav-banner");
+        banner.classList.toggle("is-off", off);
+
+        if (off) {
+          el("nav-instruction").textContent = "Return to the route";
+          el("nav-distance").textContent = `${Math.round(progress.offsetMeters)} m away`;
+          el("nav-arrow").textContent = "⟲";
+        } else if (cue) {
+          el("nav-instruction").textContent = cue.cue.text;
+          el("nav-distance").textContent = formatCueDistance(cue.metersToCue);
+          el("nav-arrow").textContent = ARROWS[cue.cue.modifier ?? "straight"] ?? "↑";
+        }
+
+        // The indoor handoff. This is the part a general map cannot do, because
+        // it needs the room code convention and the contributor's prose.
+        const card = el("indoor-card");
+        if (phase === "arrived") {
+          const line = indoorInstruction(
+            "PSD401",
+            "Take the far stairwell by the CS office; CINTERLABS is the double door on the left.",
+          );
+          el("indoor-line").textContent = line ?? "";
+          el("indoor-source").textContent =
+            "Wing and floor read from the room code. The rest is contributor-written.";
+          card.hidden = false;
+          banner.classList.add("is-arrived");
+        } else {
+          card.hidden = true;
+          banner.classList.remove("is-arrived");
+        }
+
+        paintDot(Math.min(1, progress.alongMeters / TOTAL));
+      }
+
+      let timer: number | null = null;
+      el("btn-play").addEventListener("click", () => {
+        if (timer) window.clearInterval(timer);
+        let along = 0;
+        wasOff = false;
+        timer = window.setInterval(() => {
+          along += 12;
+          render(positionAlong(along), 6);
+          if (along >= TOTAL) {
+            window.clearInterval(timer!);
+            timer = null;
+          }
+        }, 220);
+      });
+
+      el("btn-off").addEventListener("click", () => {
+        if (timer) window.clearInterval(timer);
+        timer = null;
+        // ~55 m north of the first leg, with a sharp fix, so it is a real
+        // departure rather than GPS noise.
+        render([121.2426, 14.1656], 5);
+      });
+
+      el("btn-arrive").addEventListener("click", () => {
+        if (timer) window.clearInterval(timer);
+        timer = null;
+        render(ROUTE[2] as LngLat, 6);
+      });
+
+      render(ROUTE[0] as LngLat, 6);
+    </script>
+
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #10231c;
+        --muted: #5b6b64;
+        --accent: #0f7b4f;
+        --warn: #b4451f;
+        --paper: #f6f7f5;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: #e7eae6;
+        display: flex;
+        justify-content: center;
+        padding: 16px;
+      }
+      .phone {
+        width: 100%;
+        max-width: 380px;
+        background: var(--paper);
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgb(16 35 28 / 18%);
+        display: flex;
+        flex-direction: column;
+      }
+      .map-stub { position: relative; background: #dfe6df; }
+      .map-stub svg { display: block; width: 100%; height: auto; }
+      .route-line-casing { fill: none; stroke: #fff; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; }
+      .route-line { fill: none; stroke: var(--accent); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+      .dest-building { fill: #c3cfc6; stroke: #9dada2; }
+      .user-dot { fill: #1a73e8; stroke: #fff; stroke-width: 3; transition: cx .2s linear, cy .2s linear; }
+      .map-note {
+        margin: 0; padding: 6px 12px; font-size: 11px; color: var(--muted);
+        background: #d7ded7;
+      }
+
+      .nav-banner {
+        display: flex; align-items: center; gap: 12px;
+        padding: 14px 16px;
+        background: var(--accent); color: #fff;
+        order: -1;
+      }
+      .nav-banner.is-off { background: var(--warn); }
+      .nav-banner.is-arrived { background: #0b5f3d; }
+      .nav-banner__arrow { font-size: 30px; line-height: 1; }
+      .nav-banner__text { display: flex; flex-direction: column; min-width: 0; }
+      .nav-banner__text strong { font-size: 16px; line-height: 1.25; }
+      .nav-banner__text span { font-size: 13px; opacity: .9; }
+
+      .nav-strip {
+        display: flex; align-items: center; gap: 8px;
+        padding: 10px 16px; font-size: 13px; color: var(--ink);
+        background: #fff; border-bottom: 1px solid #e2e6e2;
+      }
+      .nav-strip__sep { color: var(--muted); }
+      .nav-strip__state {
+        margin-left: auto; font-size: 12px; color: var(--accent);
+        border: 1px solid currentColor; border-radius: 999px; padding: 2px 8px;
+      }
+      .nav-strip__state.is-off { color: var(--warn); }
+
+      .indoor-card { padding: 14px 16px; background: #fff; border-top: 3px solid var(--accent); }
+      .indoor-card__head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+      .indoor-card__badge {
+        font-size: 11px; text-transform: uppercase; letter-spacing: .04em;
+        color: var(--accent); border: 1px solid currentColor;
+        border-radius: 999px; padding: 2px 8px;
+      }
+      .indoor-card__head strong { font-size: 15px; color: var(--ink); }
+      .indoor-card__line { margin: 0 0 6px; font-size: 14px; line-height: 1.45; color: var(--ink); }
+      .indoor-card__source { margin: 0; font-size: 11px; color: var(--muted); }
+
+      .controls { display: flex; gap: 8px; padding: 12px 16px 16px; flex-wrap: wrap; }
+      .controls button {
+        flex: 1 1 auto; padding: 9px 10px; font-size: 12px; cursor: pointer;
+        border: 1px solid #c8d1c9; border-radius: 8px; background: #fff; color: var(--ink);
+      }
+      .controls button:hover { border-color: var(--accent); color: var(--accent); }
+    </style>
+  </body>
+</html>

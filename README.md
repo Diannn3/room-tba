@@ -271,16 +271,17 @@ MIT lets you fork this and run it for a different school. This is not a "swap th
 
 Full guide with every file path and the painful parts: **[Fork this for your campus](https://room-tba.uplb.tools/wiki/fork-for-your-campus)** in the wiki. For the config file, start with the **[fork wizard](https://room-tba.uplb.tools/fork)** — point a map at your campus and it generates `src/campus.config.ts` plus a Vercel deploy link.
 
+Start with `bun run fork:init` — it asks for your campus name, URL, map center/bounds/zoom, and whether you want the 3D terrain and transit overlays, then rewrites `src/campus.config.ts` for you (refuses a dirty git tree unless `--force`).
+
 **See it working first:** `bun run seed:sample` loads a small fictional campus (6 buildings, 12 rooms, 2 terms of classes) into an empty database so the app runs before you have any real data, and `bun run import:classes-generic -- your-classes.csv` imports your registrar's export from a documented flat CSV/JSON shape. Walkthrough: [docs/fork-data-guide.md](docs/fork-data-guide.md).
 
 The short version of what you replace:
 
 | File | What to change |
 | --- | --- |
-| `src/campus.config.ts` | **The single config file.** Site name, URL, title, description, map center/bounds/camera, community links. The files below import from here. |
-| `src/constants/map-terrain.ts` | Terrain source (Makiling) — disable if your campus is flat. Bounds and camera come from `campus.config.ts`. |
+| `src/campus.config.ts` | **The single config file** (`bun run fork:init` writes it). Site name, URL, title, description, map center/bounds/camera, terrain (`campusTerrain.enabled` off = flat map), transit overlay (`campusTransit.enabled` + menu label), E2E fixture coordinates, community links. The files below import from here. |
 | `public/room_info.json` | UPLB building seed → your buildings |
-| `src/constants/jeepney-routes.ts` + geometries | Delete if no campus transit overlay |
+| `src/constants/jeepney-routes.ts` + geometries | Your transit routes/stops, or set `campusTransit.enabled: false` to hide the overlay everywhere |
 | `scripts/import-amis-classes.ts` and friends | UPLB data sources (AMIS, OUR finals, OSA). Use `bun run import:classes-generic` with your registrar's export instead ([guide](docs/fork-data-guide.md)). |
 | Supabase DB contents | Every row is UPLB. Schema stays; data goes. |
 

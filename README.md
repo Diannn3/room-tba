@@ -271,7 +271,7 @@ Room TBA is funded by curated campus-relevant sponsors and one-time donations. R
 
 MIT lets you fork this and run it for a different school. This is not a "swap the logo and ship" fork — a lot of the app is UPLB data and UPLB-specific glue. You keep the engine (map UI, search, offline cache, editor, planner, the Drizzle schema) and replace the UPLB parts.
 
-Full guide with every file path and the painful parts: **[Fork this for your campus](https://room-tba.uplb.tools/wiki/fork-for-your-campus)** in the wiki.
+Full guide with every file path and the painful parts: **[Fork this for your campus](https://room-tba.uplb.tools/wiki/fork-for-your-campus)** in the wiki. For the config file, start with the **[fork wizard](https://room-tba.uplb.tools/fork)** — point a map at your campus and it generates `src/campus.config.ts` plus a Vercel deploy link.
 
 Start with `bun run fork:init` — it asks for your campus name, URL, map center/bounds/zoom, and whether you want the 3D terrain and transit overlays, then rewrites `src/campus.config.ts` for you (refuses a dirty git tree unless `--force`).
 

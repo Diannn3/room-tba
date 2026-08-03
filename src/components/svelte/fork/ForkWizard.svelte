@@ -75,7 +75,6 @@
 
   const forkConfig = $derived<ForkConfig>({
     name: name.trim(),
-    slug,
     siteUrl,
     center: [centerLng, centerLat],
     bounds: [

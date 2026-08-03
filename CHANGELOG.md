@@ -1,3 +1,21 @@
+# [2.7.0](https://github.com/uplbtools/room-tba/compare/v2.6.1...v2.7.0) (2026-08-03)
+
+
+### Bug Fixes
+
+* **map-chrome:** show OSM and MapTiler credits without a click ([1e86cea](https://github.com/uplbtools/room-tba/commit/1e86cea8814a14d3027d1467b9251d20d51717e7))
+
+
+### Features
+
+* **classes:** probable location for Room TBA sections ([#846](https://github.com/uplbtools/room-tba/issues/846)) ([#849](https://github.com/uplbtools/room-tba/issues/849)) ([92f063f](https://github.com/uplbtools/room-tba/commit/92f063f49a0bba8532fa987423cc47b46bc3eaff))
+* **fork:** campus.config owns terrain, transit, e2e fixtures + fork:init ([#844](https://github.com/uplbtools/room-tba/issues/844)) ([3e1b59c](https://github.com/uplbtools/room-tba/commit/3e1b59c6223cfed85e9fea3f2968fbecd3a93c21))
+* **fork:** interactive fork wizard at /fork ([#841](https://github.com/uplbtools/room-tba/issues/841)) ([#843](https://github.com/uplbtools/room-tba/issues/843)) ([4460b43](https://github.com/uplbtools/room-tba/commit/4460b433b6243ec041154519a00251c233c3d56d))
+* **fork:** sample campus seed + generic class importer ([#842](https://github.com/uplbtools/room-tba/issues/842)) ([d010246](https://github.com/uplbtools/room-tba/commit/d010246899ec71979b46b9b469640d813a3a9729))
+* **map:** measure-route tool with walk/cycle/drive times ([#848](https://github.com/uplbtools/room-tba/issues/848)) ([#851](https://github.com/uplbtools/room-tba/issues/851)) ([cbc7755](https://github.com/uplbtools/room-tba/commit/cbc77551c8c1dfc5c21df9f9d401cf796a25d423)), closes [#847](https://github.com/uplbtools/room-tba/issues/847) [#847](https://github.com/uplbtools/room-tba/issues/847) [#847](https://github.com/uplbtools/room-tba/issues/847)
+* **map:** travel-time isochrone tool over vendored campus walk graph ([#847](https://github.com/uplbtools/room-tba/issues/847)) ([#850](https://github.com/uplbtools/room-tba/issues/850)) ([9c787d7](https://github.com/uplbtools/room-tba/commit/9c787d7d8be57f9614c82bda8fa73d9a1603e0ed))
+* **today:** one-tap day route with walking totals ([#839](https://github.com/uplbtools/room-tba/issues/839)) ([#845](https://github.com/uplbtools/room-tba/issues/845)) ([abb37e3](https://github.com/uplbtools/room-tba/commit/abb37e3b84180c70a5c07891e3ae812ff31bcfb2))
+
 # [2.4.0](https://github.com/uplbtools/room-tba/compare/v2.3.1...v2.4.0) (2026-07-26)
 
 

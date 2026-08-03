@@ -3,6 +3,7 @@
   import type { InitialSearchState } from "@lib/app-data";
   import { getAppData } from "@lib/context";
   import { findCampusPointBySlug } from "@lib/route-links";
+  import { campusTransit } from "../../campus.config";
   import {
     modalStore,
     queryStore,
@@ -13,10 +14,13 @@
     adminAuthStore,
     mapEditStore,
     mapToolsStore,
+    travelTimeStore,
+    measureRouteStore,
     editorChromeStore,
     jeepneyStore,
     appBootstrapStore,
     plannerStore,
+    scheduleRouteStore,
     termStore,
     sidebarStore,
     announcementsStore,
@@ -31,6 +35,9 @@
   import LocationButton from "@ui/LocationButton.svelte";
   import MapAttribution from "@ui/MapAttribution.svelte";
   import MapLegend from "@ui/MapLegend.svelte";
+  import MapToolsFlyout from "@ui/MapToolsFlyout.svelte";
+  import MeasureRoutePanel from "@ui/MeasureRoutePanel.svelte";
+  import TravelTimeLegend from "@ui/TravelTimeLegend.svelte";
   import StatusBar from "@ui/StatusBar.svelte";
   import Toast from "@ui/Toast.svelte";
   import Building3DViewer from "@ui/Building3DViewer.svelte";
@@ -58,6 +65,7 @@
   import StagingBanner from "./StagingBanner.svelte";
   import AnnouncementBar from "./AnnouncementBar.svelte";
   import KeyboardShortcutsPopup from "./map-chrome/KeyboardShortcutsPopup.svelte";
+  import DayRouteChip from "./DayRouteChip.svelte";
   import OnlineCounter from "./OnlineCounter.svelte";
   import { MediaQuery } from "svelte/reactivity";
   import type { RecentSearch } from "@lib/types";
@@ -184,7 +192,9 @@
     // Jeepney deep link: ?jeepney=<routeId>[&stop=<index>] opens the route on
     // the map (and focuses a stop when given). Shared from the route modal /
     // stop panel copy-link.
-    const jeepneyRouteId = urlParams.get("jeepney");
+    const jeepneyRouteId = campusTransit.enabled
+      ? urlParams.get("jeepney")
+      : null;
     if (jeepneyRouteId) {
       openCampusBrowse(queryStore, sidePanelStore, "jeepney");
       jeepneyStore.openRouteOnMap(jeepneyRouteId);
@@ -203,15 +213,16 @@
 
     // /route/<from>/<to> sends its two endpoints here as slugs. Resolving them
     // against loaded campus data (rather than passing coordinates in the URL)
-    // keeps the link stable when an editor moves a pin.
+    // keeps the link stable when an editor moves a pin. On /today the same
+    // param means "route my day" instead (handled below).
     const routeParam = urlParams.get("route");
-    if (routeParam) {
+    if (routeParam && !openToday) {
       const [fromSlug, toSlug] = routeParam.split(",");
       const waypoints = [fromSlug, toSlug]
         .map((slug) => (slug ? findCampusPointBySlug(appData(), slug) : null))
         .filter((point): point is [number, number] => point !== null);
       if (waypoints.length === 2) {
-        locationStore.setWaypoints(waypoints);
+        locationStore.setRouteWaypoints(waypoints);
       }
       window.history.replaceState({}, "", window.location.pathname);
     }
@@ -242,6 +253,10 @@
     if (openToday) {
       void termStore.init();
       sidebarStore.changeOpened("today");
+      // /today?route=1 routes today's classes once the screen mounts (#839).
+      if (routeParam === "1") {
+        scheduleRouteStore.pendingDayRoute = true;
+      }
     }
 
     const planParam = urlParams.get("plan");
@@ -383,6 +398,10 @@
         editorChromeStore.closeAdditionModal();
       } else if (mapToolsStore.open) {
         mapToolsStore.close();
+      } else if (travelTimeStore.active) {
+        travelTimeStore.disable();
+      } else if (measureRouteStore.active) {
+        measureRouteStore.disable();
       } else if (jeepneyStore.selectedStopIndex !== null) {
         jeepneyStore.closeStop();
       } else if (queryStore.inputValue !== "" || queryStore.type === "result") {
@@ -423,6 +442,12 @@
       <div class="inner-layer">
         <MainControls />
         <div class="bottom-band">
+          {#if travelTimeStore.active}
+            <TravelTimeLegend />
+          {/if}
+          {#if measureRouteStore.active}
+            <MeasureRoutePanel />
+          {/if}
           <div class="bottom-chrome" bind:this={bottomChromeEl}>
             <div class="bottom-chrome__bar">
               <div class="bottom-chrome__leading">
@@ -443,7 +468,9 @@
                 </div>
               {/if}
               <div class="bottom-chrome__triggers">
+                <DayRouteChip />
                 <OnlineCounter />
+                <MapToolsFlyout />
                 <MapLegend trigger="chip" />
                 <LocationButton embedded />
               </div>

@@ -2,10 +2,12 @@
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
   import ChevronRight from "@lucide/svelte/icons/chevron-right";
   import Layers from "@lucide/svelte/icons/layers";
+  import Ruler from "@lucide/svelte/icons/ruler";
   import Timer from "@lucide/svelte/icons/timer";
   import { fade } from "svelte/transition";
   import {
     mapToolsStore,
+    measureRouteStore,
     travelTimeStore,
     type MapToolsSection,
   } from "@lib/store.svelte";
@@ -58,6 +60,11 @@
     if (travelTimeStore.active) mapToolsStore.close();
   }
 
+  function toggleMeasureRoute() {
+    measureRouteStore.toggle();
+    if (measureRouteStore.active) mapToolsStore.close();
+  }
+
   $effect(() => {
     if (!mapToolsStore.open || !panelEl) return;
     return trapFocus(panelEl, { onEscape: () => mapToolsStore.close() });
@@ -101,6 +108,23 @@
               {travelTimeStore.active
                 ? "On — tap the map to pick a start point"
                 : "Color paths by walking minutes from a point"}
+            </span>
+          </span>
+        </button>
+        <button
+          type="button"
+          class="map-tools-flyout__tool"
+          class:map-tools-flyout__tool--active={measureRouteStore.active}
+          aria-pressed={measureRouteStore.active}
+          onclick={toggleMeasureRoute}
+        >
+          <Ruler size={18} aria-hidden="true" />
+          <span class="map-tools-flyout__tool-copy">
+            <span class="map-tools-flyout__tool-label">Measure route</span>
+            <span class="map-tools-flyout__tool-description">
+              {measureRouteStore.active
+                ? "On — tap the map to drop waypoints"
+                : "Drop waypoints, get walk / cycle / car times"}
             </span>
           </span>
         </button>

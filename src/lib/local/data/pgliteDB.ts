@@ -46,8 +46,14 @@ export function isLocalCacheReady(): boolean {
  * would boot the WASM engine just to shut it down again.
  */
 export async function closeLocalDB(): Promise<void> {
-  if (!localDB) return;
-  const db = localDB;
-  localDB = null;
-  await db.close();
+  if (!dbPromise) return;
+  const pending = dbPromise;
+  dbPromise = null;
+  ready = false;
+  try {
+    const db = await pending;
+    await db.close();
+  } catch {
+    // Never opened successfully, so there is nothing to close.
+  }
 }

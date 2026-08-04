@@ -117,6 +117,10 @@ describe("browse helper call sites keep the side panel wired", () => {
       helper: "openCampusBrowse",
     },
     {
+      file: "src/components/svelte/navigation/Sidebar.svelte",
+      helper: "openBrowseClasses",
+    },
+    {
       file: "src/components/svelte/modal/StudentOrgsModal.svelte",
       helper: "openCampusBrowse",
     },

@@ -311,9 +311,9 @@
     });
     queryStore.inputValue = name;
     sidePanelStore.openPanel({
-        type: "search-result",
-        component: BuildingResult
-    })
+      type: "search-result",
+      component: BuildingResult,
+    });
   }
 
   function openCollege(name: string) {
@@ -324,9 +324,9 @@
     });
     queryStore.inputValue = name;
     sidePanelStore.openPanel({
-        type: "search-result",
-        component: CollegeResult
-    })
+      type: "search-result",
+      component: CollegeResult,
+    });
   }
 
   function openDivision(name: string) {
@@ -337,9 +337,9 @@
     });
     queryStore.inputValue = name;
     sidePanelStore.openPanel({
-        type: "search-result",
-        component: DivisionResult
-    })
+      type: "search-result",
+      component: DivisionResult,
+    });
   }
 
   function openOrg(name: string) {
@@ -350,9 +350,9 @@
     });
     queryStore.inputValue = name;
     sidePanelStore.openPanel({
-        type: "search-result",
-        component: OrgResult
-    })
+      type: "search-result",
+      component: OrgResult,
+    });
   }
 
   function openDorm(name: string) {
@@ -363,9 +363,9 @@
     });
     queryStore.inputValue = name;
     sidePanelStore.openPanel({
-        type: "search-result",
-        component: DormResult
-    })
+      type: "search-result",
+      component: DormResult,
+    });
   }
 
   function openPlace(name: string) {
@@ -376,9 +376,9 @@
     });
     queryStore.inputValue = name;
     sidePanelStore.openPanel({
-        type: "search-result",
-        component: PlaceResult
-    })
+      type: "search-result",
+      component: PlaceResult,
+    });
   }
 
   const filteredJeepneyRoutes = $derived.by(() => {
@@ -395,7 +395,6 @@
 
   function openJeepneyRoute(id: string) {
     jeepneyStore.openRouteOnMap(id);
-
   }
 
   function closeList() {

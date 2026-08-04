@@ -48,8 +48,8 @@
   import type { FinalExamRow, RoomData } from "@lib/types";
   import Classes from "./Classes.svelte";
   import FinalExamsList from "./FinalExamsList.svelte";
-    import TermSelector from "@ui/TermSelector.svelte";
-    import BuildingResult from "@ui/controls/BuildingResult.svelte";
+  import TermSelector from "@ui/TermSelector.svelte";
+  import BuildingResult from "@ui/controls/BuildingResult.svelte";
 
   type RoomEditableField =
     | "roomCode"
@@ -399,9 +399,9 @@
       value: buildingName,
     });
     sidePanelStore.openPanel({
-        type: "search-result",
-        component: BuildingResult
-    })
+      type: "search-result",
+      component: BuildingResult,
+    });
   }
 
   const allFieldsUnchanged = $derived.by(() => {

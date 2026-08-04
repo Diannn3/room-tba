@@ -10,7 +10,6 @@
   // maplibre at its self-contained CSP worker bundle instead.
   maplibregl.setWorkerUrl(maplibreWorkerUrl);
   import { getAppActions, getAppData } from "@lib/context";
-
   import {
     queryStore,
     locationStore,
@@ -164,11 +163,12 @@
     submitCreateProposal,
     submitPinPositionProposal,
   } from "@lib/proposals/client";
-    import BuildingResult from "./controls/BuildingResult.svelte";
-    import PlaceResult from "./controls/PlaceResult.svelte";
-    import OrgResult from "./controls/OrgResult.svelte";
-    import DormResult from "./controls/DormResult.svelte";
-    import EventResult from "./controls/EventResult.svelte";
+  import BuildingResult from "./controls/BuildingResult.svelte";
+  import PlaceResult from "./controls/PlaceResult.svelte";
+  import OrgResult from "./controls/OrgResult.svelte";
+  import DormResult from "./controls/DormResult.svelte";
+  import EventResult from "./controls/EventResult.svelte";
+
   const data = getAppData();
   const appActions = getAppActions();
   const { buildings, dorms, events, organizations, places, loaded } =
@@ -286,9 +286,9 @@
     });
     queryStore.inputValue = place.name;
     sidePanelStore.openPanel({
-        type: "search-result",
-        component: PlaceResult
-    })
+      type: "search-result",
+      component: PlaceResult,
+    });
   }
 
   // Event titles are not unique, so resolve the selected event by its slug when
@@ -2549,9 +2549,9 @@
     });
     queryStore.inputValue = buildingName;
     sidePanelStore.openPanel({
-        type: "search-result",
-        component: BuildingResult
-    })
+      type: "search-result",
+      component: BuildingResult,
+    });
   }
 
   function handleDormMarkerClick(dormName: string) {
@@ -2565,9 +2565,9 @@
     });
     queryStore.inputValue = dormName;
     sidePanelStore.openPanel({
-        type: "search-result",
-        component: DormResult
-    })
+      type: "search-result",
+      component: DormResult,
+    });
   }
 
   function handleOrgMarkerClick(name: string) {
@@ -2587,9 +2587,9 @@
     });
     queryStore.inputValue = name;
     sidePanelStore.openPanel({
-        type: "search-result",
-        component: OrgResult
-    })
+      type: "search-result",
+      component: OrgResult,
+    });
   }
 
   function handleEventMarkerClick(event: EventData) {
@@ -2604,9 +2604,9 @@
     });
     queryStore.inputValue = event.title;
     sidePanelStore.openPanel({
-        type: "search-result",
-        component: EventResult
-    })
+      type: "search-result",
+      component: EventResult,
+    });
   }
 
   function toggleEventMarkerGroup(groupKey: string) {

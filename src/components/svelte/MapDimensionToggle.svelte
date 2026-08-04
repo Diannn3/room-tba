@@ -44,24 +44,22 @@
     if (!map) return;
     fn(map);
   }
-  const toggleMapDimension = () =>
+
+  const go2D = () =>
     withMap((map) => {
-      if (!isMap2DPitch(map.getPitch())) {
-        enterFlatMapDimension(map, terrainStore.enabled);
-        map.easeTo({ pitch: 0, duration: 400 });
-        return;
-      }
+      if (isMap2DPitch(map.getPitch())) return;
+      enterFlatMapDimension(map, terrainStore.enabled);
+      map.easeTo({ pitch: 0, bearing: 0, duration: 400 });
+    });
+
+  const go3D = () =>
+    withMap((map) => {
+      if (!isMap2DPitch(map.getPitch())) return;
       map.easeTo({ pitch: THREE_D_PITCH, duration: 400 });
       map.once("moveend", () =>
         enterTiltedMapDimension(map, terrainStore.enabled),
       );
     });
-
-  // One button now switches both ways, so the label has to name the state it
-  // moves to rather than the state it shows.
-  const toggleLabel = $derived(
-    is2D ? "Switch to tilted 3D map" : "Switch to flat 2D map",
-  );
 </script>
 
 <div
@@ -74,15 +72,24 @@
   <button
     type="button"
     class="segment"
-    onclick={toggleMapDimension}
-    aria-label={toggleLabel}
-    title={toggleLabel}
+    class:active={is2D}
+    onclick={go2D}
+    aria-pressed={is2D}
+    aria-label="Switch to flat 2D map"
+    title="Flat top-down map"
   >
-    {#if is2D}
-      2D
-    {:else}
-      3D
-    {/if}
+    2D
+  </button>
+  <button
+    type="button"
+    class="segment"
+    class:active={!is2D}
+    onclick={go3D}
+    aria-pressed={!is2D}
+    aria-label="Switch to tilted 3D map"
+    title="Tilted perspective map"
+  >
+    3D
   </button>
 </div>
 
@@ -132,6 +139,12 @@
     outline-offset: 1px;
   }
 
+  .segment.active {
+    background-color: hsl(5, 53%, 96%);
+    color: hsl(5, 53%, 28%);
+    font-weight: 700;
+  }
+
   .map-dimension-toggle.embedded {
     display: flex;
     flex-direction: column;
@@ -156,7 +169,7 @@
     min-height: var(--map-chrome-toggle-size, 2rem);
     padding: 0;
     border-radius: var(--map-chrome-toggle-radius, 0.5rem);
-    font-size: .875rem;
+    font-size: 0.625rem;
     letter-spacing: 0.04em;
   }
 
@@ -164,7 +177,14 @@
     background-color: hsla(0, 0%, 0%, 0.08);
   }
 
+  .map-dimension-toggle.embedded .segment.active {
+    background-color: hsla(5, 53%, 32%, 0.1);
+    color: hsl(5, 53%, 28%);
+  }
+
   .map-dimension-toggle.compact {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     align-items: stretch;
     box-sizing: border-box;
     padding: 0;
@@ -186,7 +206,13 @@
     min-height: 0;
     padding: 0.75rem;
     border-radius: 999px;
-    font-size: .875rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+  }
+
+  .map-dimension-toggle.compact .segment.active {
+    background-color: hsl(5, 53%, 22%);
+    color: hsl(5, 53%, 96%);
     font-weight: 600;
   }
 </style>

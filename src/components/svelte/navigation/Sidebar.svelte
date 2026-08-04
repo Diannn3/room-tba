@@ -43,8 +43,7 @@
   import CircleQuestionMark from "@lucide/svelte/icons/circle-question-mark";
   import { LogIn, LogOut } from "@lucide/svelte";
   import NavLink from "./NavLink.svelte";
-  import ClassesList from "@ui/controls/ClassesList.svelte";
-  import CampusBrowseList from "@ui/controls/CampusBrowseList.svelte";
+
   const entityButtonsInfo: {
     id: string;
     label: string;
@@ -66,11 +65,7 @@
   ];
   function handleBrowse(id: string) {
     if (id === "classes") {
-      openBrowseClasses(queryStore);
-      sidePanelStore.openPanel({
-        type: "browsing-entities",
-        component: ClassesList,
-      });
+      openBrowseClasses(queryStore, sidePanelStore);
       return;
     }
     if (id === "jeepney") {
@@ -86,18 +81,13 @@
         value: "Campus events",
       });
       queryStore.inputValue = "";
-      sidePanelStore.openPanel({
-        type: "browsing-events",
-      });
-
+      sidePanelStore.openPanel({ type: "browsing-events" });
       return;
     }
+    // openCampusBrowse opens the panel itself, so no openPanel pairing here.
     openCampusBrowse(queryStore, sidePanelStore, id);
-    sidePanelStore.openPanel({
-      type: "browsing-entities",
-      component: CampusBrowseList,
-    });
   }
+
   // Selecting anything auto-closes the mobile rail; the hamburger reopens it.
   $effect(() => {
     if (queryStore.category !== null) sidebarStore.closeRail();

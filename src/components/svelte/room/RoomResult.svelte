@@ -508,6 +508,12 @@
 
       <h2 class="entity-header__title">{currentRoom.value.code}</h2>
 
+      {#if currentRoom.value.fullName}
+        <p class="entity-header__context room-full-name">
+          {currentRoom.value.fullName}
+        </p>
+      {/if}
+
       {#if roomCategoryLabel(currentRoom.value.category)}
         <span class="room-category-badge"
           >{roomCategoryLabel(currentRoom.value.category)}</span
@@ -906,6 +912,13 @@
   @import "../controls/entity-detail.css";
   @import "../editor/entity-editor.css";
   @import "../map-chrome/map-chrome.css";
+
+  /* The unabbreviated name (#875) reads as the room's real name, so it sits
+     a shade darker than the college affiliation line below it. */
+  .room-full-name {
+    color: #27272a;
+    font-weight: 600;
+  }
 
   .room-category-badge {
     display: inline-block;

@@ -63,7 +63,11 @@
   );
 
   type AliasHit = { alias: string; value: string };
-  type RoomHit = { value: string; category: "room" };
+  type RoomHit = {
+    value: string;
+    category: "room";
+    fullName?: string | null;
+  };
 
   let aliasResults = $state<AliasHit[]>([]);
   let roomResults = $state<RoomHit[]>([]);
@@ -115,7 +119,7 @@
       try {
         const response = await fetch(url);
         const roomsFetch = (await response.json()) as {
-          data?: { value: string }[] | null;
+          data?: { value: string; fullName?: string | null }[] | null;
         };
         if (cancelled) return;
         if (response.ok && Array.isArray(roomsFetch?.data)) {
@@ -185,7 +189,11 @@
       </p>
     {:else}
       {#each roomResults as roomResult (roomResult.value)}
-        <Suggestion {...roomResult} />
+        <Suggestion
+          value={roomResult.value}
+          category={roomResult.category}
+          secondary={roomResult.fullName}
+        />
       {/each}
     {/if}
   {/if}

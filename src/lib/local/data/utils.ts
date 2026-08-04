@@ -348,6 +348,7 @@ export async function getLocalRoomByCode(code: string) {
             SELECT
             r.id,
             r.room_code AS code,
+            r.full_name AS "fullName",
             r.directions AS directions,
             json_build_object('name',b.building_name, 'lat', b.lat, 'lon', b.lon, 'directions', b.directions ) as building,
             c.college_name as "collegeName",
@@ -385,6 +386,7 @@ export async function getLocalRoomById(id: number) {
             SELECT
             r.id,
             r.room_code AS code,
+            r.full_name AS "fullName",
             r.directions AS directions,
             json_build_object('name',b.building_name, 'lat', b.lat, 'lon', b.lon, 'directions', b.directions ) as building,
             c.college_name as "collegeName",
@@ -835,7 +837,7 @@ export async function getLocalRoomsCounts(): Promise<
  * when there are none (matching the server contract). */
 export async function searchLocalRooms(
   searchString: string,
-): Promise<{ value: string }[] | null> {
+): Promise<{ value: string; fullName: string | null }[] | null> {
   try {
     const escaped = searchString
       .replace(/\\/g, "\\\\")
@@ -844,12 +846,13 @@ export async function searchLocalRooms(
     const localDB = getDB();
     await localDB.waitReady;
     const data = (await localDB.query(
-      `SELECT room_code AS value FROM rooms
+      `SELECT room_code AS value, full_name AS "fullName" FROM rooms
        WHERE upper(room_code) LIKE upper($1) ESCAPE '\\'
+          OR upper(full_name) LIKE upper($1) ESCAPE '\\'
        ORDER BY length(room_code), room_code
        LIMIT 6`,
       [`%${escaped}%`],
-    )) as Results<{ value: string }>;
+    )) as Results<{ value: string; fullName: string | null }>;
     return data.rows.length ? data.rows : null;
   } catch (e) {
     console.error(e);

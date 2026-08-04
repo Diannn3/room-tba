@@ -48,6 +48,8 @@ export type AppData = {
 type RoomData = {
   id: number;
   code: string;
+  /** Unabbreviated readable name when the code is an abbreviation (#875). */
+  fullName?: string | null;
   directions: string | null;
   building: {
     name: string;

@@ -25,6 +25,7 @@
     eventSlug,
     building,
     event: eventData,
+    secondary,
   }: {
     value: string;
     category: Exclude<QueryStoreState["category"], null>;
@@ -32,6 +33,8 @@
     eventSlug?: string;
     building?: BuildingData;
     event?: EventData;
+    /** Supporting line under the value, e.g. a room's unabbreviated name (#875). */
+    secondary?: string | null;
   } = $props();
 
   function handleSuggestionClick() {
@@ -115,7 +118,12 @@
     onfocus={handleFocus}
   >
     {@render icon(category)}
-    <div class="text">{value}</div>
+    <div class="text">
+      {value}
+      {#if secondary}
+        <span class="text-secondary">{secondary}</span>
+      {/if}
+    </div>
     {#if typeof id === "undefined"}
       <ArrowUpRight size={20} class="icon trailing" />
     {/if}
@@ -195,6 +203,14 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .text-secondary {
+    color: #52525b;
+  }
+
+  .text-secondary::before {
+    content: " · ";
   }
 
   @media (max-width: 425px) {

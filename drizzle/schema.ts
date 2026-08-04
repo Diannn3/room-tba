@@ -368,6 +368,8 @@ export const roomsTable = pgTable(
       cache: 1,
     }),
     roomCode: text("room_code").notNull(),
+    /** Unabbreviated readable name, e.g. "DSDS Main Lecture Hall" (#875). */
+    fullName: text("full_name"),
     directions: text(),
     buildingId: integer("building_id"),
     collegeId: integer("college_id"),

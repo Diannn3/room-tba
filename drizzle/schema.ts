@@ -745,3 +745,15 @@ export const sponsorImpressionsTable = pgTable("sponsor_impressions", {
   userAgent: text("user_agent"),
   pagePath: text("page_path"),
 });
+
+// Anonymous presence heartbeats behind the "N online" counter. A sid is a
+// random client-generated UUID held in sessionStorage — never an account, a
+// user id, or an IP. Server-only: deliberately absent from the PGlite
+// SYNCED_TABLES set so it never reaches the browser cache. Rows are pruned
+// opportunistically by /api/presence.
+export const presenceTable = pgTable("presence", {
+  sid: varchar({ length: 64 }).primaryKey(),
+  lastSeenAt: timestamp("last_seen_at", { withTimezone: true, mode: "string" })
+    .defaultNow()
+    .notNull(),
+});

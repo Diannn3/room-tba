@@ -19,6 +19,7 @@
   } from "@lib/local/data/sync";
   import { fetchBuildingFootprint } from "@lib/overpass";
   import { fetchBasemap } from "@lib/osm-basemap";
+  import { trapFocus } from "@lib/focus-trap";
   import {
     footprintToLocalPolygon,
     placeRooms,
@@ -61,6 +62,7 @@
   };
   type RoomPositionDraft = { floor: number; x: number; y: number };
 
+  let viewerFrameEl: HTMLDivElement | null = $state(null);
   let canvasContainer: HTMLDivElement | null = $state(null);
   let labelContainer: HTMLDivElement | null = $state(null);
 
@@ -193,6 +195,13 @@
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === "Escape") close();
   }
+
+  // `aria-modal="true"` tells assistive tech the rest of the page is inert, so
+  // Tab has to honour that. Same shared trap the other modals use.
+  $effect(() => {
+    if (!viewerFrameEl) return;
+    return trapFocus(viewerFrameEl, { onEscape: close });
+  });
 
   async function init() {
     if (!canvasContainer || !labelContainer) return;
@@ -1184,6 +1193,7 @@
   transition:fade={overlayFade(reducedMotion.current)}
 >
   <div
+    bind:this={viewerFrameEl}
     class="viewer-frame"
     role="dialog"
     aria-modal="true"

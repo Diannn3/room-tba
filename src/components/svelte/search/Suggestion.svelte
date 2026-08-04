@@ -25,6 +25,7 @@
     eventSlug,
     building,
     event: eventData,
+    secondary,
   }: {
     value: string;
     category: Exclude<QueryStoreState["category"], null>;
@@ -32,6 +33,8 @@
     eventSlug?: string;
     building?: BuildingData;
     event?: EventData;
+    /** Supporting line under the value, e.g. a room's unabbreviated name (#875). */
+    secondary?: string | null;
   } = $props();
 
   function handleSuggestionClick() {
@@ -141,6 +144,9 @@
           class:rest={hasMatchHighlight && !part.matched}>{part.text}</span
         >
       {/each}
+      {#if secondary}
+        <span class="text-secondary">{secondary}</span>
+      {/if}
     </div>
     {#if typeof id === "undefined"}
       <ArrowUpRight size={18} class="icon trailing" />
@@ -240,6 +246,14 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .text-secondary {
+    color: #52525b;
+  }
+
+  .text-secondary::before {
+    content: " · ";
   }
 
   .text .match {

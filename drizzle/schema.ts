@@ -346,6 +346,8 @@ export const roomPositionsTable = pgTable(
     posY: numeric("pos_y").notNull(),
     updatedAt: timestamp("updated_at", { mode: "string" }).notNull(),
     roomId: integer("room_id").notNull(),
+    /** 'manual' = an editor placed it; 'inferred' = accepted from room-code inference. */
+    source: varchar({ length: 16 }).default("manual").notNull(),
   },
   (table) => [
     foreignKey({
@@ -396,6 +398,8 @@ export const roomsTable = pgTable(
       cache: 1,
     }),
     roomCode: text("room_code").notNull(),
+    /** Unabbreviated readable name, e.g. "DSDS Main Lecture Hall" (#875). */
+    fullName: text("full_name"),
     directions: text(),
     buildingId: integer("building_id"),
     collegeId: integer("college_id"),

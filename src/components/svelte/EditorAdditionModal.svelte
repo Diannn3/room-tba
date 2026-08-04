@@ -29,9 +29,24 @@
     if (!editorChromeStore.additionModalOpen || !dialogEl) return;
     return trapFocus(dialogEl, { onEscape: close });
   });
+
+  // Same click-outside pattern as AppMenu / TermSelector / OfflineMaps /
+  // KeyboardShortcutsPopup: a window-level pointerdown that bails when the
+  // event lands inside the dialog. Keeps the dismiss affordance off the
+  // static overlay div, which would need its own keyboard handler (a11y).
+  function handleDocumentPointerDown(event: PointerEvent) {
+    if (!editorChromeStore.additionModalOpen) return;
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+    if (dialogEl?.contains(target)) return;
+    close();
+  }
 </script>
 
-<svelte:window onkeydown={handleKeydown} />
+<svelte:window
+  onkeydown={handleKeydown}
+  onpointerdown={handleDocumentPointerDown}
+/>
 
 {#if editorChromeStore.additionModalOpen}
   <div
@@ -52,7 +67,12 @@
           <MapPinPlus size={16} aria-hidden="true" />
           <span>Add to map</span>
         </div>
-        <IconButton size="sm" shape="rounded" label="Close add to map" onclick={close}>
+        <IconButton
+          size="sm"
+          shape="rounded"
+          label="Close add to map"
+          onclick={close}
+        >
           <X size={18} aria-hidden="true" />
         </IconButton>
       </header>

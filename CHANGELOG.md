@@ -1,3 +1,10 @@
+## [2.7.1](https://github.com/uplbtools/room-tba/compare/v2.7.0...v2.7.1) (2026-08-04)
+
+
+### Bug Fixes
+
+* **sync:** show a single retry affordance when campus sync fails ([#869](https://github.com/uplbtools/room-tba/issues/869)) ([d837809](https://github.com/uplbtools/room-tba/commit/d8378092db6eb5912c40b3ba154a5db8aa6e4c92))
+
 # [2.4.0](https://github.com/uplbtools/room-tba/compare/v2.3.1...v2.4.0) (2026-07-26)
 
 

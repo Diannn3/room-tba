@@ -506,6 +506,8 @@ export const editProposalsTable = pgTable("edit_proposals", {
     () => adminUsersTable.id,
   ),
   adminNote: text("admin_note"),
+  /** Contributor's message to the reviewer. Never published (#873). */
+  submitterNote: text("submitter_note"),
   reviewedBy: varchar("reviewed_by", { length: 100 }),
   reviewedAt: timestamp("reviewed_at", { mode: "string" }),
   createdAt: timestamp("created_at", { mode: "string" }).defaultNow().notNull(),

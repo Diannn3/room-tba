@@ -345,6 +345,9 @@ describe("ProposalReviewPanel undo after approve", () => {
     expect(screen.getByRole("status").textContent).toMatch(/publishing in/i);
     expect(screen.getByRole("button", { name: /^undo$/i })).toBeVisible();
 
+    // Unmount flushes a held approve on purpose, so cleanup() would commit this
+    // one after the stub is gone and post to a real localhost.
+    await fireEvent.click(screen.getByRole("button", { name: /^undo$/i }));
     vi.unstubAllGlobals();
   });
 
@@ -432,6 +435,8 @@ describe("ProposalReviewPanel keyboard shortcuts", () => {
 
     expect(screen.getByRole("status").textContent).toMatch(/Old Hall/);
 
+    // Same reason as the undo suite: release the hold before the stub goes.
+    await fireEvent.click(screen.getByRole("button", { name: /^undo$/i }));
     vi.unstubAllGlobals();
   });
 

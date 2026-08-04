@@ -447,6 +447,33 @@
           {#if measureRouteStore.active}
             <MeasureRoutePanel />
           {/if}
+          <div class="bottom-chrome" bind:this={bottomChromeEl}>
+            <div class="bottom-chrome__bar">
+              <div class="bottom-chrome__leading">
+                <MapAttribution />
+              </div>
+              <div class="bottom-chrome__status">
+                <StatusBar />
+              </div>
+            </div>
+            <div
+              class="bottom-chrome__actions"
+              bind:this={bottomChromeActionsEl}
+              aria-label="Location controls"
+            >
+              {#if mobile.current}
+                <div>
+                  <MapDimensionToggle compact />
+                </div>
+              {/if}
+              <div class="bottom-chrome__triggers">
+                <DayRouteChip />
+                <OnlineCounter />
+                <MapToolsFlyout />
+                <LocationButton embedded />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       {#if mobile.current}
@@ -574,7 +601,11 @@
 
     width: 100%;
     height: 100dvh;
-    overflow: hidden;
+    /* clip, not hidden: `hidden` leaves a programmatically scrollable box, so
+       overflowing chrome stays "reachable" to scripts while invisible to users
+       and hides layout bugs like this one. Matches Layout.astro. */
+    overflow-x: clip;
+    overflow-y: hidden;
   }
 
   .app-layout.edit-mode {
@@ -614,10 +645,17 @@
     z-index: var(--z-status-bar, 3);
     display: flex;
     flex-direction: row;
+    /* The row carries a fixed-width credits block plus a fixed-width action
+       column; below ~430px their sum exceeds the viewport and the trailing
+       controls used to be clipped away entirely. Wrapping drops the action
+       column onto its own line instead of pushing it off-screen. */
+    flex-wrap: wrap;
     align-items: flex-end;
     justify-content: space-between;
     gap: 0.5rem;
+    row-gap: 0.375rem;
     width: 100%;
+    max-width: 100%;
     min-width: 0;
     min-height: 2rem;
     box-sizing: border-box;
@@ -631,10 +669,16 @@
   .bottom-chrome__bar {
     display: flex;
     flex-direction: row;
+    /* Credits are a hard floor (they may not be truncated — basemap terms), so
+       the status text and any sync action wrap under them rather than widening
+       the pill past the viewport. */
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.375rem;
+    row-gap: 0.125rem;
     flex: 0 1 auto;
     min-width: 0;
+    max-width: 100%;
     min-height: 2rem;
     background-color: var(--map-chrome-surface, hsl(5 20% 97%));
     backdrop-filter: blur(10px);
@@ -690,6 +734,9 @@
     align-items: flex-end;
     gap: 0.375rem;
     padding: 0;
+    /* Stay hard right once the row wraps this column onto its own line. */
+    margin-left: auto;
+    max-width: 100%;
     pointer-events: auto;
   }
 
@@ -708,8 +755,12 @@
   }
   .bottom-chrome__triggers {
     display: flex;
+    /* A sixth chip must wrap, not clip (same failure the browse-chip row hit). */
+    flex-wrap: wrap;
+    justify-content: flex-end;
     gap: 0.375rem;
     align-items: flex-end;
+    max-width: 100%;
   }
 
   .bottom-band::before {

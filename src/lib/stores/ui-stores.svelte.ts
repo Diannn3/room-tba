@@ -176,6 +176,9 @@ export class ToastStore {
   };
 }
 
+/** Mobile entity bottom sheet snap; desktop stays `"closed"`. */
+export type MobileSheetSnap = "closed" | "peek" | "expanded";
+
 export class FloatingControlPanelStore {
   openPanel: FloatingControlPanel | null = $state(null);
 
@@ -228,6 +231,7 @@ export class SidePanelStore {
   state = $state<SidePanelMetaData | null>(null);
   active = $state<boolean>(false);
   collapsed: boolean = $state(false);
+  mobileSheetSnap: MobileSheetSnap = $state("closed");
 
   openPanel(state: SidePanelMetaData) {
     this.state = state;
@@ -249,5 +253,9 @@ export class SidePanelStore {
 
   collapse = () => {
     this.collapsed = true;
+  };
+
+  setMobileSheetSnap = (snap: MobileSheetSnap) => {
+    this.mobileSheetSnap = snap;
   };
 }

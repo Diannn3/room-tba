@@ -28,20 +28,13 @@
     align-items: flex-end;
     min-height: 0;
   }
+
   @media screen and (max-width: 48rem) {
     .side-panel-wrapper {
-      position: relative;
       gap: 0;
       margin-inline: var(--map-ui-padding, 0.375rem);
       width: auto;
       max-width: none;
-      flex: 1;
-      pointer-events: none;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      min-height: 0;
-      overflow: visible;
     }
 
     .side-panel-controls {
@@ -49,6 +42,5 @@
       min-height: 0;
       pointer-events: none;
     }
-
   }
 </style>

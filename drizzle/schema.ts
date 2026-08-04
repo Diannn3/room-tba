@@ -93,7 +93,8 @@ export const dormsTable = pgTable("dorms", {
   shortName: varchar("short_name", { length: 48 }),
   lat: doublePrecision(),
   lon: doublePrecision(),
-  gender: text().notNull(),
+  /** Null = policy not known. Not the same claim as co-ed; see 0050. */
+  gender: text(),
   capacity: integer(),
   managingOffice: text("managing_office"),
   contactEmail: text("contact_email"),
@@ -184,6 +185,33 @@ export const announcementsTable = pgTable("announcements", {
   version: integer().default(1).notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
 });
+
+// In-app feedback (#881). Server-only: never synced to the PGlite client cache
+// (not in the generator's SYNCED_TABLES), and deliberately holds no IP address —
+// `contact` is optional free text the sender chose to leave.
+export const feedbackTable = pgTable(
+  "feedback",
+  {
+    id: integer().primaryKey().generatedByDefaultAsIdentity({
+      name: "feedback_id_seq",
+      startWith: 1,
+      increment: 1,
+      minValue: 1,
+      maxValue: 2147483647,
+      cache: 1,
+    }),
+    message: text().notNull(),
+    contact: text(),
+    /** Path the sender was on, e.g. `/planner` — not a full URL with query. */
+    screen: text(),
+    appVersion: text("app_version"),
+    wasOnline: boolean("was_online"),
+    createdAt: timestamp("created_at", { mode: "string" })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [index("feedback_created_at_idx").on(table.createdAt.desc())],
+);
 
 export const collegesTable = pgTable("colleges", {
   id: integer().primaryKey().generatedByDefaultAsIdentity({

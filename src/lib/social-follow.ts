@@ -14,7 +14,12 @@
 
 export const FOLLOW_PROMPT_KEY = "social-follow-prompt";
 
-export type FollowPromptOutcome = "dismissed" | "followed";
+/** Views without an answer before the prompt retires itself. */
+export const FOLLOW_PROMPT_MAX_VIEWS = 3;
+
+const VIEW_COUNT_KEY = "social-follow-prompt-views";
+
+export type FollowPromptOutcome = "dismissed" | "followed" | "ignored";
 
 /** True once the reader has dismissed or acted on the prompt, on any visit. */
 export function isFollowPromptRetired(): boolean {
@@ -24,6 +29,32 @@ export function isFollowPromptRetired(): boolean {
     // SSR, or storage blocked. Never treat "cannot read" as "already asked".
     return false;
   }
+}
+
+/**
+ * Count a render, and retire the prompt once it has been shown
+ * FOLLOW_PROMPT_MAX_VIEWS times without an answer.
+ *
+ * Without this, someone who neither dismisses nor follows, and simply scrolls
+ * past, sees it again on every visit forever. For a reader who looks up a room
+ * most days that is a nag, which is the one thing this was not allowed to be.
+ * Ignoring something three times is an answer.
+ *
+ * Returns true when this render should still show the prompt.
+ */
+export function countFollowPromptView(): boolean {
+  if (isFollowPromptRetired()) return false;
+  try {
+    const seen = Number(localStorage.getItem(VIEW_COUNT_KEY) ?? "0") + 1;
+    localStorage.setItem(VIEW_COUNT_KEY, String(seen));
+    if (seen > FOLLOW_PROMPT_MAX_VIEWS) {
+      retireFollowPrompt("ignored");
+      return false;
+    }
+  } catch {
+    // Storage blocked: show it rather than treating the failure as an answer.
+  }
+  return true;
 }
 
 /** Retire the prompt permanently. Idempotent. */

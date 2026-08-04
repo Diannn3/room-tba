@@ -2,7 +2,7 @@
   import X from "@lucide/svelte/icons/x";
   import IconButton from "@ui/IconButton.svelte";
   import {
-    isFollowPromptRetired,
+    countFollowPromptView,
     retireFollowPrompt,
   } from "@lib/social-follow";
   import FollowUpdates from "./FollowUpdates.svelte";
@@ -16,7 +16,9 @@
 
   // Read once at init, not in an effect: re-reading would let the prompt come
   // back inside a session, and coming back is the thing this must never do.
-  let retired = $state(isFollowPromptRetired());
+  // Counting the view here also retires it after the third unanswered showing,
+  // so ignoring it is an answer rather than an invitation to ask again.
+  let retired = $state(!countFollowPromptView());
 
   function retire(outcome: "dismissed" | "followed") {
     retired = true;

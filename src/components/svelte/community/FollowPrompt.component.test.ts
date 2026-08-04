@@ -53,6 +53,27 @@ describe("FollowPrompt", () => {
     expect(screen.queryByText(note)).toBe(null);
   });
 
+  // Without a cap, a reader who neither dismisses nor follows sees this on
+  // every visit forever. For someone who looks up a room most days that is a
+  // nag, which is the one thing this was not allowed to be.
+  test("retires itself after three unanswered showings", () => {
+    for (let visit = 1; visit <= 3; visit += 1) {
+      const { unmount } = render(FollowPrompt, { props: { note } });
+      expect(
+        screen.queryByRole("button", { name: /dismiss follow suggestion/i }),
+        `visit ${visit} should still ask`,
+      ).not.toBe(null);
+      unmount();
+    }
+
+    render(FollowPrompt, { props: { note } });
+    expect(
+      screen.queryByRole("button", { name: /dismiss follow suggestion/i }),
+      "fourth visit must not ask again",
+    ).toBe(null);
+    expect(localStorage.getItem(FOLLOW_PROMPT_KEY)).toBe("ignored");
+  });
+
   test("a dismissal written by an earlier visit hides it before first paint", () => {
     localStorage.setItem(FOLLOW_PROMPT_KEY, "dismissed");
     render(FollowPrompt, { props: { note } });

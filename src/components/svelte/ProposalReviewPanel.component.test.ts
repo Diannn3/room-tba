@@ -270,3 +270,218 @@ describe("ProposalReviewPanel bulk actions", () => {
     expect(screen.getByText(/2 selected/)).toBeVisible();
   });
 });
+
+function pinProposal() {
+  return {
+    ...baseProposal(),
+    proposedPatch: { lat: 14.1663, lon: 121.2412 },
+    currentValues: { lat: 14.1661, lon: 121.241 },
+  };
+}
+
+describe("ProposalReviewPanel map preview", () => {
+  beforeEach(() => {
+    adminAuthStore.isLoggedIn = true;
+    adminAuthStore.canReview = true;
+    proposalsStore.loading = false;
+    proposalsStore.pendingCount = 1;
+  });
+
+  test("offers a preview for a proposal that moves a pin", async () => {
+    proposalsStore.proposals = [pinProposal()];
+    render(ProposalReviewPanelHost);
+    await expandFirstRow();
+
+    expect(
+      screen.getByRole("button", { name: /show map preview/i }),
+    ).toBeVisible();
+  });
+
+  // Each preview is a WebGL map and browsers cap live contexts, so it must stay
+  // closed until asked for.
+  test("the preview starts closed", async () => {
+    proposalsStore.proposals = [pinProposal()];
+    render(ProposalReviewPanelHost);
+    await expandFirstRow();
+
+    const toggle = screen.getByRole("button", { name: /show map preview/i });
+    expect(toggle.getAttribute("aria-expanded")).toBe("false");
+  });
+
+  test("no preview for a proposal that does not move a pin", async () => {
+    proposalsStore.proposals = [baseProposal()];
+    render(ProposalReviewPanelHost);
+    await expandFirstRow();
+
+    expect(screen.queryByRole("button", { name: /map preview/i })).toBeNull();
+  });
+});
+
+describe("ProposalReviewPanel undo after approve", () => {
+  beforeEach(() => {
+    adminAuthStore.isLoggedIn = true;
+    adminAuthStore.canReview = true;
+    proposalsStore.loading = false;
+    proposalsStore.pendingCount = 1;
+    proposalsStore.refresh = vi.fn(() => Promise.resolve());
+    proposalsStore.proposals = [baseProposal()];
+  });
+
+  test("approve is held, not written, while undo is offered", async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({}),
+      } as Response),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(ProposalReviewPanelHost);
+    await expandFirstRow();
+    await fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+
+    // The recovery path is that the request has not left yet.
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.getByRole("status").textContent).toMatch(/publishing in/i);
+    expect(screen.getByRole("button", { name: /^undo$/i })).toBeVisible();
+
+    // Unmount flushes a held approve on purpose, so cleanup() would commit this
+    // one after the stub is gone and post to a real localhost.
+    await fireEvent.click(screen.getByRole("button", { name: /^undo$/i }));
+    vi.unstubAllGlobals();
+  });
+
+  test("undo restores the suggestion and never posts", async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({}),
+      } as Response),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const row = () => document.querySelector('[data-proposal-row="7"]');
+
+    render(ProposalReviewPanelHost);
+    await expandFirstRow();
+    await fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+    // Held rows leave the queue optimistically (the label survives in the
+    // undo banner, so assert on the row itself, not the text).
+    expect(row()).toBeNull();
+
+    await fireEvent.click(screen.getByRole("button", { name: /^undo$/i }));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(row()).not.toBeNull();
+    expect(screen.queryByRole("status")).toBeNull();
+
+    vi.unstubAllGlobals();
+  });
+
+  test("publish now commits the held approve immediately", async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({}),
+      } as Response),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(ProposalReviewPanelHost);
+    await expandFirstRow();
+    await fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+    await fireEvent.click(screen.getByRole("button", { name: /publish now/i }));
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.map((c) => String(c[0]))).toContain(
+        "/api/admin/proposals/7/approve",
+      );
+    });
+
+    vi.unstubAllGlobals();
+  });
+});
+
+describe("ProposalReviewPanel keyboard shortcuts", () => {
+  beforeEach(() => {
+    adminAuthStore.isLoggedIn = true;
+    adminAuthStore.canReview = true;
+    proposalsStore.loading = false;
+    proposalsStore.pendingCount = 2;
+    proposalsStore.refresh = vi.fn(() => Promise.resolve());
+    proposalsStore.proposals = [
+      { ...baseProposal(), id: 7, entityLabel: "Old Hall" },
+      { ...baseProposal(), id: 8, entityLabel: "New Hall" },
+    ];
+  });
+
+  test("the shortcut hint is visible, not hidden in a help modal", () => {
+    render(ProposalReviewPanelHost);
+    expect(screen.getByText(/next \/ previous suggestion/i)).toBeVisible();
+  });
+
+  test("J focuses a row and A approves it", async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({}),
+      } as Response),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(ProposalReviewPanelHost);
+    await fireEvent.keyDown(window, { key: "j" });
+    await fireEvent.keyDown(window, { key: "a" });
+
+    expect(screen.getByRole("status").textContent).toMatch(/Old Hall/);
+
+    // Same reason as the undo suite: release the hold before the stub goes.
+    await fireEvent.click(screen.getByRole("button", { name: /^undo$/i }));
+    vi.unstubAllGlobals();
+  });
+
+  test("R opens the reject note step rather than rejecting outright", async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({}),
+      } as Response),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(ProposalReviewPanelHost);
+    await fireEvent.keyDown(window, { key: "j" });
+    await fireEvent.keyDown(window, { key: "r" });
+
+    expect(screen.getByLabelText(/note to yeyel/i)).toBeVisible();
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    vi.unstubAllGlobals();
+  });
+
+  // The reason the typing guard exists: "a" and "r" are common letters.
+  test("typing a note never triggers a review action", async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({}),
+      } as Response),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(ProposalReviewPanelHost);
+    await expandFirstRow();
+    await fireEvent.click(screen.getByRole("button", { name: "Reject" }));
+
+    const note = screen.getByLabelText(/note to yeyel/i);
+    await fireEvent.keyDown(note, { key: "a" });
+    await fireEvent.keyDown(note, { key: "r" });
+    await fireEvent.keyDown(note, { key: "j" });
+
+    // No approve was held and no request was sent.
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    vi.unstubAllGlobals();
+  });
+});

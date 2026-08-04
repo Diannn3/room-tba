@@ -427,7 +427,13 @@
     {/if}
     {#if ["map", "contributors", "settings"].includes(sidebarStore.panelOpen)}
       {#if mobile.current}
-        <div class="mobile-map-controls" bind:this={mapToolsStackEl}>
+        <div
+          class="mobile-map-controls"
+          class:mobile-map-controls--sheet-open={sidePanelStore.mobileSheetSnap !==
+            "closed"}
+          bind:this={mapToolsStackEl}
+          aria-hidden={sidePanelStore.mobileSheetSnap !== "closed"}
+        >
           <MapControlsStack hideCompass />
         </div>
       {:else}
@@ -449,33 +455,6 @@
           {#if measureRouteStore.active}
             <MeasureRoutePanel />
           {/if}
-          <div class="bottom-chrome" bind:this={bottomChromeEl}>
-            <div class="bottom-chrome__bar">
-              <div class="bottom-chrome__leading">
-                <MapAttribution />
-              </div>
-              <div class="bottom-chrome__status">
-                <StatusBar />
-              </div>
-            </div>
-            <div
-              class="bottom-chrome__actions"
-              bind:this={bottomChromeActionsEl}
-              aria-label="Location controls"
-            >
-              {#if mobile.current}
-                <div>
-                  <MapDimensionToggle compact />
-                </div>
-              {/if}
-              <div class="bottom-chrome__triggers">
-                <DayRouteChip />
-                <OnlineCounter />
-                <MapToolsFlyout />
-                <LocationButton embedded />
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     {:else if sidebarStore.panelOpen === "today"}
@@ -591,14 +570,16 @@
       --motion-duration-shelf: 0ms;
     }
     /* Stacking contract — highest first; blocking overlays dismiss ephemeral chrome.
-       map(0) < side-panel(2) < status-bar(5) < search-elevated(12) < map-tools(15) < chrome-popover(17)
-       < modal(100) < login-modal(200) < toast(1000). (#302) */
+       map(0) < side-panel(2) < status-bar(5) < map-tools(15) < mobile-sheet(16)
+       < chrome-popover(17) < search-elevated(18) < modal(100) < login-modal(200)
+       < toast(1000). (#302) */
     --z-map: 0;
     --z-staging-banner: 20;
     --z-side-panel: 2;
     --z-search-elevated: 18;
     --z-status-bar: 5;
     --z-map-tools: 15;
+    --z-mobile-sheet: 16;
     --z-chrome-popover: 17;
     --z-modal: 100;
     --z-login-modal: 200;
@@ -952,10 +933,24 @@
     flex-direction: column;
     align-items: flex-end;
     pointer-events: none;
+    opacity: 1;
+    transition: opacity var(--motion-duration-micro, 200ms) ease;
   }
 
   .mobile-map-controls > :global(*) {
     pointer-events: auto;
+  }
+
+  /* Entity sheet open (peek or expanded): hide locate / 3D / zoom — they sit
+     in the same corner as the sheet and otherwise paint on top of it. */
+  .mobile-map-controls--sheet-open {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  .mobile-map-controls--sheet-open > :global(*) {
+    pointer-events: none !important;
   }
 
   .mobile-bottom-nav-slot {

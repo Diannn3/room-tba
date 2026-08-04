@@ -22,6 +22,7 @@
   import { MediaQuery } from "svelte/reactivity";
   import SearchIcon from "@lucide/svelte/icons/search";
   import MapPinPlus from "@lucide/svelte/icons/map-pin-plus";
+  import ArrowLeft from "@lucide/svelte/icons/arrow-left";
 
   let searchElement = $state<HTMLInputElement | null>(null);
   let shellMainEl = $state<HTMLDivElement | null>(null);
@@ -88,6 +89,13 @@
     searchElement?.focus();
   }
 
+  function dismissMobileSearch() {
+    searchFocused = false;
+    searchElement?.blur();
+  }
+
+  const mobileSearchActive = $derived(mobile.current && searchFocused);
+
   const clearSelectionLabel = $derived(
     queryStore.type === "result" && queryStore.category !== null
       ? "Close details"
@@ -127,6 +135,7 @@
   class="search-root"
   class:mobile-shell={mobile.current}
   class:search-input-focused={searchFocused}
+  class:search-mobile-active={mobileSearchActive}
   class:search-suggestions-open={showSearchDropdown}
   class:search-query-active={draftInput.trim() !== ""}
 >
@@ -139,9 +148,28 @@
     >
       <div class="map-search-chrome__bar">
         <div class="map-search-chrome__bar-row">
+          {#if mobile.current}
+            <button
+              type="button"
+              class="map-search-chrome__back"
+              class:map-search-chrome__back--visible={mobileSearchActive}
+              aria-label="Close search"
+              tabindex={mobileSearchActive ? 0 : -1}
+              onmousedown={(event) => {
+                event.preventDefault();
+                dismissMobileSearch();
+              }}
+            >
+              <ArrowLeft size={22} aria-hidden="true" />
+            </button>
+          {/if}
           <div class="map-search-chrome__pill-wrap">
             <div class="map-search-chrome__pill">
-              <span class="search-icon" aria-hidden="true">
+              <span
+                class="search-icon"
+                class:search-icon--hidden={mobileSearchActive}
+                aria-hidden="true"
+              >
                 <SearchIcon size={20} />
               </span>
               <label class="sr-only" for="search">Search campus</label>
@@ -170,8 +198,10 @@
                   onclick={closeSearchContext}
                   type="button"
                   class="clear-btn"
+                  class:clear-btn--hidden={mobileSearchActive}
                   aria-label={clearSelectionLabel}
                   title={clearSelectionLabel}
+                  tabindex={mobileSearchActive ? -1 : 0}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -207,7 +237,7 @@
             </div>
           </div>
 
-          {#if !mobile.current}
+          {#if !mobile.current && !searchFocused}
             <MapFilterChips />
           {/if}
 
@@ -236,7 +266,7 @@
         </div>
       </div>
 
-      {#if mobile.current}
+      {#if mobile.current && !searchFocused}
         <div class="map-search-chrome__mobile-chips">
           <MapFilterChips />
         </div>
@@ -279,9 +309,21 @@
   }
 
   .search-root.mobile-shell {
-    display: block;
+    /* Full viewport under staging banner always — idle is transparent so
+       map/nav stay clickable; active fades white in (no layout jump). */
+    position: fixed;
+    top: var(--staging-banner-height, 0px);
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: var(--z-search-elevated, 18);
+    display: flex;
+    flex-direction: column;
     width: 100%;
+    background: transparent;
     pointer-events: none;
+    transition: background-color var(--motion-duration-micro, 200ms)
+      var(--motion-ease-out, ease);
   }
 
   .search-shell-main {
@@ -294,14 +336,17 @@
     max-width: 100%;
   }
 
-  /* Mobile redesign (393 frame): search pill + chips row under it. */
+  /* Mobile redesign (393): search + filters only (Add is bottom-nav FAB). */
   .search-root.mobile-shell .search-shell-main {
-    display: block;
+    display: flex;
+    flex-direction: column;
     width: 100%;
     max-width: 100%;
     min-width: 0;
+    min-height: 0;
     box-sizing: border-box;
-    padding: calc(env(safe-area-inset-top, 0px) + 0.75rem)
+    margin: 0;
+    padding: var(--staging-banner-gap, 0.5rem)
       max(1rem, env(safe-area-inset-right, 0px))
       0.5rem
       max(1rem, env(safe-area-inset-left, 0px));
@@ -310,16 +355,21 @@
     border-radius: 0;
     box-shadow: none;
     pointer-events: auto;
+    transition: padding var(--motion-duration-micro, 200ms)
+      var(--motion-ease-out, ease);
   }
 
   .search-root.mobile-shell .map-search-chrome--mobile-redesign {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.625rem;
     width: 100%;
+    min-height: 0;
     border: none;
     background: transparent;
     box-shadow: none;
+    transition: gap var(--motion-duration-micro, 200ms)
+      var(--motion-ease-out, ease);
   }
 
   .search-root.mobile-shell
@@ -331,7 +381,41 @@
   .search-root.mobile-shell
     .map-search-chrome--mobile-redesign
     .map-search-chrome__bar-row {
+    align-items: center;
     min-width: 0;
+    gap: 0;
+    transition: gap var(--motion-duration-micro, 200ms)
+      var(--motion-ease-out, ease);
+  }
+
+  .search-root.mobile-shell .map-search-chrome__back {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 0;
+    height: 2.25rem;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: #111;
+    opacity: 0;
+    pointer-events: none;
+    cursor: pointer;
+    transition:
+      width var(--motion-duration-micro, 200ms) var(--motion-ease-out, ease),
+      opacity var(--motion-duration-fast, 150ms) ease,
+      margin var(--motion-duration-micro, 200ms) var(--motion-ease-out, ease);
+  }
+
+  .search-root.mobile-shell .map-search-chrome__back--visible {
+    width: 2.25rem;
+    margin-right: 0.5rem;
+    opacity: 1;
+    pointer-events: auto;
   }
 
   .search-root.mobile-shell
@@ -346,13 +430,19 @@
     .map-search-chrome__pill {
     box-sizing: border-box;
     width: 100%;
-    min-height: 2.75rem;
-    gap: 0.55rem;
-    padding: 0.65rem 0.95rem;
-    border: none;
+    min-height: 3rem;
+    gap: 0.6rem;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid transparent;
     border-radius: 999px;
     background: #fff;
     box-shadow: var(--shadow-search, 0 1px 3.5px rgb(58 58 71 / 0.2));
+    transition:
+      border-color var(--motion-duration-micro, 200ms) ease,
+      box-shadow var(--motion-duration-micro, 200ms) ease,
+      min-height var(--motion-duration-micro, 200ms) ease,
+      padding var(--motion-duration-micro, 200ms) ease,
+      gap var(--motion-duration-micro, 200ms) ease;
   }
 
   .search-root.mobile-shell
@@ -362,6 +452,7 @@
     font-size: 0.875rem;
     font-weight: 500;
     color: #111;
+    transition: font-size var(--motion-duration-micro, 200ms) ease;
   }
 
   .search-root.mobile-shell
@@ -373,11 +464,42 @@
     opacity: 1;
   }
 
+  .search-root.mobile-shell .search-icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    overflow: hidden;
+    opacity: 1;
+    transition:
+      width var(--motion-duration-fast, 150ms) ease,
+      opacity var(--motion-duration-fast, 150ms) ease,
+      margin var(--motion-duration-fast, 150ms) ease;
+  }
+
+  .search-root.mobile-shell .search-icon--hidden {
+    width: 0;
+    margin: 0;
+    opacity: 0;
+  }
+
+  .search-root.mobile-shell .clear-btn--hidden {
+    width: 0 !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
   .search-root.mobile-shell
     .map-search-chrome--mobile-redesign
     .map-search-chrome__mobile-chips {
     min-width: 0;
     width: 100%;
+    padding-right: 0.125rem;
   }
 
   .search-root.mobile-shell
@@ -400,6 +522,7 @@
     :global(.map-filter-chips__more) {
     width: 2.125rem;
     height: 2.125rem;
+    margin-right: 0.125rem;
     border-radius: 999px;
   }
 
@@ -407,12 +530,76 @@
     .map-search-chrome--mobile-redesign
     .map-search-chrome__suggestions {
     width: 100%;
-    margin-top: 0.25rem;
+    flex: 1 1 auto;
+    min-height: 0;
+    margin: 0;
     border: none;
-    border-radius: 1.15rem;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
+  .search-root.mobile-shell.search-mobile-active {
     background: #fff;
-    box-shadow: var(--shadow-results, 0 2px 6px rgb(36 37 46 / 0.2));
-    overflow: hidden;
+    pointer-events: auto;
+  }
+
+  .search-root.mobile-shell.search-mobile-active .search-shell-main {
+    flex: 1 1 auto;
+    height: 100%;
+    min-height: 100%;
+    padding-top: 0.75rem;
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  .search-root.mobile-shell.search-mobile-active
+    .map-search-chrome--mobile-redesign {
+    flex: 1 1 auto;
+    gap: 0.75rem;
+  }
+
+  .search-root.mobile-shell.search-mobile-active
+    .map-search-chrome__bar-row {
+    gap: 0;
+  }
+
+  .search-root.mobile-shell.search-mobile-active .map-search-chrome__pill {
+    min-height: 2.75rem;
+    padding: 0.625rem 1rem;
+    border-color: #d34825;
+    box-shadow: none;
+  }
+
+  .search-root.mobile-shell.search-mobile-active
+    .map-search-chrome__pill
+    input {
+    min-width: 0;
+    font-size: 0.9375rem;
+  }
+
+  .search-root.mobile-shell.search-mobile-active
+    .map-search-chrome__suggestions
+    :global(.suggestions-container) {
+    max-height: none;
+    padding: 0.25rem 0 1rem;
+    border-top: none;
+    gap: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .search-root.mobile-shell,
+    .search-root.mobile-shell .search-shell-main,
+    .search-root.mobile-shell .map-search-chrome--mobile-redesign,
+    .search-root.mobile-shell .map-search-chrome__bar-row,
+    .search-root.mobile-shell .map-search-chrome__back,
+    .search-root.mobile-shell .map-search-chrome__pill,
+    .search-root.mobile-shell .map-search-chrome__pill input,
+    .search-root.mobile-shell .search-icon,
+    .search-root.mobile-shell .map-search-chrome__suggestions {
+      transition: none;
+    }
   }
 
   .search-root:not(.mobile-shell) .map-search-chrome {

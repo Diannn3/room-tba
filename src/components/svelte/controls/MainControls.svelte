@@ -56,7 +56,12 @@
     const identity = panelIdentity;
     if (identity === lastPanelIdentity) return;
 
-    sidePanelStore.expand();
+    // Mobile: GMaps-style half-sheet peek so map + Directions stay usable.
+    // Full height is via drag-up / handle — not the default.
+    if (identity !== null) {
+      if (mobile.current) sidePanelStore.collapse();
+      else sidePanelStore.expand();
+    }
     jeepneyStore.closeStop();
     lastPanelIdentity = identity;
   });
@@ -81,45 +86,91 @@
   let dragStartY: number | null = null;
   let dragStartTime = 0;
   let dragMoved = false;
+  let dragFromHandle = false;
   let sheetEl: HTMLElement | null = $state(null);
   /** Live drag offset in px (0 = open, positive = dragged down toward peek). */
   let dragOffset = $state(0);
   const isDragging = $derived(dragStartY !== null && dragMoved);
 
-  function onHandlePointerDown(event: PointerEvent) {
-    if (!mobile.current || event.pointerType === "mouse") return;
+  function detailsScrollTop(): number {
+    const el = sheetEl?.querySelector(".side-panel-details");
+    return el instanceof HTMLElement ? el.scrollTop : 0;
+  }
+
+  function shouldIgnoreSheetDragTarget(target: EventTarget | null): boolean {
+    if (!(target instanceof Element)) return true;
+    // Handle is a <button> but must still start a drag.
+    if (target.closest(".drawer-handle")) return false;
+    // Leave taps on actions (Directions, Close, links) alone.
+    return Boolean(
+      target.closest(
+        "button, a, input, textarea, select, label, [role='button']",
+      ),
+    );
+  }
+
+  function beginSheetDrag(event: PointerEvent, fromHandle: boolean) {
+    if (!mobile.current) return;
     dragStartY = event.clientY;
     dragStartTime = performance.now();
     dragMoved = false;
+    dragFromHandle = fromHandle;
     dragOffset = 0;
-    (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
+    // Capture on the sheet so move/up keep firing even if the gesture
+    // started on the handle button.
+    sheetEl?.setPointerCapture?.(event.pointerId);
   }
 
-  function onHandlePointerMove(event: PointerEvent) {
+  function onHandlePointerDown(event: PointerEvent) {
+    event.stopPropagation();
+    beginSheetDrag(event, true);
+  }
+
+  function onSheetPointerDown(event: PointerEvent) {
+    if (!mobile.current) return;
+    if (shouldIgnoreSheetDragTarget(event.target)) return;
+    beginSheetDrag(event, false);
+  }
+
+  function onSheetPointerMove(event: PointerEvent) {
     if (dragStartY === null) return;
     const delta = event.clientY - dragStartY;
     if (Math.abs(delta) > DRAG_THRESHOLD) dragMoved = true;
     if (!dragMoved) return;
 
-    // When expanded, dragging down increases offset (toward peek).
-    // When collapsed, dragging up decreases offset (toward open).
+    // Expanded + scrolled: vertical pans scroll content, not the sheet —
+    // unless the gesture started on the grab handle.
+    if (
+      !dragFromHandle &&
+      !sidePanelStore.collapsed &&
+      detailsScrollTop() > 0
+    ) {
+      dragStartY = null;
+      dragMoved = false;
+      dragOffset = 0;
+      return;
+    }
+
+    // Peek: drag up (negative) toward full. Full: drag down toward peek.
     if (sidePanelStore.collapsed) {
-      dragOffset = Math.min(0, delta); // negative = opening
+      dragOffset = Math.min(0, delta);
     } else {
-      dragOffset = Math.max(0, delta); // positive = closing
+      dragOffset = Math.max(0, delta);
     }
   }
 
-  function onHandlePointerUp(event: PointerEvent) {
+  function onSheetPointerUp(event: PointerEvent) {
     if (dragStartY === null) return;
     const elapsed = performance.now() - dragStartTime;
     const delta = event.clientY - dragStartY;
     const velocity = Math.abs(delta) / Math.max(elapsed, 1);
+    const moved = dragMoved;
 
     dragStartY = null;
+    dragFromHandle = false;
 
-    if (!dragMoved) {
-      // Tap — let the click handler toggle.
+    if (!moved) {
+      // Tap — handle click toggles; body taps fall through to children.
       return;
     }
 
@@ -140,9 +191,10 @@
   /** Multi-touch/OS gesture takeover cancels the pointer sequence without a
    * pointerup — reset to the current committed position instead of leaving
    * the sheet stuck mid-drag with transitions disabled. */
-  function onHandlePointerCancel() {
+  function onSheetPointerCancel() {
     dragStartY = null;
     dragMoved = false;
+    dragFromHandle = false;
     dragOffset = 0;
   }
 
@@ -172,11 +224,17 @@
   <div class="side-panel-controls">
     {#if queryStore.category !== null || jeepneyStore.selectedStopIndex !== null}
       <div class="drawer" class:is-collapsed={sidePanelStore.collapsed}>
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
           class="drawer-sheet"
           bind:this={sheetEl}
           style:transform={sheetTransform}
           style:transition={sheetTransition}
+          onpointerdown={onSheetPointerDown}
+          onpointermove={onSheetPointerMove}
+          onpointerup={onSheetPointerUp}
+          onpointercancel={onSheetPointerCancel}
+          onlostpointercapture={onSheetPointerCancel}
         >
           <button
             class="drawer-handle"
@@ -187,10 +245,6 @@
             title={toggleLabel}
             onclick={onHandleClick}
             onpointerdown={onHandlePointerDown}
-            onpointermove={onHandlePointerMove}
-            onpointerup={onHandlePointerUp}
-            onpointercancel={onHandlePointerCancel}
-            onlostpointercapture={onHandlePointerCancel}
           >
             {#if mobile.current}
               <span class="drawer-grab" aria-hidden="true"></span>
@@ -449,22 +503,23 @@
       border-radius: var(--map-chrome-radius, 1rem);
       box-shadow: var(--map-chrome-panel-shadow);
       overflow: hidden;
+      touch-action: pan-y;
       /* #411: snap transition for drag-release — transform animates back
          to translateY(0) when the sheet settles at peek or open. */
       transition: transform 0.3s var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1));
     }
 
-    /* Collapsed = half-height peek (still scrollable), not full hide. */
+    /* Collapsed = ~half-height peek (GMaps-style), not full hide. */
     .drawer.is-collapsed {
       top: auto;
       height: min(
-        50dvh,
+        52dvh,
         calc(
           100dvh - var(--mobile-detail-sheet-top-inset, 0px) -
             var(--side-panel-bottom-inset, 0px)
         )
       );
-      max-height: 50dvh;
+      max-height: 52dvh;
       transform: none;
     }
 
@@ -475,6 +530,8 @@
       min-height: 0;
       border-radius: var(--map-chrome-radius, 1rem);
       border-bottom: 1px solid var(--map-chrome-border, hsl(5 10% 68%));
+      /* Peek: sheet drag owns the gesture (pull up to expand). */
+      touch-action: none;
     }
 
     .drawer.is-collapsed .drawer-card {
@@ -528,14 +585,14 @@
       align-self: stretch;
       width: auto;
       height: auto;
-      /* #411: slim handle — was 2.75rem, now a lightweight grab zone */
-      min-height: 1.5rem;
-      padding: 0.375rem
+      /* Larger grab zone — drag sheet like GMaps, not a tiny tap target. */
+      min-height: 2rem;
+      padding: 0.625rem
         max(
           var(--map-search-inline-pad, 0.625rem),
           env(safe-area-inset-right, 0px)
         )
-        0.375rem
+        0.5rem
         max(
           var(--map-search-inline-pad, 0.625rem),
           env(safe-area-inset-left, 0px)
@@ -550,14 +607,13 @@
       align-items: center;
       justify-content: center;
       cursor: grab;
-      /* Let the handle own vertical drags instead of scrolling the page. */
       touch-action: none;
     }
 
     .drawer-grab {
       display: block;
-      width: 2.5rem;
-      height: 0.1875rem;
+      width: 2.75rem;
+      height: 0.25rem;
       border-radius: 999px;
       background: #d4d4d8;
       flex-shrink: 0;

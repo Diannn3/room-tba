@@ -35,7 +35,7 @@
     aria-current={active === "map" ? "page" : undefined}
     onclick={() => go("map")}
   >
-    <img src={mapIcon} alt="" width="22" height="22" decoding="async" />
+    <img src={mapIcon} alt="" width="24" height="24" decoding="async" />
     <span>Map</span>
   </button>
 
@@ -46,7 +46,7 @@
     aria-current={active === "planner" ? "page" : undefined}
     onclick={() => go("planner")}
   >
-    <img src={plannerIcon} alt="" width="22" height="22" decoding="async" />
+    <img src={plannerIcon} alt="" width="24" height="24" decoding="async" />
     <span>Planner</span>
   </button>
 
@@ -57,8 +57,8 @@
     onclick={() => editorChromeStore.openAdditionModal()}
   >
     <svg
-      width="22"
-      height="22"
+      width="24"
+      height="24"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -67,7 +67,9 @@
       stroke-linejoin="round"
       aria-hidden="true"
     >
-      <path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+      <path
+        d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"
+      />
       <path d="M12 7v6" />
       <path d="M9 10h6" />
     </svg>
@@ -80,7 +82,7 @@
     aria-current={active === "finals" ? "page" : undefined}
     onclick={() => go("finals")}
   >
-    <img src={finalExamsIcon} alt="" width="22" height="22" decoding="async" />
+    <img src={finalExamsIcon} alt="" width="24" height="24" decoding="async" />
     <span>Final Exams</span>
   </button>
 
@@ -89,7 +91,7 @@
     class="mobile-bottom-nav__item"
     onclick={openAccount}
   >
-    <img src={accountIcon} alt="" width="22" height="22" decoding="async" />
+    <img src={accountIcon} alt="" width="24" height="24" decoding="async" />
     <span>Account</span>
   </button>
 </nav>
@@ -99,15 +101,16 @@
     pointer-events: auto;
     box-sizing: border-box;
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    align-items: end;
-    gap: 0.125rem;
+    grid-template-columns: 1fr 1fr auto 1fr 1fr;
+    align-items: center;
+    column-gap: 0.15rem;
     width: 100%;
-    padding: 0.35rem 0.5rem calc(0.35rem + env(safe-area-inset-bottom, 0px));
+    min-height: 3.75rem;
+    padding: 0.4rem 0.4rem calc(0.4rem + env(safe-area-inset-bottom, 0px));
     border: none;
-    border-top: 1px solid #efe9ea;
+    border-top: 1px solid #f0eaeb;
     background: #fff;
-    box-shadow: 0 -1px 8px rgb(0 0 0 / 0.06);
+    box-shadow: 0 -2px 12px rgb(0 0 0 / 0.06);
   }
 
   .mobile-bottom-nav__item {
@@ -117,13 +120,13 @@
     justify-content: center;
     gap: 0.2rem;
     min-width: 0;
-    min-height: 3.25rem;
+    min-height: 3rem;
     margin: 0;
-    padding: 0.35rem 0.15rem;
+    padding: 0.3rem 0.1rem;
     border: none;
     border-radius: 0.75rem;
     background: transparent;
-    color: #332529;
+    color: #3a3032;
     font: inherit;
     font-size: 0.625rem;
     font-weight: 500;
@@ -132,9 +135,9 @@
   }
 
   .mobile-bottom-nav__item img {
-    width: 1.375rem;
-    height: 1.375rem;
-    opacity: 0.9;
+    width: 1.5rem;
+    height: 1.5rem;
+    opacity: 0.92;
   }
 
   .mobile-bottom-nav__item span {
@@ -158,18 +161,17 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    align-self: center;
-    width: 3.25rem;
-    height: 3.25rem;
-    margin: 0 auto;
+    width: 3.5rem;
+    height: 3.5rem;
+    margin: 0 0.15rem;
     padding: 0;
     border: none;
-    border-radius: 1rem;
+    border-radius: 1.05rem;
     background: #8d1437;
     color: #fff;
-    box-shadow: 0 2px 8px rgb(141 20 55 / 0.35);
+    box-shadow: 0 3px 10px rgb(141 20 55 / 0.35);
     cursor: pointer;
-    transform: translateY(-0.55rem);
+    transform: translateY(-0.65rem);
   }
 
   .mobile-bottom-nav__fab:hover {

@@ -170,7 +170,7 @@
 <div class="side-panel-wrapper">
   <Search />
   <div class="side-panel-controls">
-    {#if (queryStore.category !== null || jeepneyStore.selectedStopIndex !== null) && !(mobile.current && sidePanelStore.collapsed)}
+    {#if queryStore.category !== null || jeepneyStore.selectedStopIndex !== null}
       <div class="drawer" class:is-collapsed={sidePanelStore.collapsed}>
         <div
           class="drawer-sheet"
@@ -204,7 +204,7 @@
             <div
               id="side-panel-details"
               class="side-panel-details map-chrome-scroll"
-              aria-hidden={sidePanelStore.collapsed}
+              aria-hidden={sidePanelStore.collapsed && !mobile.current}
             >
               {#if jeepneyStore.selectedStopIndex !== null}
                 <JeepneyStopPanel />
@@ -306,6 +306,36 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+  }
+
+  /* Desktop redesign: same floating card as search / filter chips. */
+  :global(.app-layout.redesign-desktop) .drawer-card {
+    border: none;
+    border-left: none;
+    border-radius: var(--map-chrome-radius, 0.75rem);
+    padding: 0.75rem 0.875rem;
+    background-color: #fff;
+    box-shadow: var(
+      --shadow-results,
+      0 2px 6px rgb(36 37 46 / 0.2)
+    );
+  }
+
+  :global(.app-layout.redesign-desktop) .drawer-handle {
+    right: -2.25rem;
+    width: 2.25rem;
+    min-height: 2.25rem;
+    height: 3.25rem;
+    border: none;
+    border-radius: 0 0.625rem 0.625rem 0;
+    background-color: #fff;
+    color: var(--color-brand, #8d1437);
+    box-shadow: var(--shadow-search, 0 1px 3.5px rgb(58 58 71 / 0.2));
+  }
+
+  :global(.app-layout.redesign-desktop) .drawer-handle:hover,
+  :global(.app-layout.redesign-desktop) .drawer-handle:focus-visible {
+    background-color: #fff;
   }
 
   .drawer-sheet {
@@ -424,28 +454,40 @@
       transition: transform 0.3s var(--motion-ease-out, cubic-bezier(0.22, 1, 0.36, 1));
     }
 
+    /* Collapsed = half-height peek (still scrollable), not full hide. */
     .drawer.is-collapsed {
       top: auto;
-      height: auto;
+      height: min(
+        50dvh,
+        calc(
+          100dvh - var(--mobile-detail-sheet-top-inset, 0px) -
+            var(--side-panel-bottom-inset, 0px)
+        )
+      );
+      max-height: 50dvh;
       transform: none;
     }
 
     .drawer.is-collapsed .drawer-sheet {
-      flex: 0 0 auto;
+      flex: 1 1 auto;
+      height: 100%;
+      max-height: 100%;
+      min-height: 0;
       border-radius: var(--map-chrome-radius, 1rem);
       border-bottom: 1px solid var(--map-chrome-border, hsl(5 10% 68%));
     }
 
     .drawer.is-collapsed .drawer-card {
-      flex: 0 0 0;
-      max-height: 0;
+      flex: 1 1 auto;
+      max-height: none;
       min-height: 0;
-      opacity: 0;
-      padding-top: 0;
-      padding-bottom: 0;
-      border-width: 0;
+      opacity: 1;
       overflow: hidden;
-      pointer-events: none;
+      pointer-events: auto;
+    }
+
+    .drawer.is-collapsed .side-panel-details {
+      overflow-y: auto;
     }
 
     .drawer-card {

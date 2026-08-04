@@ -211,12 +211,22 @@
 
   .suggestions-header {
     margin: 0;
-    padding: 0.125rem 0.5rem 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 600;
+    padding: 8px;
+    font-family: Inter, system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
     letter-spacing: 0.02em;
     text-transform: uppercase;
-    color: hsl(0, 0%, 45%);
+    color: #7b7c8d;
+  }
+
+  @media (min-width: 48.0625rem) {
+    .suggestions-container {
+      gap: 0;
+      padding: 16px 20px;
+      border-top: none;
+      max-height: min(60vh, 28rem);
+    }
   }
 
   .alias-hint {

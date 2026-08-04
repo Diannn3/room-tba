@@ -724,6 +724,7 @@ export async function getLocalBuildingRooms(id: number) {
     SELECT
     r.id,
     r.room_code AS code,
+    r.full_name AS "fullName",
     r.directions AS directions,
     json_build_object('name',b.building_name, 'lat', b.lat, 'lon', b.lon, 'directions', b.directions ) as building,
     c.college_name as "collegeName",
@@ -798,8 +799,8 @@ export async function syncBuildingRooms(
     try {
       await localDB.query(
         `
-            INSERT INTO rooms (id, room_code, directions, building_id, college_id, division_id, image_url, version, updated_at, category)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            INSERT INTO rooms (id, room_code, directions, building_id, college_id, division_id, image_url, version, updated_at, category, full_name)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             ON CONFLICT (id) DO UPDATE SET
             id = EXCLUDED.id,
             room_code = EXCLUDED.room_code,
@@ -810,7 +811,8 @@ export async function syncBuildingRooms(
             image_url = EXCLUDED.image_url,
             version = EXCLUDED.version,
             updated_at = EXCLUDED.updated_at,
-            category = EXCLUDED.category;
+            category = EXCLUDED.category,
+            full_name = EXCLUDED.full_name;
             `,
         [
           room.id,
@@ -823,6 +825,7 @@ export async function syncBuildingRooms(
           room.version,
           room.updatedAt,
           room.category ?? null,
+          room.fullName ?? null,
         ],
       );
     } catch (e) {
@@ -872,6 +875,7 @@ export async function getLocalCollegeRooms(id: number) {
     SELECT
     r.id,
     r.room_code AS code,
+    r.full_name AS "fullName",
     r.directions AS directions,
     json_build_object('name',b.building_name, 'lat', b.lat, 'lon', b.lon, 'directions', b.directions ) as building,
     c.college_name as "collegeName",
@@ -928,8 +932,8 @@ export async function syncCollegeRooms(
     try {
       await localDB.query(
         `
-            INSERT INTO rooms (id, room_code, directions, building_id, college_id, division_id, image_url, version, updated_at, category)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            INSERT INTO rooms (id, room_code, directions, building_id, college_id, division_id, image_url, version, updated_at, category, full_name)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             ON CONFLICT (id) DO UPDATE SET
             id = EXCLUDED.id,
             room_code = EXCLUDED.room_code,
@@ -940,7 +944,8 @@ export async function syncCollegeRooms(
             image_url = EXCLUDED.image_url,
             version = EXCLUDED.version,
             updated_at = EXCLUDED.updated_at,
-            category = EXCLUDED.category;
+            category = EXCLUDED.category,
+            full_name = EXCLUDED.full_name;
             `,
         [
           room.id,
@@ -953,6 +958,7 @@ export async function syncCollegeRooms(
           room.version,
           room.updatedAt,
           room.category ?? null,
+          room.fullName ?? null,
         ],
       );
     } catch (e) {
@@ -1002,6 +1008,7 @@ export async function getLocalDivisionRooms(id: number) {
     SELECT
     r.id,
     r.room_code AS code,
+    r.full_name AS "fullName",
     r.directions AS directions,
     json_build_object('name',b.building_name, 'lat', b.lat, 'lon', b.lon, 'directions', b.directions ) as building,
     c.college_name as "collegeName",
@@ -1058,8 +1065,8 @@ export async function syncDivisionRooms(
     try {
       await localDB.query(
         `
-            INSERT INTO rooms (id, room_code, directions, building_id, college_id, division_id, image_url, version, updated_at, category)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            INSERT INTO rooms (id, room_code, directions, building_id, college_id, division_id, image_url, version, updated_at, category, full_name)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             ON CONFLICT (id) DO UPDATE SET
             id = EXCLUDED.id,
             room_code = EXCLUDED.room_code,
@@ -1070,7 +1077,8 @@ export async function syncDivisionRooms(
             image_url = EXCLUDED.image_url,
             version = EXCLUDED.version,
             updated_at = EXCLUDED.updated_at,
-            category = EXCLUDED.category;
+            category = EXCLUDED.category,
+            full_name = EXCLUDED.full_name;
             `,
         [
           room.id,
@@ -1083,6 +1091,7 @@ export async function syncDivisionRooms(
           room.version,
           room.updatedAt,
           room.category ?? null,
+          room.fullName ?? null,
         ],
       );
     } catch (e) {

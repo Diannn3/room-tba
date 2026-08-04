@@ -381,11 +381,13 @@ button.map-chrome-chip:disabled {
 .map-chrome-fab-trigger {
   display: flex;
   flex-shrink: 0;
-  padding: 0.75rem;
-  /* Padding + icon lands on 42px; pin to the shared toggle size so the chip
-     keeps a 44px touch target next to its neighbours in the bottom chrome. */
-  min-width: var(--map-chrome-toggle-size, 2.75rem);
-  min-height: var(--map-chrome-toggle-size, 2.75rem);
+  /* Was padding-sized, which landed on a 42px box with a 16px icon while every
+     neighbour in the bottom chrome is a 2.75rem box with a 1.125rem icon. Pin
+     to the same tokens as .map-chrome-control-btn--compact so the row reads as
+     one set of controls and the chip keeps a 44px touch target. */
+  width: var(--map-chrome-toggle-size, 2.75rem);
+  height: var(--map-chrome-toggle-size, 2.75rem);
+  padding: 0;
   box-sizing: border-box;
   align-items: center;
   justify-content: center;
@@ -472,7 +474,11 @@ button.map-chrome-chip:disabled {
   );
 }
 
-.map-chrome-control-btn--compact svg {
+/* One icon size across the bottom chrome controls, whatever `size` prop each
+   component passes — otherwise adjacent buttons drift (Map tools shipped a
+   16px icon beside the legend's 18px one). */
+.map-chrome-control-btn--compact svg,
+.map-chrome-fab-trigger svg {
   width: 1.125rem;
   height: 1.125rem;
   flex-shrink: 0;

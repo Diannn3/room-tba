@@ -2,6 +2,7 @@
   import MapViewControls from "@ui/MapViewControls.svelte";
   import TerrainControl from "@ui/TerrainControl.svelte";
   import ScheduleImportPanel from "@ui/ScheduleImportPanel.svelte";
+  import FeedbackPanel from "./FeedbackPanel.svelte";
   import { TERRAIN_ENABLED } from "@constants/map-terrain";
   import "../map-chrome/map-chrome.css";
 </script>
@@ -22,6 +23,10 @@
     <section class="settings-modal__section">
       <h3>Schedule</h3>
       <ScheduleImportPanel embedded />
+    </section>
+    <section class="settings-modal__section">
+      <h3>Feedback</h3>
+      <FeedbackPanel />
     </section>
   </div>
 </div>

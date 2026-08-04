@@ -14,7 +14,7 @@ Production-grade test pyramid for CI and local development.
 | `bun run e2e` | Playwright blocking suite |
 | `bun run e2e:advisory` | Playwright advisory (non-blocking in CI) |
 | `bun run e2e:staging` | Live staging smoke |
-| `bun run check:migrations` | Required tables exist on `DATABASE_URL` |
+| `bun run check:migrations` | Required tables exist in `E2E_SCHEMA`, else `public` |
 
 Full local gate (before marking PR ready):
 
@@ -31,7 +31,7 @@ E2E runs `serve:e2e`, which rebuilds with `@astrojs/node` because `@astrojs/verc
 ## CI (every PR push, including drafts)
 
 - **CI / verify**: Biome format, ESLint, unit, components, PWA legal, prod build (~5–8 min)
-- **CI / migrations**: schema table check on E2E DB (~1 min)
+- **CI / migrations**: migrate a throwaway run schema on the E2E DB, then check its tables (~2 min)
 - **CI / feature retirement**: a deleted `src/pages/` entry must retire or repurpose an automated spec and refresh `docs/test-inventory.md`.
 
 ## CI (gated: ready for review or `run/e2e`)
@@ -74,10 +74,32 @@ Blocking, advisory, and staging E2E all call [`e2e-reusable.yml`](../.github/wor
 - `e2e:reset-db` creates the schema, replays **every** `drizzle/*.sql` in filename order into it (a fresh schema has no history, so nothing needs registering by hand when you add a migration), then seeds the usual fixtures.
 - Every connection pins itself with `SET search_path TO <schema>` right after connect ([`scripts/e2e-schema.ts`](../scripts/e2e-schema.ts), used by [`src/lib/db.ts`](../src/lib/db.ts), the reset script, `integration/`, and `e2e/helpers/db.ts`). The Supabase **session pooler** silently ignores `?options=-csearch_path=…` in the URL and rejects node-postgres `options`, so the URL tricks do not work here.
 - Teardown runs `bun run scripts/e2e-reset-db.ts --drop` under `if: always()`. Cancelled jobs that skip it are covered by the sweeper: each schema is stamped with `COMMENT ON SCHEMA … IS '<iso>'` at creation, and every reset drops stamped `e2e_*` schemas older than 24 h.
+- The `CI / migrations` job builds one too (`e2e_migrations_<run_id>_<run_attempt>`) and runs `check:migrations` against it, so the cheap always-on check validates the schema CI actually produces instead of an E2E `public` nobody migrates any more (#806). `check:migrations` reads `E2E_SCHEMA` like everything else, so with it unset the release workflow still checks prod `public`.
 
 Pinning costs one extra round trip per new connection, and several proposal-service tests already sat at bun's 5 s default while doing ~20 round trips to Supabase, so `test:integration` now runs with `--timeout 20000`. CI calls that script instead of repeating the flags.
 
 **Contract:** `E2E_SCHEMA` unset (the local default) = today's behavior against `public`. Set = must match `^e2e_[a-z0-9_]+$`; anything else throws instead of silently falling back to `public`. Never point it at `public`, and never run `e2e:reset-db` without it while CI is live, because unset truncates the shared schema.
+
+### Connection budget (`pool_size: 15`)
+
+Schema isolation removed the data contention between overlapping runs, which moved the binding limit to **connections**: the E2E project's session pooler caps at `pool_size: 15`, and four heavy jobs (blocking + advisory for two PRs) used to want ~20 (#782). Read this before adding a connection anywhere in CI.
+
+| Holder | Connections | When |
+| ------------------------------------ | ----------- | ------------------------------ |
+| `e2e:reset-db` | 1 | job start, seconds |
+| Preview server (`DATABASE_POOL_MAX`) | up to 2 | preview up to teardown |
+| `test:integration` pool | up to 2 | blocking job, integration step |
+| `test:integration` per-suite client | 1 | blocking job, integration step |
+| `CI / migrations` | 1 | every push, seconds |
+
+That is **5 for a blocking job** and **2 for an advisory one** at the theoretical peak, so two PRs sit at 14 with the always-on `migrations` job taking the 15th for a few seconds. In practice the two pools in a blocking job never both sit at their max (idle connections are released after 10 s), so the real peak is lower.
+
+Two things keep it there:
+
+- `DATABASE_POOL_MAX` is `2` job-wide in [`e2e-reusable.yml`](../.github/workflows/e2e-reusable.yml), and `src/lib/db.ts` defaults to the same `2` under `CI`. **2 is also the floor.** A few edit-conflict paths (`updateRoom`, `updateEvent`, the merge helpers) read through the global `db` while a transaction already holds a client, so a single in-flight request can need two connections; at `1` those paths wait on themselves and the job hangs instead of failing.
+- `e2e:reset-db` takes the global advisory lock **only** when resetting `public`. A run schema is the job's own, so nothing needs serializing; before #782 every concurrent job held a pooler connection while queueing behind the others' full chain replay, which is how a run died at 2m01s with `EMAXCONNSESSION` during its own reset. The stale-schema sweep still takes the lock, with `pg_try_advisory_lock`: a run that loses the race skips the sweep and the next reset picks the schemas up.
+
+Do **not** switch to the transaction pooler (port 6543) to raise the ceiling: `SET search_path` is session state, and transaction mode hands out a different backend per transaction, so run schemas would stop being honored and tests would silently read `public`. Three PRs at once still will not fit; raise `pool_size` on the Supabase project when that becomes routine.
 
 ## CI (advisory, non-blocking)
 

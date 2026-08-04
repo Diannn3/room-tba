@@ -1,3 +1,16 @@
+# [2.9.0](https://github.com/uplbtools/room-tba/compare/v2.8.0...v2.9.0) (2026-08-04)
+
+
+### Features
+
+* **proposals:** add map preview, undo, and shortcuts to the approver queue ([#895](https://github.com/uplbtools/room-tba/issues/895)) ([7f138ac](https://github.com/uplbtools/room-tba/commit/7f138ac84f9809041a336434f23b948f18ae7f54))
+* add Tailwind CSS ([95f88ff](https://github.com/uplbtools/room-tba/commit/95f88ff9711515f4018ea03a584af428f9a8352f))
+
+### Bug Fixes
+
+* **map-chrome:** reflow the bottom chrome so no control is clipped at 320px ([#893](https://github.com/uplbtools/room-tba/issues/893)) ([f45e6cc](https://github.com/uplbtools/room-tba/commit/f45e6cc15bc662dffce31cd04285122dd285bc88))
+* **proposals:** make the approver queue usable at 59 pending ([#887](https://github.com/uplbtools/room-tba/issues/887)) ([40df657](https://github.com/uplbtools/room-tba/commit/40df65773d7ec375b6369b70dc68f831bf0d3ab4))
+
 # [2.8.0](https://github.com/uplbtools/room-tba/compare/v2.7.1...v2.8.0) (2026-08-04)
 
 

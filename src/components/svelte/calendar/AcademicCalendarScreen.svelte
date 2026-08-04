@@ -133,7 +133,7 @@
 
   function markerTitle(entries: CalendarMilestone[]) {
     return entries
-      .map((entry) => `${entry.label} — ${dateLabel(entry)}`)
+      .map((entry) => `${entry.label}, ${dateLabel(entry)}`)
       .join("\n");
   }
 </script>
@@ -245,6 +245,16 @@
               No registrar calendar published for {timelineHeading} yet.
             </p>
           {/each}
+          {#if milestoneTimeline && milestoneTimeline.outOfRangeCount > 0}
+            <p class="acal-milestones__note">
+              {milestoneTimeline.outOfRangeCount}
+              {milestoneTimeline.outOfRangeCount === 1
+                ? "registrar date falls"
+                : "registrar dates fall"}
+              outside the months shown, mostly pre-term registration. Every date
+              for a term is in its card below.
+            </p>
+          {/if}
           <p class="acal-milestones__note">
             From the Office of the University Registrar's academic calendar for
             {timelineHeading}. Staff-only rows (faculty, University Council and

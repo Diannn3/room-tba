@@ -228,6 +228,28 @@ describe("AcademicCalendarScreen", () => {
       expect(datesIn(cards[0])).not.toEqual(datesIn(cards[1]));
     });
 
+    test("owns up to the registrar dates that fall off the strip", () => {
+      // The strip is padded to the term's own months (Aug - Dec), but
+      // registration and completion exams run in July. Those rows must not
+      // vanish silently from a list headed "Registrar calendar for AY ...".
+      render(AcademicCalendarScreen);
+      const labelsIn = (selector: string) =>
+        [
+          ...document.querySelectorAll(`${selector} .acal-milestone__label`),
+        ].map((node) => node.textContent);
+
+      expect(labelsIn(".acal-milestones__list")).not.toContain(
+        "General registration",
+      );
+      expect(labelsIn(".acal-card__dates")).toContain("General registration");
+
+      const note = document
+        .querySelector(".acal-milestones")
+        ?.textContent?.replace(/\s+/g, " ");
+      expect(note).toContain("3 registrar dates fall outside the months shown");
+      expect(note).toContain("in its card below");
+    });
+
     test("@320px: no horizontal overflow with the full milestone list", () => {
       mountAtWidth(320);
       const { container } = render(AcademicCalendarScreen);

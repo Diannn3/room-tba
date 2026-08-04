@@ -90,6 +90,7 @@
   let fieldError = $state<string | null>(null);
   let editing = $state(false);
   let submitterNameDraft = $state("");
+  let submitterNoteDraft = $state("");
   let proposalStatus = $state<string | null>(null);
   let activeProposalId = $state<number | null>(null);
   let mergePrompt = $state<{
@@ -273,6 +274,7 @@
           adminAuthStore.displayName ??
           adminAuthStore.username ??
           submitterNameDraft,
+        submitterNote: submitterNoteDraft,
         proposalId: activeProposalId,
       });
 
@@ -461,6 +463,7 @@
           adminAuthStore.displayName ??
           adminAuthStore.username ??
           submitterNameDraft,
+        submitterNote: submitterNoteDraft,
         proposalId: activeProposalId,
       });
 
@@ -575,6 +578,8 @@
           submitterNameId="room-submitter-name"
           historyEntity={currentRoom.value ? { entityType: "room", entityId: currentRoom.value.id, version: currentRoom.value.version } : null}
           bind:submitterName={submitterNameDraft}
+          showSubmitterNote={!canPublish}
+          bind:submitterNote={submitterNoteDraft}
           {proposalStatus}
           activeProposalId={activeProposalId}
           onWithdrawn={() => {

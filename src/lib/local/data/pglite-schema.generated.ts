@@ -289,6 +289,7 @@ CREATE TABLE IF NOT EXISTS "rooms" (
 );
 ALTER TABLE "rooms" ADD COLUMN IF NOT EXISTS "room_code" text;
 ALTER TABLE "rooms" ADD COLUMN IF NOT EXISTS "full_name" text;
+ALTER TABLE "rooms" ALTER COLUMN "full_name" DROP NOT NULL;
 ALTER TABLE "rooms" ADD COLUMN IF NOT EXISTS "directions" text;
 ALTER TABLE "rooms" ALTER COLUMN "directions" DROP NOT NULL;
 ALTER TABLE "rooms" ADD COLUMN IF NOT EXISTS "building_id" integer;

@@ -209,6 +209,19 @@
     contain: layout style;
   }
 
+  @media (max-width: 48rem) {
+    .suggestions-container {
+      gap: 0;
+      padding: 0.125rem 0 0.5rem;
+      border-top: none;
+    }
+
+    .suggestions-header {
+      padding: 0.5rem 0.25rem;
+      font-size: 0.75rem;
+    }
+  }
+
   .suggestions-header {
     margin: 0;
     padding: 8px;

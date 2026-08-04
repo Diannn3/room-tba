@@ -22,7 +22,7 @@ type StructuredData = Record<string, unknown>;
 
 type Props = {
   title?: string;
-  /** Short share title (og:title / twitter:title) — the entity name only.
+  /** Short share title (og:title / twitter:title): the entity name only.
    * og:site_name already says "Room TBA", so the full <title> chain is
    * redundant on share cards. Defaults to title. */
   ogTitle?: string;
@@ -31,7 +31,7 @@ type Props = {
   imagePath?: string;
   robots?: string;
   structuredData?: StructuredData[];
-  /** Map app shell only — static pages (changelog, legal) should disable this. */
+  /** Map app shell only: static pages (changelog, legal) should disable this. */
   showAppLoadingShell?: boolean;
 };
 
@@ -233,7 +233,7 @@ const shareTitle = ogTitle ?? title;
             // button): this script is `is:inline` so it can still run when the
             // bundle itself is broken, which means it cannot import that
             // module. Keep the two in step by hand. Like the shared version,
-            // it must never call localStorage.clear() — planner plans live
+            // it must never call localStorage.clear(): planner plans live
             // there.
             function resetAppData() {
               var jobs = [];

@@ -471,7 +471,6 @@
                 <DayRouteChip />
                 <OnlineCounter />
                 <MapToolsFlyout />
-                <MapLegend trigger="chip" />
                 <LocationButton embedded />
               </div>
             </div>

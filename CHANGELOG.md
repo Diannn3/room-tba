@@ -1,3 +1,21 @@
+# [2.8.0](https://github.com/uplbtools/room-tba/compare/v2.7.1...v2.8.0) (2026-08-04)
+
+
+### Features
+
+* **settings:** add a Storage section with Resync campus data and Clear cached data ([#882](https://github.com/uplbtools/room-tba/issues/882)) ([91681bc](https://github.com/uplbtools/room-tba/commit/91681bc0a68262905c42696a2d8ade7824f201e8))
+* **data:** record editor history for bulk maintenance operations ([#878](https://github.com/uplbtools/room-tba/issues/878)) ([bc34ff4](https://github.com/uplbtools/room-tba/commit/bc34ff42e78240e4f4359b6afe69678d0098a62b))
+* **presence:** replace the fabricated online counter with real session presence ([#874](https://github.com/uplbtools/room-tba/issues/874)) ([ed97b4f](https://github.com/uplbtools/room-tba/commit/ed97b4fbcb9f9386eb6064386beca763923ba821))
+
+### Bug Fixes
+
+* **local:** closeLocalDB referenced an undeclared localDB ([626f780](https://github.com/uplbtools/room-tba/commit/626f78001e7acc3d18bc026646ecb445bbd49eea))
+* **map:** fall back to a keyless basemap when MapTiler rejects the key ([#883](https://github.com/uplbtools/room-tba/issues/883)) ([49cc328](https://github.com/uplbtools/room-tba/commit/49cc3287d9d77e7adf80cee7d7b7c60ff3db8e07))
+
+### Performance Improvements
+
+* **boot:** defer PGlite and batch the sync probes ([#880](https://github.com/uplbtools/room-tba/issues/880)) ([9168374](https://github.com/uplbtools/room-tba/commit/916837476441339c7257046793fa4350a7acae89))
+
 ## [2.7.1](https://github.com/uplbtools/room-tba/compare/v2.7.0...v2.7.1) (2026-08-04)
 
 

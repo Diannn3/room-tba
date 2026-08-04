@@ -24,3 +24,15 @@ export function getDB() {
   }
   return localDB;
 }
+
+/**
+ * Close the offline cache so its IndexedDB database can be deleted (#865).
+ * No-op when nothing opened it — deliberately does not call `getDB()`, which
+ * would boot the WASM engine just to shut it down again.
+ */
+export async function closeLocalDB(): Promise<void> {
+  if (!localDB) return;
+  const db = localDB;
+  localDB = null;
+  await db.close();
+}

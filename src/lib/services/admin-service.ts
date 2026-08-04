@@ -75,6 +75,22 @@ export class DuplicateNameError<TCandidate = unknown> extends Error {
   }
 }
 
+/**
+ * A write was well-formed and current, but refused because accepting it would
+ * overwrite work a human did by hand. Distinct from `EditConflictError`: the
+ * client's version was fine, so reloading and retrying the same write will not
+ * help. Routes map it to 409 with `code: "manual_position"`.
+ */
+export class ManualPositionError<TLatest = unknown> extends Error {
+  latest: TLatest | null;
+
+  constructor(latest: TLatest | null) {
+    super("This room already has a position an editor placed by hand.");
+    this.name = "ManualPositionError";
+    this.latest = latest;
+  }
+}
+
 /** Refresh the sync key for a table so viewers detect the change and re-sync. */
 export async function refreshSyncKey(
   tableName: string,
@@ -557,10 +573,22 @@ export async function updateRoomPosition(
   const beforePosition = await getRoomPosition(roomId);
   const source: RoomPositionSource = input.source ?? "manual";
 
+  // Optimistic concurrency is checked before any other refusal: a client working
+  // from a stale version must get a 409 whatever it was trying to write, or two
+  // editors moving the same pin silently clobber each other. The conditional
+  // UPDATE below is still the race-safe check; this one only makes sure the
+  // refusal underneath it can never mask a conflict.
+  if (expectedVersion !== undefined && before.version !== expectedVersion) {
+    throw new EditConflictError(before);
+  }
+
   // A suggestion never overwrites a position a human dragged into place, and
-  // never bumps the room version to say it tried.
+  // never bumps the room version to say it tried. Throw rather than return the
+  // unchanged room: callers cannot tell a refusal from a successful save by the
+  // return value, so the route would answer `{ success: true }` and the editor
+  // would mark the pin saved.
   if (source === "inferred" && beforePosition?.source === "manual") {
-    return before;
+    throw new ManualPositionError(before);
   }
 
   const updatedAt = new Date().toISOString();

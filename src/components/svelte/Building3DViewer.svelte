@@ -55,6 +55,7 @@
     room?: RoomData | null;
     latest?: RoomData | null;
     error?: string;
+    code?: string;
   };
   type RoomPositionDraft = { floor: number; x: number; y: number };
 
@@ -937,7 +938,10 @@
           setRoomSavingState(roomCode, "failed");
           editorStatus = {
             type: "error",
-            message: `${roomCode} was not saved because the server has newer data.`,
+            message:
+              data.code === "manual_position"
+                ? `${roomCode} was not saved: an editor has already placed this room by hand.`
+                : `${roomCode} was not saved because the server has newer data.`,
           };
           return;
         }

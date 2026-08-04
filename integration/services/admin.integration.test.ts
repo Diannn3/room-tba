@@ -27,8 +27,8 @@ describeIntegration("admin building service integration", () => {
     await client?.end();
   });
 
-  test("an inferred room position never overwrites a manual one", async () => {
-    const { updateRoomPosition } = await import("@lib/services/admin-service");
+  /** Room + helpers shared by the room-position refusal tests below. */
+  const roomPositionFixture = async () => {
     const { rows: roomRows } = await client.query<{
       id: number;
       version: number;
@@ -43,6 +43,24 @@ describeIntegration("admin building service integration", () => {
       );
       return rows[0]?.version ?? 1;
     };
+    const position = async () => {
+      const { rows } = await client.query<{ floor: number; source: string }>(
+        "SELECT floor, source FROM room_positions WHERE room_id = $1",
+        [roomId],
+      );
+      return rows[0] ?? null;
+    };
+    const cleanup = () =>
+      client.query("DELETE FROM room_positions WHERE room_id = $1", [roomId]);
+
+    return { roomId, version, position, cleanup };
+  };
+
+  test("an inferred room position never overwrites a manual one", async () => {
+    const { updateRoomPosition, ManualPositionError } = await import(
+      "@lib/services/admin-service"
+    );
+    const { roomId, version, position, cleanup } = await roomPositionFixture();
 
     try {
       await updateRoomPosition(
@@ -53,25 +71,60 @@ describeIntegration("admin building service integration", () => {
       );
       const afterManual = await version();
 
-      await updateRoomPosition(
-        roomId,
-        { floor: 5, posX: "9", posY: "9", source: "inferred" },
-        afterManual,
-        "e2e-admin",
-      );
+      // Regression (#795 review): the refusal used to `return before`, which the
+      // PATCH route answers as `{ success: true, room }` — the editor marked the
+      // pin saved and the suggestion disappeared from the list. A refused write
+      // has to reach the caller as a failure.
+      await expect(
+        updateRoomPosition(
+          roomId,
+          { floor: 5, posX: "9", posY: "9", source: "inferred" },
+          afterManual,
+          "e2e-admin",
+        ),
+      ).rejects.toBeInstanceOf(ManualPositionError);
 
-      const { rows } = await client.query<{ floor: number; source: string }>(
-        "SELECT floor, source FROM room_positions WHERE room_id = $1",
-        [roomId],
-      );
-      expect(rows[0]?.floor).toBe(2);
-      expect(rows[0]?.source).toBe("manual");
+      expect((await position())?.floor).toBe(2);
+      expect((await position())?.source).toBe("manual");
       // A refused write must not pretend it happened.
       expect(await version()).toBe(afterManual);
     } finally {
-      await client.query("DELETE FROM room_positions WHERE room_id = $1", [
+      await cleanup();
+    }
+  });
+
+  test("a stale inferred write conflicts instead of being silently refused", async () => {
+    const { updateRoomPosition, EditConflictError } = await import(
+      "@lib/services/admin-service"
+    );
+    const { roomId, version, position, cleanup } = await roomPositionFixture();
+
+    try {
+      await updateRoomPosition(
         roomId,
-      ]);
+        { floor: 2, posX: "1", posY: "2", source: "manual" },
+        await version(),
+        "e2e-admin",
+      );
+      const afterManual = await version();
+
+      // Regression (#795 review): the manual-position guard used to sit above the
+      // version check, so a client working from a stale version got a refusal
+      // (HTTP 200) instead of a 409 and never learned it had to reload. Optimistic
+      // concurrency has to win over every other refusal.
+      await expect(
+        updateRoomPosition(
+          roomId,
+          { floor: 5, posX: "9", posY: "9", source: "inferred" },
+          afterManual - 1,
+          "e2e-admin",
+        ),
+      ).rejects.toBeInstanceOf(EditConflictError);
+
+      expect((await position())?.floor).toBe(2);
+      expect(await version()).toBe(afterManual);
+    } finally {
+      await cleanup();
     }
   });
 

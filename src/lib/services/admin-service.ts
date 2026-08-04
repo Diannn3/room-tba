@@ -75,6 +75,22 @@ export class DuplicateNameError<TCandidate = unknown> extends Error {
   }
 }
 
+/**
+ * A write was well-formed and current, but refused because accepting it would
+ * overwrite work a human did by hand. Distinct from `EditConflictError`: the
+ * client's version was fine, so reloading and retrying the same write will not
+ * help. Routes map it to 409 with `code: "manual_position"`.
+ */
+export class ManualPositionError<TLatest = unknown> extends Error {
+  latest: TLatest | null;
+
+  constructor(latest: TLatest | null) {
+    super("This room already has a position an editor placed by hand.");
+    this.name = "ManualPositionError";
+    this.latest = latest;
+  }
+}
+
 /** Refresh the sync key for a table so viewers detect the change and re-sync. */
 export async function refreshSyncKey(
   tableName: string,
@@ -557,10 +573,22 @@ export async function updateRoomPosition(
   const beforePosition = await getRoomPosition(roomId);
   const source: RoomPositionSource = input.source ?? "manual";
 
+  // Optimistic concurrency is checked before any other refusal: a client working
+  // from a stale version must get a 409 whatever it was trying to write, or two
+  // editors moving the same pin silently clobber each other. The conditional
+  // UPDATE below is still the race-safe check; this one only makes sure the
+  // refusal underneath it can never mask a conflict.
+  if (expectedVersion !== undefined && before.version !== expectedVersion) {
+    throw new EditConflictError(before);
+  }
+
   // A suggestion never overwrites a position a human dragged into place, and
-  // never bumps the room version to say it tried.
+  // never bumps the room version to say it tried. Throw rather than return the
+  // unchanged room: callers cannot tell a refusal from a successful save by the
+  // return value, so the route would answer `{ success: true }` and the editor
+  // would mark the pin saved.
   if (source === "inferred" && beforePosition?.source === "manual") {
-    return before;
+    throw new ManualPositionError(before);
   }
 
   const updatedAt = new Date().toISOString();
@@ -1008,7 +1036,7 @@ export type DormUpdateInput = Partial<{
   shortName: string | null;
   lat: number | null;
   lon: number | null;
-  gender: string;
+  gender: string | null;
   capacity: number | null;
   managingOffice: string | null;
   contactEmail: string | null;
@@ -1032,6 +1060,12 @@ export async function updateDorm(
   const updates: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(input)) {
     if (value !== undefined) updates[key] = value;
+  }
+  // Clearing the policy in the editor sends "", which would store an empty
+  // string that reads as "recorded, and it is nothing". Null is the honest
+  // value for a policy nobody has told us.
+  if (typeof updates.gender === "string" && updates.gender.trim() === "") {
+    updates.gender = null;
   }
   if (Object.keys(updates).length > 0) {
     if (input.dormName !== undefined) {
@@ -1164,7 +1198,6 @@ export async function createPlace(
 
 export type DormCreateInput = DormUpdateInput & {
   dormName: string;
-  gender: string;
 };
 
 export async function createDorm(
@@ -1175,7 +1208,7 @@ export async function createDorm(
     .insert(dormsTable)
     .values({
       dormName: input.dormName.trim(),
-      gender: input.gender.trim(),
+      gender: input.gender?.trim() || null,
       shortName: input.shortName ?? null,
       lat: input.lat ?? null,
       lon: input.lon ?? null,

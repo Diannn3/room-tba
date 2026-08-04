@@ -123,15 +123,35 @@ describe("directions text", () => {
 });
 
 describe("confidence degrades honestly", () => {
-  it("drops to low and prefers the prose when code and directions disagree", () => {
+  it("drops to low and keeps the room code when the directions disagree", () => {
     const signal = inferRoomSignal({
       roomCode: "PS B-203",
       directions: "Third floor, past the balcony.",
     });
-    expect(signal?.floor).toBe(3);
+    expect(signal?.floor).toBe(2);
     expect(signal?.confidence).toBe("low");
-    expect(signal?.reason).toContain("used the directions");
+    expect(signal?.reason).toContain("Used the room number");
   });
+
+  it.each([
+    [
+      "PS B-203",
+      "Enter through the ground floor lobby, then take the stairs.",
+      2,
+    ],
+    ["PS B-305", "From the 1st floor entrance, go up two flights.", 3],
+    ["BS A-409", "Take the elevator from the ground floor.", 4],
+    ["CEM 216", "Beside the 1st floor canteen, one level above.", 2],
+  ])(
+    "route prose about the way in does not drag %s down a floor",
+    (code, directions, floor) => {
+      // Directions here are walking directions. They name the entrance far more
+      // often than the destination, so prose must not outrank the room code.
+      expect(inferRoomSignal({ roomCode: code, directions })?.floor).toBe(
+        floor,
+      );
+    },
+  );
 
   it("drops to low when the floor has to be clamped to the model", () => {
     const signal = inferRoomSignal({ roomCode: "BS A-409" }, 2);

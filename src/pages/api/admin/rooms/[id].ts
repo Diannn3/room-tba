@@ -6,6 +6,7 @@ import { parseImageUrl } from "@lib/r2-upload-core";
 import {
   EditConflictError,
   DuplicateNameError,
+  ManualPositionError,
   updateRoom,
   updateRoomPosition,
 } from "@lib/services/admin-service";
@@ -151,6 +152,17 @@ export const PATCH: APIRoute = async ({ cookies, params, request }) => {
       return json(
         {
           error: "This room was changed by another editor.",
+          latest: err.latest,
+        },
+        409,
+      );
+    }
+
+    if (err instanceof ManualPositionError) {
+      return json(
+        {
+          error: err.message,
+          code: "manual_position",
           latest: err.latest,
         },
         409,

@@ -100,15 +100,15 @@ function readCodeSignal(
 function readDirectionsSignal(directions: string | null | undefined): {
   floor: number | null;
   wing: string | null;
-  basement: boolean;
 } {
   const text = (directions ?? "").trim();
-  if (!text) return { floor: null, wing: null, basement: false };
+  if (!text) return { floor: null, wing: null };
 
   const wingMatch = /\bwing\s+([A-E])\b/i.exec(text);
   const wing = wingMatch?.[1] ? wingMatch[1].toUpperCase() : null;
 
-  if (/\bbasement\b/i.test(text)) return { floor: null, wing, basement: true };
+  // "In the basement, below the 2nd floor lab" must not yield floor 2.
+  if (/\bbasement\b/i.test(text)) return { floor: null, wing };
 
   const ordinal = /\b([1-9])\s*(?:st|nd|rd|th)\s*floor\b/i.exec(text);
   const numbered = /\bfloor\s*([1-9])\b/i.exec(text);
@@ -124,11 +124,7 @@ function readDirectionsSignal(directions: string | null | undefined): {
     (worded && WORD_FLOORS[worded]) ||
     null;
 
-  return {
-    floor: floor && floor <= MAX_FLOOR ? floor : null,
-    wing,
-    basement: false,
-  };
+  return { floor: floor && floor <= MAX_FLOOR ? floor : null, wing };
 }
 
 /**
@@ -152,11 +148,14 @@ export function inferRoomSignal(
   let reason: string;
 
   if (code && prose.floor !== null && code.floor !== prose.floor) {
-    // Prose is hand-written by someone who walked there; trust it over the
-    // code, but say out loud that the two disagree.
-    floor = prose.floor;
+    // Directions are walking directions: they name the way in ("enter through
+    // the ground floor, then take the stairs") at least as often as the
+    // destination. So a floor in the prose that fights the room code is
+    // usually the lobby, not the room. The code is a statement about the room
+    // itself, so it wins; the disagreement is named and confidence drops.
+    floor = code.floor;
     confidence = "low";
-    reason = `Directions say floor ${prose.floor} but "${room.roomCode}" implies floor ${code.floor} — used the directions`;
+    reason = `"${room.roomCode}" implies floor ${code.floor}; the directions mention floor ${prose.floor}, which is more often the way in than the room. Used the room number`;
   } else if (code && prose.floor !== null) {
     floor = code.floor;
     confidence = "high";

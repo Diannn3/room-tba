@@ -2325,7 +2325,6 @@
         type: "search-result",
         component: EventResult
     })
-    alert("event marker clicked");
   }
 
   function toggleEventMarkerGroup(groupKey: string) {

@@ -89,8 +89,9 @@ Schema isolation removed the data contention between overlapping runs, which mov
 | Preview server (`DATABASE_POOL_MAX`) | up to 2 | preview up to teardown |
 | `test:integration` pool | up to 2 | blocking job, integration step |
 | `test:integration` per-suite client | 1 | blocking job, integration step |
+| `CI / migrations` | 1 | every push, seconds |
 
-That is **5 for a blocking job** and **2 for an advisory one** at the theoretical peak, so two PRs sit at 14 and the 15th is spare. In practice the two pools in a blocking job never both sit at their max (idle connections are released after 10 s), so the real peak is lower.
+That is **5 for a blocking job** and **2 for an advisory one** at the theoretical peak, so two PRs sit at 14 with the always-on `migrations` job taking the 15th for a few seconds. In practice the two pools in a blocking job never both sit at their max (idle connections are released after 10 s), so the real peak is lower.
 
 Two things keep it there:
 

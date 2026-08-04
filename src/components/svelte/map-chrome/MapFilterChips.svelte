@@ -1,6 +1,6 @@
 <script lang="ts">
   import ChevronRight from "@lucide/svelte/icons/chevron-right";
-  import { openCampusBrowse } from "@lib/browse-campus";
+  import { openBrowseClasses, openCampusBrowse } from "@lib/browse-campus";
   import type { CampusBrowseTab } from "@lib/browse-campus";
   import { campusTransit } from "../../../campus.config";
   import { jeepneyStore, queryStore, sidePanelStore } from "@lib/store.svelte";
@@ -17,17 +17,23 @@
   type ChipId =
     | "buildings"
     | "dorms"
+    | "colleges"
     | "divisions"
+    | "organizations"
     | "offices"
     | "jeepney"
     | "landmarks"
     | "services"
+    | "classes"
     | "events";
 
   const chips: { id: ChipId; label: string; icon: string }[] = [
     { id: "buildings", label: "Class Buildings", icon: classBuildingsIcon },
+    { id: "classes", label: "Classes", icon: classBuildingsIcon },
     { id: "dorms", label: "Dorms", icon: dormsIcon },
+    { id: "colleges", label: "Colleges", icon: divisionsIcon },
     { id: "divisions", label: "Divisions", icon: divisionsIcon },
+    { id: "organizations", label: "Student Orgs", icon: unitsOfficesIcon },
     { id: "offices", label: "Units & Offices", icon: unitsOfficesIcon },
     ...(campusTransit.enabled
       ? [
@@ -48,12 +54,15 @@
 
   const activeId = $derived.by((): ChipId | null => {
     if (queryStore.category === "events") return "events";
+    if (queryStore.category === "classes") return "classes";
     if (queryStore.category !== "browse") return null;
     const v = queryStore.queryValue;
     if (
       v === "buildings" ||
       v === "dorms" ||
+      v === "colleges" ||
       v === "divisions" ||
+      v === "organizations" ||
       v === "offices" ||
       v === "jeepney" ||
       v === "landmarks" ||
@@ -98,6 +107,10 @@
       });
       queryStore.inputValue = "";
       sidePanelStore.expand();
+      return;
+    }
+    if (id === "classes") {
+      openBrowseClasses(queryStore, sidePanelStore);
       return;
     }
     if (id === "jeepney") {

@@ -55,7 +55,6 @@
   import { openCampusBrowse } from "@lib/browse-campus";
   import { getTransitRoutePath, getTransitStopPath } from "@lib/transit-urls";
   import { shouldAutoOpenLandingModal } from "@lib/landing-modal-auto-open";
-  import Sidebar from "./navigation/Sidebar.svelte";
   import StagingBanner from "./StagingBanner.svelte";
   import AnnouncementBar from "./AnnouncementBar.svelte";
   import KeyboardShortcutsPopup from "./map-chrome/KeyboardShortcutsPopup.svelte";
@@ -420,9 +419,13 @@
   <StagingBanner />
   <AnnouncementBar />
   <div class="ui-layer">
-    {#if mobile.current}
-      <Sidebar />
-    {:else}
+    <!-- Mobile navigation is MobileBottomNav plus the browse chips in Search.
+         The rail Sidebar is desktop-era and was left rendering on mobile with
+         no way to open it: nothing calls sidebarStore.toggleRail(), because the
+         hamburger that used to (Search.svelte) was replaced by AppMenu, which
+         does not touch railOpen. It shipped as a permanently hidden element
+         that also stranded Colleges, Orgs and Classes (#930). -->
+    {#if !mobile.current}
       <DesktopTopBar />
     {/if}
     {#if ["map", "contributors", "settings"].includes(sidebarStore.panelOpen)}

@@ -4,11 +4,39 @@
   import ScheduleImportPanel from "@ui/ScheduleImportPanel.svelte";
   import { TERRAIN_ENABLED } from "@constants/map-terrain";
   import { clearCachedData } from "@lib/local/clear-cached-data";
+  import {
+    resyncCampusData,
+    type ResyncOutcome,
+  } from "@lib/local/resync-campus-data";
+  import { syncToastStore } from "@lib/store.svelte";
   import "../map-chrome/map-chrome.css";
 
   let confirming = $state(false);
   let clearing = $state(false);
   let confirmButton = $state<HTMLButtonElement | null>(null);
+  let resyncing = $state(false);
+  let resyncResult = $state<ResyncOutcome | null>(null);
+
+  const RESYNC_MESSAGE: Record<ResyncOutcome, string> = {
+    synced: "Campus data is up to date.",
+    failed: "Resync failed. Check your connection and try again.",
+    timeout: "Still syncing in the background. Check again in a moment.",
+  };
+
+  // No reload to signal success here, so the result has to be said out loud.
+  async function resync() {
+    if (resyncing) return;
+    resyncing = true;
+    resyncResult = null;
+    try {
+      resyncResult = await resyncCampusData(() => ({
+        allSynced: syncToastStore.allSynced,
+        syncError: syncToastStore.syncError,
+      }));
+    } finally {
+      resyncing = false;
+    }
+  }
 
   // Opening the confirm swaps the button out from under the pointer, which
   // would drop keyboard focus to <body>. Move it to the confirm instead.
@@ -45,8 +73,36 @@
     </section>
     <section class="settings-modal__section">
       <h3>Storage</h3>
+
+      <div class="settings-modal__task">
+        <p class="settings-modal__hint">
+          Rooms or classes look stale or wrong? Fetch campus data again from
+          the server. Your downloaded offline maps are kept.
+        </p>
+        <div class="settings-modal__actions">
+          <button
+            type="button"
+            class="settings-modal__btn"
+            disabled={resyncing}
+            onclick={resync}
+          >
+            {resyncing ? "Resyncing…" : "Resync campus data"}
+          </button>
+        </div>
+        {#if resyncResult}
+          <p
+            class="settings-modal__hint"
+            class:settings-modal__hint--warn={resyncResult !== "synced"}
+            class:settings-modal__hint--ok={resyncResult === "synced"}
+            role="status"
+          >
+            {RESYNC_MESSAGE[resyncResult]}
+          </p>
+        {/if}
+      </div>
+
       <p class="settings-modal__hint">
-        Fixes a stuck app after a bad update: clears the cached app, saved
+        Still broken? This is the heavier fix: it clears the cached app, saved
         campus data, and downloaded offline maps, then reloads. Your saved
         class plans stay.
       </p>
@@ -147,6 +203,20 @@
 
   .settings-modal__hint--warn {
     color: hsl(5, 53%, 32%);
+  }
+
+  .settings-modal__hint--ok {
+    color: hsl(150, 40%, 28%);
+  }
+
+  /* Groups the light fix with its own result line, so the heavier
+     clear-and-reload below reads as the separate, bigger hammer. */
+  .settings-modal__task {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    padding-bottom: 0.625rem;
+    border-bottom: 1px solid hsl(0, 0%, 90%);
   }
 
   .settings-modal__actions {

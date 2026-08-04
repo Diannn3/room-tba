@@ -2,27 +2,26 @@
   import { onMount } from "svelte";
   import { debounce } from "es-toolkit";
   import { fade } from "svelte/transition";
-  import Menu from "@lucide/svelte/icons/menu";
   import ShieldCheck from "@lucide/svelte/icons/shield-check";
   import { getAppData } from "@lib/context";
   import { getMapChromeVisibility } from "@lib/map-chrome";
   import {
     adminAuthStore,
+    editorChromeStore,
     mapEditStore,
     modalStore,
     proposalsStore,
     queryStore,
-    sidebarStore,
   } from "@lib/store.svelte";
   import Suggestions from "./Suggestions.svelte";
-  import TermSelector from "@ui/TermSelector.svelte";
-  import MapDimensionToggle from "@ui/MapDimensionToggle.svelte";
-  import MapChromeToggleButton from "@ui/map-chrome/MapChromeToggleButton.svelte";
+  import MapFilterChips from "@ui/map-chrome/MapFilterChips.svelte";
   import { observeBlockHeight } from "@lib/layout-css-vars";
   import { registerSearchFocus } from "@lib/search-focus";
   import { registerEphemeralOverlayDismisser } from "@lib/overlay-stack";
   import { dropdownFadeIn, dropdownFadeOut } from "@lib/motion";
   import { MediaQuery } from "svelte/reactivity";
+  import SearchIcon from "@lucide/svelte/icons/search";
+  import MapPinPlus from "@lucide/svelte/icons/map-pin-plus";
 
   let searchElement = $state<HTMLInputElement | null>(null);
   let shellMainEl = $state<HTMLDivElement | null>(null);
@@ -132,49 +131,19 @@
   class:search-query-active={draftInput.trim() !== ""}
 >
   <div class="search-shell-main" bind:this={shellMainEl}>
-    {#if mobile.current}
-      <MapChromeToggleButton
-        class="map-menu-btn"
-        ariaLabel="App menu"
-        ariaExpanded={sidebarStore.railOpen}
-        ariaControls="app-sidebar"
-        title="App menu"
-        onclick={() => {
-          if (!sidebarStore.railOpen) {
-            searchFocused = false;
-            searchElement?.blur();
-          }
-          sidebarStore.toggleRail();
-        }}
-      >
-        <Menu size={20} aria-hidden="true" />
-      </MapChromeToggleButton>
-    {/if}
-
-    <div bind:this={chromeEl} class="map-search-chrome">
+    <div
+      bind:this={chromeEl}
+      class="map-search-chrome"
+      class:map-search-chrome--redesign={!mobile.current}
+      class:map-search-chrome--mobile-redesign={mobile.current}
+    >
       <div class="map-search-chrome__bar">
         <div class="map-search-chrome__bar-row">
           <div class="map-search-chrome__pill-wrap">
             <div class="map-search-chrome__pill">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                class="search-icon"
-                aria-hidden="true"
-                ><circle cx="11" cy="11" r="8" /><line
-                  x1="21"
-                  y1="21"
-                  x2="16.65"
-                  y2="16.65"
-                /></svg
-              >
+              <span class="search-icon" aria-hidden="true">
+                <SearchIcon size={20} />
+              </span>
               <label class="sr-only" for="search">Search campus</label>
               <input
                 type="text"
@@ -194,7 +163,7 @@
                 aria-controls="search-suggestions"
                 aria-autocomplete="list"
                 aria-haspopup="listbox"
-                placeholder="Search room, building, org, event, division..."
+                placeholder="ex. Institute of Computer Science"
               />
               {#if draftInput !== "" || queryStore.category !== null}
                 <button
@@ -224,8 +193,23 @@
                   >
                 </button>
               {/if}
+              {#if !mobile.current}
+                <button
+                  type="button"
+                  class="map-search-chrome__add"
+                  aria-label="Add something to the map"
+                  onclick={() => editorChromeStore.openAdditionModal()}
+                >
+                  <MapPinPlus size={14} aria-hidden="true" />
+                  <span>Add</span>
+                </button>
+              {/if}
             </div>
           </div>
+
+          {#if !mobile.current}
+            <MapFilterChips />
+          {/if}
 
           {#if showEditorChrome}
             <button
@@ -251,6 +235,12 @@
           {/if}
         </div>
       </div>
+
+      {#if mobile.current}
+        <div class="map-search-chrome__mobile-chips">
+          <MapFilterChips />
+        </div>
+      {/if}
 
       {#if showSearchDropdown}
         <!-- svelte-ignore a11y_interactive_supports_focus -->
@@ -304,124 +294,125 @@
     max-width: 100%;
   }
 
+  /* Mobile redesign (393 frame): search pill + chips row under it. */
   .search-root.mobile-shell .search-shell-main {
-    display: grid;
-    grid-template-columns: var(--map-chrome-toggle-size, 2.75rem) minmax(0, 1fr);
-    align-items: center;
-    justify-items: stretch;
-    column-gap: 0.375rem;
-    row-gap: 0;
+    display: block;
     width: 100%;
     max-width: 100%;
     min-width: 0;
     box-sizing: border-box;
-    overflow-x: visible;
-    padding: calc(env(safe-area-inset-top, 0px) + 0.4375rem)
-      max(
-        var(--map-search-inline-pad, 0.625rem),
-        env(safe-area-inset-right, 0px)
-      )
-      0.4375rem
-      max(
-        var(--map-search-inline-pad, 0.625rem),
-        env(safe-area-inset-left, 0px)
-      );
-    background: linear-gradient(
-      180deg,
-      var(--map-chrome-band-backdrop, hsla(5, 22%, 96%, 0.82)) 0%,
-      var(--map-chrome-surface, hsl(5 20% 97%)) 72%
-    );
-    border: 1px solid var(--map-chrome-border, hsl(5 10% 68%));
-    border-radius: var(--map-chrome-radius, 1rem);
-    box-shadow:
-      0 1px 3px hsla(0, 0%, 0%, 0.12),
-      0 4px 12px hsla(0, 0%, 0%, 0.16),
-      0 10px 24px hsla(0, 0%, 0%, 0.1);
+    padding: calc(env(safe-area-inset-top, 0px) + 0.75rem)
+      max(1rem, env(safe-area-inset-right, 0px))
+      0.5rem
+      max(1rem, env(safe-area-inset-left, 0px));
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
     pointer-events: auto;
   }
 
-  .search-root.mobile-shell .map-search-chrome {
-    display: contents;
-  }
-
-  .search-root.mobile-shell .map-menu-btn {
-    grid-column: 1;
-    grid-row: 1;
-    align-self: center;
-    margin: 0;
-  }
-
-  .search-root.mobile-shell .map-search-chrome__bar {
-    grid-column: 2;
-    grid-row: 1;
-    min-width: 0;
+  .search-root.mobile-shell .map-search-chrome--mobile-redesign {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
     width: 100%;
-    max-width: 100%;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .search-root.mobile-shell
+    .map-search-chrome--mobile-redesign
+    .map-search-chrome__bar {
     padding: 0;
   }
 
-  .search-root.mobile-shell .map-search-chrome__bar-row {
+  .search-root.mobile-shell
+    .map-search-chrome--mobile-redesign
+    .map-search-chrome__bar-row {
     min-width: 0;
   }
 
-  .search-root.mobile-shell .map-search-chrome__pill-wrap {
+  .search-root.mobile-shell
+    .map-search-chrome--mobile-redesign
+    .map-search-chrome__pill-wrap {
+    width: 100%;
     min-width: 0;
   }
 
-  .search-root.mobile-shell .map-search-chrome__pill input {
-    min-width: 0;
+  .search-root.mobile-shell
+    .map-search-chrome--mobile-redesign
+    .map-search-chrome__pill {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 2.75rem;
+    gap: 0.55rem;
+    padding: 0.65rem 0.95rem;
+    border: none;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: var(--shadow-search, 0 1px 3.5px rgb(58 58 71 / 0.2));
   }
 
-  .search-root.mobile-shell .map-search-chrome__chips {
-    grid-column: 1 / -1;
-    grid-row: 2;
+  .search-root.mobile-shell
+    .map-search-chrome--mobile-redesign
+    .map-search-chrome__pill
+    input {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #111;
+  }
+
+  .search-root.mobile-shell
+    .map-search-chrome--mobile-redesign
+    .map-search-chrome__pill
+    input::placeholder {
+    color: #bcbcc8;
+    font-weight: 500;
+    opacity: 1;
+  }
+
+  .search-root.mobile-shell
+    .map-search-chrome--mobile-redesign
+    .map-search-chrome__mobile-chips {
     min-width: 0;
     width: 100%;
-    max-width: 100%;
-    margin-inline: 0;
-    padding: 0.4375rem 0 0.1875rem;
-    border-top: 1px solid var(--map-chrome-divider, hsl(5 12% 88%));
   }
 
-  .search-root.mobile-shell .map-search-chrome__suggestions {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    min-width: 0;
+  .search-root.mobile-shell
+    .map-search-chrome--mobile-redesign
+    :global(.map-filter-chips) {
+    height: auto;
+  }
+
+  .search-root.mobile-shell
+    .map-search-chrome--mobile-redesign
+    :global(.map-filter-chips__chip) {
+    height: 2.125rem;
+    padding: 0 0.7rem;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+  }
+
+  .search-root.mobile-shell
+    .map-search-chrome--mobile-redesign
+    :global(.map-filter-chips__more) {
+    width: 2.125rem;
+    height: 2.125rem;
+    border-radius: 999px;
+  }
+
+  .search-root.mobile-shell
+    .map-search-chrome--mobile-redesign
+    .map-search-chrome__suggestions {
     width: 100%;
-    max-width: 100%;
-    margin-inline: 0;
-    padding: 0;
-  }
-
-  .search-root.mobile-shell.search-suggestions-open .map-search-chrome__chips {
-    grid-row: 3;
-  }
-
-  .search-root.mobile-shell.search-suggestions-open.search-query-active
-    .map-search-chrome__transit-routes,
-  .search-root.mobile-shell.search-suggestions-open.search-query-active
-    .map-search-chrome__events {
-    grid-row: 3;
-  }
-
-  .search-root.mobile-shell.search-suggestions-open:not(.search-query-active)
-    .map-search-chrome__transit-routes,
-  .search-root.mobile-shell.search-suggestions-open:not(.search-query-active)
-    .map-search-chrome__events {
-    grid-row: 4;
-  }
-
-  .search-root.mobile-shell:not(.search-suggestions-open)
-    .map-search-chrome__transit-routes,
-  .search-root.mobile-shell:not(.search-suggestions-open)
-    .map-search-chrome__events {
-    grid-column: 1 / -1;
-    grid-row: 3;
-    min-width: 0;
-    width: 100%;
-    max-width: 100%;
-    margin-inline: 0;
-    padding: 0.375rem 0 0.4375rem;
+    margin-top: 0.25rem;
+    border: none;
+    border-radius: 1.15rem;
+    background: #fff;
+    box-shadow: var(--shadow-results, 0 2px 6px rgb(36 37 46 / 0.2));
+    overflow: hidden;
   }
 
   .search-root:not(.mobile-shell) .map-search-chrome {
@@ -780,5 +771,255 @@
     overflow-y: auto;
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* Fluid desktop search + filter row — Figma: Search | Add | chips | > */
+  .search-root:not(.mobile-shell) .map-search-chrome--redesign {
+    width: min(100%, calc(100vw - 2rem));
+    max-width: none;
+    min-width: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    .map-search-chrome__bar {
+    padding: 0;
+  }
+
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    .map-search-chrome__bar-row {
+    align-items: center;
+    gap: var(--map-filter-gap, 0.375rem);
+    flex-wrap: nowrap;
+  }
+
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    .map-search-chrome__pill-wrap {
+    flex: 0 0 var(--map-search-width, 26rem);
+    width: var(--map-search-width, 26rem);
+    max-width: min(28rem, 42vw);
+    min-width: 14rem;
+  }
+
+  /* Figma: Add lives inside the search pill (pink wash). */
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    .map-search-chrome__add {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.3rem;
+    height: 1.875rem;
+    margin: 0 0 0 0.25rem;
+    padding: 0 0.65rem;
+    border: none;
+    border-radius: 999px;
+    background: #feeaea;
+    color: #8d1437;
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    box-shadow: none;
+    cursor: pointer;
+  }
+
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    .map-search-chrome__add:hover {
+    background: #fcdada;
+  }
+
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    .map-search-chrome__pill {
+    box-sizing: border-box;
+    width: 100%;
+    height: var(--map-search-pill-height, 2.375rem);
+    min-height: var(--map-search-pill-height, 2.375rem);
+    gap: 0.55rem;
+    padding: 0.35rem 0.4rem 0.35rem 0.95rem;
+    border: none;
+    border-radius: 999px;
+    background: #fff;
+    box-shadow: var(--shadow-search, 0 1px 3.5px rgb(58 58 71 / 0.2));
+  }
+
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    .map-search-chrome__pill
+    :global(.search-icon) {
+    flex-shrink: 0;
+    color: #332529;
+  }
+
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    .map-search-chrome__pill
+    :global(.search-icon svg) {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    .map-search-chrome__pill
+    input {
+    font-family: Inter, system-ui, sans-serif;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #000;
+  }
+
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    .map-search-chrome__pill
+    .clear-btn
+    svg {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    .map-search-chrome__pill
+    input::placeholder {
+    color: #bcbcc8;
+    font-weight: 600;
+    opacity: 1;
+  }
+
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    .map-search-chrome__suggestions {
+    width: var(--map-search-width, 26rem);
+    max-width: 100%;
+    margin-top: 0.5rem;
+    border: none;
+    border-radius: 1.25rem;
+    background: #fff;
+    box-shadow: var(--shadow-results, 0 2px 6px rgb(36 37 46 / 0.2));
+    overflow: hidden;
+  }
+
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    .map-search-chrome__suggestions
+    :global(.suggestions-container) {
+    gap: 0.125rem;
+    padding: 1rem 1rem 1.125rem;
+    border-top: none;
+    max-height: min(60vh, 22rem);
+  }
+
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    .map-search-chrome__suggestions
+    :global(.suggestions-header) {
+    padding: 0.15rem 0.5rem 0.65rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    color: #9a9aab;
+  }
+
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    .map-search-chrome__suggestions
+    :global(.suggestion-row) {
+    border-radius: 0.625rem;
+  }
+
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    .map-search-chrome__suggestions
+    :global(.suggestion) {
+    min-height: 2.5rem;
+    padding: 0.55rem 0.5rem;
+    gap: 0.65rem;
+    border-radius: 0.625rem;
+  }
+
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    .map-search-chrome__suggestions
+    :global(.suggestion .text) {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    .map-search-chrome__suggestions
+    :global(.suggestion-remove) {
+    width: 2.25rem;
+    color: #8a8a98;
+  }
+
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    :global(.map-filter-chips) {
+    flex: 1 1 auto;
+    width: auto;
+    max-width: none;
+    min-width: 0;
+    height: var(--map-search-pill-height, 2.375rem);
+  }
+
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    :global(.map-filter-chips__chip) {
+    height: var(--map-chip-height, 2rem);
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    padding: 0 0.75rem;
+  }
+
+  .search-root:not(.mobile-shell)
+    .map-search-chrome--redesign
+    :global(.map-filter-chips__more) {
+    width: var(--map-chip-height, 2rem);
+    height: var(--map-chip-height, 2rem);
+    border-radius: 999px;
+  }
+
+  .search-root:not(.mobile-shell) .search-shell-main {
+    width: min(100%, calc(100vw - 2rem));
+    max-width: none;
+  }
+
+  /* Narrow desktop: chips under Search + Add. */
+  @media (max-width: 64rem) {
+    .search-root:not(.mobile-shell)
+      .map-search-chrome--redesign
+      .map-search-chrome__bar-row {
+      flex-wrap: wrap;
+    }
+
+    .search-root:not(.mobile-shell)
+      .map-search-chrome--redesign
+      .map-search-chrome__pill-wrap {
+      flex: 1 1 auto;
+      width: auto;
+      max-width: none;
+      min-width: 12rem;
+    }
+
+    .search-root:not(.mobile-shell)
+      .map-search-chrome--redesign
+      :global(.map-filter-chips) {
+      flex: 1 1 100%;
+      order: 3;
+    }
   }
 </style>

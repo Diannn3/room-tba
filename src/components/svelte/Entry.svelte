@@ -30,15 +30,9 @@
   import Modal from "@ui/modal/Modal.svelte";
   import MainControls from "@ui/controls/MainControls.svelte";
   import Map from "@ui/Map.svelte";
-  import MapViewControls from "@ui/MapViewControls.svelte";
-  import MapDimensionToggle from "@ui/MapDimensionToggle.svelte";
-  import LocationButton from "@ui/LocationButton.svelte";
   import MapAttribution from "@ui/MapAttribution.svelte";
-  import MapLegend from "@ui/MapLegend.svelte";
-  import MapToolsFlyout from "@ui/MapToolsFlyout.svelte";
   import MeasureRoutePanel from "@ui/MeasureRoutePanel.svelte";
   import TravelTimeLegend from "@ui/TravelTimeLegend.svelte";
-  import StatusBar from "@ui/StatusBar.svelte";
   import Toast from "@ui/Toast.svelte";
   import Building3DViewer from "@ui/Building3DViewer.svelte";
   import AdminLoginModal from "@ui/AdminLoginModal.svelte";
@@ -52,7 +46,7 @@
   import EntityUrlSync from "@ui/EntityUrlSync.svelte";
   import EntityHoverPreview from "@ui/map/EntityHoverPreview.svelte";
   import "./map-chrome/map-chrome.css";
-  import { observeBlockHeight, observeBlockWidth } from "@lib/layout-css-vars";
+  import { observeBlockHeight } from "@lib/layout-css-vars";
   import {
     dispatchGlobalShortcut,
     getGlobalShortcutAction,
@@ -65,8 +59,9 @@
   import StagingBanner from "./StagingBanner.svelte";
   import AnnouncementBar from "./AnnouncementBar.svelte";
   import KeyboardShortcutsPopup from "./map-chrome/KeyboardShortcutsPopup.svelte";
-  import DayRouteChip from "./DayRouteChip.svelte";
-  import OnlineCounter from "./OnlineCounter.svelte";
+  import DesktopTopBar from "./map-chrome/DesktopTopBar.svelte";
+  import MapControlsStack from "./map-chrome/MapControlsStack.svelte";
+  import MobileBottomNav from "./map-chrome/MobileBottomNav.svelte";
   import { MediaQuery } from "svelte/reactivity";
   import type { RecentSearch } from "@lib/types";
 
@@ -309,7 +304,6 @@
 
   let mapToolsStackEl = $state<HTMLDivElement | null>(null);
   let bottomChromeEl = $state<HTMLDivElement | null>(null);
-  let bottomChromeActionsEl = $state<HTMLDivElement | null>(null);
 
   $effect(() => {
     const el = mapToolsStackEl;
@@ -322,9 +316,19 @@
 
   $effect(() => {
     const el = bottomChromeEl;
-    if (!el) return;
-    const root = el.closest(".app-layout") as HTMLElement | null;
+    const root = document.querySelector(".app-layout") as HTMLElement | null;
     if (!root) return;
+
+    // Desktop redesign has no bottom nav; keep side-panel insets sane.
+    if (!el) {
+      root.style.setProperty("--status-bar-block-height", "0px");
+      root.style.setProperty("--mobile-bottom-nav-height", "0px");
+      root.style.setProperty(
+        "--side-panel-bottom-inset-measured",
+        "calc(1rem + env(safe-area-inset-bottom, 0px))",
+      );
+      return;
+    }
 
     let rafId = 0;
     let lastHeight = "";
@@ -339,6 +343,7 @@
       if (height !== lastHeight) {
         lastHeight = height;
         root.style.setProperty("--status-bar-block-height", height);
+        root.style.setProperty("--mobile-bottom-nav-height", height);
       }
       if (inset !== lastInset) {
         lastInset = inset;
@@ -363,19 +368,6 @@
       window.visualViewport?.removeEventListener("resize", schedule);
       if (rafId) cancelAnimationFrame(rafId);
     };
-  });
-
-  $effect(() => {
-    const el = bottomChromeActionsEl;
-    if (!el) return;
-    return observeBlockWidth(el, "--bottom-fab-inset", {
-      onSync: (widthPx, root) => {
-        root.style.setProperty(
-          "--bottom-fab-inset",
-          `calc(${widthPx} + var(--bottom-chrome-gap, var(--bottom-fab-gap, 0.5rem)))`,
-        );
-      },
-    });
   });
 
   function handleKeydown(e: KeyboardEvent) {
@@ -419,26 +411,33 @@
 <EntityUrlSync />
 <EntityHoverPreview />
 
-<div class="app-layout" class:edit-mode={mapEditStore.enabled}>
+<div
+  class="app-layout"
+  class:edit-mode={mapEditStore.enabled}
+  class:redesign-desktop={!mobile.current}
+>
   <Map />
   <StagingBanner />
   <AnnouncementBar />
   <div class="ui-layer">
-    <Sidebar />
+    {#if mobile.current}
+      <Sidebar />
+    {:else}
+      <DesktopTopBar />
+    {/if}
     {#if ["map", "contributors", "settings"].includes(sidebarStore.panelOpen)}
-      <section
-        class="top-right-map-stack"
-        aria-label="Map camera controls"
-        bind:this={mapToolsStackEl}
-      >
-        <section class="desktop-camera-controls" aria-label="Map camera">
-          <div class="camera-controls-card">
-            <MapDimensionToggle embedded />
-            <div class="camera-controls-card__divider" aria-hidden="true"></div>
-            <MapViewControls variant="camera" embedded />
-          </div>
-        </section>
-      </section>
+      {#if mobile.current}
+        <div class="mobile-map-controls" bind:this={mapToolsStackEl}>
+          <MapControlsStack hideCompass />
+        </div>
+      {:else}
+        <div class="desktop-map-controls" bind:this={mapToolsStackEl}>
+          <MapControlsStack />
+        </div>
+      {/if}
+      <div class="map-attrib-corner">
+        <MapAttribution />
+      </div>
       <div class="inner-layer">
         <MainControls />
         <div class="bottom-band">
@@ -448,36 +447,13 @@
           {#if measureRouteStore.active}
             <MeasureRoutePanel />
           {/if}
-          <div class="bottom-chrome" bind:this={bottomChromeEl}>
-            <div class="bottom-chrome__bar">
-              <div class="bottom-chrome__leading">
-                <MapAttribution />
-              </div>
-              <div class="bottom-chrome__status">
-                <StatusBar />
-              </div>
-            </div>
-            <div
-              class="bottom-chrome__actions"
-              bind:this={bottomChromeActionsEl}
-              aria-label="Location controls"
-            >
-              {#if mobile.current}
-                <div>
-                  <MapDimensionToggle compact />
-                </div>
-              {/if}
-              <div class="bottom-chrome__triggers">
-                <DayRouteChip />
-                <OnlineCounter />
-                <MapToolsFlyout />
-                <MapLegend trigger="chip" />
-                <LocationButton embedded />
-              </div>
-            </div>
-          </div>
         </div>
       </div>
+      {#if mobile.current}
+        <div class="mobile-bottom-nav-slot" bind:this={bottomChromeEl}>
+          <MobileBottomNav />
+        </div>
+      {/if}
     {:else if sidebarStore.panelOpen === "today"}
       <TodayScreen />
     {:else if sidebarStore.panelOpen === "planner"}
@@ -771,6 +747,199 @@
     pointer-events: none;
     display: flex;
   }
+
+  .app-layout.redesign-desktop {
+    /* Fluid desktop chrome — Figma 1512 is the ceiling, not a fixed layout. */
+    --desktop-top-bar-height: clamp(3rem, 5.5vh, 3.5625rem);
+    --map-search-width: clamp(18rem, 28vw, 26rem);
+    --map-search-pill-height: 2.375rem;
+    --map-chip-height: 2rem;
+    --map-search-chrome-width: clamp(18rem, 26vw, 22.5rem);
+    --map-filter-gap: 0.375rem;
+    /* Figma: locate/2D square; compass larger circle; zoom width=square, height≈2.2× */
+    --map-ctrl-size: 2.25rem;
+    --map-ctrl-compass: 3.25rem;
+    --map-ctrl-zoom-h: 4.875rem;
+    /* Side panel matches search / chip floating cards. */
+    --map-chrome-surface: #fff;
+    --map-chrome-panel-bg: #fff;
+    --map-chrome-border: #e8e4e5;
+    --map-chrome-panel-accent-border: transparent;
+    --map-chrome-panel-shadow: var(--shadow-results, 0 2px 6px rgb(36 37 46 / 0.2));
+    --map-chrome-radius: 0.75rem;
+  }
+
+  /* Compact panel chrome: Close + action chips like filter chips. */
+  .app-layout.redesign-desktop
+    :global(.drawer-card .entity-panel-close) {
+    min-height: var(--map-chip-height, 1.875rem);
+    min-width: 0;
+    height: var(--map-chip-height, 1.875rem);
+    padding: 0 0.55rem;
+    border: none;
+    border-radius: 0.5rem;
+    background: #fff;
+    color: var(--color-brand, #8d1437);
+    font-size: 0.75rem;
+    font-weight: 500;
+    box-shadow: var(--shadow-search, 0 1px 3.5px rgb(58 58 71 / 0.2));
+  }
+
+  .app-layout.redesign-desktop
+    :global(.drawer-card .entity-panel-close:hover),
+  .app-layout.redesign-desktop
+    :global(.drawer-card .entity-panel-close:focus-visible) {
+    background: #fff;
+    border-color: transparent;
+    box-shadow:
+      var(--shadow-search, 0 1px 3.5px rgb(58 58 71 / 0.2)),
+      0 0 0 1px var(--color-brand, #8d1437);
+  }
+
+  .app-layout.redesign-desktop
+    :global(.drawer-card .entity-panel-filter--search) {
+    min-height: var(--map-search-pill-height, 2.25rem);
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow-search, 0 1px 3.5px rgb(58 58 71 / 0.2));
+  }
+
+  .app-layout.redesign-desktop
+    :global(.drawer-card .entity-panel-filter--search:focus-within) {
+    outline: none;
+    border-color: transparent;
+    box-shadow:
+      var(--shadow-search, 0 1px 3.5px rgb(58 58 71 / 0.2)),
+      0 0 0 1px var(--color-brand, #8d1437);
+  }
+
+  .app-layout.redesign-desktop
+    :global(.drawer-card .entity-panel-filter--search input) {
+    padding: 0.35rem 0;
+  }
+
+  .app-layout.redesign-desktop
+    :global(.drawer-card .map-chrome-action-chip),
+  .app-layout.redesign-desktop
+    :global(.drawer-card .map-chrome-action-chip--toolbar),
+  .app-layout.redesign-desktop
+    :global(.drawer-card .editor-toggle--toolbar) {
+    min-height: var(--map-chip-height, 1.875rem);
+    padding: 0.25rem 0.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    background: #fff;
+    color: var(--color-ink, #332529);
+    font-size: 0.75rem;
+    font-weight: 500;
+    box-shadow: var(--shadow-search, 0 1px 3.5px rgb(58 58 71 / 0.2));
+  }
+
+  .app-layout.redesign-desktop
+    :global(.drawer-card .map-chrome-action-chip:hover:not(:disabled)),
+  .app-layout.redesign-desktop
+    :global(.drawer-card .map-chrome-action-chip--toolbar:hover:not(:disabled)),
+  .app-layout.redesign-desktop
+    :global(.drawer-card .editor-toggle--toolbar:hover) {
+    border-color: transparent;
+    background: #fff;
+    box-shadow:
+      var(--shadow-search, 0 1px 3.5px rgb(58 58 71 / 0.2)),
+      0 0 0 1px var(--color-brand, #8d1437);
+  }
+
+  /* Staging banner is position:fixed + z-20 above ui-layer (z-10). Without
+     this offset the DesktopTopBar sits under the banner and looks "missing". */
+  .app-layout.redesign-desktop .ui-layer {
+    flex-direction: column;
+    top: var(--staging-banner-height, 0px);
+  }
+
+  .app-layout.redesign-desktop .inner-layer {
+    padding-top: 0.75rem;
+  }
+
+  .desktop-map-controls {
+    /* fixed: ui-layer is flex-column; absolute was resolving to static top. */
+    position: fixed;
+    top: auto;
+    right: 0.75rem;
+    bottom: calc(2.5rem + env(safe-area-inset-bottom, 0px));
+    left: auto;
+    z-index: var(--z-map-tools, 15);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.375rem;
+    width: auto;
+    height: auto;
+    pointer-events: none;
+  }
+
+  .desktop-map-controls > :global(*) {
+    pointer-events: auto;
+  }
+
+  /* Mobile 393 frame: controls above bottom nav. */
+  .mobile-map-controls {
+    position: fixed;
+    top: auto;
+    right: 0.75rem;
+    bottom: calc(
+      var(--mobile-bottom-nav-height, 4.5rem) + 0.75rem +
+        env(safe-area-inset-bottom, 0px)
+    );
+    left: auto;
+    z-index: var(--z-map-tools, 15);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    pointer-events: none;
+  }
+
+  .mobile-map-controls > :global(*) {
+    pointer-events: auto;
+  }
+
+  .mobile-bottom-nav-slot {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: var(--z-status-bar, 5);
+    pointer-events: none;
+  }
+
+  .mobile-bottom-nav-slot > :global(*) {
+    pointer-events: auto;
+  }
+
+  /* Bottom-right corner — white 40% rect (MapAttribution). */
+  .map-attrib-corner {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-map-tools, 15);
+    max-width: min(100%, calc(100vw - 0.5rem));
+    pointer-events: none;
+  }
+
+  .map-attrib-corner :global(.map-attribution) {
+    pointer-events: auto;
+  }
+
+  @media (max-width: 48rem) {
+    .map-attrib-corner {
+      bottom: var(--mobile-bottom-nav-height, 4.5rem);
+      max-width: min(100%, calc(100vw - 5.5rem));
+    }
+  }
+
+  /* Desktop redesign: no bottom-left chrome shell (was an empty white pill). */
+  .app-layout.redesign-desktop .bottom-band::before {
+    display: none;
+  }
+
 
   .top-right-map-stack {
     position: absolute;

@@ -39,3 +39,21 @@ export function getDB(): Promise<PGlite> {
 export function isLocalCacheReady(): boolean {
   return ready;
 }
+
+/**
+ * Close the offline cache so its IndexedDB database can be deleted (#865).
+ * No-op when nothing opened it — deliberately does not call `getDB()`, which
+ * would boot the WASM engine just to shut it down again.
+ */
+export async function closeLocalDB(): Promise<void> {
+  if (!dbPromise) return;
+  const pending = dbPromise;
+  dbPromise = null;
+  ready = false;
+  try {
+    const db = await pending;
+    await db.close();
+  } catch {
+    // Never opened successfully, so there is nothing to close.
+  }
+}

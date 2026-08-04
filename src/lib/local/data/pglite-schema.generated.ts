@@ -276,6 +276,7 @@ ALTER TABLE "divisions" ADD COLUMN IF NOT EXISTS "rooms_fetched" boolean DEFAULT
 CREATE TABLE IF NOT EXISTS "rooms" (
   "id" integer PRIMARY KEY,
   "room_code" text NOT NULL,
+  "full_name" text,
   "directions" text,
   "building_id" integer,
   "college_id" integer,
@@ -287,6 +288,8 @@ CREATE TABLE IF NOT EXISTS "rooms" (
   "classes_fetched" boolean DEFAULT false NOT NULL
 );
 ALTER TABLE "rooms" ADD COLUMN IF NOT EXISTS "room_code" text;
+ALTER TABLE "rooms" ADD COLUMN IF NOT EXISTS "full_name" text;
+ALTER TABLE "rooms" ALTER COLUMN "full_name" DROP NOT NULL;
 ALTER TABLE "rooms" ADD COLUMN IF NOT EXISTS "directions" text;
 ALTER TABLE "rooms" ALTER COLUMN "directions" DROP NOT NULL;
 ALTER TABLE "rooms" ADD COLUMN IF NOT EXISTS "building_id" integer;

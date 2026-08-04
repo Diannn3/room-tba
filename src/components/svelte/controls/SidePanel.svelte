@@ -1,12 +1,13 @@
 <script lang="ts">
   import { queryStore, sidePanelStore, jeepneyStore } from "@lib/store.svelte";
-  import EventsList from "./EventsList.svelte";
   import SponsorBanner from "@ui/SponsorBanner.svelte";
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import ChevronRight from "@lucide/svelte/icons/chevron-right";
   import { MediaQuery } from "svelte/reactivity";
   import { resolveSheetDragReleaseIntent } from "@lib/sheet-drag-intent";
-    import ProposalReviewPanel from "@ui/ProposalReviewPanel.svelte";
+  import { resolvePanelContent } from "@lib/side-panel-content";
+  import JeepneyStopPanel from "./JeepneyStopPanel.svelte";
+  import JeepneyRouteModal from "@ui/modal/JeepneyRouteModal.svelte";
 
   const mobile = new MediaQuery("max-width:48rem");
   // Entity detail views only — never list/browse panels (docs/ad-policy.md).
@@ -38,11 +39,18 @@
       ? "Expand details panel"
       : "Collapse details panel",
   );
+  const PanelContent = $derived(
+    resolvePanelContent(sidePanelStore.state, queryStore.category),
+  );
 
   $effect(() => {
     const identity = panelIdentity;
     if (identity === lastPanelIdentity) return;
 
+    // Navigating to another entity drops the metadata the previous view was
+    // opened with, so a still-open review queue cannot outlive the query that
+    // replaced it.
+    sidePanelStore.state = null;
     sidePanelStore.expand();
     jeepneyStore.closeStop();
     lastPanelIdentity = identity;
@@ -152,66 +160,60 @@
   const sheetTransition = $derived(isDragging ? "none" : "");
 
 </script>
-{#if sidePanelStore.active && sidePanelStore.state}
-      <div class="drawer"
-        class:is-collapsed={sidePanelStore.collapsed}
+
+{#if (PanelContent !== null || jeepneyStore.selectedStopIndex !== null) && !(mobile.current && sidePanelStore.collapsed)}
+  <div class="drawer" class:is-collapsed={sidePanelStore.collapsed}>
+    <div
+      class="drawer-sheet"
+      style:transform={sheetTransform}
+      style:transition={sheetTransition}
+    >
+      <button
+        class="drawer-handle"
+        type="button"
+        aria-expanded={!sidePanelStore.collapsed}
+        aria-controls="side-panel-details"
+        aria-label={toggleLabel}
+        title={toggleLabel}
+        onclick={onHandleClick}
+        onpointerdown={onHandlePointerDown}
+        onpointermove={onHandlePointerMove}
+        onpointerup={onHandlePointerUp}
+        onpointercancel={onHandlePointerCancel}
+        onlostpointercapture={onHandlePointerCancel}
       >
+        {#if mobile.current}
+          <span class="drawer-grab" aria-hidden="true"></span>
+        {:else if sidePanelStore.collapsed}
+          <ChevronRight size={20} aria-hidden="true" />
+        {:else}
+          <ChevronLeft size={20} aria-hidden="true" />
+        {/if}
+      </button>
+      <div class="drawer-card">
         <div
-          class="drawer-sheet"
-          style:transform={sheetTransform}
-          style:transition={sheetTransition}
+          id="side-panel-details"
+          class="side-panel-details map-chrome-scroll"
+          aria-hidden={sidePanelStore.collapsed}
         >
-          <button
-            class="drawer-handle"
-            type="button"
-            aria-expanded={!sidePanelStore.collapsed}
-            aria-controls="side-panel-details"
-            aria-label={toggleLabel}
-            title={toggleLabel}
-            onclick={onHandleClick}
-            onpointerdown={onHandlePointerDown}
-            onpointermove={onHandlePointerMove}
-            onpointerup={onHandlePointerUp}
-            onpointercancel={onHandlePointerCancel}
-            onlostpointercapture={onHandlePointerCancel}
-          >
-            {#if mobile.current}
-              <span class="drawer-grab" aria-hidden="true"></span>
-            {:else if sidePanelStore.collapsed}
-              <ChevronRight size={20} aria-hidden="true" />
-            {:else}
-              <ChevronLeft size={20} aria-hidden="true" />
-            {/if}
-          </button>
-          <div class="drawer-card">
-              <!-- aria-hidden={sidePanelStore.collapsed} -->
-            <div
-              id="side-panel-details"
-              class="side-panel-details map-chrome-scroll"
-            >
-                {#if sidePanelStore.state.type === "browsing-entities" || sidePanelStore.state.type === "search-result"}
-                        <sidePanelStore.state.component />
-                    {:else if sidePanelStore.state.type === "browsing-events"}
-                        <EventsList />
-                    {:else if sidePanelStore.state.type === "admin-suggestions"}
-                        <ProposalReviewPanel />
-                {/if}
-              <!-- {#if jeepneyStore.selectedStopIndex !== null}
-                <JeepneyStopPanel />
-              {:else if jeepneyStore.selectedRouteId !== null && queryStore.category === "browse" && queryStore.queryValue === "jeepney"}
-                <JeepneyRouteModal
-                  routeId={jeepneyStore.selectedRouteId}
-                  onback={() => jeepneyStore.clearRoute()}
-                />
-                {/if} -->
-              {#if showSponsorBanner}
-                <SponsorBanner />
-              {/if}
-            </div>
-          </div>
+          {#if jeepneyStore.selectedStopIndex !== null}
+            <JeepneyStopPanel />
+          {:else if jeepneyStore.selectedRouteId !== null && queryStore.category === "browse" && queryStore.queryValue === "jeepney"}
+            <JeepneyRouteModal
+              routeId={jeepneyStore.selectedRouteId}
+              onback={() => jeepneyStore.clearRoute()}
+            />
+          {:else if PanelContent}
+            <PanelContent />
+          {/if}
+          {#if showSponsorBanner}
+            <SponsorBanner />
+          {/if}
         </div>
       </div>
-    {/if}
+    </div>
+  </div>
+{/if}
 
 <style>
   .drawer {

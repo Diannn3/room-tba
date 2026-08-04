@@ -76,9 +76,8 @@
 
   function handleReviewQueue() {
     onclose?.();
-    sidePanelStore.openPanel({
-        type: "admin-suggestions"
-    })
+    sidePanelStore.openPanel({ type: "admin-suggestions" });
+    sidePanelStore.expand();
   }
 
   function addEventLabel() {

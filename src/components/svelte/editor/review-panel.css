@@ -1,4 +1,7 @@
-* {
+/* Scoped to the panel: EntityReviewActions imports this file from a module,
+   which makes it a global stylesheet, so a bare `*` reset would land on every
+   page. */
+.entity-review-panel * {
   box-sizing: border-box;
 }
 

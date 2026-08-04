@@ -1,25 +1,6 @@
 <script lang="ts">
   import Search from "@ui/search/Search.svelte";
-  import { queryStore, sidePanelStore, jeepneyStore } from "@lib/store.svelte";
-    import SidePanel from "./SidePanel.svelte";
-  let lastPanelIdentity = $state<string | null>(null);
-  const panelIdentity = $derived(
-    queryStore.category === null
-      ? null
-      : queryStore.category === "event" && queryStore.selectedEventSlug
-        ? `event:${queryStore.selectedEventSlug}`
-        : `${queryStore.category}:${queryStore.queryValue}`,
-  );
-
-  $effect(() => {
-    const identity = panelIdentity;
-    if (identity === lastPanelIdentity) return;
-
-    sidePanelStore.expand();
-    jeepneyStore.closeStop();
-    lastPanelIdentity = identity;
-  });
-
+  import SidePanel from "./SidePanel.svelte";
 </script>
 
 <div class="side-panel-wrapper">

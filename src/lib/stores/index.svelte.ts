@@ -986,7 +986,6 @@ export const toastStore = new ToastStore();
 export const locationStore = new LocationStore();
 export const mapStore = new MapStore();
 export const mapViewStore = new MapViewStore();
-// export const sidePanelStore = new MainControlsStore();
 export const floatingControlPanelStore = new FloatingControlPanelStore();
 export const mapToolsStore = new MapToolsStore();
 export const editorChromeStore = new EditorChromeStore();

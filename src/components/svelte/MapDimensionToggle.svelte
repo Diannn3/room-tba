@@ -47,15 +47,21 @@
   const toggleMapDimension = () =>
     withMap((map) => {
       if (!isMap2DPitch(map.getPitch())) {
-          enterFlatMapDimension(map, terrainStore.enabled);
-          map.easeTo({ pitch: 0, duration: 400 });
-          return;
-      };
+        enterFlatMapDimension(map, terrainStore.enabled);
+        map.easeTo({ pitch: 0, duration: 400 });
+        return;
+      }
       map.easeTo({ pitch: THREE_D_PITCH, duration: 400 });
       map.once("moveend", () =>
         enterTiltedMapDimension(map, terrainStore.enabled),
       );
     });
+
+  // One button now switches both ways, so the label has to name the state it
+  // moves to rather than the state it shows.
+  const toggleLabel = $derived(
+    is2D ? "Switch to tilted 3D map" : "Switch to flat 2D map",
+  );
 </script>
 
 <div
@@ -69,8 +75,8 @@
     type="button"
     class="segment"
     onclick={toggleMapDimension}
-    aria-label="Switch to tilted 3D map"
-    title="Tilted perspective map"
+    aria-label={toggleLabel}
+    title={toggleLabel}
   >
     {#if is2D}
       2D

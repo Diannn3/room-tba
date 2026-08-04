@@ -382,6 +382,11 @@ button.map-chrome-chip:disabled {
   display: flex;
   flex-shrink: 0;
   padding: 0.75rem;
+  /* Padding + icon lands on 42px; pin to the shared toggle size so the chip
+     keeps a 44px touch target next to its neighbours in the bottom chrome. */
+  min-width: var(--map-chrome-toggle-size, 2.75rem);
+  min-height: var(--map-chrome-toggle-size, 2.75rem);
+  box-sizing: border-box;
   align-items: center;
   justify-content: center;
   border: 1.5px solid var(--map-chrome-border-accent, hsl(5, 40%, 42%));

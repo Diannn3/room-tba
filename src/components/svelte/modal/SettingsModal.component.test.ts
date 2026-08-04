@@ -60,6 +60,19 @@ describe("SettingsModal storage section (#865)", () => {
     ).toBeInTheDocument();
   });
 
+  test("moves focus to the confirm so keyboard users are not dropped on <body>", async () => {
+    render(SettingsModalHost);
+
+    clearButton().click();
+    const confirm = await screen.findByRole("button", {
+      name: "Clear and reload",
+    });
+    await vi.waitFor(() => expect(document.activeElement).toBe(confirm));
+    expect(confirm.getAttribute("aria-describedby")).toBe(
+      "settings-storage-warning",
+    );
+  });
+
   test("cancel backs out without clearing", async () => {
     render(SettingsModalHost);
 

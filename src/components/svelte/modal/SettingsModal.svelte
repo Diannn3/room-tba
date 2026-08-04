@@ -8,6 +8,13 @@
 
   let confirming = $state(false);
   let clearing = $state(false);
+  let confirmButton = $state<HTMLButtonElement | null>(null);
+
+  // Opening the confirm swaps the button out from under the pointer, which
+  // would drop keyboard focus to <body>. Move it to the confirm instead.
+  $effect(() => {
+    if (confirming) confirmButton?.focus();
+  });
 
   // The reload is the success signal, so there is no toast: either the page
   // comes back clean or the button is still sitting there.
@@ -44,7 +51,10 @@
         class plans stay.
       </p>
       {#if confirming}
-        <p class="settings-modal__hint settings-modal__hint--warn">
+        <p
+          id="settings-storage-warning"
+          class="settings-modal__hint settings-modal__hint--warn"
+        >
           Downloaded offline maps go too — you will need to download them again
           on a connection.
         </p>
@@ -52,7 +62,9 @@
           <button
             type="button"
             class="settings-modal__btn settings-modal__btn--danger"
+            aria-describedby="settings-storage-warning"
             disabled={clearing}
+            bind:this={confirmButton}
             onclick={clearAndReload}
           >
             {clearing ? "Clearing…" : "Clear and reload"}

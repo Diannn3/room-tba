@@ -9,10 +9,11 @@ export type { CampusBrowseTab } from "./browse-campus-shared.js";
 import CampusBrowseList from "@ui/controls/CampusBrowseList.svelte";
 import ClassesList from "@ui/controls/ClassesList.svelte";
 
-// The side panel only renders while `sidePanelStore.active` is set, so setting a
-// query is no longer enough to show it. Both helpers own that call themselves:
-// every caller routes through here, and a caller that forgets `openPanel` fails
-// silently (nothing renders, no error). See browse-campus.store.test.ts.
+// Both helpers name the panel themselves rather than leaving it to each caller.
+// `resolvePanelContent` would reach the same component from the query category,
+// but every browse entry point routes through here, so owning the call in one
+// place is what keeps a caller from setting a query and rendering nothing.
+// See browse-campus.store.test.ts.
 export function openCampusBrowse(
   queryStore: QueryStore,
   sidePanelStore: SidePanelStore,

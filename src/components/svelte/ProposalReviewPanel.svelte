@@ -16,6 +16,12 @@
   import EntityEditorFormField from "@ui/editor/EntityEditorFormField.svelte";
   import EntityReviewActions from "@ui/editor/EntityReviewActions.svelte";
   import Avatar from "@ui/Avatar.svelte";
+  import { proposalPinChange } from "@lib/proposals/proposal-pin";
+  import {
+    getReviewShortcutAction,
+    stepIndex,
+    REVIEW_SHORTCUT_HINTS,
+  } from "@lib/proposals/review-shortcuts";
 
   const appActions = getAppActions();
   const appData = getAppData();
@@ -89,11 +95,32 @@
   let bulkAction = $state<NoteAction | null>(null);
   let bulkNote = $state("");
 
+  // Which rows have their map preview open. Off by default: each preview is a
+  // WebGL map, and browsers cap live contexts, so a 59-row queue must not mount
+  // one per row.
+  let previewOpenById = $state<Record<number, boolean>>({});
+
+  /**
+   * Approving had no recovery path, and there is no un-approve endpoint —
+   * `editor_history` revert needs publish rights a reviewer may not have. So
+   * the undo window sits *before* the write: an approve is held locally for
+   * UNDO_WINDOW_MS and only then POSTed. Undo cancels a request that never
+   * left, which is a more reliable recovery than reverting a published row.
+   */
+  const UNDO_WINDOW_MS = 7000;
+  type HeldApproval = { id: number; label: string };
+  let heldApproval = $state<HeldApproval | null>(null);
+  let undoSecondsLeft = $state(0);
+  let holdTimer: ReturnType<typeof setTimeout> | undefined;
+  let holdTicker: ReturnType<typeof setInterval> | undefined;
+
   // Same submitter's suggestions review as a set: one contributor filing many
   // near-identical room edits is the common shape of this queue (#873).
   const groups = $derived.by(() => {
     const bySubmitter = new Map<string, typeof proposalsStore.proposals>();
     for (const proposal of proposalsStore.proposals) {
+      // A held approve is already "gone" to the reviewer; undo brings it back.
+      if (heldApproval?.id === proposal.id) continue;
       const list = bySubmitter.get(proposal.submitterName) ?? [];
       list.push(proposal);
       bySubmitter.set(proposal.submitterName, list);
@@ -103,6 +130,13 @@
       proposals,
     }));
   });
+
+  /** Flat visible order — what J/K steps through. */
+  const flatProposals = $derived(groups.flatMap((group) => group.proposals));
+  let focusedIndex = $state<number | null>(null);
+  const focusedProposal = $derived(
+    focusedIndex === null ? null : (flatProposals[focusedIndex] ?? null),
+  );
 
   // Approve a single proposal: POST + apply the published entity to local
   // state. No toast/refresh — callers (single action, batch) decide those.
@@ -158,23 +192,82 @@
     return { ok: true };
   }
 
+  function clearHoldTimers() {
+    if (holdTimer) clearTimeout(holdTimer);
+    if (holdTicker) clearInterval(holdTicker);
+    holdTimer = undefined;
+    holdTicker = undefined;
+  }
+
+  /** Send the held approve for real. Called by the timer, or early on flush. */
+  async function commitHeldApproval() {
+    const held = heldApproval;
+    clearHoldTimers();
+    if (!held) return;
+    heldApproval = null;
+    undoSecondsLeft = 0;
+
+    actingId = held.id;
+    try {
+      const result = await approveOne(held.id);
+      if (!result.ok) {
+        toastStore.show(
+          result.error ?? `Could not approve proposal #${held.id}.`,
+          "error",
+        );
+      } else {
+        selectedIds.delete(held.id);
+      }
+    } finally {
+      actingId = null;
+      await proposalsStore.refresh();
+    }
+  }
+
+  function undoHeldApproval() {
+    if (!heldApproval) return;
+    clearHoldTimers();
+    heldApproval = null;
+    undoSecondsLeft = 0;
+    toastStore.show("Approve undone — the suggestion is back in the queue.", "info");
+  }
+
+  /** Hold an approve for the undo window instead of writing immediately. */
+  async function holdApproval(id: number, label: string) {
+    // One at a time: starting a second approve commits the first.
+    if (heldApproval) await commitHeldApproval();
+
+    heldApproval = { id, label };
+    undoSecondsLeft = Math.ceil(UNDO_WINDOW_MS / 1000);
+    holdTicker = setInterval(() => {
+      undoSecondsLeft = Math.max(0, undoSecondsLeft - 1);
+    }, 1000);
+    holdTimer = setTimeout(() => void commitHeldApproval(), UNDO_WINDOW_MS);
+  }
+
+  // A pending approve must not be lost because the reviewer closed the queue or
+  // the tab: flush it rather than silently dropping the contributor's edit.
+  $effect(() => {
+    const flush = () => {
+      if (heldApproval) void commitHeldApproval();
+    };
+    window.addEventListener("beforeunload", flush);
+    return () => {
+      window.removeEventListener("beforeunload", flush);
+      flush();
+    };
+  });
+
   async function runAction(id: number, action: ReviewAction) {
+    if (action === "approve") {
+      const label =
+        proposalsStore.proposals.find((p) => p.id === id)?.entityLabel ??
+        `#${id}`;
+      await holdApproval(id, label);
+      return;
+    }
     actingId = id;
     try {
-      if (action === "approve") {
-        const result = await approveOne(id);
-        if (!result.ok) {
-          toastStore.show(
-            result.error ?? `Could not approve proposal #${id}.`,
-            "error",
-          );
-          return;
-        }
-        selectedIds.delete(id);
-        toastStore.show("Proposal approved and published.", "success");
-        await proposalsStore.refresh();
-        return;
-      }
 
       const result = await reviewOne(id, action, noteById[id] ?? "");
       if (!result.ok) {
@@ -198,6 +291,63 @@
       actingId = null;
     }
   }
+
+  function focusRow(index: number | null) {
+    focusedIndex = index;
+    if (index === null) return;
+    const proposal = flatProposals[index];
+    if (!proposal) return;
+    // Stepping onto a row reveals it: reviewing means reading the diff.
+    openById[proposal.id] = true;
+    queueMicrotask(() => {
+      document
+        .querySelector(`[data-proposal-row="${proposal.id}"]`)
+        ?.scrollIntoView({ block: "nearest" });
+    });
+  }
+
+  function handleShortcut(event: KeyboardEvent) {
+    // Bare keys, so the guard inside getReviewShortcutAction keeps them out of
+    // the note textarea and any other typing target.
+    const action = getReviewShortcutAction(event);
+    if (!action) return;
+
+    if (action === "undo") {
+      if (!heldApproval) return;
+      event.preventDefault();
+      undoHeldApproval();
+      return;
+    }
+
+    if (action === "next" || action === "previous") {
+      event.preventDefault();
+      focusRow(
+        stepIndex(
+          focusedIndex,
+          flatProposals.length,
+          action === "next" ? 1 : -1,
+        ),
+      );
+      return;
+    }
+
+    const target = focusedProposal;
+    if (!target || actingId === target.id) return;
+    event.preventDefault();
+    if (action === "approve") {
+      void runAction(target.id, "approve");
+    } else {
+      // Reject opens the note step rather than firing immediately — a single
+      // keypress must not destroy a contributor's work outright.
+      openById[target.id] = true;
+      pendingActionById[target.id] = "reject";
+    }
+  }
+
+  $effect(() => {
+    window.addEventListener("keydown", handleShortcut);
+    return () => window.removeEventListener("keydown", handleShortcut);
+  });
 
   function toggleSelected(id: number) {
     if (selectedIds.has(id)) selectedIds.delete(id);
@@ -291,6 +441,35 @@
         >
       {/if}
     </div>
+
+    {#if proposalsStore.proposals.length > 0}
+      <p class="entity-review-shortcuts">
+        {#each REVIEW_SHORTCUT_HINTS as hint (hint.keys)}
+          <span class="entity-review-shortcut">
+            <kbd>{hint.keys}</kbd>
+            {hint.description}
+          </span>
+        {/each}
+      </p>
+    {/if}
+
+    {#if heldApproval}
+      <div class="entity-review-undo" role="status">
+        <span class="entity-review-undo-text">
+          Approved <strong>{heldApproval.label}</strong> — publishing in {undoSecondsLeft}s
+        </span>
+        <div class="entity-review-undo-actions">
+          <button type="button" onclick={undoHeldApproval}>Undo</button>
+          <button
+            type="button"
+            class="entity-review-undo-now"
+            onclick={() => void commitHeldApproval()}
+          >
+            Publish now
+          </button>
+        </div>
+      </div>
+    {/if}
 
     {#if proposalsStore.loading}
       <p class="entity-review-empty">
@@ -408,7 +587,13 @@
               {#each group.proposals as proposal (proposal.id)}
                 {@const diffs = diffsFor(proposal)}
                 {@const stale = isStale(proposal)}
-                <li class="entity-review-item">
+                {@const pinChange = proposalPinChange(proposal)}
+                <li
+                  class="entity-review-item"
+                  class:entity-review-item--focused={focusedProposal?.id ===
+                    proposal.id}
+                  data-proposal-row={proposal.id}
+                >
                   <div class="entity-review-row">
                     <input
                       type="checkbox"
@@ -475,6 +660,44 @@
                             </li>
                           {/each}
                         </ul>
+
+                        {#if pinChange}
+                          <div class="entity-review-preview">
+                            <button
+                              type="button"
+                              class="entity-review-preview-toggle"
+                              aria-expanded={previewOpenById[proposal.id] ===
+                                true}
+                              onclick={() =>
+                                (previewOpenById[proposal.id] =
+                                  !previewOpenById[proposal.id])}
+                            >
+                              {previewOpenById[proposal.id]
+                                ? "Hide map preview"
+                                : "Show map preview"}
+                            </button>
+                            {#if previewOpenById[proposal.id]}
+                              <!-- Imported on open so maplibre stays out of the
+                                   review modal's bundle for reviewers who never
+                                   ask for a preview. -->
+                              {#await import("@ui/editor/ProposalPinPreview.svelte")}
+                                <p class="entity-review-preview-loading">
+                                  Loading map preview…
+                                </p>
+                              {:then previewModule}
+                                {@const Preview = previewModule.default}
+                                <Preview
+                                  change={pinChange}
+                                  label={proposal.entityLabel}
+                                />
+                              {:catch}
+                                <p class="entity-review-preview-loading">
+                                  Map preview could not load.
+                                </p>
+                              {/await}
+                            {/if}
+                          </div>
+                        {/if}
 
                         {#if bundledRoomsSummary(proposal.entityType as ProposalEntityType, proposal.proposedPatch as Record<string, unknown>)}
                           <p class="entity-review-bundled">
@@ -565,6 +788,112 @@
 <style>
   @import "./editor/review-panel.css";
   @import "./editor/entity-editor.css";
+
+  .entity-review-shortcuts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.625rem;
+    margin: 0 0 0.5rem;
+    font-size: 0.75rem;
+    color: hsl(0, 0%, 42%);
+  }
+
+  .entity-review-shortcut {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+  }
+
+  .entity-review-shortcuts kbd {
+    padding: 0.05rem 0.3rem;
+    border: 1px solid hsl(0, 0%, 80%);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    background: hsl(0, 0%, 98%);
+    font-family: inherit;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    color: hsl(0, 0%, 28%);
+  }
+
+  .entity-review-undo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin-bottom: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid hsl(140, 40%, 70%);
+    border-radius: 8px;
+    background: hsl(140, 50%, 96%);
+    font-size: 0.8125rem;
+    color: hsl(140, 60%, 18%);
+  }
+
+  .entity-review-undo-text {
+    min-width: 0;
+  }
+
+  .entity-review-undo-actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 0.25rem;
+  }
+
+  .entity-review-undo-actions button {
+    padding: 0.25rem 0.65rem;
+    border: 1px solid hsl(140, 35%, 55%);
+    border-radius: 999px;
+    background: white;
+    color: hsl(140, 60%, 20%);
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .entity-review-undo-actions button:hover {
+    background: hsl(140, 45%, 94%);
+  }
+
+  .entity-review-undo-actions .entity-review-undo-now {
+    border-color: hsl(0, 0%, 80%);
+    color: hsl(0, 0%, 35%);
+  }
+
+  .entity-review-item--focused {
+    border-radius: 6px;
+    outline: 2px solid hsl(5, 53%, 40%);
+    outline-offset: 1px;
+  }
+
+  .entity-review-preview {
+    margin: 0.375rem 0 0;
+  }
+
+  .entity-review-preview-toggle {
+    padding: 0.2rem 0.55rem;
+    border: 1px solid hsl(0, 0%, 78%);
+    border-radius: 999px;
+    background: white;
+    color: hsl(0, 0%, 22%);
+    font: inherit;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .entity-review-preview-toggle:hover {
+    background: hsl(0, 0%, 96%);
+  }
+
+  .entity-review-preview-loading {
+    margin: 0.375rem 0 0;
+    font-size: 0.8rem;
+    color: hsl(0, 0%, 40%);
+  }
 
   .entity-review-batch {
     display: flex;

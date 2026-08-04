@@ -19,14 +19,23 @@
   } from "@lib/local/data/sync";
   import { fetchBuildingFootprint } from "@lib/overpass";
   import { fetchBasemap } from "@lib/osm-basemap";
+  import { trapFocus } from "@lib/focus-trap";
   import {
     footprintToLocalPolygon,
-    mockPlaceRooms,
+    placeRooms,
+    approximateFootprint,
     defaultFloorCount,
     maxInferredFloor,
+    pickNonOverlappingLabels,
+    type LabelBox,
     type LocalPolygonData,
     type RoomPlacement,
   } from "@lib/building-3d";
+  import {
+    inferBuildingPlacements,
+    type InferredPlacement,
+    type RoomPlacementInput,
+  } from "@lib/room-placement";
 
   const appData = getAppData();
   const buildings = $derived(appData().loaded ? appData().buildings : []);
@@ -49,9 +58,11 @@
     room?: RoomData | null;
     latest?: RoomData | null;
     error?: string;
+    code?: string;
   };
   type RoomPositionDraft = { floor: number; x: number; y: number };
 
+  let viewerFrameEl: HTMLDivElement | null = $state(null);
   let canvasContainer: HTMLDivElement | null = $state(null);
   let labelContainer: HTMLDivElement | null = $state(null);
 
@@ -62,6 +73,12 @@
   let activeRoomCode = $state<string | null>(null);
   let hoveredRoomCode = $state<string | null>(null);
   let footprintNote = $state<string | null>(null);
+  /** True when OSM had no building here and we drew a stand-in box instead. */
+  let footprintApproximate = $state(false);
+  /** True when the OSM polygon we found does not contain this building's point. */
+  let footprintUncertain = $state(false);
+  let footprintOsmName = $state<string | null>(null);
+  let acceptingSuggestions = $state(false);
 
   // Editor state
   let editMode = $state(false);
@@ -89,6 +106,7 @@
   let frameId: number | null = null;
   let resizeObs: ResizeObserver | null = null;
   let onPointerMoveBound: ((e: PointerEvent) => void) | null = null;
+  let onPointerLeaveBound: (() => void) | null = null;
   let onClickBound: ((e: MouseEvent) => void) | null = null;
   let disposers: Array<() => void> = [];
   let roomMeshes: Array<{
@@ -97,6 +115,25 @@
     baseColor: number;
   }> = [];
   let floorGroups: Array<{ floor: number; group: any }> = [];
+  /** Raycast targets, hoisted so the render loop stops rebuilding them. */
+  let pickTargets: any[] = [];
+  let initStarted = false;
+  /** Only re-raycast when the pointer or the camera actually moved. */
+  let pointerMoved = false;
+  /**
+   * Every CSS2D label in the scene, for the per-frame overlap pass. `w`/`h` are
+   * measured lazily on first use; the text never changes so one read is enough.
+   */
+  let cssLabels: Array<{
+    obj: any;
+    el: HTMLElement;
+    /** Lower wins the space: floor markers 0, room pins 1. */
+    priority: number;
+    code: string | null;
+    w: number;
+    h: number;
+  }> = [];
+  let labelProjection: any = null;
 
   let buildingRooms = $state<RoomData[]>([]);
 
@@ -104,13 +141,33 @@
     buildings.find((b) => b.buildingName === name) ?? null,
   );
 
-  const roomCodes = $derived(buildingRooms.map((r) => r.code));
+  const roomInputs = $derived(
+    buildingRooms.map<RoomPlacementInput>((r) => ({
+      roomCode: r.code,
+      buildingName: name,
+      directions: r.directions,
+    })),
+  );
 
   const placements = $derived(
     polygon
-      ? mockPlaceRooms(roomCodes, polygon, totalFloors, savedOverrides)
+      ? placeRooms(roomInputs, polygon, totalFloors, savedOverrides)
       : ([] as RoomPlacement[]),
   );
+
+  /**
+   * Rooms the inference can place that nobody has saved a position for yet.
+   * These are exactly the pins an editor can accept into `room_positions`.
+   */
+  const suggestions = $derived.by(() => {
+    if (!polygon) return new Map<string, InferredPlacement>();
+    return inferBuildingPlacements(
+      roomInputs,
+      polygon,
+      totalFloors,
+      new Set(savedOverrides.keys()),
+    );
+  });
 
   let polygon: LocalPolygonData | null = $state(null);
 
@@ -138,6 +195,13 @@
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === "Escape") close();
   }
+
+  // `aria-modal="true"` tells assistive tech the rest of the page is inert, so
+  // Tab has to honour that. Same shared trap the other modals use.
+  $effect(() => {
+    if (!viewerFrameEl) return;
+    return trapFocus(viewerFrameEl, { onEscape: close });
+  });
 
   async function init() {
     if (!canvasContainer || !labelContainer) return;
@@ -191,30 +255,37 @@
         }
       }
 
-      const footprint = await fetchBuildingFootprint(
+      // When OSM has nothing here we fall back to a plain square around the
+      // building's own coordinates so rooms can still be placed and browsed.
+      // It is labelled as approximate everywhere it shows up — see
+      // `footprintApproximate`.
+      const osmFootprint = await fetchBuildingFootprint(
         buildingMeta.lat,
         buildingMeta.lon,
       );
-
-      if (!footprint) {
-        errorMsg =
-          "Could not pull a building footprint from OpenStreetMap. The building may not be mapped yet.";
-        loading = false;
-        return;
-      }
+      footprintApproximate = osmFootprint === null;
+      // OSM had *a* building nearby, but not one containing our coordinates —
+      // the outline probably belongs to a neighbour.
+      footprintUncertain = osmFootprint !== null && !osmFootprint.containsPoint;
+      footprintOsmName = osmFootprint?.osmName ?? null;
+      const footprint =
+        osmFootprint ??
+        approximateFootprint(buildingMeta.lat, buildingMeta.lon);
 
       const localPoly = footprintToLocalPolygon(footprint);
       polygon = localPoly;
 
-      const inferred = maxInferredFloor(roomCodes);
+      const inferred = maxInferredFloor(roomInputs);
       const floors = defaultFloorCount(footprint, inferred);
       totalFloors = floors;
 
-      footprintNote = footprint.levels
-        ? `OSM has \`building:levels=${footprint.levels}\`.`
-        : footprint.heightMeters
-          ? `Floor count estimated from OSM height (~${footprint.heightMeters.toFixed(0)} m).`
-          : null;
+      footprintNote = footprintApproximate
+        ? `Floor count estimated from the room codes (${floors}).`
+        : footprint.levels
+          ? `OpenStreetMap lists ${footprint.levels} floors for this building.`
+          : footprint.heightMeters
+            ? `Floor count estimated from OSM height (~${footprint.heightMeters.toFixed(0)} m).`
+            : null;
 
       // === Scene setup ===
       scene = new THREE.Scene();
@@ -360,6 +431,8 @@
 
       // Per-floor slabs.
       floorGroups = [];
+      cssLabels = [];
+      labelProjection = new THREE.Vector3();
       for (let f = 1; f <= floors; f++) {
         const slabGeom = new THREE.ExtrudeGeometry(shape, {
           depth: 0.18,
@@ -392,6 +465,14 @@
           localPoly.depthMeters / 2 + 1.5,
         );
         group.add(labelObj);
+        cssLabels.push({
+          obj: labelObj,
+          el: labelEl,
+          priority: 0,
+          code: null,
+          w: 0,
+          h: 0,
+        });
 
         scene.add(group);
         floorGroups.push({ floor: f, group });
@@ -430,9 +511,18 @@
         const labelObj = new CSS2DMod.CSS2DObject(labelEl);
         labelObj.position.set(0, 1.0, 0);
         cyl.add(labelObj);
+        cssLabels.push({
+          obj: labelObj,
+          el: labelEl,
+          priority: 1,
+          code: placement.code,
+          w: 0,
+          h: 0,
+        });
 
         roomMeshes.push({ mesh: cyl, placement, baseColor: ROOM_COLOR });
       }
+      pickTargets = roomMeshes.map((rm) => rm.mesh);
 
       // === Drag controls (editor mode) ===
       // Built once and toggled via .enabled so we don't tear down meshes when
@@ -495,13 +585,19 @@
           x: ((e.clientX - rect.left) / rect.width) * 2 - 1,
           y: -((e.clientY - rect.top) / rect.height) * 2 + 1,
         };
+        pointerMoved = true;
+      };
+      onPointerLeaveBound = () => {
+        // Without this the pointer stays "over" the last spot forever, so the
+        // hover highlight sticks and the render loop keeps raycasting.
+        pointerNDC = null;
+        hoveredRoomCode = null;
       };
       onClickBound = () => {
         if (!pointerNDC || !raycaster || !camera || !scene) return;
         pointer.set(pointerNDC.x, pointerNDC.y);
         raycaster.setFromCamera(pointer, camera);
-        const meshes = roomMeshes.map((rm) => rm.mesh);
-        const hits = raycaster.intersectObjects(meshes, false);
+        const hits = raycaster.intersectObjects(pickTargets, false);
         if (hits.length > 0) {
           const hit = hits[0]!.object;
           const code = hit.userData.roomCode as string | undefined;
@@ -517,6 +613,7 @@
         }
       };
       renderer.domElement.addEventListener("pointermove", onPointerMoveBound);
+      renderer.domElement.addEventListener("pointerleave", onPointerLeaveBound);
       renderer.domElement.addEventListener("click", onClickBound);
 
       // === Cleanup registration ===
@@ -524,6 +621,10 @@
         renderer.domElement.removeEventListener(
           "pointermove",
           onPointerMoveBound!,
+        );
+        renderer.domElement.removeEventListener(
+          "pointerleave",
+          onPointerLeaveBound!,
         );
         renderer.domElement.removeEventListener("click", onClickBound!);
       });
@@ -565,13 +666,16 @@
       resizeObs.observe(canvasContainer);
 
       const animate = () => {
-        controls?.update();
-        // Hover detection
-        if (pointerNDC && raycaster && camera) {
+        // OrbitControls.update() reports whether the camera actually moved.
+        const cameraMoved = controls?.update() === true;
+        // Hover detection — only when something changed. It used to raycast
+        // every frame forever, because pointerNDC stayed set after the first
+        // pointermove and was never cleared.
+        if ((pointerMoved || cameraMoved) && pointerNDC && raycaster && camera) {
+          pointerMoved = false;
           pointer.set(pointerNDC.x, pointerNDC.y);
           raycaster.setFromCamera(pointer, camera);
-          const meshes = roomMeshes.map((rm) => rm.mesh);
-          const hits = raycaster.intersectObjects(meshes, false);
+          const hits = raycaster.intersectObjects(pickTargets, false);
           hoveredRoomCode =
             hits.length > 0
               ? ((hits[0]!.object.userData.roomCode as string | undefined) ??
@@ -580,6 +684,9 @@
         }
         renderer.render(scene, camera);
         labelRenderer.render(scene, camera);
+        // Must run after labelRenderer.render(): it rewrites every label's
+        // inline `display` each frame, so culling before it would be undone.
+        cullOverlappingLabels();
         frameId = requestAnimationFrame(animate);
       };
 
@@ -603,6 +710,58 @@
       console.error("Building3DViewer init failed", err);
       errorMsg = "Failed to load the 3D viewer.";
       loading = false;
+    }
+  }
+
+  /**
+   * Hide labels that would land on top of one another. Without this every room
+   * gets a label at all times, so a building with a few dozen rooms renders an
+   * illegible pile (Physical Sciences: 38 labels, 101 overlapping pairs).
+   *
+   * Nearest-to-camera wins the space, floor markers outrank room pins, and the
+   * active/hovered room always survives so selecting from the sidebar can never
+   * point at a hidden label.
+   *
+   * ponytail: O(n²) sweep against already-placed boxes. Fine for the tens of
+   * rooms a building has; swap in a grid index if a building ever has hundreds.
+   */
+  function cullOverlappingLabels() {
+    if (!camera || !canvasContainer || !labelProjection) return;
+    const width = canvasContainer.clientWidth;
+    const height = canvasContainer.clientHeight;
+    if (width === 0 || height === 0) return;
+
+    const onScreen: Array<(typeof cssLabels)[number]> = [];
+    const boxes: LabelBox[] = [];
+
+    for (const entry of cssLabels) {
+      // CSS2DRenderer already hid it: off-screen, or on a filtered-out floor.
+      if (entry.el.style.display === "none") continue;
+      // Text never changes, so one layout read per label is enough.
+      if (entry.w === 0) {
+        entry.w = entry.el.offsetWidth;
+        entry.h = entry.el.offsetHeight;
+      }
+      labelProjection.setFromMatrixPosition(entry.obj.matrixWorld);
+      const depth = labelProjection.distanceTo(camera.position);
+      labelProjection.project(camera);
+      const focused =
+        entry.code !== null &&
+        (entry.code === activeRoomCode || entry.code === hoveredRoomCode);
+      onScreen.push(entry);
+      boxes.push({
+        x: (labelProjection.x * 0.5 + 0.5) * width,
+        y: (-labelProjection.y * 0.5 + 0.5) * height,
+        width: entry.w,
+        height: entry.h,
+        rank: focused ? -1 : entry.priority,
+        depth,
+      });
+    }
+
+    const keep = new Set(pickNonOverlappingLabels(boxes));
+    for (let i = 0; i < onScreen.length; i++) {
+      if (!keep.has(i)) onScreen[i]!.el.style.display = "none";
     }
   }
 
@@ -807,10 +966,41 @@
     return map;
   }
 
+  /**
+   * Accept one inferred position into `room_positions`. It goes through the
+   * same versioned endpoint as a drag, tagged `source: "inferred"` so the
+   * server refuses to overwrite anything a human placed.
+   */
+  async function acceptSuggestion(code: string, placement: InferredPlacement) {
+    const next = {
+      floor: placement.floor,
+      x: placement.posX,
+      y: placement.posY,
+    };
+    await autosaveRoomPosition(code, next, next, "inferred");
+  }
+
+  async function acceptAllSuggestions() {
+    if (acceptingSuggestions) return;
+    acceptingSuggestions = true;
+    // Snapshot: `suggestions` shrinks as each save lands in savedOverrides.
+    const entries = [...suggestions];
+    for (const [code, placement] of entries) {
+      await acceptSuggestion(code, placement);
+    }
+    const saved = entries.filter(([code]) => savedOverrides.has(code)).length;
+    acceptingSuggestions = false;
+    editorStatus = {
+      type: saved === entries.length ? "success" : "error",
+      message: `Saved ${saved} of ${entries.length} suggested positions.`,
+    };
+  }
+
   async function autosaveRoomPosition(
     roomCode: string,
     next: RoomPositionDraft,
     previous: RoomPositionDraft,
+    source: "manual" | "inferred" = "manual",
   ) {
     const room = buildingRooms.find((candidate) => candidate.code === roomCode);
     if (!room) return;
@@ -819,7 +1009,7 @@
     setRoomSavingState(roomCode, "saving");
     editorStatus = {
       type: "info",
-      message: `Saving ${roomCode}...`,
+      message: `Saving ${roomCode}…`,
     };
 
     try {
@@ -833,6 +1023,7 @@
             floor: next.floor,
             posX: String(next.x),
             posY: String(next.y),
+            source,
           },
         }),
       });
@@ -866,7 +1057,10 @@
           setRoomSavingState(roomCode, "failed");
           editorStatus = {
             type: "error",
-            message: `${roomCode} was not saved because the server has newer data.`,
+            message:
+              data.code === "manual_position"
+                ? `${roomCode} was not saved: an editor has already placed this room by hand.`
+                : `${roomCode} was not saved because the server has newer data.`,
           };
           return;
         }
@@ -916,8 +1110,30 @@
     }
   }
 
+  // `buildings` is empty until the campus dataset arrives, so calling init()
+  // straight from onMount made a deep link (`/building/<slug>/?3d=1`, which
+  // opens the viewer during bootstrap) dead-end on a false "no coordinates
+  // yet" error that never retried. Wait for this building's record instead.
+  $effect(() => {
+    const meta = buildingMeta;
+    const ready = appData().loaded;
+    untrack(() => {
+      if (initStarted) return;
+      if (meta) {
+        initStarted = true;
+        void init();
+        return;
+      }
+      // Only give up once the dataset is in and the building still isn't there.
+      if (ready && buildings.length > 0) {
+        initStarted = true;
+        errorMsg = "This building is not in the campus data yet.";
+        loading = false;
+      }
+    });
+  });
+
   onMount(() => {
-    init();
     return () => {
       if (frameId !== null) cancelAnimationFrame(frameId);
       resizeObs?.disconnect();
@@ -946,6 +1162,9 @@
       pointer = null;
       roomMeshes = [];
       floorGroups = [];
+      pickTargets = [];
+      cssLabels = [];
+      labelProjection = null;
       disposers = [];
     };
   });
@@ -974,7 +1193,11 @@
   transition:fade={overlayFade(reducedMotion.current)}
 >
   <div
+    bind:this={viewerFrameEl}
     class="viewer-frame"
+    role="dialog"
+    aria-modal="true"
+    aria-label={`3D view of ${name}`}
     in:fly={modalContentReveal(reducedMotion.current)}
     out:fly={modalContentDismiss(reducedMotion.current)}
   >
@@ -1004,6 +1227,8 @@
             {#each floorOptions as opt (opt.value)}
               <button
                 class="floor-pill"
+                type="button"
+                aria-pressed={selectedFloor === opt.value}
                 class:active={selectedFloor === opt.value}
                 onclick={() => (selectedFloor = opt.value)}
               >
@@ -1013,7 +1238,7 @@
           </div>
         </section>
 
-        <section class="viewer-section">
+        <section class="viewer-section rooms-section">
           <div class="rooms-header">
             <h3>Rooms</h3>
             <span class="rooms-count">{visibleRooms.length}</span>
@@ -1101,6 +1326,55 @@
                   Drag a room cylinder or change its floor. Changes autosave to
                   the server with a version check.
                 </p>
+                {#if suggestions.size > 0}
+                  <div class="suggest-block">
+                    <p class="editor-hint">
+                      {suggestions.size} unsaved room{suggestions.size === 1
+                        ? ""
+                        : "s"} can be placed from their room code. Floors are read
+                      from the code or directions; the spot on the floor is a corridor
+                      estimate — check them before saving.
+                    </p>
+                    <button
+                      class="suggest-accept-all"
+                      type="button"
+                      disabled={acceptingSuggestions}
+                      onclick={acceptAllSuggestions}
+                    >
+                      {acceptingSuggestions
+                        ? "Saving…"
+                        : `Save all ${suggestions.size}`}
+                    </button>
+                    <ul class="suggest-list">
+                      {#each [...suggestions] as [code, placement] (code)}
+                        <li class="suggest-item">
+                          <div class="suggest-row">
+                            <span class="suggest-code" title={code}>{code}</span
+                            >
+                            <span class="suggest-floor">F{placement.floor}</span
+                            >
+                            <span
+                              class="suggest-confidence"
+                              class:high={placement.confidence === "high"}
+                              class:medium={placement.confidence === "medium"}
+                              class:low={placement.confidence === "low"}
+                              >{placement.confidence}</span
+                            >
+                            <button
+                              class="suggest-accept"
+                              type="button"
+                              disabled={acceptingSuggestions ||
+                                savingRoomCodes.has(code)}
+                              onclick={() => acceptSuggestion(code, placement)}
+                              >Save</button
+                            >
+                          </div>
+                          <p class="suggest-reason">{placement.reason}</p>
+                        </li>
+                      {/each}
+                    </ul>
+                  </div>
+                {/if}
                 <p
                   class="editor-status"
                   class:error={editorStatus?.type === "error"}
@@ -1124,6 +1398,29 @@
         {/if}
         {#if errorMsg}
           <div class="viewer-status error">{errorMsg}</div>
+        {/if}
+        {#if (footprintApproximate || footprintUncertain) && !errorMsg && !loading}
+          <div class="viewer-provisional">
+            <span>
+              {#if footprintApproximate}
+                Approximate shape. OpenStreetMap has no footprint for this
+                building yet, so this is a stand-in box around its coordinates —
+                the outline is not the real building.
+              {:else}
+                This outline may belong to a neighbouring building: the closest
+                OpenStreetMap footprint{footprintOsmName
+                  ? ` (“${footprintOsmName}”)`
+                  : ""} does not contain this building’s coordinates.
+              {/if}
+            </span>
+            {#if buildingMeta}
+              <a
+                href={`https://www.openstreetmap.org/edit#map=19/${buildingMeta.lat}/${buildingMeta.lon}`}
+                target="_blank"
+                rel="noreferrer">Fix it in OpenStreetMap</a
+              >
+            {/if}
+          </div>
         {/if}
         <div bind:this={canvasContainer} class="viewer-canvas"></div>
         <div bind:this={labelContainer} class="viewer-labels"></div>
@@ -1308,7 +1605,20 @@
   }
   .rooms-count {
     font-size: 0.75rem;
-    color: hsl(0, 0%, 50%);
+    /* Was hsl(0,0%,50%) on the hsl(0,0%,99%) sidebar: 3.8:1, under AA. */
+    color: hsl(0, 0%, 40%);
+  }
+  /*
+   * The rooms list takes whatever height is left instead of a fixed 16rem.
+   * The fixed cap used to fill ~90% of the sidebar on narrow screens, so the
+   * list swallowed the sidebar's scroll and the note / reset / editor controls
+   * below it could not be reached.
+   */
+  .rooms-section {
+    flex: 1 1 auto;
+    min-height: 8rem;
+    display: flex;
+    flex-direction: column;
   }
   .room-list {
     list-style: none;
@@ -1317,7 +1627,8 @@
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    max-height: 16rem;
+    flex: 1 1 auto;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
   }
@@ -1398,13 +1709,16 @@
   }
   .room-empty {
     font-size: 0.8125rem;
-    color: hsl(0, 0%, 50%);
+    /* Was hsl(0,0%,50%) on the hsl(0,0%,99%) sidebar: 3.8:1, under AA. */
+    color: hsl(0, 0%, 40%);
     padding: 0.25rem 0.125rem;
   }
 
   .viewer-note {
+    flex: 0 0 auto;
     font-size: 0.6875rem;
-    color: hsl(0, 0%, 45%);
+    /* Was hsl(0,0%,45%) on this tinted panel: ~4.3:1, under AA. */
+    color: hsl(0, 0%, 36%);
     line-height: 1.4;
     background-color: hsl(45, 90%, 96%);
     border: 1px solid hsl(45, 92%, 88%);
@@ -1413,8 +1727,10 @@
   }
 
   .viewer-reset {
+    flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.375rem;
     font-size: 0.75rem;
     padding: 0.4rem 0.625rem;
@@ -1491,7 +1807,8 @@
   .editor-hint {
     margin: 0;
     font-size: 0.6875rem;
-    color: hsl(0, 0%, 45%);
+    /* Was hsl(0,0%,45%) on this tinted panel: ~4.3:1, under AA. */
+    color: hsl(0, 0%, 36%);
     line-height: 1.4;
     background-color: hsl(217, 91%, 97%);
     border: 1px solid hsl(217, 91%, 90%);
@@ -1504,6 +1821,138 @@
     line-height: 1.35;
     color: hsl(217, 72%, 30%);
   }
+
+  .suggest-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    min-width: 0;
+  }
+  .suggest-accept-all {
+    align-self: flex-start;
+    max-width: 100%;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 0.3rem 0.6rem;
+    border-radius: 0.5rem;
+    border: 1px solid hsl(217, 60%, 70%);
+    background-color: hsl(217, 91%, 97%);
+    color: hsl(217, 72%, 30%);
+    cursor: pointer;
+  }
+  .suggest-accept-all:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+  .suggest-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    max-height: 14rem;
+    overflow-y: auto;
+  }
+  .suggest-item {
+    border: 1px solid hsl(0, 0%, 90%);
+    border-radius: 0.5rem;
+    padding: 0.375rem 0.5rem;
+    min-width: 0;
+  }
+  .suggest-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    min-width: 0;
+  }
+  .suggest-code {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .suggest-floor {
+    font-size: 0.625rem;
+    color: hsl(0, 0%, 40%);
+  }
+  .suggest-confidence {
+    font-size: 0.5625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    padding: 0.1rem 0.3rem;
+    border-radius: 999px;
+  }
+  .suggest-confidence.high {
+    background-color: hsl(145, 60%, 94%);
+    color: hsl(145, 55%, 25%);
+  }
+  .suggest-confidence.medium {
+    background-color: hsl(45, 90%, 93%);
+    color: hsl(35, 70%, 28%);
+  }
+  .suggest-confidence.low {
+    background-color: hsl(5, 80%, 95%);
+    color: hsl(5, 60%, 34%);
+  }
+  .suggest-accept {
+    font-size: 0.625rem;
+    font-weight: 600;
+    padding: 0.2rem 0.45rem;
+    border-radius: 0.4rem;
+    border: 1px solid hsl(0, 0%, 82%);
+    background-color: white;
+    cursor: pointer;
+  }
+  .suggest-accept:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  .suggest-reason {
+    margin: 0.25rem 0 0;
+    font-size: 0.625rem;
+    line-height: 1.35;
+    color: hsl(0, 0%, 45%);
+  }
+
+  .viewer-provisional {
+    position: absolute;
+    top: 0.75rem;
+    left: 50%;
+    translate: -50% 0;
+    /*
+     * `width`, not `max-width`. Shrink-to-fit collapsed this to its minimum
+     * content width on a narrow stage, turning a two-line notice into a
+     * 160px-wide column that filled the full height of the 3D view and covered
+     * both the attribution and every room label.
+     */
+    width: min(32rem, calc(100% - 1.5rem));
+    box-sizing: border-box;
+    max-height: calc(100% - 3.5rem);
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.375rem;
+    background-color: hsl(45, 90%, 96%);
+    border: 1px solid hsl(45, 92%, 84%);
+    color: hsl(35, 60%, 24%);
+    border-radius: 0.625rem;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    z-index: 5;
+  }
+  .viewer-provisional a {
+    color: hsl(217, 72%, 36%);
+    text-decoration: underline;
+    white-space: nowrap;
+  }
   .editor-status.success {
     color: hsl(145, 55%, 28%);
   }
@@ -1515,6 +1964,8 @@
   .viewer-stage {
     position: relative;
     flex: 1 1 auto;
+    /* The 3D view is the point of this dialog; never let it collapse. */
+    min-height: 12rem;
     background-color: hsl(212, 24%, 95%);
     overflow: hidden;
   }
@@ -1582,7 +2033,9 @@
     border-radius: 0.375rem;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
     white-space: nowrap;
-    transform: translate(-50%, -130%);
+    /* No `transform` here: CSS2DRenderer writes an inline transform on every
+       frame, so anything set from the stylesheet is dead weight. Offset the
+       label via its CSS2DObject position instead. */
     pointer-events: none;
   }
   :global(.viewer-floor-label) {
@@ -1663,6 +2116,9 @@
       height: 100%;
       border-radius: 0;
     }
+    .viewer-title {
+      align-items: flex-start;
+    }
     .viewer-body {
       flex-direction: column;
     }
@@ -1670,10 +2126,49 @@
       width: 100%;
       border-right: none;
       border-bottom: 1px solid hsl(0, 0%, 92%);
-      max-height: 16rem;
+      /* Was a flat 16rem, which ate 45% of a 568px-tall phone and left the
+         3D view 184px. Scale with the viewport so the model keeps the room. */
+      max-height: min(14rem, 34vh);
+      flex: 0 0 auto;
+    }
+    /*
+     * One scroll surface on narrow screens. The desktop layout gives the list
+     * its own scroller inside a sidebar tall enough to also show the controls
+     * beneath it; at this width there is no such room, and a scroller inside a
+     * scroller meant a drag over the list never reached the sidebar, leaving
+     * the note, Reset camera and the editor panel unreachable.
+     */
+    .rooms-section {
+      flex: 0 0 auto;
+      min-height: 0;
+    }
+    .room-list {
+      flex: 0 0 auto;
+      overflow-y: visible;
+    }
+    /* Touch targets: these were 25–31px tall, under the 44px minimum. */
+    .floor-pill,
+    .room-item,
+    .viewer-reset,
+    .edit-toggle {
+      min-height: 2.75rem;
+    }
+    .suggest-accept,
+    .suggest-accept-all {
+      min-height: 2.25rem;
+    }
+    .viewer-provisional {
+      /* Tighter on a short stage so the notice stays a notice, not a curtain. */
+      top: 0.5rem;
+      width: calc(100% - 1rem);
+      padding: 0.4rem 0.55rem;
+      font-size: 0.6875rem;
+      gap: 0.25rem;
     }
     .room-info-card {
       width: calc(100% - 1.75rem);
+      /* Keep the attribution readable underneath the card. */
+      bottom: 1.75rem;
     }
   }
 </style>

@@ -50,6 +50,7 @@ export async function getAllRoomsCached(): Promise<RoomData[]> {
     .select({
       id: roomsTable.id,
       code: roomsTable.roomCode,
+      fullName: roomsTable.fullName,
       directions: roomsTable.directions,
       building: {
         name: buildingsTable.buildingName,
@@ -116,6 +117,7 @@ export async function getAllRooms(): Promise<RoomData[]> {
       .select({
         id: roomsTable.id,
         code: roomsTable.roomCode,
+        fullName: roomsTable.fullName,
         directions: roomsTable.directions,
         building: {
           name: buildingsTable.buildingName,
@@ -151,6 +153,7 @@ export async function getRoomByCode(code: string) {
       .select({
         id: roomsTable.id,
         code: roomsTable.roomCode,
+        fullName: roomsTable.fullName,
         directions: roomsTable.directions,
         building: {
           name: buildingsTable.buildingName,
@@ -187,12 +190,18 @@ export async function searchRooms(searchString: string) {
     const data = await db
       .select({
         value: roomsTable.roomCode,
+        fullName: roomsTable.fullName,
       })
       .from(roomsTable)
       .leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))
       .leftJoin(collegesTable, eq(collegesTable.id, roomsTable.collegeId))
       .leftJoin(divisionsTable, eq(divisionsTable.id, roomsTable.divisionId))
-      .where(like(roomsTable.roomCode, `%${escaped}%`))
+      // Callers upper-case the query, so match both columns case-insensitively:
+      // full names are mixed case ("DSDS Main Lecture Hall") (#875).
+      .where(
+        sql`upper(${roomsTable.roomCode}) LIKE ${`%${escaped.toUpperCase()}%`}
+          OR upper(${roomsTable.fullName}) LIKE ${`%${escaped.toUpperCase()}%`}`,
+      )
       .limit(6);
     if (data.length === 0) return null;
     return data;
@@ -210,6 +219,7 @@ export async function getBuildingRooms(
       .select({
         id: roomsTable.id,
         code: roomsTable.roomCode,
+        fullName: roomsTable.fullName,
         directions: roomsTable.directions,
         building: {
           name: buildingsTable.buildingName,
@@ -244,6 +254,7 @@ export async function getCollegeRooms(collegeId: number): Promise<RoomData[]> {
       .select({
         id: roomsTable.id,
         code: roomsTable.roomCode,
+        fullName: roomsTable.fullName,
         directions: roomsTable.directions,
         building: {
           name: buildingsTable.buildingName,
@@ -280,6 +291,7 @@ export async function getDivisionRooms(
       .select({
         id: roomsTable.id,
         code: roomsTable.roomCode,
+        fullName: roomsTable.fullName,
         directions: roomsTable.directions,
         building: {
           name: buildingsTable.buildingName,

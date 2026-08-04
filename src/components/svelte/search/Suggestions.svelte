@@ -63,7 +63,11 @@
   );
 
   type AliasHit = { alias: string; value: string };
-  type RoomHit = { value: string; category: "room" };
+  type RoomHit = {
+    value: string;
+    category: "room";
+    fullName?: string | null;
+  };
 
   let aliasResults = $state<AliasHit[]>([]);
   let roomResults = $state<RoomHit[]>([]);
@@ -115,7 +119,7 @@
       try {
         const response = await fetch(url);
         const roomsFetch = (await response.json()) as {
-          data?: { value: string }[] | null;
+          data?: { value: string; fullName?: string | null }[] | null;
         };
         if (cancelled) return;
         if (response.ok && Array.isArray(roomsFetch?.data)) {
@@ -185,7 +189,11 @@
       </p>
     {:else}
       {#each roomResults as roomResult (roomResult.value)}
-        <Suggestion {...roomResult} />
+        <Suggestion
+          value={roomResult.value}
+          category={roomResult.category}
+          secondary={roomResult.fullName}
+        />
       {/each}
     {/if}
   {/if}
@@ -209,14 +217,37 @@
     contain: layout style;
   }
 
+  @media (max-width: 48rem) {
+    .suggestions-container {
+      gap: 0;
+      padding: 0.125rem 0 0.5rem;
+      border-top: none;
+    }
+
+    .suggestions-header {
+      padding: 0.5rem 0.25rem;
+      font-size: 0.75rem;
+    }
+  }
+
   .suggestions-header {
     margin: 0;
-    padding: 0.125rem 0.5rem 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 600;
+    padding: 8px;
+    font-family: Inter, system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
     letter-spacing: 0.02em;
     text-transform: uppercase;
-    color: hsl(0, 0%, 45%);
+    color: #7b7c8d;
+  }
+
+  @media (min-width: 48.0625rem) {
+    .suggestions-container {
+      gap: 0;
+      padding: 16px 20px;
+      border-top: none;
+      max-height: min(60vh, 28rem);
+    }
   }
 
   .alias-hint {

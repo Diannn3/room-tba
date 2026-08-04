@@ -1,4 +1,12 @@
 import type { LngLat, OsmBuildingFootprint } from "./overpass";
+import {
+  inferBuildingPlacements,
+  maxInferredFloor,
+  pointInPolygon as pointInPolygonLocal,
+  type RoomPlacementInput,
+} from "./room-placement";
+
+export { maxInferredFloor };
 
 export type LocalPolygonData = {
   /** Polygon vertices in local meters (x = east, y = north), centered at origin. */
@@ -91,23 +99,6 @@ export function footprintToLocalPolygon(
   };
 }
 
-function pointInPolygonLocal(
-  point: { x: number; y: number },
-  cycle: { x: number; y: number }[],
-): boolean {
-  let inside = false;
-  for (let i = 0, j = cycle.length - 1; i < cycle.length; j = i++) {
-    const a = cycle[i];
-    const b = cycle[j];
-    if (!a || !b) continue;
-    const intersects =
-      a.y > point.y !== b.y > point.y &&
-      point.x < ((b.x - a.x) * (point.y - a.y)) / (b.y - a.y + 1e-12) + a.x;
-    if (intersects) inside = !inside;
-  }
-  return inside;
-}
-
 /** Mulberry32 — small deterministic PRNG seeded by string hash. */
 function seededRng(seed: string): () => number {
   let h = 2166136261;
@@ -126,65 +117,37 @@ function seededRng(seed: string): () => number {
 }
 
 /**
- * Heuristic floor extraction from common UPLB room codes:
- * looks for the first multi-digit number; the leading digit is used as floor.
- * Examples:
- *   "PSCI 305" -> 3
- *   "Math 101" -> 1
- *   "Lab"      -> null
- */
-function inferFloorFromCode(roomCode: string): number | null {
-  const match = roomCode.match(/(\d{2,4})/);
-  if (!match) return null;
-  const head = match[1]?.[0];
-  if (!head) return null;
-  const f = parseInt(head, 10);
-  if (!Number.isFinite(f) || f <= 0 || f > 12) return null;
-  return f;
-}
-
-/**
- * Distribute room codes across floors and place each one at a stable mock
- * position inside the polygon. Positions are seeded by the room code so they
- * don't jump around between renders.
+ * Place every room of a building inside the polygon.
  *
- * `overrides` lets saved positions (from the editor) win over the seeded mock
- * placement. The override is matched by room code; floor/x/y come straight
- * from the saved record.
+ * Three tiers, best first:
+ *  1. `overrides` — positions saved by an editor. Always win.
+ *  2. Inference (`inferBuildingPlacements`) — floor from the room code or
+ *     directions, x/y from the corridor heuristic.
+ *  3. Seeded random inside the polygon, round-robined across floors, for codes
+ *     that say nothing (`CDC DECIMU`). Visibly arbitrary, but the room still
+ *     exists in the model instead of vanishing.
  */
-export function mockPlaceRooms(
-  codes: string[],
+export function placeRooms(
+  rooms: RoomPlacementInput[],
   polygon: LocalPolygonData,
   floorCount: number,
   overrides?: Map<string, { floor: number; x: number; y: number }>,
 ): RoomPlacement[] {
-  if (codes.length === 0 || polygon.points.length === 0) return [];
+  if (rooms.length === 0 || polygon.points.length === 0) return [];
 
   const floors = Math.max(1, Math.floor(floorCount));
-  const inferred: { code: string; floor: number | null }[] = codes.map(
-    (code) => ({
-      code,
-      floor: inferFloorFromCode(code),
-    }),
-  );
+  const skip = new Set(overrides?.keys() ?? []);
+  const inferred = inferBuildingPlacements(rooms, polygon, floors, skip);
 
-  // Buckets per floor (1..floors). Codes whose inferred floor exceeds the known
-  // floor count are clamped down. Codes without an inferred floor get
-  // round-robined across floors so they're not all on floor 1. Codes that have
-  // an editor-saved override are skipped here — they're emitted directly below.
+  // Codes with neither an override nor a signal get round-robined across
+  // floors so they're not all stacked on floor 1.
   const buckets: string[][] = Array.from({ length: floors }, () => []);
   let rrIndex = 0;
-  for (const item of inferred) {
-    if (overrides?.has(item.code)) continue;
-    let floor: number;
-    if (item.floor !== null) {
-      floor = Math.min(item.floor, floors);
-    } else {
-      floor = (rrIndex % floors) + 1;
-      rrIndex++;
-    }
-    const bucket = buckets[floor - 1];
-    if (bucket) bucket.push(item.code);
+  for (const room of rooms) {
+    if (skip.has(room.roomCode) || inferred.has(room.roomCode)) continue;
+    const floor = (rrIndex % floors) + 1;
+    rrIndex++;
+    buckets[floor - 1]?.push(room.roomCode);
   }
 
   // Compute polygon bounding box for sampling.
@@ -206,16 +169,25 @@ export function mockPlaceRooms(
   // Emit overrides first so they always appear (even if their saved floor is
   // outside the current `floors` count, we clamp it).
   if (overrides) {
-    for (const code of codes) {
-      const o = overrides.get(code);
+    for (const { roomCode } of rooms) {
+      const o = overrides.get(roomCode);
       if (!o) continue;
       placements.push({
-        code,
+        code: roomCode,
         floor: Math.max(1, Math.min(floors, Math.floor(o.floor))),
         x: o.x,
         y: o.y,
       });
     }
+  }
+
+  for (const [code, placement] of inferred) {
+    placements.push({
+      code,
+      floor: placement.floor,
+      x: placement.posX,
+      y: placement.posY,
+    });
   }
 
   for (let f = 1; f <= floors; f++) {
@@ -249,6 +221,42 @@ export function mockPlaceRooms(
   return placements;
 }
 
+/** Side length (metres) of the stand-in footprint used when OSM has nothing. */
+const APPROX_FOOTPRINT_SIDE_M = 36;
+
+/**
+ * A deliberately plain square around the building's own lat/lon, for the ~3
+ * class buildings OpenStreetMap has not mapped yet. It is not the real shape
+ * and must always be labelled as approximate in the UI — the point is that
+ * rooms can still be placed and browsed instead of dead-ending on an error.
+ *
+ * ponytail: a square, not a guessed outline. Replace it by mapping the building
+ * in OSM, not by inventing more geometry here.
+ */
+export function approximateFootprint(
+  lat: number,
+  lon: number,
+  sideMeters = APPROX_FOOTPRINT_SIDE_M,
+): OsmBuildingFootprint {
+  const half = sideMeters / 2;
+  const dLat = half / METERS_PER_DEGREE_LAT;
+  const dLon = half / (Math.cos((lat * Math.PI) / 180) * METERS_PER_DEGREE_LAT);
+  const outline: LngLat[] = [
+    [lon - dLon, lat - dLat],
+    [lon + dLon, lat - dLat],
+    [lon + dLon, lat + dLat],
+    [lon - dLon, lat + dLat],
+    [lon - dLon, lat - dLat],
+  ];
+  return {
+    outline,
+    levels: null,
+    heightMeters: null,
+    osmName: null,
+    containsPoint: true,
+  };
+}
+
 /** Decide a floor count if OSM didn't tell us. */
 export function defaultFloorCount(
   footprint: OsmBuildingFootprint,
@@ -262,13 +270,64 @@ export function defaultFloorCount(
   return 3;
 }
 
-/** Highest floor implied by the room codes (or null if none look numeric). */
-export function maxInferredFloor(codes: string[]): number | null {
-  let max: number | null = null;
-  for (const code of codes) {
-    const f = inferFloorFromCode(code);
-    if (f === null) continue;
-    if (max === null || f > max) max = f;
+/** A label's screen-space box, in CSS pixels. */
+export type LabelBox = {
+  /** Centre of the label on screen. */
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  /**
+   * Lower wins the space when two labels collide. The viewer uses 0 for floor
+   * markers, 1 for room pins and -1 for the active/hovered room.
+   */
+  rank: number;
+  /** Distance from the camera; nearer labels win ties. */
+  depth: number;
+};
+
+/**
+ * Greedy screen-space label declutter: walk the labels best-first and keep one
+ * only if its box misses everything already kept.
+ *
+ * The 3D viewer draws one label per room, so a building with a few dozen rooms
+ * painted an illegible pile (Physical Sciences: 33 labels, 415 overlapping
+ * pairs at 320px). Returns the indices to keep, in input order.
+ *
+ * ponytail: O(n²) against the kept set. Fine for the tens of labels a building
+ * has; swap in a grid index if one ever has hundreds.
+ */
+export function pickNonOverlappingLabels(labels: LabelBox[]): number[] {
+  const order = labels
+    .map((label, index) => ({ label, index }))
+    .sort(
+      (a, b) =>
+        a.label.rank - b.label.rank ||
+        a.label.depth - b.label.depth ||
+        a.index - b.index,
+    );
+
+  const kept: Array<{ l: number; r: number; t: number; b: number }> = [];
+  const keptIndices: number[] = [];
+
+  for (const { label, index } of order) {
+    const box = {
+      l: label.x - label.width / 2,
+      r: label.x + label.width / 2,
+      t: label.y - label.height / 2,
+      b: label.y + label.height / 2,
+    };
+    const clashes = kept.some(
+      (other) =>
+        box.l < other.r &&
+        other.l < box.r &&
+        box.t < other.b &&
+        other.t < box.b,
+    );
+    if (clashes) continue;
+    kept.push(box);
+    keptIndices.push(index);
   }
-  return max;
+
+  return keptIndices.sort((a, b) => a - b);
 }

@@ -10,6 +10,8 @@ import {
 } from "./src/constants/community-links.ts";
 import { campusCommunity, campusSite } from "./src/campus.config.ts";
 
+import tailwindcss from "@tailwindcss/vite";
+
 /** Local E2E + integration preview — Vercel adapter does not support `astro preview`. */
 const e2eNodeAdapter = process.env.ASTRO_E2E_NODE === "1";
 
@@ -172,12 +174,16 @@ export default defineConfig({
     preview: {
       host: "127.0.0.1",
     },
+
     server: {
       host: "localhost",
     },
+
     optimizeDeps: {
       exclude: ["@electric-sql/pglite"],
     },
+
+    plugins: [tailwindcss()],
   },
 
   redirects: {

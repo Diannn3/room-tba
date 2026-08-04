@@ -6,6 +6,7 @@ import { parseImageUrl } from "@lib/r2-upload-core";
 import {
   EditConflictError,
   DuplicateNameError,
+  ManualPositionError,
   updateRoom,
   updateRoomPosition,
 } from "@lib/services/admin-service";
@@ -20,7 +21,12 @@ type RoomPatchBody = {
   divisionId?: number | null;
   imageUrl?: string | null;
   version?: number;
-  position?: { floor: number; posX: string; posY: string };
+  position?: {
+    floor: number;
+    posX: string;
+    posY: string;
+    source?: "manual" | "inferred";
+  };
 };
 
 function json(data: unknown, status = 200) {
@@ -42,7 +48,10 @@ function invalidPosition(value: unknown) {
     !Number.isInteger(position.floor) ||
     position.floor < 1 ||
     !Number.isFinite(Number(position.posX)) ||
-    !Number.isFinite(Number(position.posY))
+    !Number.isFinite(Number(position.posY)) ||
+    (position.source !== undefined &&
+      position.source !== "manual" &&
+      position.source !== "inferred")
   );
 }
 
@@ -126,6 +135,7 @@ export const PATCH: APIRoute = async ({ cookies, params, request }) => {
           floor: body.position.floor,
           posX: String(body.position.posX),
           posY: String(body.position.posY),
+          source: body.position.source ?? "manual",
         },
         expectedVersion,
         auth.editedBy,
@@ -142,6 +152,17 @@ export const PATCH: APIRoute = async ({ cookies, params, request }) => {
       return json(
         {
           error: "This room was changed by another editor.",
+          latest: err.latest,
+        },
+        409,
+      );
+    }
+
+    if (err instanceof ManualPositionError) {
+      return json(
+        {
+          error: err.message,
+          code: "manual_position",
           latest: err.latest,
         },
         409,

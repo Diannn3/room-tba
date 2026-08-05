@@ -46,6 +46,7 @@
     trackSponsorImpression,
   } from "@lib/sponsor-tracking";
   import { fade } from "svelte/transition";
+  import { metersToLngLatCircle } from "@lib/geolocation";
   import { sumRouteLegs } from "@lib/campus-route";
   import MapLibreGlDirections from "@maplibre/maplibre-gl-directions";
   import CalendarDays from "@lucide/svelte/icons/calendar-days";
@@ -341,6 +342,9 @@
   const JEEPNEY_ROUTE_SOURCE_ID = "jeepney-route-line";
   const JEEPNEY_ROUTE_LAYER_ID = "jeepney-route-line";
   const JEEPNEY_ROUTE_LAYER_CASING_ID = "jeepney-route-line-casing";
+  const USER_LOCATION_ACCURACY_SOURCE_ID = "user-location-accuracy";
+  const USER_LOCATION_ACCURACY_FILL_ID = "user-location-accuracy-fill";
+  const USER_LOCATION_ACCURACY_LINE_ID = "user-location-accuracy-line";
   const JEEPNEY_ROUTE_WIDTH = 5;
   const JEEPNEY_ROUTE_CASING_WIDTH = 8;
   const jeepneyRouteGeometryCache = new Map<string, ResolvedRouteGeometry>();
@@ -2319,6 +2323,102 @@
     return () => {
       cancelled = true;
     };
+  });
+
+  $effect(() => {
+    const map = mapStore.mapInstance;
+    const coords = locationStore.coords;
+    const accuracyMeters = locationStore.accuracyMeters;
+    if (!map) return;
+
+    const clearAccuracy = () => {
+      try {
+        if (map.getLayer(USER_LOCATION_ACCURACY_FILL_ID)) {
+          map.removeLayer(USER_LOCATION_ACCURACY_FILL_ID);
+        }
+        if (map.getLayer(USER_LOCATION_ACCURACY_LINE_ID)) {
+          map.removeLayer(USER_LOCATION_ACCURACY_LINE_ID);
+        }
+        if (map.getSource(USER_LOCATION_ACCURACY_SOURCE_ID)) {
+          map.removeSource(USER_LOCATION_ACCURACY_SOURCE_ID);
+        }
+      } catch {
+        // Style may not be ready.
+      }
+    };
+
+    if (!coords || accuracyMeters == null || accuracyMeters <= 0) {
+      clearAccuracy();
+      return;
+    }
+
+    const featureCollection = {
+      type: "FeatureCollection" as const,
+      features: [
+        {
+          type: "Feature" as const,
+          properties: {},
+          geometry: metersToLngLatCircle(coords, accuracyMeters),
+        },
+      ],
+    };
+
+    const draw = () => {
+      if (!map.getSource(USER_LOCATION_ACCURACY_SOURCE_ID)) {
+        map.addSource(USER_LOCATION_ACCURACY_SOURCE_ID, {
+          type: "geojson",
+          data: featureCollection,
+        });
+      } else {
+        const source = map.getSource(USER_LOCATION_ACCURACY_SOURCE_ID) as
+          | mapGl.GeoJSONSource
+          | undefined;
+        source?.setData(featureCollection);
+      }
+
+      if (!map.getLayer(USER_LOCATION_ACCURACY_FILL_ID)) {
+        map.addLayer({
+          id: USER_LOCATION_ACCURACY_FILL_ID,
+          type: "fill",
+          source: USER_LOCATION_ACCURACY_SOURCE_ID,
+          paint: {
+            "fill-color": "#4285f4",
+            "fill-opacity": 0.12,
+          },
+        });
+      }
+      if (!map.getLayer(USER_LOCATION_ACCURACY_LINE_ID)) {
+        map.addLayer({
+          id: USER_LOCATION_ACCURACY_LINE_ID,
+          type: "line",
+          source: USER_LOCATION_ACCURACY_SOURCE_ID,
+          paint: {
+            "line-color": "#4285f4",
+            "line-width": 1.5,
+            "line-opacity": 0.45,
+          },
+        });
+      }
+    };
+
+    try {
+      draw();
+      return;
+    } catch {
+      const onStyleData = () => {
+        try {
+          draw();
+          map.off("styledata", onStyleData);
+        } catch {
+          // keep retrying until style accepts the layer
+        }
+      };
+      map.on("styledata", onStyleData);
+      return () => {
+        map.off("styledata", onStyleData);
+        clearAccuracy();
+      };
+    }
   });
 
   $effect(() => {

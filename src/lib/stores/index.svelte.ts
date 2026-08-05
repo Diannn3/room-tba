@@ -142,9 +142,9 @@ import {
   ModalStore,
   QueryStore,
   ToastStore,
-  MainControlsStore,
   FloatingControlPanelStore,
   SidebarStore,
+  SidePanelStore,
 } from "./ui-stores.svelte";
 import {
   MapStore,
@@ -986,7 +986,6 @@ export const toastStore = new ToastStore();
 export const locationStore = new LocationStore();
 export const mapStore = new MapStore();
 export const mapViewStore = new MapViewStore();
-export const sidePanelStore = new MainControlsStore();
 export const floatingControlPanelStore = new FloatingControlPanelStore();
 export const mapToolsStore = new MapToolsStore();
 export const editorChromeStore = new EditorChromeStore();
@@ -1007,6 +1006,7 @@ export const building3DStore = new Building3DStore();
 export const adminAuthStore = new AdminAuthStore();
 export const proposalsStore = new ProposalsStore();
 export const sidebarStore = new SidebarStore();
+export const sidePanelStore = new SidePanelStore();
 
 // Map modes (edit, jeepney routes, Makiling terrain) are mutually exclusive.
 registerMapMode("edit", {

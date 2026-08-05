@@ -48,6 +48,7 @@
   import type { FinalExamRow, RoomData } from "@lib/types";
   import Classes from "./Classes.svelte";
   import FinalExamsList from "./FinalExamsList.svelte";
+  import FollowPrompt from "@ui/community/FollowPrompt.svelte";
   import TermSelector from "@ui/TermSelector.svelte";
   import BuildingResult from "@ui/controls/BuildingResult.svelte";
 
@@ -911,6 +912,15 @@
           <FinalExamsList exams={finalExams} />
         {/if}
       </section>
+    {/if}
+
+    <!-- Last child of the panel, and only once the schedule has actually
+         landed: the reader has their answer, and nothing above this can be
+         pushed around by it appearing. Asks at most once, ever. -->
+    {#if !roomClassesStore.loading}
+      <FollowPrompt
+        note="Room and class data changes through the term. Fixes, new features, and each term's schedule drop get posted on Facebook and Instagram."
+      />
     {/if}
   {:else if currentRoom.notFound}
     <p>Room not found.</p>

@@ -23,6 +23,7 @@ const structuredData = jsonLd(
   {description}
   canonicalPath="/wiki/fork-for-your-campus"
   {structuredData}
+  crumb="Fork for your campus"
 >
   <article class="wiki-article">
     <header class="article-hero">
@@ -36,7 +37,7 @@ const structuredData = jsonLd(
       </p>
       <p class="article-meta">
         Current as of v2.1.x. If the repo has moved, the file paths below are
-        still the map — re-check them.
+        still the map. Re-check them.
       </p>
       <WikiProvenance sourcePath="src/pages/wiki/fork-for-your-campus.astro" />
     </header>
@@ -124,7 +125,7 @@ cp .env.example .env.local</code></pre>
         Create a project. In SQL settings, copy the <strong>session pooler</strong>
         connection string (the one ending in <code>*.pooler.supabase.com</code>).
         Paste it as <code>DATABASE_URL</code> in <code>.env.local</code>. Set
-        <code>ADMIN_PASSWORD</code> to something long and random — you need it
+        <code>ADMIN_PASSWORD</code> to something long and random. You need it
         to log into the editor.
       </p>
 
@@ -137,7 +138,7 @@ bunx drizzle-kit push</code></pre>
         with an empty campus.
       </p>
 
-      <h3>4. Run <code>bun run fork:init</code> — it rewrites <code>src/campus.config.ts</code></h3>
+      <h3>4. Run <code>bun run fork:init</code>, which rewrites <code>src/campus.config.ts</code></h3>
       <pre><code>bun run fork:init</code></pre>
       <p>
         The script asks for your campus name, site URL, map center, bounds,
@@ -147,12 +148,12 @@ bunx drizzle-kit push</code></pre>
         to review. You can also edit the file by hand; these are its sections:
       </p>
       <ul>
-        <li><code>campusSite</code> — <code>url</code>, <code>name</code>, <code>title</code>, <code>description</code>.</li>
-        <li><code>campusMap</code> — <code>maxBounds</code> (the lng/lat box that keeps the camera on your campus) and <code>defaultCamera</code> (<code>center: [lng, lat]</code>, <code>zoom</code>, <code>pitch</code>, <code>bearing</code>).</li>
-        <li><code>campusTerrain</code> — the 3D terrain source, bounds, and camera. <code>enabled: false</code> gives a flat map with no terrain controls anywhere.</li>
-        <li><code>campusTransit</code> — the campus transit overlay. <code>enabled: false</code> hides the map layer, sidebar entry, deep links, and sitemap entries; <code>label</code> renames the menu entry (UPLB says jeepney, yours may say shuttle).</li>
-        <li><code>campusTestFixtures</code> — coordinates the E2E suite seeds its test building and dorm at. Keep them inside your bounds and the Playwright suite runs unchanged.</li>
-        <li><code>campusCommunity</code> — your org, GitHub, Discord, and Messenger links. Delete entries you do not have.</li>
+        <li><code>campusSite</code>: <code>url</code>, <code>name</code>, <code>title</code>, <code>description</code>.</li>
+        <li><code>campusMap</code>: <code>maxBounds</code> (the lng/lat box that keeps the camera on your campus) and <code>defaultCamera</code> (<code>center: [lng, lat]</code>, <code>zoom</code>, <code>pitch</code>, <code>bearing</code>).</li>
+        <li><code>campusTerrain</code>: the 3D terrain source, bounds, and camera. <code>enabled: false</code> gives a flat map with no terrain controls anywhere.</li>
+        <li><code>campusTransit</code>: the campus transit overlay. <code>enabled: false</code> hides the map layer, sidebar entry, deep links, and sitemap entries; <code>label</code> renames the menu entry (UPLB says jeepney, yours may say shuttle).</li>
+        <li><code>campusTestFixtures</code>: coordinates the E2E suite seeds its test building and dorm at. Keep them inside your bounds and the Playwright suite runs unchanged.</li>
+        <li><code>campusCommunity</code>: your org, GitHub, Discord, and Messenger links. Delete entries you do not have.</li>
       </ul>
       <p>
         The rest of the app (<code>site.ts</code>, <code>map-terrain.ts</code>,
@@ -201,16 +202,16 @@ bunx drizzle-kit push</code></pre>
       </p>
       <p>
         <strong>A seed script.</strong> Run <code>bun run seed:sample</code>
-        first — it loads a small fictional campus
+        first. It loads a small fictional campus
         (<code>data/sample-campus/</code>) into an empty database so the whole
         app works before you have any real data. For your first real bulk load,
         replace the sample JSON with your campus and reuse
-        <code>scripts/seed-sample-campus.ts</code> — Drizzle upsert, safe to
+        <code>scripts/seed-sample-campus.ts</code>: a Drizzle upsert, safe to
         rerun. Walkthrough: <code>docs/fork-data-guide.md</code>.
       </p>
       <p>
         Class schedules are the recurring part. Room TBA pulls from AMIS, which
-        is UPLB's system. You do not have AMIS — flatten whatever export your
+        is UPLB's system. You do not have AMIS, so flatten whatever export your
         registrar or SAIS equivalent gives you (CSV, JSON, a scraped portal, a
         PDF someone has to retype) into the documented shape of
         <code>bun run import:classes-generic</code> and rerun it each term.
@@ -230,11 +231,11 @@ bunx drizzle-kit push</code></pre>
         (Production and Preview):
       </p>
       <ul>
-        <li><code>DATABASE_URL</code> — your Supabase pooler URL.</li>
-        <li><code>ADMIN_PASSWORD</code> — same one you used locally.</li>
-        <li><code>ADMIN_SESSION_SECRET</code> — 32+ random chars, used to sign editor cookies.</li>
-        <li><code>ISR_BYPASS_TOKEN</code> — 32+ random chars, must match <code>bypassToken</code> in <code>astro.config.mjs</code>. Without it, editor publishes do not revalidate the SEO pages.</li>
-        <li><code>PUBLIC_MAPTILER_KEY</code> — your key.</li>
+        <li><code>DATABASE_URL</code>: your Supabase pooler URL.</li>
+        <li><code>ADMIN_PASSWORD</code>: same one you used locally.</li>
+        <li><code>ADMIN_SESSION_SECRET</code>: 32+ random chars, used to sign editor cookies.</li>
+        <li><code>ISR_BYPASS_TOKEN</code>: 32+ random chars, must match <code>bypassToken</code> in <code>astro.config.mjs</code>. Without it, editor publishes do not revalidate the SEO pages.</li>
+        <li><code>PUBLIC_MAPTILER_KEY</code>: your key.</li>
         <li><code>PUBLIC_APP_ENV=production</code> on your production deploy; <code>staging</code> on preview.</li>
       </ul>
       <p>
@@ -306,150 +307,3 @@ bunx drizzle-kit push</code></pre>
   </article>
 </WikiLayout>
 
-<style>
-  .wiki-article {
-    max-width: 52rem;
-  }
-
-  .article-hero {
-    padding: 1rem 0 2.5rem;
-    border-bottom: 1px solid hsl(0, 0%, 88%);
-  }
-
-  .article-meta {
-    margin: 1rem 0 0;
-    color: hsl(0, 0%, 48%);
-    font-size: 0.8rem;
-  }
-
-  .toc {
-    margin: 2rem 0 0;
-    padding: 1rem 1.15rem;
-    border: 1px solid hsl(0, 0%, 88%);
-    border-radius: 0.85rem;
-    background: hsl(0, 0%, 99%);
-  }
-
-  .toc__title {
-    margin: 0;
-    font-size: 0.8125rem;
-    font-weight: 750;
-    color: hsl(0, 0%, 35%);
-  }
-
-  .toc ol {
-    margin: 0.5rem 0 0;
-    padding-left: 1.25rem;
-    color: hsl(0, 0%, 30%);
-    font-size: 0.875rem;
-    line-height: 1.65;
-  }
-
-  .toc a {
-    color: hsl(5, 53%, 32%);
-    text-decoration: underline;
-    text-underline-offset: 0.12em;
-  }
-
-  .wiki-article section {
-    margin-top: 2.5rem;
-  }
-
-  .wiki-article h2 {
-    margin: 0 0 0.75rem;
-    font-size: clamp(1.35rem, 3vw, 1.7rem);
-    letter-spacing: -0.02em;
-  }
-
-  .wiki-article h3 {
-    margin: 1.75rem 0 0.5rem;
-    font-size: 1.1rem;
-    letter-spacing: -0.01em;
-  }
-
-  .wiki-article p {
-    max-width: 46rem;
-    margin: 0.75rem 0 0;
-    color: hsl(0, 0%, 27%);
-    font-size: 1rem;
-    line-height: 1.72;
-  }
-
-  .wiki-article ul {
-    max-width: 46rem;
-    margin: 0.75rem 0 0;
-    padding-left: 1.25rem;
-    color: hsl(0, 0%, 27%);
-    font-size: 1rem;
-    line-height: 1.72;
-  }
-
-  .wiki-article li {
-    margin: 0.35rem 0;
-  }
-
-  .wiki-article code {
-    padding: 0.1rem 0.3rem;
-    border-radius: 0.3rem;
-    background: hsl(0, 0%, 94%);
-    color: hsl(5, 40%, 30%);
-    font-size: 0.85em;
-  }
-
-  .wiki-article pre {
-    max-width: 46rem;
-    margin: 0.75rem 0 0;
-    padding: 1rem 1.15rem;
-    border: 1px solid hsl(0, 0%, 86%);
-    border-radius: 0.75rem;
-    background: hsl(0, 0%, 97%);
-    overflow-x: auto;
-    font-size: 0.85rem;
-    line-height: 1.6;
-  }
-
-  .wiki-article pre code {
-    padding: 0;
-    background: none;
-    color: hsl(0, 0%, 15%);
-    font-size: inherit;
-  }
-
-  .table-wrap {
-    overflow-x: auto;
-    border: 1px solid hsl(0, 0%, 86%);
-    border-radius: 1rem;
-    margin-top: 0.75rem;
-  }
-
-  table {
-    width: 100%;
-    min-width: 38rem;
-    border-collapse: collapse;
-    background: white;
-    font-size: 0.875rem;
-  }
-
-  th,
-  td {
-    padding: 0.6rem 0.75rem;
-    border-bottom: 1px solid hsl(0, 0%, 90%);
-    text-align: left;
-    vertical-align: top;
-  }
-
-  th {
-    background: hsl(5, 22%, 97%);
-    color: hsl(0, 0%, 36%);
-    font-size: 0.75rem;
-  }
-
-  tbody tr:last-child td {
-    border-bottom: 0;
-  }
-
-  td code,
-  th code {
-    font-size: 0.8em;
-  }
-</style>

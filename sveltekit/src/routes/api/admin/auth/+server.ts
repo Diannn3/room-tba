@@ -1,0 +1,12 @@
+import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
+
+export const ssr = true;
+
+// TODO: port from astro/src/pages/api/admin/auth.ts — needs session cookie signing, Supabase, bcrypt, Turnstile, rate limit (POST body is multipart/form-data)
+const notImplemented: RequestHandler = async () =>
+	json({ success: false, error: 'Not implemented' }, { status: 501 });
+
+export const GET = notImplemented;
+export const POST = notImplemented;
+export const DELETE = notImplemented;

@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import {
   amisExportContainsInstructorPii,
   sanitizeAmisRow,
-} from "@lib/amis/sanitize-row";
+} from "$lib/amis/sanitize-row";
 
 describe("sanitizeAmisRow", () => {
   it("removes nested faculty user names", () => {

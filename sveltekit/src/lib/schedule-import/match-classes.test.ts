@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { matchImportedScheduleRows } from "./match-classes";
-import type { ClassMapValue } from "@lib/types";
+import type { ClassMapValue } from "$lib/types";
 import type { ImportedScheduleRow } from "./types";
 
 const sampleClass: ClassMapValue = {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { normalizeRoomCode, canonicalKey } from "@lib/normalize-room-code";
+import { normalizeRoomCode, canonicalKey } from "$lib/normalize-room-code";
 
 describe("normalizeRoomCode", () => {
   it("trims whitespace", () => {

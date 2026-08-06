@@ -2,8 +2,8 @@ import { describe, expect, test } from "bun:test";
 import {
   applyPublishedEntity,
   syncTablesForEntityType,
-} from "@lib/proposals/apply-published-entity";
-import type { AppActions, AppContextData } from "@lib/context";
+} from "$lib/proposals/apply-published-entity";
+import type { AppActions, AppContextData } from "$lib/context";
 
 function mockActions() {
   const calls: string[] = [];

@@ -1,6 +1,6 @@
 import academicCalendar2024 from "../../data/academic-calendar-2024-2025.json";
 import academicCalendar2026 from "../../data/academic-calendar-2026-2027.json";
-import type { Term } from "@lib/types";
+import type { Term } from "$lib/types";
 
 /** Hand-kept instructional windows (date-only, Asia/Manila) for AYs whose
  *  registrar calendar PDF has no text layer (2025-2026) or only OCR garbage

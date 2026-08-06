@@ -14,7 +14,7 @@
  * `bun run test` covers the heuristics without a database.
  */
 
-import { distanceMeters } from "@lib/campus-route";
+import { distanceMeters } from "$lib/campus-route";
 
 export type EntityKind = "building" | "organization" | "place" | "dorm";
 

@@ -1,10 +1,10 @@
 import type { APIRoute } from "astro";
-import { editorSessionOrUnauthorized } from "@lib/admin/require-editor";
-import { json } from "@lib/api/json";
+import { editorSessionOrUnauthorized } from "$lib/admin/require-editor";
+import { json } from "$lib/api/json";
 import {
   EditConflictError,
   DuplicateNameError,
-} from "@lib/services/admin-service";
+} from "$lib/services/admin-service";
 
 type MergeHandler<TEntity> = (input: {
   sourceId: number;

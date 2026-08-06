@@ -1,10 +1,10 @@
 // src/lib/store.svelte.ts
 
-import { CAMPUS_BOUNDS } from "@constants/map-terrain";
-import { describeLocationFix } from "@lib/geolocation";
+import { CAMPUS_BOUNDS } from ""$lib/constants/map-terrain";
+import { describeLocationFix } from "$lib/geolocation";
 import { campusTransit } from "../../campus.config";
 import { getJSONFetch, getLocalRoomByCode } from "../local/data/utils.js";
-import type { BuildingTypeFilter } from "@constants/building-types";
+import type { BuildingTypeFilter } from ""$lib/constants/building-types";
 import type { RouteTotals } from "../campus-route.js";
 import { orderDayStops, type Weekday } from "../schedule-import/day-stops.js";
 import { matchImportedScheduleRows } from "../schedule-import/match-classes.js";
@@ -611,8 +611,8 @@ class AdminAuthStore {
     try {
       const [{ isSupabaseConfigured }, { createBrowserSupabaseClient }] =
         await Promise.all([
-          import("@lib/supabase/env"),
-          import("@lib/supabase/client"),
+          import("$lib/supabase/env"),
+          import("$lib/supabase/client"),
         ]);
       if (!isSupabaseConfigured()) {
         return "Google sign-in is not configured on this server.";
@@ -638,8 +638,8 @@ class AdminAuthStore {
     try {
       const [{ isSupabaseConfigured }, { createBrowserSupabaseClient }] =
         await Promise.all([
-          import("@lib/supabase/env"),
-          import("@lib/supabase/client"),
+          import("$lib/supabase/env"),
+          import("$lib/supabase/client"),
         ]);
       if (!isSupabaseConfigured()) {
         return "Google sign-in is not configured on this server.";

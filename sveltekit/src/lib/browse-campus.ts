@@ -6,8 +6,8 @@ import {
 import type { SidePanelStore, QueryStore } from "./stores/ui-stores.svelte.js";
 
 export type { CampusBrowseTab } from "./browse-campus-shared.js";
-import CampusBrowseList from "@ui/controls/CampusBrowseList.svelte";
-import ClassesList from "@ui/controls/ClassesList.svelte";
+import CampusBrowseList from "$lib/components/svelte/controls/CampusBrowseList.svelte";
+import ClassesList from "$lib/components/svelte/controls/ClassesList.svelte";
 
 // Both helpers name the panel themselves rather than leaving it to each caller.
 // `resolvePanelContent` would reach the same component from the query category,

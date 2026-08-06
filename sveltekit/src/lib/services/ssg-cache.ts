@@ -16,7 +16,7 @@ import type {
   EventData,
   PlaceData,
   RoomData,
-} from "@lib/types";
+} from "$lib/types";
 
 interface SSGCache {
   buildings: BuildingData[] | null;

@@ -5,7 +5,7 @@ import {
   BUILDING_FILL_MAX_ZOOM_2D,
   BUILDING_FILL_MAX_ZOOM_3D,
   BUILDING_FILL_MIN_ZOOM,
-} from "@constants/map-dimension";
+} from ""$lib/constants/map-dimension";
 
 function setLayerVisibility(
   map: MapLibreMap,

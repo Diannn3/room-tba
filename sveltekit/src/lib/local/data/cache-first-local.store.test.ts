@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import type { ClassMapValue } from "@lib/types";
+import type { ClassMapValue } from "$lib/types";
 
 const query = vi.fn();
 

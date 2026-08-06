@@ -10,8 +10,8 @@ import {
   resolveReference,
   spreadMeters,
   tokenize,
-} from "@lib/campus-audit";
-import { distanceMeters } from "@lib/campus-route";
+} from "$lib/campus-audit";
+import { distanceMeters } from "$lib/campus-route";
 
 /**
  * Real prod rows (ids and coordinates as stored), so the fixtures keep the

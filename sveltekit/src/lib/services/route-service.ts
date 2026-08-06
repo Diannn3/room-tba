@@ -1,7 +1,7 @@
 import { buildingsTable, dormsTable, placesTable } from "@drizzle/schema";
-import { db } from "@lib/db";
-import { slugifySegment } from "@lib/site";
-import type { RoutePlace } from "@lib/campus-route";
+import { db } from "$lib/db";
+import { slugifySegment } from "$lib/site";
+import type { RoutePlace } from "$lib/campus-route";
 
 export type RoutableKind = "building" | "dorm" | "place";
 

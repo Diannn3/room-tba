@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { absoluteUrl, ogCardPath, ogImageUrl } from "@lib/site";
+import { absoluteUrl, ogCardPath, ogImageUrl } from "$lib/site";
 
 describe("OG meta helpers", () => {
   it("ogImageUrl returns absolute image URL", () => {

@@ -1,4 +1,4 @@
-import type { BuildingData, DormData } from "@lib/types";
+import type { BuildingData, DormData } from "$lib/types";
 
 export type BuildingTypeFilter =
   | "all"

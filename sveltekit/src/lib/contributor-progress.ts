@@ -1,4 +1,4 @@
-import { fetchJsonWithRetry } from "@lib/local/data/fetch-json";
+import { fetchJsonWithRetry } from "$lib/local/data/fetch-json";
 
 export const ROOM_FIELD_CATEGORIES = [
   "directions",

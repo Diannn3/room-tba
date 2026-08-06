@@ -17,7 +17,7 @@ import {
   TRANSIT_INDEX_PATH,
   type TransitPath,
 } from "./transit-urls";
-import type { JeepneyRoute } from "@constants/jeepney-routes";
+import type { JeepneyRoute } from ""$lib/constants/jeepney-routes";
 
 type EntityHistoryState = {
   rtbaEntity?: true;

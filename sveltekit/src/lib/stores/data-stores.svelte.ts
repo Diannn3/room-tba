@@ -9,7 +9,7 @@ import {
   resolveDefaultTermFromList,
   resolveInitialTermId,
 } from "../term-calendar.js";
-import type { ClassMapValue, TermWithCount } from "@lib/types";
+import type { ClassMapValue, TermWithCount } from "$lib/types";
 import { ACTIVE_TERM_LS_KEY } from "./store-types.js";
 
 export class TermStore {

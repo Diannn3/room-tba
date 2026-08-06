@@ -6,7 +6,7 @@ import {
   getPlannerBlockColor,
   parseDays,
   parseScheduleTime,
-} from "@lib/schedule-renderer";
+} from "$lib/schedule-renderer";
 import type { PlannerPlan } from "./types";
 
 export type PlanBlock = {

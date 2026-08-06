@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import type { RoomData } from "@lib/types";
+import type { RoomData } from "$lib/types";
 
 const { getJSONFetch, getLocalRoomByCode } = vi.hoisted(() => ({
   getJSONFetch: vi.fn(),

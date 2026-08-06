@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { JEEPNEY_ROUTES } from "@constants/jeepney-routes";
+import { JEEPNEY_ROUTES } from ""$lib/constants/jeepney-routes";
 import {
   getTransitStopIndex,
   getTransitStopPath,

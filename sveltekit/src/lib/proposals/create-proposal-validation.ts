@@ -1,6 +1,6 @@
-import type { ProposalCreateType } from "@lib/services/proposal-service";
-import { ORG_CATEGORIES, type OrgCategory } from "@constants/org-categories";
-import { normalizePlaceCategory } from "@constants/place-categories";
+import type { ProposalCreateType } from "$lib/services/proposal-service";
+import { ORG_CATEGORIES, type OrgCategory } from ""$lib/constants/org-categories";
+import { normalizePlaceCategory } from ""$lib/constants/place-categories";
 
 export type BundledRoomDraft = {
   roomCode: string;

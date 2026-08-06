@@ -11,15 +11,15 @@ import {
   getDivisionSlug,
   getDormRouteSlug,
   getRoomRouteSlug,
-} from "@lib/app-data";
-import { SITE_URL } from "@lib/site";
+} from "$lib/app-data";
+import { SITE_URL } from "$lib/site";
 import type {
   BuildingData,
   CollegeData,
   DivisionData,
   DormData,
   RoomData,
-} from "@lib/types";
+} from "$lib/types";
 
 const SITEMAP_PATH = "/sitemap.xml";
 

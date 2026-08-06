@@ -2,7 +2,7 @@ import {
   appBootstrapStore,
   syncToastStore,
   modalStore,
-} from "@lib/store.svelte";
+} from "$lib/store.svelte";
 
 export type SyncLadderKind =
   | "bootstrap_error"

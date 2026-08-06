@@ -3,7 +3,7 @@ import {
   termDateKey,
   toManilaDateKey,
 } from "./term-calendar";
-import type { Term } from "@lib/types";
+import type { Term } from "$lib/types";
 
 /**
  * Timeline math for the academic calendar viewer (#408). Instructional

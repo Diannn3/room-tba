@@ -1,5 +1,5 @@
-import type { modalOptions } from "@constants/modal-states";
-import type { Weekday } from "@lib/schedule-import/types.js";
+import type { modalOptions } from ""$lib/constants/modal-states";
+import type { Weekday } from "$lib/schedule-import/types.js";
 import type { Component } from "svelte";
 
 export type LandingModalTab = "welcome" | "campus";

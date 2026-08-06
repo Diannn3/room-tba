@@ -1,5 +1,5 @@
 import { getNotificationAdapter } from "./index";
-import type { EditProposalSummary } from "@lib/services/proposal-service";
+import type { EditProposalSummary } from "$lib/services/proposal-service";
 
 export type ProposalReviewOutcome = "approved" | "rejected" | "needs_changes";
 

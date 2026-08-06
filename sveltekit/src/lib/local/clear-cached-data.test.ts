@@ -4,8 +4,8 @@ import {
   PGLITE_IDB_NAME,
   PRESERVED_LOCAL_KEYS,
 } from "./clear-cached-data";
-import { PLANNER_LS_KEY } from "@lib/stores/store-types";
-import { FOLLOW_PROMPT_KEY } from "@lib/social-follow";
+import { PLANNER_LS_KEY } from "$lib/stores/store-types";
+import { FOLLOW_PROMPT_KEY } from "$lib/social-follow";
 
 const SYNC_KEYS = JSON.stringify({
   buildings: "b1",

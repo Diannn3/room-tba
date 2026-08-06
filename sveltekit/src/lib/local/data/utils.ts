@@ -1,4 +1,4 @@
-import type { DBData } from "@lib/context";
+import type { DBData } from "$lib/context";
 import type {
   AnnouncementData,
   BuildingData,
@@ -12,20 +12,20 @@ import type {
   PlaceData,
   RoomData,
   TableSyncInfo,
-} from "@lib/types";
+} from "$lib/types";
 import { getDB, isLocalCacheReady } from "./pgliteDB";
 import { ENTITY_FETCH_OPTIONS, fetchJsonWithRetry } from "./fetch-json";
-import { escapeLikePattern } from "@lib/like-escape";
+import { escapeLikePattern } from "$lib/like-escape";
 import {
   getLocalBuildingRooms,
   getLocalCollegeRooms,
   getLocalDivisionRooms,
 } from "./sync";
-import { refreshStoredEventTiming, sortStoredEvents } from "@lib/event-time";
-import { normalizeAlias } from "@lib/site";
-import { normalizeDormListFields } from "@lib/string-lists";
+import { refreshStoredEventTiming, sortStoredEvents } from "$lib/event-time";
+import { normalizeAlias } from "$lib/site";
+import { normalizeDormListFields } from "$lib/string-lists";
 import type { Results } from "@electric-sql/pglite";
-import type { JeepneyRoute, JeepneyStop } from "@constants/jeepney-routes";
+import type { JeepneyRoute, JeepneyStop } from ""$lib/constants/jeepney-routes";
 
 export async function getLocalJeepneyRoutes(): Promise<
   JeepneyRoute[] | undefined

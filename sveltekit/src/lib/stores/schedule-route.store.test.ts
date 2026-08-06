@@ -4,7 +4,7 @@ import {
   plannerStore,
   scheduleRouteStore,
   termStore,
-} from "@lib/store.svelte";
+} from "$lib/store.svelte";
 
 function seedPlan() {
   termStore.activeTermId = 1252;

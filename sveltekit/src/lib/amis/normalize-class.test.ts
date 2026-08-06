@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import {
   extractClassRows,
   normalizeAmisClass,
-} from "@lib/amis/normalize-class";
+} from "$lib/amis/normalize-class";
 
 describe("amis normalize", () => {
   it("unwraps nested classes.data payloads", () => {

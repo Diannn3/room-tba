@@ -13,15 +13,15 @@ import {
   organizationsTable,
   roomsTable,
 } from "@drizzle/schema";
-import { normalizeAlias } from "@lib/site";
-import type { SessionUser } from "@lib/admin/auth";
-import { db } from "@lib/db";
+import { normalizeAlias } from "$lib/site";
+import type { SessionUser } from "$lib/admin/auth";
+import { db } from "$lib/db";
 import {
   validateSubmitterName,
   validateSubmitterNote,
-} from "@constants/proposals";
+} from ""$lib/constants/proposals";
 import { recordProposalContribution } from "./contribution-service";
-import { parseImageUrl } from "@lib/r2-upload";
+import { parseImageUrl } from "$lib/r2-upload";
 import { R2_PUBLIC_URL } from "astro:env/server";
 import { canWithdrawProposal } from "./proposal-access";
 export {
@@ -67,12 +67,12 @@ import {
   type JeepneyStopCreateInput,
   type JeepneyStopWriteInput,
 } from "./transit-service";
-import { allowEntityScopedProposalMerge } from "@lib/proposals/proposal-merge-policy";
+import { allowEntityScopedProposalMerge } from "$lib/proposals/proposal-merge-policy";
 import {
   ProposalValidationError,
   parseBundledRooms,
   validateCreateProposalPatch,
-} from "@lib/proposals/create-proposal-validation";
+} from "$lib/proposals/create-proposal-validation";
 
 export const PROPOSAL_UPDATE_TYPES = [
   "building",
@@ -771,7 +771,7 @@ export {
   parseBundledRooms,
   validateBundledRooms,
   type BundledRoomDraft,
-} from "@lib/proposals/create-proposal-validation";
+} from "$lib/proposals/create-proposal-validation";
 
 export class ProposalActionError extends Error {
   status: number;

@@ -1,13 +1,13 @@
 import type {
   ProposalCreateType,
   ProposalEntityType,
-} from "@lib/services/proposal-service";
+} from "$lib/services/proposal-service";
 import { FIELD_LABELS } from "./diff";
 import {
   validateSubmitterName,
   validateSubmitterNote,
-} from "@constants/proposals";
-import type { RoomData } from "@lib/types";
+} from ""$lib/constants/proposals";
+import type { RoomData } from "$lib/types";
 import {
   isOpenProposalStatus,
   type PendingProposalRow,

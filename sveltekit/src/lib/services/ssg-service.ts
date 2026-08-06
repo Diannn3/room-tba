@@ -13,8 +13,8 @@ import {
   getBuildingSlug,
   getCollegeSlug,
   getDivisionSlug,
-} from "@lib/app-data";
-import { db } from "@lib/db";
+} from "$lib/app-data";
+import { db } from "$lib/db";
 import { getEventBySlug } from "./event-service";
 import { getDefaultTerm } from "./term-service";
 

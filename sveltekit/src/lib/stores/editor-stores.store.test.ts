@@ -6,7 +6,7 @@ import {
   MapEditStore,
   MapProposalStore,
 } from "./editor-stores.svelte";
-import { mapEditStore, terrainStore } from "@lib/store.svelte";
+import { mapEditStore, terrainStore } from "$lib/store.svelte";
 
 describe("EditorChromeStore", () => {
   let store: EditorChromeStore;

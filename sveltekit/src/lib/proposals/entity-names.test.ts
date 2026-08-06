@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { AppContextData } from "@lib/context";
+import type { AppContextData } from "$lib/context";
 import { appEntityNameResolver } from "./entity-names";
 
 const loaded = {

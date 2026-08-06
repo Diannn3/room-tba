@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { normalizeEntityName } from "@lib/entity-names";
+import { normalizeEntityName } from "$lib/entity-names";
 
 describe("entity merge duplicate detection", () => {
   it("treats spacing and punctuation variants as the same name", () => {

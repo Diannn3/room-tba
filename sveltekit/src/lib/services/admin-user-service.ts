@@ -8,11 +8,11 @@ import {
   editProposalsTable,
   plannerPlansTable,
 } from "@drizzle/schema";
-import { db } from "@lib/db";
-import type { SessionUser } from "@lib/admin/auth";
-import { createSignedToken, verifySignedToken } from "@lib/admin/signed-token";
-import { sendEmail } from "@lib/email/resend";
-import { SITE_URL } from "@lib/site";
+import { db } from "$lib/db";
+import type { SessionUser } from "$lib/admin/auth";
+import { createSignedToken, verifySignedToken } from "$lib/admin/signed-token";
+import { sendEmail } from "$lib/email/resend";
+import { SITE_URL } from "$lib/site";
 
 export class AccountActionError extends Error {
   status: number;

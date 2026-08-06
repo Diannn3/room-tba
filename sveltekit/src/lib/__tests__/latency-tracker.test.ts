@@ -3,7 +3,7 @@ import {
   recordLatency,
   getLatencyStats,
   clearLatencySamples,
-} from "@lib/latency-tracker";
+} from "$lib/latency-tracker";
 
 describe("latency tracker", () => {
   it("records and reports p50/p95/p99", () => {

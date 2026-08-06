@@ -1,13 +1,13 @@
 import {
   isLandmarkPlaceCategory,
   type PlaceCategory,
-} from "@constants/place-categories";
+} from ""$lib/constants/place-categories";
 import {
   isStudentOrganization,
   type OrgCategory,
-} from "@constants/org-categories";
-import { formatCampusDateShort } from "@lib/event-time";
-import type { ProposalCreateType } from "@lib/proposals/client";
+} from ""$lib/constants/org-categories";
+import { formatCampusDateShort } from "$lib/event-time";
+import type { ProposalCreateType } from "$lib/proposals/client";
 
 export type DraftPinEntityKind =
   | "building"

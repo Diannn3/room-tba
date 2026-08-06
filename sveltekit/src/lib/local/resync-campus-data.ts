@@ -15,8 +15,8 @@
 import {
   invalidateLocalSyncKeys,
   requestCampusDataRefresh,
-} from "@lib/local/data/invalidate-sync-key";
-import { SYNC_TABLE_NAMES } from "@lib/local/data/sync-keys";
+} from "$lib/local/data/invalidate-sync-key";
+import { SYNC_TABLE_NAMES } from "$lib/local/data/sync-keys";
 
 /** The two terminal fields of `SyncToastStore`: `endSync()` sets `allSynced`, `setSyncError()` sets `syncError`. */
 export type SyncStatus = {

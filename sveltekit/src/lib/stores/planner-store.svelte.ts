@@ -10,7 +10,7 @@ import {
 } from "../planner/persist.js";
 import { sectionNaturalKey } from "../planner/types.js";
 import type { PlannedSection, PlannerPlan } from "../planner/types.js";
-import type { ClassMapValue } from "@lib/types";
+import type { ClassMapValue } from "$lib/types";
 import { PLANNER_LS_KEY } from "./store-types.js";
 
 function rowToPlannedSection(row: ClassMapValue): PlannedSection | null {

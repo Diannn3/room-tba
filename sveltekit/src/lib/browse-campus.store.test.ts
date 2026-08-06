@@ -1,12 +1,12 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, test, vi } from "vitest";
 
-vi.mock("@lib/overlay-stack.js", () => ({
+vi.mock("$lib/overlay-stack.js", () => ({
   dismissEphemeralOverlays: vi.fn(),
 }));
 
-import { openBrowseClasses, openCampusBrowse } from "@lib/browse-campus";
-import { SidePanelStore } from "@lib/stores/ui-stores.svelte";
+import { openBrowseClasses, openCampusBrowse } from "$lib/browse-campus";
+import { SidePanelStore } from "$lib/stores/ui-stores.svelte";
 
 type MockQueryStore = {
   category: string | null;

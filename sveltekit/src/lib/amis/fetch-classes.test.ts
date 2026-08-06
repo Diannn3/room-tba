@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { readAmisPageMeta } from "@lib/amis/fetch-classes";
+import { readAmisPageMeta } from "$lib/amis/fetch-classes";
 
 describe("readAmisPageMeta", () => {
   it("reads nested classes pagination fields", () => {

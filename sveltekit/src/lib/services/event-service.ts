@@ -2,7 +2,7 @@ import { asc, eq, inArray } from "drizzle-orm";
 import {
   getStoredEventOccurrence,
   getStoredEventStatus,
-} from "@lib/event-time";
+} from "$lib/event-time";
 import {
   buildingsTable,
   dormsTable,
@@ -11,7 +11,7 @@ import {
   eventRoutesTable,
   eventsTable,
 } from "@drizzle/schema";
-import { db } from "@lib/db";
+import { db } from "$lib/db";
 import { getBuildCache } from "./ssg-cache";
 import type {
   BuildingData,
@@ -20,7 +20,7 @@ import type {
   EventLocationData,
   EventRouteData,
   EventRouteStopData,
-} from "@lib/types";
+} from "$lib/types";
 
 type EventRow = typeof eventsTable.$inferSelect;
 type EventLocationRow = typeof eventLocationsTable.$inferSelect;

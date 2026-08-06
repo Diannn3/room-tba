@@ -9,7 +9,7 @@
  * contributors + MapTiler).
  */
 
-import { MAPTILER_KEY_PLACEHOLDER, withMaptilerKey } from "@lib/maptiler-key";
+import { MAPTILER_KEY_PLACEHOLDER, withMaptilerKey } from "$lib/maptiler-key";
 
 const TILE_URL = (z: number, x: number, y: number) =>
   withMaptilerKey(

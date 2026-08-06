@@ -4,7 +4,7 @@ import {
   jeepneyStore,
   mapToolsStore,
   modalStore,
-} from "@lib/store.svelte";
+} from "$lib/store.svelte";
 
 describe("JeepneyStore", () => {
   beforeEach(() => {

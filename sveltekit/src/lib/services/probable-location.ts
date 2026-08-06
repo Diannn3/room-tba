@@ -13,15 +13,15 @@ import {
   organizationsTable,
   roomsTable,
 } from "@drizzle/schema";
-import { isRoomScheduledClassType } from "@lib/amis/room-scheduled-types";
-import { db } from "@lib/db";
+import { isRoomScheduledClassType } from "$lib/amis/room-scheduled-types";
+import { db } from "$lib/db";
 import {
   type HistoryRow,
   type ProbableLocation,
   rankBuildingsByHistory,
   resolveProbableLocation,
-} from "@lib/probable-location";
-import type { ClassMapValue } from "@lib/types";
+} from "$lib/probable-location";
+import type { ClassMapValue } from "$lib/types";
 
 const historySelect = {
   buildingId: buildingsTable.id,

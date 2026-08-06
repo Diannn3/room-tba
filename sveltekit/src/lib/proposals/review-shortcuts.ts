@@ -1,4 +1,4 @@
-import { isTypingTarget } from "@lib/keyboard-shortcuts";
+import { isTypingTarget } from "$lib/keyboard-shortcuts";
 
 /**
  * Single-key shortcuts for the approver queue (#873 follow-up). A long queue is

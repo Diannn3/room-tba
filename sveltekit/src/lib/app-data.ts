@@ -21,7 +21,7 @@ import type {
   DormData,
   EventData,
   RoomData,
-} from "@lib/types";
+} from "$lib/types";
 
 export type SearchCategory =
   | "building"

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { allowEntityScopedProposalMerge } from "@lib/proposals/proposal-merge-policy";
+import { allowEntityScopedProposalMerge } from "$lib/proposals/proposal-merge-policy";
 
 describe("allowEntityScopedProposalMerge", () => {
   test("create proposals only merge when proposalId is sent explicitly", () => {

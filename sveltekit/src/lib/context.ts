@@ -7,7 +7,7 @@ import type {
   EventData,
   OrgData,
   PlaceData,
-} from "@lib/types";
+} from "$lib/types";
 export type AppContextData =
   | {
       buildings: BuildingData[];

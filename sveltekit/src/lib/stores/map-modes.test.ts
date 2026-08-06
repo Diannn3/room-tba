@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   deactivateMapModesExcept,
   registerMapMode,
-} from "@lib/stores/map-modes";
+} from "$lib/stores/map-modes";
 
 describe("map-modes", () => {
   test("deactivateMapModesExcept calls other mode handles", () => {

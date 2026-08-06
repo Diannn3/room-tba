@@ -3,7 +3,7 @@ import {
   MESSENGER_CONTRIBUTE_TARGET,
   UPLB_TOOLS_URL,
   DISCORD_URL,
-} from "@constants/community-links";
+} from ""$lib/constants/community-links";
 
 /** Icon keys resolved in StatusBarLinkGroup — add new icons there when extending. */
 export type StatusBarIcon = "external" | "discord" | "messenger" | "version";

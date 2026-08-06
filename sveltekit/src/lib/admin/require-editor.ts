@@ -1,7 +1,7 @@
 import type { AstroCookies } from "astro";
 import { and, eq } from "drizzle-orm";
 import { adminUsersTable } from "@drizzle/schema";
-import { db } from "@lib/db";
+import { db } from "$lib/db";
 import {
   ADMIN_COOKIE_NAME,
   canPublishDirectly,

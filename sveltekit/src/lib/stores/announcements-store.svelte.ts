@@ -3,7 +3,7 @@
  * answers first, the network refreshes it, and an offline start still renders
  * the last fetched notices.
  */
-import type { AnnouncementData } from "@lib/types";
+import type { AnnouncementData } from "$lib/types";
 import {
   filterPublished,
   seenStampFor,

@@ -3,7 +3,7 @@ import {
   buildingTypeFilter,
   queryStore,
   sidebarStore,
-} from "@lib/store.svelte";
+} from "$lib/store.svelte";
 
 describe("QueryStore pin filter reset (#chip mislabel)", () => {
   beforeEach(() => {

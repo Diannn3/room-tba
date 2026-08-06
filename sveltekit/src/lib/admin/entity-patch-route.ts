@@ -1,12 +1,12 @@
 import type { APIRoute } from "astro";
-import { editorSessionOrUnauthorized } from "@lib/admin/require-editor";
-import { parseRequiredEditorVersion } from "@lib/admin/expected-version";
-import { json, errorResponse, parseIdParam } from "@lib/api/json";
+import { editorSessionOrUnauthorized } from "$lib/admin/require-editor";
+import { parseRequiredEditorVersion } from "$lib/admin/expected-version";
+import { json, errorResponse, parseIdParam } from "$lib/api/json";
 import {
   EditConflictError,
   DuplicateNameError,
   DuplicateSlugError,
-} from "@lib/services/admin-service";
+} from "$lib/services/admin-service";
 
 type ApplyResult<TInput> =
   | { ok: true; input: TInput; version?: number }

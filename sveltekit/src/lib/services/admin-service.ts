@@ -1,6 +1,6 @@
 import { and, eq, ne, sql } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
-import { parsePublishingActor } from "@lib/admin/auth";
+import { parsePublishingActor } from "$lib/admin/auth";
 import { recordEditorContribution } from "./contribution-service";
 import {
   buildingsTable,
@@ -18,11 +18,11 @@ import {
   roomPositionsTable,
   updateTable,
 } from "@drizzle/schema";
-import { normalizeEntityName } from "@lib/entity-names";
-import { sanitizeCrFacilities } from "@constants/cr-facilities";
-import { normalizePlaceCategory } from "@constants/place-categories";
-import { normalizeRoomCategory } from "@constants/room-categories";
-import { db } from "@lib/db";
+import { normalizeEntityName } from "$lib/entity-names";
+import { sanitizeCrFacilities } from ""$lib/constants/cr-facilities";
+import { normalizePlaceCategory } from ""$lib/constants/place-categories";
+import { normalizeRoomCategory } from ""$lib/constants/room-categories";
+import { db } from "$lib/db";
 import {
   buildingIsrPath,
   collegeIsrPath,
@@ -31,9 +31,9 @@ import {
   eventIsrPath,
   revalidateIsrPaths,
   roomIsrPath,
-} from "@lib/isr-revalidate";
+} from "$lib/isr-revalidate";
 import { getEventById } from "./event-service";
-import type { EventData, PlaceData, RoomData } from "@lib/types";
+import type { EventData, PlaceData, RoomData } from "$lib/types";
 import { EditConflictError } from "./edit-conflict-error";
 
 export { EditConflictError } from "./edit-conflict-error";

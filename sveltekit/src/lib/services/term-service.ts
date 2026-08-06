@@ -1,8 +1,8 @@
 import { eq, desc, sql } from "drizzle-orm";
 import { classesTable, termsTable } from "@drizzle/schema";
-import { db } from "@lib/db";
-import { resolveDefaultTermFromList } from "@lib/term-calendar";
-import type { Term, TermWithCount } from "@lib/types";
+import { db } from "$lib/db";
+import { resolveDefaultTermFromList } from "$lib/term-calendar";
+import type { Term, TermWithCount } from "$lib/types";
 
 /**
  * All terms with the number of classes tagged to each, ordered for display

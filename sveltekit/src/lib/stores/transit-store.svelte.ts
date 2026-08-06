@@ -1,10 +1,10 @@
-import { JEEPNEY_ROUTES, type JeepneyRoute } from "@constants/jeepney-routes";
-import { getLocalJeepneyRoutes } from "@lib/local/data/utils";
-import { localTableSyncCheck, syncJeepneyRoutes } from "@lib/local/data/sync";
+import { JEEPNEY_ROUTES, type JeepneyRoute } from ""$lib/constants/jeepney-routes";
+import { getLocalJeepneyRoutes } from "$lib/local/data/utils";
+import { localTableSyncCheck, syncJeepneyRoutes } from "$lib/local/data/sync";
 import {
   fetchJsonWithRetry,
   ENTITY_FETCH_OPTIONS,
-} from "@lib/local/data/fetch-json";
+} from "$lib/local/data/fetch-json";
 
 export class TransitStore {
   routes = $state<JeepneyRoute[]>(JEEPNEY_ROUTES);

@@ -1,10 +1,10 @@
 import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { adminUsersTable } from "@drizzle/schema";
-import { db } from "@lib/db";
-import { buildProposalDigest } from "@lib/email/digest-core";
-import { isResendConfigured, sendEmail } from "@lib/email/resend";
-import { listPendingProposals } from "@lib/services/proposal-service";
-import { SITE_URL } from "@lib/site";
+import { db } from "$lib/db";
+import { buildProposalDigest } from "$lib/email/digest-core";
+import { isResendConfigured, sendEmail } from "$lib/email/resend";
+import { listPendingProposals } from "$lib/services/proposal-service";
+import { SITE_URL } from "$lib/site";
 
 export async function listDigestRecipients(): Promise<string[]> {
   const rows = await db

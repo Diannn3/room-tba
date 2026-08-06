@@ -1,13 +1,13 @@
-import { queryStore } from "@lib/store.svelte";
-import type { AppContextData } from "@lib/context";
-import type { ProposalEntityType } from "@lib/services/proposal-service";
+import { queryStore } from "$lib/store.svelte";
+import type { AppContextData } from "$lib/context";
+import type { ProposalEntityType } from "$lib/services/proposal-service";
 import type {
   BuildingData,
   CollegeData,
   DivisionData,
   DormData,
   EventData,
-} from "@lib/types";
+} from "$lib/types";
 
 type PublishedRow = { id: number };
 

@@ -12,7 +12,7 @@ import { withTermQuery } from "./term-url";
 import { absoluteUrl } from "./site";
 import { getTransitRoutePath, getTransitStopPath } from "./transit-urls";
 import type { DormData, OrgData, PlaceData, RoomData } from "./types";
-import type { JeepneyRoute } from "@constants/jeepney-routes";
+import type { JeepneyRoute } from ""$lib/constants/jeepney-routes";
 
 export function getBuildingShareUrl(
   buildingName: string,

@@ -1,4 +1,4 @@
-import { parseScheduleTime } from "@lib/schedule-renderer";
+import { parseScheduleTime } from "$lib/schedule-renderer";
 import type { ScheduleDayStop, ScheduleMatchResult, Weekday } from "./types";
 
 const SCHEDULE_TIME_RE =

@@ -2,7 +2,7 @@ import {
   groupClassesByOffering,
   type ClassOfferingGroup,
 } from "../class-offering-groups.js";
-import type { ClassMapValue } from "@lib/types";
+import type { ClassMapValue } from "$lib/types";
 
 /**
  * Other sections of one course a planner block can be dragged onto (#506).

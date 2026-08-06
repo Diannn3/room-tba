@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "vitest";
-import type { RoomData } from "@lib/types";
+import type { RoomData } from "$lib/types";
 import { getEntityRooms } from "./utils";
 
 const realFetch = globalThis.fetch;

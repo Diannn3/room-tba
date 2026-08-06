@@ -1,5 +1,5 @@
-import type { ProposalCreateType } from "@lib/services/proposal-service";
-import type { EventPlacementDraft } from "@lib/store.svelte";
+import type { ProposalCreateType } from "$lib/services/proposal-service";
+import type { EventPlacementDraft } from "$lib/store.svelte";
 
 const DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const DRAFT_DEBOUNCE_MS = 400;

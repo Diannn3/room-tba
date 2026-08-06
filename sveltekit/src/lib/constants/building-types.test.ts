@@ -2,8 +2,8 @@ import { describe, expect, it } from "bun:test";
 import {
   buildingMatchesTypeFilter,
   getBuildingTypeFilterOptions,
-} from "@constants/building-types";
-import type { BuildingData } from "@lib/types";
+} from ""$lib/constants/building-types";
+import type { BuildingData } from "$lib/types";
 
 function building(id: number, type: "admin" | "non-admin"): BuildingData {
   // Only the fields the filter reads matter here.

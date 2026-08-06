@@ -3,7 +3,7 @@ import {
   groupClassesByOffering,
   parentLectureSection,
 } from "./class-offering-groups.js";
-import type { ClassMapValue } from "@lib/types";
+import type { ClassMapValue } from "$lib/types";
 
 const row = (overrides: Partial<ClassMapValue>): ClassMapValue => ({
   id: 1,

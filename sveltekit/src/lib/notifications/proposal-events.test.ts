@@ -1,5 +1,5 @@
 import { describe, expect, test, mock } from "bun:test";
-import type { EditProposalSummary } from "@lib/services/proposal-service";
+import type { EditProposalSummary } from "$lib/services/proposal-service";
 
 const notify = mock(async () => {});
 

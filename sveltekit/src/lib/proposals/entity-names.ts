@@ -1,4 +1,4 @@
-import type { AppContextData } from "@lib/context";
+import type { AppContextData } from "$lib/context";
 import type { EntityNameResolver } from "./diff";
 
 /**

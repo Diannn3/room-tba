@@ -5,7 +5,7 @@ import {
   MapViewStore,
   TerrainStore,
 } from "./map-stores.svelte";
-import { mapEditStore, mapToolsStore, terrainStore } from "@lib/store.svelte";
+import { mapEditStore, mapToolsStore, terrainStore } from "$lib/store.svelte";
 
 describe("MapToolsStore", () => {
   let store: MapToolsStore;

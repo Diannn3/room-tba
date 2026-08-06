@@ -1,4 +1,4 @@
-import { parseDays, parseScheduleTime } from "@lib/schedule-renderer";
+import { parseDays, parseScheduleTime } from "$lib/schedule-renderer";
 import { sectionNaturalKey, type PlannerPlan } from "./types.js";
 
 // Manila is UTC+8 with no DST, so events are emitted as fixed UTC times and

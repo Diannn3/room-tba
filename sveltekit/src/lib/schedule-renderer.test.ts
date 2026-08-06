@@ -3,7 +3,7 @@ import {
   getPlannerBlockColor,
   parseDays,
   parseScheduleTime,
-} from "@lib/schedule-renderer";
+} from "$lib/schedule-renderer";
 
 describe("getPlannerBlockColor", () => {
   it("colors by component type, not course", () => {

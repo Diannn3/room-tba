@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { alternativeOfferings } from "./alternatives.js";
-import type { ClassMapValue } from "@lib/types";
+import type { ClassMapValue } from "$lib/types";
 
 function row(over: Partial<ClassMapValue>): ClassMapValue {
   return {

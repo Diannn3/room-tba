@@ -1,0 +1,902 @@
+import type { DBData } from "@lib/context";
+import type {
+  AnnouncementData,
+  BuildingData,
+  ClassMapValue,
+  CollegeData,
+  DivisionData,
+  DormData,
+  EntityLoadResult,
+  EventData,
+  OrgData,
+  PlaceData,
+  RoomData,
+  TableSyncInfo,
+} from "@lib/types";
+import { getDB, isLocalCacheReady } from "./pgliteDB";
+import { ENTITY_FETCH_OPTIONS, fetchJsonWithRetry } from "./fetch-json";
+import { escapeLikePattern } from "@lib/like-escape";
+import {
+  getLocalBuildingRooms,
+  getLocalCollegeRooms,
+  getLocalDivisionRooms,
+} from "./sync";
+import { refreshStoredEventTiming, sortStoredEvents } from "@lib/event-time";
+import { normalizeAlias } from "@lib/site";
+import { normalizeDormListFields } from "@lib/string-lists";
+import type { Results } from "@electric-sql/pglite";
+import type { JeepneyRoute, JeepneyStop } from "@constants/jeepney-routes";
+
+export async function getLocalJeepneyRoutes(): Promise<
+  JeepneyRoute[] | undefined
+> {
+  try {
+    const localDB = await getDB();
+    await localDB.waitReady;
+    const [routes, stops] = await Promise.all([
+      localDB.query(`
+        SELECT id, name, description, direction_note AS "directionNote", color,
+          fare_regular AS "fareRegular", fare_discounted AS "fareDiscounted"
+        FROM jeepney_routes ORDER BY name;
+      `) as Promise<
+        Results<{
+          id: string;
+          name: string;
+          description: string;
+          directionNote: string | null;
+          color: string;
+          fareRegular: number;
+          fareDiscounted: number;
+        }>
+      >,
+      localDB.query(`
+        SELECT id, route_id AS "routeId", name, description, lat, lon,
+          sort_order AS "sortOrder", version, updated_at AS "updatedAt"
+        FROM jeepney_stops ORDER BY route_id, sort_order;
+      `) as Promise<Results<JeepneyStop & { routeId: string }>>,
+    ]);
+    return routes.rows.map((route) => ({
+      id: route.id,
+      name: route.name,
+      description: route.description,
+      directionNote: route.directionNote ?? undefined,
+      color: route.color,
+      fare: {
+        regular: route.fareRegular,
+        discounted: route.fareDiscounted,
+      },
+      stops: stops.rows
+        .filter((stop) => stop.routeId === route.id)
+        .map(({ routeId: _, ...stop }) => stop),
+    }));
+  } catch {
+    return undefined;
+  }
+}
+
+export async function getLocalBuildings(): Promise<BuildingData[] | undefined> {
+  try {
+    const localDB = await getDB();
+    await localDB.waitReady;
+    const data = (await localDB.query(`
+        SELECT building_name AS "buildingName", lon, lat, id, directions, type AS "buildingType", image_url AS "imageUrl", cr_facilities AS "crFacilities", version, updated_at AS "updatedAt" FROM buildings
+      `)) as Results<BuildingData>;
+    return data.rows;
+  } catch (e) {
+    console.error("Error: ", e);
+    return undefined;
+  }
+}
+
+export async function getLocalColleges(): Promise<CollegeData[] | undefined> {
+  try {
+    const localDB = await getDB();
+    await localDB.waitReady;
+    const data = (await localDB.query(`
+        SELECT college_name AS "collegeName", website_link AS "websiteLink", id, version, updated_at AS "updatedAt" FROM colleges;
+      `)) as Results<CollegeData>;
+    return data.rows;
+  } catch (e) {
+    console.error("Error: ", e);
+    return undefined;
+  }
+}
+
+export async function getLocalDivisions(): Promise<DivisionData[] | undefined> {
+  try {
+    const localDB = await getDB();
+    await localDB.waitReady;
+    const data = (await localDB.query(`
+        SELECT division_name AS "divisionName", website_link AS "websiteLink", id, version, updated_at AS "updatedAt" FROM divisions;
+      `)) as Results<DivisionData>;
+    return data.rows;
+  } catch (e) {
+    console.error("Error: ", e);
+    return undefined;
+  }
+}
+
+export async function getLocalDorms(): Promise<DormData[] | undefined> {
+  try {
+    const localDB = await getDB();
+    await localDB.waitReady;
+    const data = (await localDB.query(`
+      SELECT
+        id,
+        dorm_name AS "dormName",
+        short_name AS "shortName",
+        lat,
+        lon,
+        gender,
+        capacity,
+        managing_office AS "managingOffice",
+        contact_email AS "contactEmail",
+        amenities,
+        osm_link AS "osmLink",
+        description,
+        is_up_managed AS "isUpManaged",
+        price_range AS "priceRange",
+        contact_phone AS "contactPhone",
+        facebook_link AS "facebookLink",
+        image_url AS "imageUrl",
+        version,
+        updated_at AS "updatedAt"
+      FROM dorms;
+      `)) as Results<DormData>;
+    return data.rows.map((row) => normalizeDormListFields(row));
+  } catch (e) {
+    console.error("Error: ", e);
+    return undefined;
+  }
+}
+
+export async function getLocalOrganizations(): Promise<OrgData[] | undefined> {
+  try {
+    const localDB = await getDB();
+    await localDB.waitReady;
+    const data = (await localDB.query(`
+      SELECT
+        id,
+        name,
+        category,
+        building_id AS "buildingId",
+        room_id AS "roomId",
+        lat,
+        lon,
+        description,
+        website_link AS "websiteLink",
+        facebook_link AS "facebookLink",
+        email,
+        image_url AS "imageUrl",
+        bio,
+        org_type AS "orgType",
+        established_year AS "establishedYear",
+        member_count AS "memberCount",
+        version,
+        updated_at AS "updatedAt"
+      FROM organizations;
+      `)) as Results<OrgData>;
+    return data.rows;
+  } catch (e) {
+    console.error("Error: ", e);
+    return undefined;
+  }
+}
+
+export async function getLocalPlaces(): Promise<PlaceData[] | undefined> {
+  try {
+    const localDB = await getDB();
+    await localDB.waitReady;
+    const data = (await localDB.query(`
+      SELECT
+        id,
+        name,
+        category,
+        lat,
+        lon,
+        description,
+        hours,
+        website_link AS "websiteLink",
+        facebook_link AS "facebookLink",
+        image_url AS "imageUrl",
+        version,
+        updated_at AS "updatedAt"
+      FROM places;
+      `)) as Results<PlaceData>;
+    return data.rows;
+  } catch (e) {
+    console.error("Error: ", e);
+    return undefined;
+  }
+}
+
+export async function getLocalAnnouncements(): Promise<
+  AnnouncementData[] | undefined
+> {
+  try {
+    const localDB = await getDB();
+    await localDB.waitReady;
+    const data = (await localDB.query(`
+      SELECT
+        id,
+        title,
+        body,
+        severity,
+        starts_on AS "startsOn",
+        ends_on AS "endsOn",
+        link_url AS "linkUrl",
+        author,
+        created_at AS "createdAt",
+        version,
+        updated_at AS "updatedAt"
+      FROM announcements;
+      `)) as Results<AnnouncementData>;
+    return data.rows;
+  } catch (e) {
+    console.error("Error: ", e);
+    return undefined;
+  }
+}
+
+export async function getLocalEvents(): Promise<EventData[] | undefined> {
+  try {
+    const localDB = await getDB();
+    await localDB.waitReady;
+    const [events, locations, routes, stops] = await Promise.all([
+      localDB.query(`
+        SELECT
+          id,
+          slug,
+          title,
+          description,
+          category,
+          starts_at AS "startsAt",
+          ends_at AS "endsAt",
+          timezone,
+          recurrence,
+          is_active AS "isActive",
+          source_url AS "sourceUrl",
+          image_url AS "imageUrl",
+          priority,
+          include_in_seo AS "includeInSeo",
+          version,
+          updated_at AS "updatedAt",
+          status,
+          occurrence_starts_at AS "occurrenceStartsAt",
+          occurrence_ends_at AS "occurrenceEndsAt"
+        FROM events;
+      `) as Promise<Results<Omit<EventData, "locations" | "routes">>>,
+      localDB.query(`
+        SELECT
+          id,
+          event_id AS "eventId",
+          anchor_type AS "anchorType",
+          building_id AS "buildingId",
+          dorm_id AS "dormId",
+          label,
+          lat,
+          lon,
+          highlight_priority AS "highlightPriority",
+          sort_order AS "sortOrder",
+          is_primary AS "isPrimary",
+          updated_at AS "updatedAt",
+          resolved_lat AS "resolvedLat",
+          resolved_lon AS "resolvedLon",
+          resolved_label AS "resolvedLabel",
+          building_name AS "buildingName",
+          dorm_name AS "dormName"
+        FROM event_locations
+        ORDER BY sort_order, id;
+      `) as Promise<Results<EventData["locations"][number]>>,
+      localDB.query(`
+        SELECT
+          id,
+          event_id AS "eventId",
+          name,
+          description,
+          sort_order AS "sortOrder",
+          updated_at AS "updatedAt"
+        FROM event_routes
+        ORDER BY sort_order, id;
+      `) as Promise<Results<Omit<EventData["routes"][number], "stops">>>,
+      localDB.query(`
+        SELECT
+          id,
+          route_id AS "routeId",
+          event_location_id AS "eventLocationId",
+          label,
+          lat,
+          lon,
+          sort_order AS "sortOrder",
+          updated_at AS "updatedAt",
+          resolved_lat AS "resolvedLat",
+          resolved_lon AS "resolvedLon",
+          resolved_label AS "resolvedLabel"
+        FROM event_route_stops
+        ORDER BY sort_order, id;
+      `) as Promise<Results<EventData["routes"][number]["stops"][number]>>,
+    ]);
+
+    return sortStoredEvents(
+      events.rows.map((event) =>
+        refreshStoredEventTiming({
+          ...event,
+          locations: locations.rows.filter(
+            (location) => location.eventId === event.id,
+          ),
+          routes: routes.rows
+            .filter((route) => route.eventId === event.id)
+            .map((route) => ({
+              ...route,
+              stops: stops.rows.filter((stop) => stop.routeId === route.id),
+            })),
+        }),
+      ),
+    );
+  } catch (e) {
+    console.error("Error: ", e);
+    return undefined;
+  }
+}
+
+export async function getLocalRoomByCode(code: string) {
+  try {
+    const normalizedCode = code.toUpperCase();
+    const localDB = await getDB();
+    await localDB.waitReady;
+    const data = (await localDB.query(
+      `
+            SELECT
+            r.id,
+            r.room_code AS code,
+            r.full_name AS "fullName",
+            r.directions AS directions,
+            json_build_object('name',b.building_name, 'lat', b.lat, 'lon', b.lon, 'directions', b.directions ) as building,
+            c.college_name as "collegeName",
+            d.division_name as "divisionName",
+            r.building_id as "buildingId",
+            r.college_id as "collegeId",
+            r.division_id as "divisionId",
+            r.image_url as "imageUrl",
+            r.category as category,
+            r.version,
+            r.updated_at as "updatedAt"
+            FROM rooms AS r
+            LEFT JOIN buildings AS b ON b.id = r.building_id
+            LEFT JOIN colleges as c ON c.id = r.college_id
+            LEFT JOIN divisions AS d ON d.id = r.division_id
+            WHERE upper(r.room_code) = $1
+        `,
+      [normalizedCode],
+    )) as Results<RoomData>;
+    if (data.rows.length === 0 && typeof data.rows[0] === "undefined")
+      return null;
+    return data.rows[0] as RoomData;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+export async function getLocalRoomById(id: number) {
+  try {
+    const localDB = await getDB();
+    await localDB.waitReady;
+    const data = (await localDB.query(
+      `
+            SELECT
+            r.id,
+            r.room_code AS code,
+            r.full_name AS "fullName",
+            r.directions AS directions,
+            json_build_object('name',b.building_name, 'lat', b.lat, 'lon', b.lon, 'directions', b.directions ) as building,
+            c.college_name as "collegeName",
+            d.division_name as "divisionName",
+            r.building_id as "buildingId",
+            r.college_id as "collegeId",
+            r.division_id as "divisionId",
+            r.image_url as "imageUrl",
+            r.category as category,
+            r.version,
+            r.updated_at as "updatedAt"
+            FROM rooms AS r
+            LEFT JOIN buildings AS b ON b.id = r.building_id
+            LEFT JOIN colleges as c ON c.id = r.college_id
+            LEFT JOIN divisions AS d ON d.id = r.division_id
+            WHERE r.id = $1
+        `,
+      [id],
+    )) as Results<RoomData>;
+    if (data.rows.length === 0) return null;
+    return data.rows[0] as RoomData;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+// export async function getLocalRooms(): Promise<RoomData[] | undefined> {
+//   try {
+//     const localDB = getDB();
+
+//     await localDB.waitReady;
+//     const data = (await localDB.query(`
+//       SELECT
+//         r.room_code AS code,
+//         r.directions AS directions,
+//         json_build_object('name',b.building_name, 'lat', b.lat, 'lon', b.lon, 'directions', b.directions ) as building,
+//         c.college_name as "collegeName",
+//         d.division_name as "divisionName",
+//         r.building_id as "buildingId",
+//         r.college_id as "collegeId",
+//         r.division_id as "divisionId"
+//       FROM rooms AS r
+//       LEFT JOIN buildings AS b ON b.id = r.building_id
+//       LEFT JOIN colleges as c ON c.id = r.college_id
+//       LEFT JOIN divisions AS d ON d.id = r.division_id;
+//       `)) as Results<RoomData>;
+//     return data.rows;
+//   } catch (e) {
+//     console.error("Error: ", e);
+//     return undefined;
+//   }
+// }
+
+export async function getLocalClasses(): Promise<ClassMapValue[] | undefined> {
+  try {
+    const localDB = await getDB();
+
+    await localDB.waitReady;
+    const data = (await localDB.query(`
+      SELECT
+        c.id,
+        c.course_code as "courseCode",
+        c.section,
+        c.type,
+        c.schedule,
+        c.directions,
+        c.course_title as "courseTitle",
+        c.term_id as "termId",
+        c.room_id as "roomId"
+      FROM classes AS c
+      LEFT JOIN rooms AS r ON r.id = c.room_id;
+    `)) as Results<ClassMapValue>;
+    return data.rows;
+  } catch (e) {
+    console.error("Error: ", e);
+    return undefined;
+  }
+}
+
+/**
+ * Building ids that host at least one class for a term (or any term when
+ * termId is omitted). Derived from the classes -> rooms -> building chain;
+ * used to surface dual-role buildings (admin AND class venue) in the class
+ * filter. Returns an empty set on any error so callers degrade gracefully.
+ */
+export async function getBuildingIdsWithClasses(
+  termId?: number | null,
+): Promise<Set<number>> {
+  try {
+    const localDB = await getDB();
+    await localDB.waitReady;
+    const scoped = termId != null;
+    const data = (await localDB.query(
+      `
+      SELECT DISTINCT r.building_id AS "buildingId"
+      FROM classes AS c
+      JOIN rooms AS r ON r.id = c.room_id
+      WHERE r.building_id IS NOT NULL
+      ${scoped ? "AND c.term_id = $1" : ""};
+    `,
+      scoped ? [termId] : [],
+    )) as Results<{ buildingId: number | null }>;
+    return new Set(
+      data.rows
+        .map((row) => row.buildingId)
+        .filter((id): id is number => id !== null),
+    );
+  } catch (e) {
+    console.error("Error: ", e);
+    return new Set<number>();
+  }
+}
+
+export async function loadCachedAppData(): Promise<DBData> {
+  const [
+    buildings,
+    colleges,
+    divisions,
+    dorms,
+    events,
+    organizations,
+    places,
+    roomsMeta,
+  ] = await Promise.all([
+    getLocalBuildings().then((rows) => rows ?? []),
+    getLocalColleges().then((rows) => rows ?? []),
+    getLocalDivisions().then((rows) => rows ?? []),
+    getLocalDorms().then((rows) => rows ?? []),
+    getLocalEvents().then((rows) => rows ?? []),
+    getLocalOrganizations().then((rows) => rows ?? []),
+    getLocalPlaces().then((rows) => rows ?? []),
+    getLocalRoomsCounts(),
+  ]);
+
+  return {
+    buildings,
+    colleges,
+    divisions,
+    dorms,
+    events,
+    organizations,
+    places,
+    directionCount: roomsMeta.directionCount,
+    totalRooms: roomsMeta.totalRooms,
+  };
+}
+
+export async function getJSONFetch<T>(url: string, timeoutMs = 30_000) {
+  const req = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
+  return (await req.json()) as T;
+}
+
+export function getEntity<T>(
+  tableName: string,
+  getLocalEntity: () => Promise<T[] | undefined>,
+): (checker: TableSyncInfo) => Promise<EntityLoadResult<T>> {
+  return async (checker: TableSyncInfo) => {
+    // local() never throws: a broken PGlite must not take down the whole
+    // load path — every branch below relies on it as the safe fallback.
+    const local = async () => {
+      try {
+        return (await getLocalEntity()) ?? [];
+      } catch {
+        return [];
+      }
+    };
+    // #866: the cache hydrates in the background (~5 MB of wasm). This
+    // snapshot is only a last-resort fallback for a failed fetch, so it must
+    // not put the whole boot behind PGlite — a first-time visitor would be
+    // waiting on a database that is guaranteed empty. Once hydrated, every
+    // later call takes the real snapshot as before.
+    const initialSnapshot: T[] = isLocalCacheReady() ? await local() : [];
+    // Offline (sync endpoint unreachable): prefer stale local cache over
+    // failing to remote. Only treat invalid checker as "must refetch" when
+    // we actually got a newKey back (confirmed sync mismatch) (#169).
+    if (checker.newKey === null) {
+      const cached = await local();
+      return { rows: cached, source: "cache" };
+    }
+    if (checker.valid) {
+      const cached = await local();
+      // localStorage sync key can outlive PGlite (IDB eviction, cleared site data).
+      // Treat an empty cache as stale so we refetch instead of showing no events.
+      if (cached.length > 0) {
+        return { rows: cached, source: "cache" };
+      }
+    }
+    try {
+      const fetchedData = await fetchJsonWithRetry<T[]>(
+        `/api/${tableName}`,
+        ENTITY_FETCH_OPTIONS,
+      );
+      if (Array.isArray(fetchedData)) {
+        return { rows: fetchedData, source: "remote" };
+      }
+      const cached = await local();
+      return { rows: cached, source: "cache" };
+    } catch {
+      const cached = await local();
+      // if cache is gone, return the snapshot taken before the fetch
+      return {
+        rows: cached.length > 0 ? cached : initialSnapshot,
+        source: "cache",
+      };
+    }
+  };
+}
+
+export async function fetchRemoteEvents(): Promise<EventData[]> {
+  return fetchJsonWithRetry<EventData[]>("/api/events", ENTITY_FETCH_OPTIONS);
+}
+
+export const getBuildings = getEntity<BuildingData>(
+  "buildings",
+  getLocalBuildings,
+);
+
+export const getColleges = getEntity<CollegeData>("colleges", getLocalColleges);
+
+export const getDivisions = getEntity<DivisionData>(
+  "divisions",
+  getLocalDivisions,
+);
+
+export const getDorms = getEntity<DormData>("dorms", getLocalDorms);
+
+export const getOrganizations = getEntity<OrgData>(
+  "organizations",
+  getLocalOrganizations,
+);
+export const getPlaces = getEntity<PlaceData>("places", getLocalPlaces);
+
+export const getEvents = getEntity<EventData>("events", getLocalEvents);
+
+export const getAnnouncements = getEntity<AnnouncementData>(
+  "announcements",
+  getLocalAnnouncements,
+);
+
+export const getClasses = getEntity<ClassMapValue>("classes", getLocalClasses);
+
+/** Room list from the API; used when PGlite has no rows or for background refresh. */
+export async function fetchEntityRoomsRemote(
+  entityName: "building" | "college" | "division",
+  id: number,
+): Promise<RoomData[]> {
+  const url = `/api/rooms?${entityName}_id=${id}`;
+  try {
+    const response = await fetch(url);
+    const fetchedData = (await response.json()) as { data?: RoomData[] };
+    if (response.ok && Array.isArray(fetchedData?.data)) {
+      return fetchedData.data;
+    }
+    if (response.status === 404) {
+      return [];
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+export function getEntityRooms(
+  entityName: string,
+  getLocalTableRoom: (id: number) => Promise<RoomData[] | undefined>,
+) {
+  return async (validSync: boolean, id: number) => {
+    const loadLocal = async () => (await getLocalTableRoom(id)) ?? [];
+    const cached = await loadLocal();
+    // Cache-first: paint from PGlite when rows exist (#415).
+    if (cached.length > 0) return cached;
+    if (validSync) return cached;
+    const remote = await fetchEntityRoomsRemote(
+      entityName as "building" | "college" | "division",
+      id,
+    );
+    return remote.length > 0 ? remote : cached;
+  };
+}
+
+const CLASS_ROW_SELECT = `
+  c.id,
+  c.course_code as "courseCode",
+  c.section,
+  c.type,
+  c.schedule,
+  c.directions,
+  c.course_title as "courseTitle",
+  c.term_id as "termId",
+  c.room_id as "roomId"
+`;
+
+/** Classes for one room from PGlite; null when the classes table is empty (#415). */
+export async function getLocalClassesForRoom(
+  roomCode: string,
+  termId: number | null,
+): Promise<ClassMapValue[] | null> {
+  try {
+    const localDB = await getDB();
+    await localDB.waitReady;
+    const hasAny = (await localDB.query(
+      "SELECT 1 FROM classes LIMIT 1",
+    )) as Results<Record<string, unknown>>;
+    if (hasAny.rows.length === 0) return null;
+
+    const scoped = termId != null;
+    const data = (await localDB.query(
+      `
+      SELECT ${CLASS_ROW_SELECT}
+      FROM classes AS c
+      JOIN rooms AS r ON r.id = c.room_id
+      WHERE upper(r.room_code) = upper($1)
+      ${scoped ? "AND c.term_id = $2" : ""}
+      `,
+      scoped ? [roomCode, termId] : [roomCode],
+    )) as Results<ClassMapValue>;
+    return data.rows;
+  } catch (e) {
+    console.error("Error: ", e);
+    return null;
+  }
+}
+
+const ENTITY_ROOM_FILTER: Record<"building" | "college" | "division", string> =
+  {
+    building: "r.building_id = $1",
+    college: "r.college_id = $1",
+    division: "r.division_id = $1",
+  };
+
+/** Per-room class counts from PGlite; null when classes were never synced (#415). */
+export async function getLocalRoomClassCounts(
+  entityName: "building" | "college" | "division",
+  id: number,
+  termId?: number,
+): Promise<Map<number, number> | null> {
+  try {
+    const localDB = await getDB();
+    await localDB.waitReady;
+    const hasAny = (await localDB.query(
+      "SELECT 1 FROM classes LIMIT 1",
+    )) as Results<Record<string, unknown>>;
+    if (hasAny.rows.length === 0) return null;
+
+    const scoped = termId != null;
+    const data = (await localDB.query(
+      `
+      SELECT c.room_id AS "roomId", COUNT(*)::int AS count
+      FROM classes AS c
+      JOIN rooms AS r ON r.id = c.room_id
+      WHERE ${ENTITY_ROOM_FILTER[entityName]}
+      ${scoped ? "AND c.term_id = $2" : ""}
+      GROUP BY c.room_id
+      `,
+      scoped ? [id, termId] : [id],
+    )) as Results<{ roomId: number; count: number }>;
+    return new Map(data.rows.map((row) => [row.roomId, row.count]));
+  } catch (e) {
+    console.error("Error: ", e);
+    return null;
+  }
+}
+
+export const getBuildingRooms = getEntityRooms(
+  "building",
+  getLocalBuildingRooms,
+);
+
+export const getCollegeRooms = getEntityRooms("college", getLocalCollegeRooms);
+
+export const getDivisionRooms = getEntityRooms(
+  "division",
+  getLocalDivisionRooms,
+);
+
+/** Per-room class counts for an entity's room list, scoped to the active term.
+ * One batched /api/rooms/class-counts request replaces N+1 /api/classes calls
+ * per visible row (#342). Returns null on offline/server error so the UI can
+ * distinguish "not loaded yet" from a real "0 classes". */
+export async function fetchRoomClassCounts(
+  entityName: "building" | "college" | "division",
+  id: number,
+  termId?: number,
+): Promise<Map<number, number> | null> {
+  const local = await getLocalRoomClassCounts(entityName, id, termId);
+  if (local !== null) return local;
+
+  const params = new URLSearchParams({ [`${entityName}_id`]: String(id) });
+  if (termId != null) params.set("term_id", String(termId));
+  try {
+    const response = await fetch(
+      `/api/rooms/class-counts?${params.toString()}`,
+    );
+    if (!response.ok) return null;
+    const payload = (await response.json()) as {
+      data?: { roomId: number; count: number }[];
+    };
+    if (!Array.isArray(payload?.data)) return null;
+    return new Map(payload.data.map((row) => [row.roomId, row.count]));
+  } catch {
+    return null;
+  }
+}
+
+export async function getRoomsData(): Promise<
+  Pick<DBData, "directionCount" | "totalRooms">
+> {
+  try {
+    const fetchedRoomsData =
+      await getJSONFetch<Pick<DBData, "directionCount" | "totalRooms">>(
+        "/api/rooms-update",
+      );
+    if (
+      typeof fetchedRoomsData?.totalRooms === "number" &&
+      fetchedRoomsData.totalRooms > 0
+    ) {
+      return fetchedRoomsData;
+    }
+    // Offline / empty response: derive counts from cached PGlite rows.
+    const local = await getLocalRoomsCounts();
+    return local.totalRooms > 0 ? local : fetchedRoomsData;
+  } catch {
+    return getLocalRoomsCounts();
+  }
+}
+
+/** Room counts derived from the local PGlite cache (offline fallback). */
+export async function getLocalRoomsCounts(): Promise<
+  Pick<DBData, "directionCount" | "totalRooms">
+> {
+  try {
+    const localDB = await getDB();
+    await localDB.waitReady;
+    const total = (await localDB.query(
+      "SELECT COUNT(*)::int AS count FROM rooms",
+    )) as Results<{ count: number }>;
+    const directed = (await localDB.query(
+      "SELECT COUNT(*)::int AS count FROM rooms WHERE directions IS NOT NULL",
+    )) as Results<{ count: number }>;
+    return {
+      totalRooms: total.rows[0]?.count ?? 0,
+      directionCount: directed.rows[0]?.count ?? 0,
+    };
+  } catch (e) {
+    console.error(e);
+    return { directionCount: 0, totalRooms: 0 };
+  }
+}
+
+/** Local room-code search mirroring the server `search_code` behavior, used as
+ * an offline fallback for search suggestions. Returns up to 6 matches, or null
+ * when there are none (matching the server contract). */
+export async function searchLocalRooms(
+  searchString: string,
+): Promise<{ value: string; fullName: string | null }[] | null> {
+  try {
+    const escaped = escapeLikePattern(searchString);
+    const localDB = await getDB();
+    await localDB.waitReady;
+    const data = (await localDB.query(
+      `SELECT room_code AS value, full_name AS "fullName" FROM rooms
+       WHERE upper(room_code) LIKE upper($1) ESCAPE '\\'
+          OR upper(full_name) LIKE upper($1) ESCAPE '\\'
+       ORDER BY length(room_code), room_code
+       LIMIT 6`,
+      [`%${escaped}%`],
+    )) as Results<{ value: string; fullName: string | null }>;
+    return data.rows.length ? data.rows : null;
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
+}
+
+/** Offline alias lookup against the PGlite cache (#155 follow-up). */
+export async function searchLocalAliases(
+  searchString: string,
+): Promise<{ alias: string; value: string }[]> {
+  const normalized = normalizeAlias(searchString);
+  if (!normalized) return [];
+  try {
+    const localDB = await getDB();
+    await localDB.waitReady;
+    const data = (await localDB.query(
+      `
+      SELECT
+        a.alias,
+        COALESCE(b.building_name, a.building_name) AS value,
+        a.normalized_alias AS "normalizedAlias"
+      FROM aliases AS a
+      LEFT JOIN buildings AS b
+        ON a.target_type = 'building' AND b.id = a.target_id
+      WHERE COALESCE(b.building_name, a.building_name) IS NOT NULL
+        AND (a.normalized_alias = $1 OR a.normalized_alias LIKE $2)
+      ORDER BY CASE WHEN a.normalized_alias = $1 THEN 0 ELSE 1 END, a.alias
+      LIMIT 12
+      `,
+      [normalized, `${normalized}%`],
+    )) as Results<{ alias: string; value: string; normalizedAlias: string }>;
+
+    const seen = new Set<string>();
+    return data.rows.filter((row) => {
+      if (!row.value || seen.has(row.value)) return false;
+      seen.add(row.value);
+      return true;
+    });
+  } catch (e) {
+    console.error(e);
+    return [];
+  }
+}

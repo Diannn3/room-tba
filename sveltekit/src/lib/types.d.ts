@@ -10,7 +10,7 @@ import {
   placesTable,
   roomPositionsTable,
   termsTable,
-} from "$lib/server/db";
+} from "@drizzle/schema";
 import type { QueryStoreState } from "./store.svelte";
 
 export type AppData = {

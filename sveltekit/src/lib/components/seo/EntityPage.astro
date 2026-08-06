@@ -1,0 +1,150 @@
+---
+import AppRoot from "@ui/AppRoot.svelte";
+import Layout from "@layouts/Layout.astro";
+import { ogCardPath } from "@lib/site";
+import type { InitialSearchState } from "@lib/app-data";
+
+type Breadcrumb = {
+  href: string;
+  label: string;
+};
+
+type Props = {
+  title: string;
+  description: string;
+  canonicalPath: string;
+  image?: {
+    src: string;
+    alt: string;
+  } | null;
+  heading: string;
+  intro: string;
+  facts?: string[];
+  breadcrumbs: Breadcrumb[];
+  structuredData?: Record<string, unknown>[];
+  initialSearch: InitialSearchState;
+  /** Renders the exact-URL OG card when there is no real photo to share. */
+  ogCard?: {
+    title: string;
+    subtitle?: string | null;
+    kicker?: string | null;
+  } | null;
+};
+
+const {
+  title,
+  description,
+  canonicalPath,
+  image = null,
+  heading,
+  intro,
+  facts = [],
+  breadcrumbs,
+  structuredData = [],
+  initialSearch,
+  ogCard = null,
+}: Props = Astro.props;
+
+// Every entity shares the same legible UPLB card treatment; its own photo
+// remains available in structured data and the app surface.
+const ogImagePath = ogCard ? ogCardPath(ogCard) : image?.src;
+---
+
+<Layout
+  title={title}
+  ogTitle={ogCard?.title}
+  description={description}
+  canonicalPath={canonicalPath}
+  imagePath={ogImagePath}
+  structuredData={structuredData}
+>
+  <main class="entity-page">
+    <div class="entity-page__app">
+      <AppRoot
+        initialSearch={initialSearch}
+        suppressLandingModal={true}
+        client:only="svelte"
+      />
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .entity-page {
+    min-height: 100dvh;
+    background: linear-gradient(180deg, #faf6f4 0%, #ffffff 22rem);
+  }
+
+  .entity-page__content {
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 1rem 1rem 0.75rem;
+    color: #1f1f1f;
+  }
+
+  .breadcrumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0;
+    margin: 0 0 0.75rem;
+    list-style: none;
+    font-size: 0.875rem;
+  }
+
+  .breadcrumbs li:not(:last-child)::after {
+    content: "/";
+    margin-left: 0.5rem;
+    color: #727272;
+  }
+
+  .breadcrumbs a {
+    color: #7b1113;
+    text-decoration: none;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(1.75rem, 3vw, 2.5rem);
+    line-height: 1.1;
+  }
+
+  .entity-page__intro {
+    margin: 0.75rem 0 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    max-width: 56rem;
+  }
+
+  .entity-page__image {
+    display: block;
+    width: min(22rem, 100%);
+    height: auto;
+    margin-top: 1rem;
+    border-radius: 1rem;
+    box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.16);
+  }
+
+  .entity-page__facts {
+    margin: 1rem 0 0;
+    padding-left: 1.25rem;
+    display: grid;
+    gap: 0.4rem;
+    max-width: 56rem;
+  }
+
+  .entity-page__app {
+    position: relative;
+    height: min(70rem, 100dvh - 12rem);
+  }
+
+  @media (max-width: 48rem) {
+    .entity-page__content {
+      padding-inline: 0.75rem;
+    }
+
+    .entity-page__app {
+      height: calc(100dvh - 11rem);
+    }
+  }
+</style>

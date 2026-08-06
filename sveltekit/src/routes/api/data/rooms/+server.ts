@@ -79,9 +79,8 @@ export const GET: RequestHandler = async ({ url }) => {
 	}
 
 	if (data?.length === 0)
-		return new Response("No data exists", {
-			status: 404,
-			statusText: "query not found",
+		throw error(404, {
+			message: "Room not found",
 		});
 	return json(data);
 };

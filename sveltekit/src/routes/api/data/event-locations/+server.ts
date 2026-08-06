@@ -25,7 +25,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		return json(data);
 	} catch (e) {
 		console.error(e);
-		throw error(400, {
+		throw error(500, {
 			message: "Cannot query data for event locations",
 		});
 	}

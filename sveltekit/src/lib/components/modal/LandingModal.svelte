@@ -7,7 +7,7 @@
     MESSENGER_CONTRIBUTE_TARGET,
     MESSENGER_MAINTAIN_TARGET,
   } from ""$lib/constants/community-links";
-  import CommunityPlatformLink from "$lib/components/svelte/community/CommunityPlatformLink.svelte";
+  import CommunityPlatformLink from "$lib/components/community/CommunityPlatformLink.svelte";
   import {
     fetchGithubContributors,
     type GithubContributor,
@@ -16,8 +16,8 @@
   import PeopleAvatarGrid from "./PeopleAvatarGrid.svelte";
   import GithubContributorsSection from "./GithubContributorsSection.svelte";
   import LandingGuideSteps from "./LandingGuideSteps.svelte";
-  import VisitorCounter from "$lib/components/svelte/VisitorCounter.svelte";
-  import GithubStarLink from "$lib/components/svelte/GithubStarLink.svelte";
+  import VisitorCounter from "$lib/components/VisitorCounter.svelte";
+  import GithubStarLink from "$lib/components/GithubStarLink.svelte";
   import { GITHUB_ROOM_TBA_URL } from ""$lib/constants/community-links";
   import Download from "@lucide/svelte/icons/download";
   import { untrack } from "svelte";

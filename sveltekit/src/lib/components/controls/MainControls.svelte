@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Search from '$lib/components/svelte/search/Search.svelte';
+	import Search from '$lib/components/search/Search.svelte';
 	import SidePanel from './SidePanel.svelte';
 </script>
 

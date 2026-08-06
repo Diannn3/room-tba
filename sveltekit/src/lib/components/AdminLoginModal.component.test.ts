@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/svelte";
 import { beforeEach, describe, expect, test } from "vitest";
-import AdminLoginModal from "$lib/components/svelte/AdminLoginModal.svelte";
+import AdminLoginModal from "$lib/components/AdminLoginModal.svelte";
 import { adminAuthStore } from "$lib/store.svelte";
 import {
   expectNoHorizontalOverflow,

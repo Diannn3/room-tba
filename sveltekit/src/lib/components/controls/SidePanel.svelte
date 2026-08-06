@@ -1,9 +1,9 @@
 <script lang="ts">
-	import BottomSheet from '$lib/components/svelte/BottomSheet.svelte';
+	import BottomSheet from '$lib/components/BottomSheet.svelte';
 	import { queryStore, sidePanelStore, jeepneyStore } from '$lib/store.svelte';
 	import JeepneyStopPanel from './JeepneyStopPanel.svelte';
-	import JeepneyRouteModal from '$lib/components/svelte/modal/JeepneyRouteModal.svelte';
-	import SponsorBanner from '$lib/components/svelte/SponsorBanner.svelte';
+	import JeepneyRouteModal from '$lib/components/modal/JeepneyRouteModal.svelte';
+	import SponsorBanner from '$lib/components/SponsorBanner.svelte';
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import { MediaQuery } from 'svelte/reactivity';

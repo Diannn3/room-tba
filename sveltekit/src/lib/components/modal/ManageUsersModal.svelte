@@ -1,14 +1,14 @@
 <script lang="ts">
-	import LoadingIndicator from '$lib/components/svelte/LoadingIndicator.svelte';
-	import IconButton from '$lib/components/svelte/IconButton.svelte';
+	import LoadingIndicator from '$lib/components/LoadingIndicator.svelte';
+	import IconButton from '$lib/components/IconButton.svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { X, Users } from '@lucide/svelte';
 	import { adminAuthStore, toastStore } from '$lib/store.svelte';
 	import { modalContentDismiss, modalContentReveal, overlayFade } from '$lib/motion';
 	import { trapFocus } from '$lib/focus-trap';
-	import EntityEditorFormField from '$lib/components/svelte/editor/EntityEditorFormField.svelte';
-	import EntityEditorSubmitButton from '$lib/components/svelte/editor/EntityEditorSubmitButton.svelte';
-	import EntityEditorMessage from '$lib/components/svelte/editor/EntityEditorMessage.svelte';
+	import EntityEditorFormField from '$lib/components/editor/EntityEditorFormField.svelte';
+	import EntityEditorSubmitButton from '$lib/components/editor/EntityEditorSubmitButton.svelte';
+	import EntityEditorMessage from '$lib/components/editor/EntityEditorMessage.svelte';
 	import '../editor/entity-editor.css';
 	import { MediaQuery } from 'svelte/reactivity';
 

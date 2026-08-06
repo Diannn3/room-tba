@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
-  import SubmitterNameField from "$lib/components/svelte/SubmitterNameField.svelte";
+  import SubmitterNameField from "$lib/components/SubmitterNameField.svelte";
   import { MAX_SUBMITTER_NOTE_LENGTH } from ""$lib/constants/proposals";
   import EntityEditorFormField from "./EntityEditorFormField.svelte";
   import EntityEditorMessage from "./EntityEditorMessage.svelte";

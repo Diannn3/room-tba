@@ -25,9 +25,9 @@
 	import { buildPlanIcs } from '$lib/planner/ics';
 	import { renderPlanToPng } from '$lib/planner/plan-image';
 	import { encodeSharePlan } from '$lib/planner/share-codec';
-	import FinalExamsList from '$lib/components/svelte/room/FinalExamsList.svelte';
-	import TermSelector from '$lib/components/svelte/TermSelector.svelte';
-	import GoogleCalendarIcon from '$lib/components/svelte/icons/GoogleCalendarIcon.svelte';
+	import FinalExamsList from '$lib/components/room/FinalExamsList.svelte';
+	import TermSelector from '$lib/components/TermSelector.svelte';
+	import GoogleCalendarIcon from '$lib/components/icons/GoogleCalendarIcon.svelte';
 	import PlannerCourseSearch from './PlannerCourseSearch.svelte';
 	import PlannerGrid from './PlannerGrid.svelte';
 	import type { ClassMapValue, FinalExamRow } from '$lib/types';

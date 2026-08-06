@@ -1,5 +1,5 @@
 <script lang="ts">
-	import LoadingIndicator from '$lib/components/svelte/LoadingIndicator.svelte';
+	import LoadingIndicator from '$lib/components/LoadingIndicator.svelte';
 	import { buildFieldDiffs } from '$lib/proposals/diff';
 	import { appEntityNameResolver } from '$lib/proposals/entity-names';
 	import { afterProposalPublished } from '$lib/proposals/apply-published-entity';

@@ -1,8 +1,8 @@
 <script lang="ts">
   import ExternalLink from "@lucide/svelte/icons/external-link";
   import GitFork from "@lucide/svelte/icons/git-fork";
-  import CommunityBrandIcon from "$lib/components/svelte/community/CommunityBrandIcon.svelte";
-  import MapChromeGhostButton from "$lib/components/svelte/map-chrome/MapChromeGhostButton.svelte";
+  import CommunityBrandIcon from "$lib/components/community/CommunityBrandIcon.svelte";
+  import MapChromeGhostButton from "$lib/components/map-chrome/MapChromeGhostButton.svelte";
   import type {
     StatusBarNavGroup,
     StatusBarActionItem,

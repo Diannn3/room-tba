@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { queryStore, sidePanelStore } from '$lib/store.svelte';
 	import type { RoomData } from '$lib/types';
-	import RoomResult from '$lib/components/svelte/room/RoomResult.svelte';
+	import RoomResult from '$lib/components/room/RoomResult.svelte';
 
 	type Props = {
 		room: RoomData;

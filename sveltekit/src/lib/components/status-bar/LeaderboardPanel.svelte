@@ -1,5 +1,5 @@
 <script lang="ts">
-	import LoadingIndicator from '$lib/components/svelte/LoadingIndicator.svelte';
+	import LoadingIndicator from '$lib/components/LoadingIndicator.svelte';
 	import { onMount } from 'svelte';
 	import type { LeaderboardRow } from '$lib/services/contribution-service';
 

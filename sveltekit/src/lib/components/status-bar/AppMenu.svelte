@@ -29,10 +29,10 @@
     sidebarStore,
     toastStore,
   } from "$lib/store.svelte";
-  import OfflineMaps from "$lib/components/svelte/OfflineMaps.svelte";
-  import PWAInstallPrompt from "$lib/components/svelte/PWAInstallPrompt.svelte";
-  import MapChromeSession from "$lib/components/svelte/map-chrome/MapChromeSession.svelte";
-  import KeyboardShortcutsChip from "$lib/components/svelte/map-chrome/KeyboardShortcutsPopup.svelte";
+  import OfflineMaps from "$lib/components/OfflineMaps.svelte";
+  import PWAInstallPrompt from "$lib/components/PWAInstallPrompt.svelte";
+  import MapChromeSession from "$lib/components/map-chrome/MapChromeSession.svelte";
+  import KeyboardShortcutsChip from "$lib/components/map-chrome/KeyboardShortcutsPopup.svelte";
   import StatusBarLinkGroups from "./StatusBarLinkGroups.svelte";
   import "../map-chrome/map-chrome.css";
 

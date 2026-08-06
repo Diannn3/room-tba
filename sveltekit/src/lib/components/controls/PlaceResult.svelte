@@ -15,8 +15,8 @@
     placeDirectoryLabel,
   } from ""$lib/constants/place-categories";
   import type { PlaceData } from "$lib/types";
-  import EntityEditorPinRow from "$lib/components/svelte/editor/EntityEditorPinRow.svelte";
-  import EntityEditorToggle from "$lib/components/svelte/editor/EntityEditorToggle.svelte";
+  import EntityEditorPinRow from "$lib/components/editor/EntityEditorPinRow.svelte";
+  import EntityEditorToggle from "$lib/components/editor/EntityEditorToggle.svelte";
   import EntityDirectionsChip from "./EntityDirectionsChip.svelte";
   import EntityGoogleMapsLink from "./EntityGoogleMapsLink.svelte";
   import EntityStreetAddress from "./EntityStreetAddress.svelte";

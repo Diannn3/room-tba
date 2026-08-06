@@ -16,7 +16,7 @@ vi.stubGlobal(
     ),
   ),
 );
-import PlannerScreen from "$lib/components/svelte/planner/PlannerScreen.svelte";
+import PlannerScreen from "$lib/components/planner/PlannerScreen.svelte";
 import { plannerStore, termStore } from "$lib/store.svelte";
 import type { ClassMapValue } from "$lib/types";
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import X from '@lucide/svelte/icons/x';
-	import IconButton from '$lib/components/svelte/IconButton.svelte';
+	import IconButton from '$lib/components/IconButton.svelte';
 	import { countFollowPromptView, retireFollowPrompt } from '$lib/social-follow';
 	import FollowUpdates from './FollowUpdates.svelte';
 

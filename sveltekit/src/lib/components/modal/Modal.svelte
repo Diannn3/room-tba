@@ -17,7 +17,7 @@
 	import EditorToolsModal from './EditorToolsModal.svelte';
 	import PrivacyModal from './PrivacyModal.svelte';
 	import OfflineMapsModal from './OfflineMapsModal.svelte';
-	import IconButton from '$lib/components/svelte/IconButton.svelte';
+	import IconButton from '$lib/components/IconButton.svelte';
 	import X from '@lucide/svelte/icons/x';
 
 	const reducedMotion = new MediaQuery('(prefers-reduced-motion: reduce)');

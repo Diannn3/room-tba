@@ -1,5 +1,5 @@
 <script lang="ts">
-  import EntitySkeleton from "$lib/components/svelte/EntitySkeleton.svelte";
+  import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
   import {
     adminAuthStore,
     mapEditStore,
@@ -11,7 +11,7 @@
   } from "$lib/store.svelte";
   import { getAppActions, getAppData } from "$lib/context";
   import Box from "@lucide/svelte/icons/box";
-  import MapChromeActionChip from "$lib/components/svelte/map-chrome/MapChromeActionChip.svelte";
+  import MapChromeActionChip from "$lib/components/map-chrome/MapChromeActionChip.svelte";
   import type { BuildingData, RoomData } from "$lib/types";
   import ResultDisplay from "./ResultDisplay.svelte";
   import EntityShareCopyLink from "./EntityShareCopyLink.svelte";
@@ -20,11 +20,11 @@
   import EntityStreetAddress from "./EntityStreetAddress.svelte";
   import EntityDirectionsChip from "./EntityDirectionsChip.svelte";
   import EntityLastUpdated from "../EntityLastUpdated.svelte";
-  import EntityEditorToggle from "$lib/components/svelte/editor/EntityEditorToggle.svelte";
-  import EntityEditorPanel from "$lib/components/svelte/editor/EntityEditorPanel.svelte";
-  import EntityEditorField from "$lib/components/svelte/editor/EntityEditorField.svelte";
-  import EntityEditorPinRow from "$lib/components/svelte/editor/EntityEditorPinRow.svelte";
-  import ImageUpload from "$lib/components/svelte/editor/ImageUpload.svelte";
+  import EntityEditorToggle from "$lib/components/editor/EntityEditorToggle.svelte";
+  import EntityEditorPanel from "$lib/components/editor/EntityEditorPanel.svelte";
+  import EntityEditorField from "$lib/components/editor/EntityEditorField.svelte";
+  import EntityEditorPinRow from "$lib/components/editor/EntityEditorPinRow.svelte";
+  import ImageUpload from "$lib/components/editor/ImageUpload.svelte";
   import { fieldSaveActionLabel } from "$lib/editor/field-action-label";
   import { entityEditorSavedMessage } from "$lib/editor/field-action-label";
   import { tick } from "svelte";
@@ -45,7 +45,7 @@
     persistEntityChange,
   } from "$lib/proposals/client";
   import { handlePersistEntityResult } from "$lib/editor/handle-persist-result";
-  import MergeEntityPrompt from "$lib/components/svelte/editor/MergeEntityPrompt.svelte";
+  import MergeEntityPrompt from "$lib/components/editor/MergeEntityPrompt.svelte";
   import {
     clearEntityContributorDraft,
     readEntityContributorDraft,

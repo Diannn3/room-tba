@@ -14,16 +14,16 @@
     type MapToolsSection,
   } from "$lib/store.svelte";
   import { panelFadeIn, panelFadeOut } from "$lib/motion";
-  import MapViewControls from "$lib/components/svelte/MapViewControls.svelte";
-  import MapLegend from "$lib/components/svelte/MapLegend.svelte";
-  import TerrainControl from "$lib/components/svelte/TerrainControl.svelte";
+  import MapViewControls from "$lib/components/MapViewControls.svelte";
+  import MapLegend from "$lib/components/MapLegend.svelte";
+  import TerrainControl from "$lib/components/TerrainControl.svelte";
   import { TERRAIN_ENABLED } from ""$lib/constants/map-terrain";
-  import TrailControl from "$lib/components/svelte/TrailControl.svelte";
-  import JeepneyMenu from "$lib/components/svelte/JeepneyMenu.svelte";
-  import ScheduleImportPanel from "$lib/components/svelte/ScheduleImportPanel.svelte";
+  import TrailControl from "$lib/components/TrailControl.svelte";
+  import JeepneyMenu from "$lib/components/JeepneyMenu.svelte";
+  import ScheduleImportPanel from "$lib/components/ScheduleImportPanel.svelte";
   import { trapFocus } from "$lib/focus-trap";
-  import MapChromeFabTrigger from "$lib/components/svelte/map-chrome/MapChromeFabTrigger.svelte";
-  import MapChromePanel from "$lib/components/svelte/map-chrome/MapChromePanel.svelte";
+  import MapChromeFabTrigger from "$lib/components/map-chrome/MapChromeFabTrigger.svelte";
+  import MapChromePanel from "$lib/components/map-chrome/MapChromePanel.svelte";
   import "./map-chrome/map-chrome.css";
   import { MediaQuery } from "svelte/reactivity";
 

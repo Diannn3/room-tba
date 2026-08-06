@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { modalStore } from '$lib/store.svelte';
-	import EditorShelf from '$lib/components/svelte/EditorShelf.svelte';
+	import EditorShelf from '$lib/components/EditorShelf.svelte';
 	import '../map-chrome/map-chrome.css';
 </script>
 

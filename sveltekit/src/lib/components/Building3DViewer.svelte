@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, untrack } from 'svelte';
-	import IconButton from '$lib/components/svelte/IconButton.svelte';
+	import IconButton from '$lib/components/IconButton.svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { X, Building2, Loader, RotateCcw, Pencil } from '@lucide/svelte';
 	import { building3DStore, adminAuthStore } from '$lib/store.svelte';

@@ -3,7 +3,7 @@
 	import { toastStore } from '$lib/store.svelte';
 	import Download from '@lucide/svelte/icons/download';
 	import X from '@lucide/svelte/icons/x';
-	import IconButton from '$lib/components/svelte/IconButton.svelte';
+	import IconButton from '$lib/components/IconButton.svelte';
 
 	const INSTALL_DISMISS_KEY = 'room-tba:install-dismissed';
 	const INSTALL_DISMISS_DAYS = 14;

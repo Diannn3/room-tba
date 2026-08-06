@@ -19,8 +19,8 @@
   import EntityLastUpdated from "../EntityLastUpdated.svelte";
   import EntityShareCopyLink from "./EntityShareCopyLink.svelte";
   import EntityBackToList from "./EntityBackToList.svelte";
-  import EntityEditorToggle from "$lib/components/svelte/editor/EntityEditorToggle.svelte";
-  import EntityEditorPinRow from "$lib/components/svelte/editor/EntityEditorPinRow.svelte";
+  import EntityEditorToggle from "$lib/components/editor/EntityEditorToggle.svelte";
+  import EntityEditorPinRow from "$lib/components/editor/EntityEditorPinRow.svelte";
   import type { OrgData } from "$lib/types";
   import {
     isStudentOrganization,

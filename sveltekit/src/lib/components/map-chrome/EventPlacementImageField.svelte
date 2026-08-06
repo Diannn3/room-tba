@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ImageUpload from '$lib/components/svelte/editor/ImageUpload.svelte';
+	import ImageUpload from '$lib/components/editor/ImageUpload.svelte';
 	import { adminAuthStore, eventPlacementStore } from '$lib/store.svelte';
 
 	const draft = $derived(eventPlacementStore.draft);

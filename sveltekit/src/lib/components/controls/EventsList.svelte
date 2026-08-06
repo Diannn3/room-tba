@@ -1,6 +1,6 @@
 <script lang="ts">
-	import EntitySkeleton from '$lib/components/svelte/EntitySkeleton.svelte';
-	import LoadingIndicator from '$lib/components/svelte/LoadingIndicator.svelte';
+	import EntitySkeleton from '$lib/components/EntitySkeleton.svelte';
+	import LoadingIndicator from '$lib/components/LoadingIndicator.svelte';
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
 	import MapPin from '@lucide/svelte/icons/map-pin';
 	import EntityPanelHeader from './EntityPanelHeader.svelte';

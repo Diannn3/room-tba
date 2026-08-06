@@ -3,7 +3,7 @@
 	import CalendarDays from '@lucide/svelte/icons/calendar-days';
 	import CalendarPlus from '@lucide/svelte/icons/calendar-plus';
 	import ChevronUp from '@lucide/svelte/icons/chevron-up';
-	import SubmitterNameField from '$lib/components/svelte/SubmitterNameField.svelte';
+	import SubmitterNameField from '$lib/components/SubmitterNameField.svelte';
 	import MapChromeActionChip from './MapChromeActionChip.svelte';
 	import MapChromeToggleButton from './MapChromeToggleButton.svelte';
 

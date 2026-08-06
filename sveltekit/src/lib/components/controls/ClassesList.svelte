@@ -1,6 +1,6 @@
 <script lang="ts">
-	import EntitySkeleton from '$lib/components/svelte/EntitySkeleton.svelte';
-	import Classes from '$lib/components/svelte/room/Classes.svelte';
+	import EntitySkeleton from '$lib/components/EntitySkeleton.svelte';
+	import Classes from '$lib/components/room/Classes.svelte';
 	import EntityEmptyState from './EntityEmptyState.svelte';
 	import EntityPanelFilter from './EntityPanelFilter.svelte';
 	import EntityPanelHeader from './EntityPanelHeader.svelte';
@@ -8,10 +8,10 @@
 	import { fetchClassPage } from '$lib/classes-api';
 	import { CLASS_BROWSE_SCOPE_NOTE } from '$lib/amis/room-scheduled-types';
 	import { queryStore, termStore } from '$lib/store.svelte';
-	import ScheduleFreshnessNote from '$lib/components/svelte/ScheduleFreshnessNote.svelte';
+	import ScheduleFreshnessNote from '$lib/components/ScheduleFreshnessNote.svelte';
 	import type { ClassMapValue } from '$lib/types';
 	import { onMount } from 'svelte';
-	import TermSelector from '$lib/components/svelte/TermSelector.svelte';
+	import TermSelector from '$lib/components/TermSelector.svelte';
 
 	const PAGE_SIZE = 25;
 

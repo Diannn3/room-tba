@@ -1,6 +1,6 @@
 <script lang="ts">
-  import EntitySkeleton from "$lib/components/svelte/EntitySkeleton.svelte";
-  import LoadingIndicator from "$lib/components/svelte/LoadingIndicator.svelte";
+  import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
+  import LoadingIndicator from "$lib/components/LoadingIndicator.svelte";
   import ChevronRight from "@lucide/svelte/icons/chevron-right";
   import EntityEmptyState from "./EntityEmptyState.svelte";
   import EntityPanelFilter from "./EntityPanelFilter.svelte";

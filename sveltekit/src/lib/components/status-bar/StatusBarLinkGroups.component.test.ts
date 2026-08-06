@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/svelte";
 import { describe, expect, test } from "vitest";
-import StatusBarLinkGroups from "$lib/components/svelte/status-bar/StatusBarLinkGroups.svelte";
+import StatusBarLinkGroups from "$lib/components/status-bar/StatusBarLinkGroups.svelte";
 import { STATUS_BAR_COMMUNITY_GROUP } from ""$lib/constants/status-bar-links";
 import { MESSENGER_CONTRIBUTE_TARGET } from ""$lib/constants/community-links";
 import { mountAtWidth } from "@test/layout-assertions";

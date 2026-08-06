@@ -4,7 +4,7 @@
 	import { queryStore } from '$lib/store.svelte';
 	import type { RoomData } from '$lib/types';
 	import RoomDisplay from './RoomDisplay.svelte';
-	import TermSelector from '$lib/components/svelte/TermSelector.svelte';
+	import TermSelector from '$lib/components/TermSelector.svelte';
 
 	const MAX_DISPLAY_RESULT = 12;
 	let paginateOffset = $state(0);

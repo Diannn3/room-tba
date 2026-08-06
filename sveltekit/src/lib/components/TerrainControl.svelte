@@ -3,7 +3,7 @@
   import Mountain from "@lucide/svelte/icons/mountain";
   import RotateCcw from "@lucide/svelte/icons/rotate-ccw";
   import X from "@lucide/svelte/icons/x";
-  import IconButton from "$lib/components/svelte/IconButton.svelte";
+  import IconButton from "$lib/components/IconButton.svelte";
   import {
     TERRAIN_EXAGGERATION_OPTIONS,
     TERRAIN_UNAVAILABLE_OFFLINE_MESSAGE,

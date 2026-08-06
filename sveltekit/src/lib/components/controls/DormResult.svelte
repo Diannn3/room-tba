@@ -25,14 +25,14 @@
 		persistEntityChange
 	} from '$lib/proposals/client';
 	import { handlePersistEntityResult } from '$lib/editor/handle-persist-result';
-	import MergeEntityPrompt from '$lib/components/svelte/editor/MergeEntityPrompt.svelte';
+	import MergeEntityPrompt from '$lib/components/editor/MergeEntityPrompt.svelte';
 	import {
 		clearEntityContributorDraft,
 		readEntityContributorDraft,
 		scheduleEntityContributorDraftSave
 	} from '$lib/contributor-drafts';
-	import EntityEditorToggle from '$lib/components/svelte/editor/EntityEditorToggle.svelte';
-	import DormEditorPanel from '$lib/components/svelte/controls/DormEditorPanel.svelte';
+	import EntityEditorToggle from '$lib/components/editor/EntityEditorToggle.svelte';
+	import DormEditorPanel from '$lib/components/controls/DormEditorPanel.svelte';
 	import EntityLastUpdated from '../EntityLastUpdated.svelte';
 	import EntityShareCopyLink from './EntityShareCopyLink.svelte';
 	import EntityBackToList from './EntityBackToList.svelte';

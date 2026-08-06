@@ -16,7 +16,7 @@ vi.mock("$lib/sponsors", async (importOriginal) => ({
   loadSponsors: loadSponsorsMock,
 }));
 
-import SponsorBanner from "$lib/components/svelte/SponsorBanner.svelte";
+import SponsorBanner from "$lib/components/SponsorBanner.svelte";
 
 function sponsorsData(overrides: Partial<Sponsor> = {}): SponsorsData {
   const start = new Date(Date.now() - 86400000).toISOString().slice(0, 10);

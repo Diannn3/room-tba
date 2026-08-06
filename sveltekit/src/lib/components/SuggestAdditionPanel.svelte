@@ -25,12 +25,12 @@
     readSuggestAdditionDraft,
     scheduleSuggestAdditionDraftSave,
   } from "$lib/contributor-drafts";
-  import EntityEditorFormField from "$lib/components/svelte/editor/EntityEditorFormField.svelte";
-  import EntityEditorSubmitButton from "$lib/components/svelte/editor/EntityEditorSubmitButton.svelte";
-  import ProposalLicenseNote from "$lib/components/svelte/editor/ProposalLicenseNote.svelte";
-  import EntityEditorPinRow from "$lib/components/svelte/editor/EntityEditorPinRow.svelte";
-  import EntityEditorMessage from "$lib/components/svelte/editor/EntityEditorMessage.svelte";
-  import ImageUpload from "$lib/components/svelte/editor/ImageUpload.svelte";
+  import EntityEditorFormField from "$lib/components/editor/EntityEditorFormField.svelte";
+  import EntityEditorSubmitButton from "$lib/components/editor/EntityEditorSubmitButton.svelte";
+  import ProposalLicenseNote from "$lib/components/editor/ProposalLicenseNote.svelte";
+  import EntityEditorPinRow from "$lib/components/editor/EntityEditorPinRow.svelte";
+  import EntityEditorMessage from "$lib/components/editor/EntityEditorMessage.svelte";
+  import ImageUpload from "$lib/components/editor/ImageUpload.svelte";
   import ContributorPendingProposals from "./ContributorPendingProposals.svelte";
   import type { BundledRoomDraft } from "$lib/proposals/create-proposal-validation";
   import {

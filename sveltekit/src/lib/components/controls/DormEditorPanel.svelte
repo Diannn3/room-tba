@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { DormData } from '$lib/types';
-	import EntityEditorPanel from '$lib/components/svelte/editor/EntityEditorPanel.svelte';
-	import EntityEditorPinRow from '$lib/components/svelte/editor/EntityEditorPinRow.svelte';
-	import EntityEditorField from '$lib/components/svelte/editor/EntityEditorField.svelte';
-	import EntityEditorCheckboxField from '$lib/components/svelte/editor/EntityEditorCheckboxField.svelte';
-	import ImageUpload from '$lib/components/svelte/editor/ImageUpload.svelte';
+	import EntityEditorPanel from '$lib/components/editor/EntityEditorPanel.svelte';
+	import EntityEditorPinRow from '$lib/components/editor/EntityEditorPinRow.svelte';
+	import EntityEditorField from '$lib/components/editor/EntityEditorField.svelte';
+	import EntityEditorCheckboxField from '$lib/components/editor/EntityEditorCheckboxField.svelte';
+	import ImageUpload from '$lib/components/editor/ImageUpload.svelte';
 	import { fieldSaveActionLabel } from '$lib/editor/field-action-label';
 	import { entityEditorSavedMessage } from '$lib/editor/field-action-label';
 	import { adminAuthStore, mapEditStore, mapProposalStore } from '$lib/store.svelte';

@@ -3,8 +3,8 @@
 	import type { PendingProposalRow } from '$lib/proposals/pending-proposals';
 	import { formatProposalStatusLabel } from '$lib/proposals/pending-proposals';
 	import { adminAuthStore, toastStore } from '$lib/store.svelte';
-	import EntityEditorMessage from '$lib/components/svelte/editor/EntityEditorMessage.svelte';
-	import EntityEditorSubmitButton from '$lib/components/svelte/editor/EntityEditorSubmitButton.svelte';
+	import EntityEditorMessage from '$lib/components/editor/EntityEditorMessage.svelte';
+	import EntityEditorSubmitButton from '$lib/components/editor/EntityEditorSubmitButton.svelte';
 	import { onMount } from 'svelte';
 
 	let {

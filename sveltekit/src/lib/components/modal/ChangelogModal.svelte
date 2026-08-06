@@ -5,7 +5,7 @@
   import { parseChangelogEntries } from "$lib/changelog-highlights";
   import { releaseTimestampLabel } from "$lib/release-timestamps";
   import changelogRaw from "../../../../CHANGELOG.md?raw";
-  import FollowUpdates from "$lib/components/svelte/community/FollowUpdates.svelte";
+  import FollowUpdates from "$lib/components/community/FollowUpdates.svelte";
 
   const entries = $derived(parseChangelogEntries(changelogRaw));
   const hasUpdate = $derived(syncToastStore.needRefresh);

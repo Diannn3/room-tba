@@ -9,8 +9,8 @@
 	import TransitStopEditor from './TransitStopEditor.svelte';
 	import { getJeepneyRouteShareUrl } from '$lib/share-links';
 	import { jeepneyStore, transitStore } from '$lib/store.svelte';
-	import MapChromeActionChip from '$lib/components/svelte/map-chrome/MapChromeActionChip.svelte';
-	import '$lib/components/svelte/map-chrome/map-chrome.css';
+	import MapChromeActionChip from '$lib/components/map-chrome/MapChromeActionChip.svelte';
+	import '$lib/components/map-chrome/map-chrome.css';
 
 	const route = $derived(transitStore.getRoute(jeepneyStore.selectedRouteId));
 

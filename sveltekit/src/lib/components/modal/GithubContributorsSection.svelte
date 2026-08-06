@@ -1,5 +1,5 @@
 <script lang="ts">
-	import LoadingIndicator from '$lib/components/svelte/LoadingIndicator.svelte';
+	import LoadingIndicator from '$lib/components/LoadingIndicator.svelte';
 	import PeopleAvatarGrid from './PeopleAvatarGrid.svelte';
 	import type { GithubContributor } from '$lib/github-contributors';
 	import { formatGithubContributions } from '$lib/github-contributors';

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import EntityShareCopyLink from "$lib/components/svelte/controls/EntityShareCopyLink.svelte";
-  import EventShelfToolbar from "$lib/components/svelte/map-chrome/EventShelfToolbar.svelte";
+  import EntityShareCopyLink from "$lib/components/controls/EntityShareCopyLink.svelte";
+  import EventShelfToolbar from "$lib/components/map-chrome/EventShelfToolbar.svelte";
   import { getAppData } from "$lib/context";
   import { getEventImage } from "$lib/event-images";
   import { formatCampusDateShort, formatCampusTime } from "$lib/event-time";

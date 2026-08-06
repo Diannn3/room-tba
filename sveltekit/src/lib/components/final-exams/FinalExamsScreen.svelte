@@ -8,8 +8,8 @@
 	import { sidebarStore, termStore } from '$lib/store.svelte';
 	import { fetchFinalExams, FINALS_SCOPE_NOTE, formatExamDate } from '$lib/final-exams';
 	import { finalsWindowLabel } from '$lib/term-calendar';
-	import FinalExamsList from '$lib/components/svelte/room/FinalExamsList.svelte';
-	import TermSelector from '$lib/components/svelte/TermSelector.svelte';
+	import FinalExamsList from '$lib/components/room/FinalExamsList.svelte';
+	import TermSelector from '$lib/components/TermSelector.svelte';
 	import type { FinalExamRow } from '$lib/types';
 
 	const reducedMotion = new MediaQuery('(prefers-reduced-motion: reduce)');

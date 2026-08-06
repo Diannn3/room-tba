@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
 
 import { resolvePanelContent } from "$lib/side-panel-content";
-import BuildingResult from "$lib/components/svelte/controls/BuildingResult.svelte";
-import CampusBrowseList from "$lib/components/svelte/controls/CampusBrowseList.svelte";
-import ProposalReviewPanel from "$lib/components/svelte/ProposalReviewPanel.svelte";
-import RoomResult from "$lib/components/svelte/room/RoomResult.svelte";
+import BuildingResult from "$lib/components/controls/BuildingResult.svelte";
+import CampusBrowseList from "$lib/components/controls/CampusBrowseList.svelte";
+import ProposalReviewPanel from "$lib/components/ProposalReviewPanel.svelte";
+import RoomResult from "$lib/components/room/RoomResult.svelte";
 
 describe("resolvePanelContent", () => {
   /**

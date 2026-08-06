@@ -1,5 +1,5 @@
 <script lang="ts">
-	import LoadingIndicator from '$lib/components/svelte/LoadingIndicator.svelte';
+	import LoadingIndicator from '$lib/components/LoadingIndicator.svelte';
 	import { onMount } from 'svelte';
 	import { getAppData } from '$lib/context';
 	import {
@@ -14,7 +14,7 @@
 		type RoomFieldCategory
 	} from '$lib/contributor-progress';
 	import { adminAuthStore } from '$lib/store.svelte';
-	import MapChromeGhostButton from '$lib/components/svelte/map-chrome/MapChromeGhostButton.svelte';
+	import MapChromeGhostButton from '$lib/components/map-chrome/MapChromeGhostButton.svelte';
 
 	type ScopeTab = 'campus' | 'building' | 'mine';
 

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import TodayScreen from "$lib/components/svelte/today/TodayScreen.svelte";
+import TodayScreen from "$lib/components/today/TodayScreen.svelte";
 import {
   plannerStore,
   queryStore,

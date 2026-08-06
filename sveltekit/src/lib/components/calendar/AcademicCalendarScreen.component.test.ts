@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/svelte";
 import { beforeEach, describe, expect, test } from "vitest";
-import AcademicCalendarScreen from "$lib/components/svelte/calendar/AcademicCalendarScreen.svelte";
+import AcademicCalendarScreen from "$lib/components/calendar/AcademicCalendarScreen.svelte";
 import {
   expectNoHorizontalOverflow,
   mountAtWidth,

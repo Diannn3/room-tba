@@ -1,5 +1,5 @@
 <script lang="ts">
-  import EntitySkeleton from "$lib/components/svelte/EntitySkeleton.svelte";
+  import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
   import ExternalLink from "@lucide/svelte/icons/external-link";
   import MapPin from "@lucide/svelte/icons/map-pin";
   import Route from "@lucide/svelte/icons/route";
@@ -7,13 +7,13 @@
   import EntityShareCopyLink from "./EntityShareCopyLink.svelte";
   import EntityDirectionsChip from "./EntityDirectionsChip.svelte";
   import EntityLastUpdated from "../EntityLastUpdated.svelte";
-  import EntityEditorToggle from "$lib/components/svelte/editor/EntityEditorToggle.svelte";
-  import EntityEditorPanel from "$lib/components/svelte/editor/EntityEditorPanel.svelte";
-  import EntityEditorFormField from "$lib/components/svelte/editor/EntityEditorFormField.svelte";
-  import EntityEditorCard from "$lib/components/svelte/editor/EntityEditorCard.svelte";
-  import EntityEditorPinRow from "$lib/components/svelte/editor/EntityEditorPinRow.svelte";
-  import EntityEditorSubmitButton from "$lib/components/svelte/editor/EntityEditorSubmitButton.svelte";
-  import ImageUpload from "$lib/components/svelte/editor/ImageUpload.svelte";
+  import EntityEditorToggle from "$lib/components/editor/EntityEditorToggle.svelte";
+  import EntityEditorPanel from "$lib/components/editor/EntityEditorPanel.svelte";
+  import EntityEditorFormField from "$lib/components/editor/EntityEditorFormField.svelte";
+  import EntityEditorCard from "$lib/components/editor/EntityEditorCard.svelte";
+  import EntityEditorPinRow from "$lib/components/editor/EntityEditorPinRow.svelte";
+  import EntityEditorSubmitButton from "$lib/components/editor/EntityEditorSubmitButton.svelte";
+  import ImageUpload from "$lib/components/editor/ImageUpload.svelte";
   import { fieldSaveActionLabel } from "$lib/editor/field-action-label";
   import { getAppActions, getAppData } from "$lib/context";
   import {

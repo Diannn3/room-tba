@@ -1,5 +1,5 @@
 <script lang="ts">
-  import EntitySkeleton from "$lib/components/svelte/EntitySkeleton.svelte";
+  import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
   import { onMount } from "svelte";
   import {
     adminAuthStore,
@@ -26,10 +26,10 @@
   import { getAppData } from "$lib/context";
   import EntityGoogleMapsLink from "../controls/EntityGoogleMapsLink.svelte";
   import EntityDirectionsChip from "../controls/EntityDirectionsChip.svelte";
-  import EntityEditorToggle from "$lib/components/svelte/editor/EntityEditorToggle.svelte";
-  import EntityEditorPanel from "$lib/components/svelte/editor/EntityEditorPanel.svelte";
-  import EntityEditorField from "$lib/components/svelte/editor/EntityEditorField.svelte";
-  import ImageUpload from "$lib/components/svelte/editor/ImageUpload.svelte";
+  import EntityEditorToggle from "$lib/components/editor/EntityEditorToggle.svelte";
+  import EntityEditorPanel from "$lib/components/editor/EntityEditorPanel.svelte";
+  import EntityEditorField from "$lib/components/editor/EntityEditorField.svelte";
+  import ImageUpload from "$lib/components/editor/ImageUpload.svelte";
   import { fieldSaveActionLabel } from "$lib/editor/field-action-label";
   import { entityEditorSavedMessage } from "$lib/editor/field-action-label";
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
@@ -48,9 +48,9 @@
   import type { FinalExamRow, RoomData } from "$lib/types";
   import Classes from "./Classes.svelte";
   import FinalExamsList from "./FinalExamsList.svelte";
-  import FollowPrompt from "$lib/components/svelte/community/FollowPrompt.svelte";
-  import TermSelector from "$lib/components/svelte/TermSelector.svelte";
-  import BuildingResult from "$lib/components/svelte/controls/BuildingResult.svelte";
+  import FollowPrompt from "$lib/components/community/FollowPrompt.svelte";
+  import TermSelector from "$lib/components/TermSelector.svelte";
+  import BuildingResult from "$lib/components/controls/BuildingResult.svelte";
 
   type RoomEditableField =
     | "roomCode"

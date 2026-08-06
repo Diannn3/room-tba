@@ -15,7 +15,7 @@
 		sidePanelStore
 	} from '$lib/store.svelte';
 	import Suggestions from './Suggestions.svelte';
-	import MapFilterChips from '$lib/components/svelte/map-chrome/MapFilterChips.svelte';
+	import MapFilterChips from '$lib/components/map-chrome/MapFilterChips.svelte';
 	import { observeBlockHeight } from '$lib/layout-css-vars';
 	import { registerSearchFocus } from '$lib/search-focus';
 	import { registerEphemeralOverlayDismisser } from '$lib/overlay-stack';

@@ -1,7 +1,7 @@
 <!-- <script lang="ts">
 	import Layout from '@layouts/Layout.astro';
 	import { breadcrumbSchema, jsonLd, webpageSchema, websiteSchema } from '@lib/site';
-	import AppRoot from '$lib/components/svelte/AppRoot.svelte';
+	import AppRoot from '$lib/components/AppRoot.svelte';
 
 	const title = 'Room TBA | Find Rooms, Dorms, Buildings, Colleges, and Divisions at UPLB';
 	const description =

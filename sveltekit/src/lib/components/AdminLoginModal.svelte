@@ -1,7 +1,7 @@
 <script lang="ts">
   import { fade, fly } from "svelte/transition";
   import { X, Lock } from "@lucide/svelte";
-  import IconButton from "$lib/components/svelte/IconButton.svelte";
+  import IconButton from "$lib/components/IconButton.svelte";
   import { adminAuthStore, toastStore } from "$lib/store.svelte";
   import {
     modalContentDismiss,
@@ -9,11 +9,11 @@
     overlayFade,
   } from "$lib/motion";
   import { trapFocus } from "$lib/focus-trap";
-  import EntityEditorFormField from "$lib/components/svelte/editor/EntityEditorFormField.svelte";
-  import EntityEditorSubmitButton from "$lib/components/svelte/editor/EntityEditorSubmitButton.svelte";
-  import EntityEditorMessage from "$lib/components/svelte/editor/EntityEditorMessage.svelte";
-  import CommunityBrandIcon from "$lib/components/svelte/community/CommunityBrandIcon.svelte";
-  import TurnstileWidget from "$lib/components/svelte/TurnstileWidget.svelte";
+  import EntityEditorFormField from "$lib/components/editor/EntityEditorFormField.svelte";
+  import EntityEditorSubmitButton from "$lib/components/editor/EntityEditorSubmitButton.svelte";
+  import EntityEditorMessage from "$lib/components/editor/EntityEditorMessage.svelte";
+  import CommunityBrandIcon from "$lib/components/community/CommunityBrandIcon.svelte";
+  import TurnstileWidget from "$lib/components/TurnstileWidget.svelte";
   import { MESSENGER_MAINTAIN_TARGET } from ""$lib/constants/community-links";
   import "./editor/entity-editor.css";
   import { MediaQuery } from "svelte/reactivity";

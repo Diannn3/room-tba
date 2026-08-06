@@ -1,5 +1,5 @@
 <script lang="ts">
-	import EntitySkeleton from '$lib/components/svelte/EntitySkeleton.svelte';
+	import EntitySkeleton from '$lib/components/EntitySkeleton.svelte';
 	import { adminAuthStore, queryStore, toastStore, termStore } from '$lib/store.svelte';
 	import {
 		getStoredProposalForEntity,
@@ -7,7 +7,7 @@
 		mergeEntityRecord
 	} from '$lib/proposals/client';
 	import { handlePersistEntityResult } from '$lib/editor/handle-persist-result';
-	import MergeEntityPrompt from '$lib/components/svelte/editor/MergeEntityPrompt.svelte';
+	import MergeEntityPrompt from '$lib/components/editor/MergeEntityPrompt.svelte';
 	import {
 		clearEntityContributorDraft,
 		readEntityContributorDraft,
@@ -26,9 +26,9 @@
 	import EntityExternalLink from './EntityExternalLink.svelte';
 	import EntityLastUpdated from '../EntityLastUpdated.svelte';
 	import { getDivisionShareUrl } from '$lib/share-links';
-	import EntityEditorToggle from '$lib/components/svelte/editor/EntityEditorToggle.svelte';
-	import EntityEditorPanel from '$lib/components/svelte/editor/EntityEditorPanel.svelte';
-	import EntityEditorField from '$lib/components/svelte/editor/EntityEditorField.svelte';
+	import EntityEditorToggle from '$lib/components/editor/EntityEditorToggle.svelte';
+	import EntityEditorPanel from '$lib/components/editor/EntityEditorPanel.svelte';
+	import EntityEditorField from '$lib/components/editor/EntityEditorField.svelte';
 	import { entityEditorSavedMessage } from '$lib/editor/field-action-label';
 	import {
 		checkLocalDivisionRoom,

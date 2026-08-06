@@ -1,9 +1,9 @@
 <script lang="ts">
-	import EntitySkeleton from '$lib/components/svelte/EntitySkeleton.svelte';
+	import EntitySkeleton from '$lib/components/EntitySkeleton.svelte';
 	import { onMount } from 'svelte';
 	import EntityPagination from './EntityPagination.svelte';
-	import Classes from '$lib/components/svelte/room/Classes.svelte';
-	import FinalExamsList from '$lib/components/svelte/room/FinalExamsList.svelte';
+	import Classes from '$lib/components/room/Classes.svelte';
+	import FinalExamsList from '$lib/components/room/FinalExamsList.svelte';
 	import { fetchClassPage } from '$lib/classes-api';
 	import { CLASS_BROWSE_SCOPE_NOTE } from '$lib/amis/room-scheduled-types';
 	import { fetchFinalExams, FINALS_SCOPE_NOTE, looksLikeCourseCode } from '$lib/final-exams';

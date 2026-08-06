@@ -16,11 +16,11 @@
     ProposalValidationError,
     validateCreateProposalPatch,
   } from "$lib/proposals/create-proposal-validation";
-  import EntityEditorFormField from "$lib/components/svelte/editor/EntityEditorFormField.svelte";
-  import EntityEditorPanel from "$lib/components/svelte/editor/EntityEditorPanel.svelte";
-  import EntityEditorPinRow from "$lib/components/svelte/editor/EntityEditorPinRow.svelte";
-  import EntityEditorSubmitButton from "$lib/components/svelte/editor/EntityEditorSubmitButton.svelte";
-  import EntityEditorToggle from "$lib/components/svelte/editor/EntityEditorToggle.svelte";
+  import EntityEditorFormField from "$lib/components/editor/EntityEditorFormField.svelte";
+  import EntityEditorPanel from "$lib/components/editor/EntityEditorPanel.svelte";
+  import EntityEditorPinRow from "$lib/components/editor/EntityEditorPinRow.svelte";
+  import EntityEditorSubmitButton from "$lib/components/editor/EntityEditorSubmitButton.svelte";
+  import EntityEditorToggle from "$lib/components/editor/EntityEditorToggle.svelte";
 
   type Props = {
     routeId: string;

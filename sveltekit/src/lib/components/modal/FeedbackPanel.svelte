@@ -5,10 +5,10 @@
    * required email. What gets attached is listed in full under the fields, and
    * it is read once on mount so the note describes exactly what is sent. */
   import { onMount } from "svelte";
-  import CommunityPlatformLink from "$lib/components/svelte/community/CommunityPlatformLink.svelte";
-  import EntityEditorFormField from "$lib/components/svelte/editor/EntityEditorFormField.svelte";
-  import EntityEditorMessage from "$lib/components/svelte/editor/EntityEditorMessage.svelte";
-  import EntityEditorSubmitButton from "$lib/components/svelte/editor/EntityEditorSubmitButton.svelte";
+  import CommunityPlatformLink from "$lib/components/community/CommunityPlatformLink.svelte";
+  import EntityEditorFormField from "$lib/components/editor/EntityEditorFormField.svelte";
+  import EntityEditorMessage from "$lib/components/editor/EntityEditorMessage.svelte";
+  import EntityEditorSubmitButton from "$lib/components/editor/EntityEditorSubmitButton.svelte";
   import {
     DISCORD_URL,
     MESSENGER_CONTRIBUTE_URL,

@@ -2,11 +2,11 @@
 	import { fade, fly } from 'svelte/transition';
 	import MapPinPlus from '@lucide/svelte/icons/map-pin-plus';
 	import X from '@lucide/svelte/icons/x';
-	import IconButton from '$lib/components/svelte/IconButton.svelte';
+	import IconButton from '$lib/components/IconButton.svelte';
 	import { adminAuthStore, editorChromeStore } from '$lib/store.svelte';
 	import { trapFocus } from '$lib/focus-trap';
 	import { modalContentDismiss, modalContentReveal, overlayFade } from '$lib/motion';
-	import SuggestAdditionPanel from '$lib/components/svelte/SuggestAdditionPanel.svelte';
+	import SuggestAdditionPanel from '$lib/components/SuggestAdditionPanel.svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 
 	const reducedMotion = new MediaQuery('(prefers-reduced-motion: reduce)');

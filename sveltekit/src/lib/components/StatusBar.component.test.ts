@@ -12,7 +12,7 @@ vi.mock("$lib/sponsors", async (importOriginal) => ({
   loadSponsors: loadSponsorsMock,
 }));
 
-import StatusBar from "$lib/components/svelte/StatusBar.svelte";
+import StatusBar from "$lib/components/StatusBar.svelte";
 import { syncToastStore } from "$lib/store.svelte";
 
 afterEach(() => {

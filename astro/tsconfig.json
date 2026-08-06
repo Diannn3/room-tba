@@ -1,14 +1,5 @@
 {
   "extends": "astro/tsconfigs/base",
-  "include": [
-    ".astro/types.d.ts",
-    "src/**/*.ts",
-    "src/**/*.astro",
-    "src/**/*.svelte",
-    "scripts/**/*.ts",
-    "drizzle/**/*.ts",
-    "drizzle.config.ts"
-  ],
   "exclude": ["dist", "node_modules", ".vercel", "coverage"],
   "compilerOptions": {
     "strict": true,
@@ -23,14 +14,5 @@
     "noPropertyAccessFromIndexSignature": true,
     "erasableSyntaxOnly": false,
     "verbatimModuleSyntax": true,
-    "paths": {
-      "@ui/*": ["./src/components/svelte/*"],
-      "@seo/*": ["./src/components/seo/*"],
-      "@constants/*": ["./src/constants/*"],
-      "@lib/*": ["./src/lib/*"],
-      "@drizzle/*": ["./drizzle/*"],
-      "@layouts/*": ["./src/layouts/*"],
-      "@test/*": ["./src/test/*"]
-    }
   }
 }

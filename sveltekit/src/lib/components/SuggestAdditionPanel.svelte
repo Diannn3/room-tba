@@ -17,7 +17,7 @@
   import {
     MAX_SUBMITTER_NOTE_LENGTH,
     validateSubmitterName,
-  } from ""$lib/constants/proposals";
+  } from "$lib/constants/proposals";
   import { instantToCampusWallString } from "$lib/event-time";
   import { slugifySegment } from "$lib/site";
   import {
@@ -38,12 +38,12 @@
     ProposalValidationError,
     validateBundledRooms,
   } from "$lib/proposals/create-proposal-validation";
-  import { PLACE_CATEGORIES, type PlaceCategory } from ""$lib/constants/place-categories";
+  import { PLACE_CATEGORIES, type PlaceCategory } from "$lib/constants/place-categories";
   import {
     ORG_CATEGORIES,
     type OrgCategory,
     orgCategoryLabel,
-  } from ""$lib/constants/org-categories";
+  } from "$lib/constants/org-categories";
   import { onMount } from "svelte";
   import {
     buildDraftPinPreview,

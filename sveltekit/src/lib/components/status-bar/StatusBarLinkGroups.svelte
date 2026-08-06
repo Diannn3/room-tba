@@ -6,7 +6,7 @@
   import type {
     StatusBarNavGroup,
     StatusBarActionItem,
-  } from ""$lib/constants/status-bar-links";
+  } from "$lib/constants/status-bar-links";
 
   type Props = {
     groups: StatusBarNavGroup[];

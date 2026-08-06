@@ -6,7 +6,7 @@
   import { formatCampusDateShort, formatCampusTime } from "$lib/event-time";
   import { getEventShareUrl } from "$lib/share-links";
   import { beginEventPlacement } from "$lib/event-placement";
-  import { validateSubmitterName } from ""$lib/constants/proposals";
+  import { validateSubmitterName } from "$lib/constants/proposals";
   import {
     readProposeEventDraft,
     scheduleProposeEventDraftSave,

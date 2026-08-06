@@ -25,7 +25,7 @@ import { refreshStoredEventTiming, sortStoredEvents } from "$lib/event-time";
 import { normalizeAlias } from "$lib/site";
 import { normalizeDormListFields } from "$lib/string-lists";
 import type { Results } from "@electric-sql/pglite";
-import type { JeepneyRoute, JeepneyStop } from ""$lib/constants/jeepney-routes";
+import type { JeepneyRoute, JeepneyStop } from "$lib/constants/jeepney-routes";
 
 export async function getLocalJeepneyRoutes(): Promise<
   JeepneyRoute[] | undefined

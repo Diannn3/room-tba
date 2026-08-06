@@ -8,7 +8,7 @@
 	import { getAppData } from '$lib/context';
 	import { floatingControlPanelStore, mapViewStore, queryStore } from '$lib/store.svelte';
 	import { openEphemeralOverlay, registerEphemeralOverlayDismisser } from '$lib/overlay-stack';
-	import { campusTransit } from '../../campus.config';
+	import { campusTransit } from '$lib/campus.config';
 
 	type Props = {
 		embedded?: boolean;

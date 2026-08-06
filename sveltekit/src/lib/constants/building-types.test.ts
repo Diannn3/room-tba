@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import {
   buildingMatchesTypeFilter,
   getBuildingTypeFilterOptions,
-} from ""$lib/constants/building-types";
+} from "$lib/constants/building-types";
 import type { BuildingData } from "$lib/types";
 
 function building(id: number, type: "admin" | "non-admin"): BuildingData {

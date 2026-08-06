@@ -19,9 +19,9 @@ import {
   updateTable,
 } from "@drizzle/schema";
 import { normalizeEntityName } from "$lib/entity-names";
-import { sanitizeCrFacilities } from ""$lib/constants/cr-facilities";
-import { normalizePlaceCategory } from ""$lib/constants/place-categories";
-import { normalizeRoomCategory } from ""$lib/constants/room-categories";
+import { sanitizeCrFacilities } from "$lib/constants/cr-facilities";
+import { normalizePlaceCategory } from "$lib/constants/place-categories";
+import { normalizeRoomCategory } from "$lib/constants/room-categories";
 import { db } from "$lib/db";
 import {
   buildingIsrPath,

@@ -2,7 +2,7 @@
 import { pwaInfo } from "virtual:pwa-info";
 import { onMount } from "svelte";
 import { page } from "$app/state";
-import AppRoot from "$lib/components/ui/AppRoot.svelte";
+import AppRoot from "$lib/components/AppRoot.svelte";
 import {
 	absoluteUrl,
 	breadcrumbSchema,
@@ -28,13 +28,6 @@ const structuredData = jsonLd(
 	webpageSchema({ title, description, path: "/" }),
 	breadcrumbSchema([{ name: "Home", path: "/" }]),
 );
-const structuredDataHtml = structuredData
-	.map(
-		(entry) =>
-			`<script type="application/ld+json">${JSON.stringify(entry)}
-</script>`,
-	)
-	.join("\n");
 
 const canonicalUrl = $derived(absoluteUrl(page.url.pathname));
 const imageUrl = absoluteUrl(imagePath);
@@ -93,7 +86,6 @@ const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : "");
 	<meta name="twitter:description" content={description} />
 	<meta name="twitter:image" content={imageUrl} />
 	<meta name="twitter:image:alt" content={shareTitle} />
-	{@html structuredDataHtml}
 
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
@@ -174,7 +166,7 @@ const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : "");
 </svelte:head>
 
 <AppRoot />
-<!-- 
+<!--
 <Layout
 	{title}
 	ogTitle="Find Rooms, Dorms, Buildings, Colleges, and Divisions at UPLB"

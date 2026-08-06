@@ -2,7 +2,7 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "$lib/db";
 import { announcementsTable } from "@drizzle/schema";
-import { normalizeAnnouncementSeverity } from ""$lib/constants/announcement-severities";
+import { normalizeAnnouncementSeverity } from "$lib/constants/announcement-severities";
 import { filterPublished } from "$lib/announcements";
 import type { AnnouncementData } from "$lib/types";
 import { EditConflictError, refreshSyncKey } from "./admin-service";

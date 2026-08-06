@@ -55,7 +55,7 @@
     CR_FACILITIES,
     crFacilityLabel,
     sanitizeCrFacilities,
-  } from ""$lib/constants/cr-facilities";
+  } from "$lib/constants/cr-facilities";
 
   type BuildingEditableField =
     | "buildingName"

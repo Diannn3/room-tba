@@ -1,4 +1,4 @@
-import { JEEPNEY_ROUTES, type JeepneyRoute } from ""$lib/constants/jeepney-routes";
+import { JEEPNEY_ROUTES, type JeepneyRoute } from "$lib/constants/jeepney-routes";
 import { slugifySegment } from "./site";
 
 export const TRANSIT_INDEX_PATH = "/transit/";

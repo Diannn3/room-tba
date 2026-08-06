@@ -10,7 +10,7 @@
   import ArrowRight from "@lucide/svelte/icons/arrow-right";
   import Plus from "@lucide/svelte/icons/plus";
   import CommunityBrandIcon from "$lib/components/community/CommunityBrandIcon.svelte";
-  import { DISCORD_URL, MESSENGER_CONTRIBUTE_TARGET } from ""$lib/constants/community-links";
+  import { DISCORD_URL, MESSENGER_CONTRIBUTE_TARGET } from "$lib/constants/community-links";
 
   /**
    * `secondary` cards are hidden on phones (see the 36rem media query): a

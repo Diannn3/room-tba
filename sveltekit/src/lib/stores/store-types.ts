@@ -1,4 +1,4 @@
-import type { modalOptions } from ""$lib/constants/modal-states";
+import type { modalOptions } from "$lib/constants/modal-states";
 import type { Weekday } from "$lib/schedule-import/types.js";
 import type { Component } from "svelte";
 

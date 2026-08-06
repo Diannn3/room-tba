@@ -5,7 +5,7 @@ import AppRoot from "@ui/AppRoot.svelte";
 import Layout from "@layouts/Layout.astro";
 import { JEEPNEY_ROUTES } from "@constants/jeepney-routes";
 import { breadcrumbSchema, jsonLd, ogCardPath, webpageSchema } from "@lib/site";
-import { campusTransit } from "../../campus.config";
+import { campusTransit } from "$lib/campus.config";
 
 if (!campusTransit.enabled) {
   return new Response(null, { status: 404 });

@@ -22,7 +22,7 @@
   import Users from "@lucide/svelte/icons/users";
   import Megaphone from "@lucide/svelte/icons/megaphone";
   import { openBrowseClasses, openCampusBrowse } from "@lib/browse-campus";
-  import { campusTransit } from "../../../campus.config";
+  import { campusTransit } from "../$lib/campus.config";
   import {
     adminAuthStore,
     announcementsStore,

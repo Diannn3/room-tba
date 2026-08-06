@@ -8,7 +8,7 @@
 import {
   FEEDBACK_CONTACT_MAX,
   FEEDBACK_MESSAGE_MAX,
-} from ""$lib/constants/feedback";
+} from "$lib/constants/feedback";
 import { checkRateLimit } from "./rate-limit";
 
 export { FEEDBACK_CONTACT_MAX, FEEDBACK_MESSAGE_MAX };

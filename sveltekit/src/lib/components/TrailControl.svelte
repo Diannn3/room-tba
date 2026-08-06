@@ -5,7 +5,7 @@
   import {
     MAKILING_TRAIL_STATIONS,
     MAKILING_TRAIL_CAMERA,
-  } from ""$lib/constants/makiling-trail";
+  } from "$lib/constants/makiling-trail";
 
   type Props = {
     embedded?: boolean;

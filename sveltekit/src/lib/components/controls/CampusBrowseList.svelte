@@ -10,11 +10,11 @@
   import {
     isStudentOrganization,
     orgCategoryLabel,
-  } from ""$lib/constants/org-categories";
+  } from "$lib/constants/org-categories";
   import {
     isLandmarkPlaceCategory,
     placeDirectoryLabel,
-  } from ""$lib/constants/place-categories";
+  } from "$lib/constants/place-categories";
   import {
     jeepneyStore,
     queryStore,
@@ -27,7 +27,7 @@
   import OrgResult from "./OrgResult.svelte";
   import DormResult from "./DormResult.svelte";
   import PlaceResult from "./PlaceResult.svelte";
-  import { campusTransit } from "../../../campus.config";
+  import { campusTransit } from "../$lib/campus.config";
 
   // Derived from campusTransit.label so a fork edits one place:
   // label Jeepney routes → title Jeepney Routes, plural jeepney routes,

@@ -71,8 +71,8 @@
     OrgData,
     PlaceData,
   } from "$lib/types";
-  import { isStudentOrganization } from ""$lib/constants/org-categories";
-  import { isLandmarkPlaceCategory } from ""$lib/constants/place-categories";
+  import { isStudentOrganization } from "$lib/constants/org-categories";
+  import { isLandmarkPlaceCategory } from "$lib/constants/place-categories";
   import {
     resolveRouteGeometry,
     type JeepneyRoute,
@@ -80,8 +80,8 @@
     type ResolvedRouteGeometry,
     type RouteGeometrySource,
     type StoredRouteGeometry,
-  } from ""$lib/constants/jeepney-routes";
-  import jeepneyGeometries from ""$lib/constants/jeepney-geometries.json";
+  } from "$lib/constants/jeepney-routes";
+  import jeepneyGeometries from "$lib/constants/jeepney-geometries.json";
   import {
     MAKILING_TRAIL_COLOR,
     MAKILING_TRAIL_LAYER_CASING_ID,
@@ -91,7 +91,7 @@
     MAKILING_TRAIL_STATIONS_LAYER_ID,
     MAKILING_TRAIL_STATIONS_SOURCE_ID,
     MAKILING_TRAIL_SOURCE_ID,
-  } from ""$lib/constants/makiling-trail";
+  } from "$lib/constants/makiling-trail";
   import {
     CAMPUS_DEFAULT_CAMERA,
     CAMPUS_MAX_BOUNDS,
@@ -104,11 +104,11 @@
     TERRAIN_TILE_FAILURE_MESSAGE,
     TERRAIN_UNAVAILABLE_OFFLINE_MESSAGE,
     getTerrainTileJsonUrl,
-  } from ""$lib/constants/map-terrain";
+  } from "$lib/constants/map-terrain";
   import {
     ISOCHRONE_CAP_MINUTES,
     VIRIDIS_STOPS,
-  } from ""$lib/constants/travel-modes";
+  } from "$lib/constants/travel-modes";
   import {
     dijkstra,
     isochroneFeatures,
@@ -119,12 +119,12 @@
   import { loadTravelGraph } from "$lib/travel-graph/load";
   import { applyBasemapPalette } from "$lib/map-basemap-palette";
   import { loadCampusMapStyle } from "$lib/maptiler-key";
-  import { isMap2DPitch } from ""$lib/constants/map-dimension";
+  import { isMap2DPitch } from "$lib/constants/map-dimension";
   import { syncBuildingLayersForDimension } from "$lib/map-dimension-layers";
   import {
     buildingMatchesTypeFilter,
     dormMatchesTypeFilter,
-  } from ""$lib/constants/building-types";
+  } from "$lib/constants/building-types";
   import { getEventImage } from "$lib/event-images";
   import { formatCampusDateShort, formatCampusTime } from "$lib/event-time";
   import {

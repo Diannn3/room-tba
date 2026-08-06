@@ -29,7 +29,7 @@
     getStoredProposalForEntity,
     persistEntityChange,
   } from "$lib/proposals/client";
-  import { CAMPUS_DEFAULT_CAMERA } from ""$lib/constants/map-terrain";
+  import { CAMPUS_DEFAULT_CAMERA } from "$lib/constants/map-terrain";
   import { getEventImage } from "$lib/event-images";
   import {
     campusInputToWallString,

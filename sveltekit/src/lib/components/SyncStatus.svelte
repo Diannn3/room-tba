@@ -13,7 +13,7 @@
     modalStore,
   } from "$lib/store.svelte";
   import { getSyncLadderState } from "$lib/stores/sync-ladder.svelte";
-  import { APP_VERSION, APP_VERSION_LABEL } from ""$lib/constants/version";
+  import { APP_VERSION, APP_VERSION_LABEL } from "$lib/constants/version";
   import {
     parseChangelogHighlights,
     isChangelogCurrent,

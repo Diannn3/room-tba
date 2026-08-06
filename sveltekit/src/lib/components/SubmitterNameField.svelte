@@ -3,7 +3,7 @@
   import {
     MAX_SUBMITTER_NAME_LENGTH,
     MIN_SUBMITTER_NAME_LENGTH,
-  } from ""$lib/constants/proposals";
+  } from "$lib/constants/proposals";
   import {
     readSubmitterName,
     scheduleSubmitterNameSave,

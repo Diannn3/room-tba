@@ -11,7 +11,7 @@ import {
 } from "./generic-class-import";
 import { parseScheduleTime } from "./schedule-renderer";
 
-const SAMPLE_DIR = join(import.meta.dir, "../../data/sample-campus");
+const SAMPLE_DIR = join(import.meta.dir, "$lib/data/sample-campus");
 const HEADER =
   "course_code,section,type,days,start,end,room_code,building_code,term_id,course_title";
 

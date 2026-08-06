@@ -6,7 +6,7 @@ import { FIELD_LABELS } from "./diff";
 import {
   validateSubmitterName,
   validateSubmitterNote,
-} from ""$lib/constants/proposals";
+} from "$lib/constants/proposals";
 import type { RoomData } from "$lib/types";
 import {
   isOpenProposalStatus,

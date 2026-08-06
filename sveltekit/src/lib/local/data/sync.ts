@@ -14,7 +14,7 @@ import { getDB } from "./pgliteDB";
 import { syncToastStore } from "$lib/store.svelte";
 import type { Results } from "@electric-sql/pglite";
 import { getSyncKey, getSyncKeysFromLs } from "./sync-keys";
-import type { JeepneyRoute } from ""$lib/constants/jeepney-routes";
+import type { JeepneyRoute } from "$lib/constants/jeepney-routes";
 
 export { getSyncKey, getSyncKeysFromLs };
 

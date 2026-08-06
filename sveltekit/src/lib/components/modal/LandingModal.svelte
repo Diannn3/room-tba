@@ -1,12 +1,12 @@
 <script lang="ts">
   import { modalStore } from "$lib/store.svelte";
-  import { designers } from ""$lib/constants/contributors";
+  import { designers } from "$lib/constants/contributors";
   import {
     UPLB_TOOLS_URL,
     DISCORD_URL,
     MESSENGER_CONTRIBUTE_TARGET,
     MESSENGER_MAINTAIN_TARGET,
-  } from ""$lib/constants/community-links";
+  } from "$lib/constants/community-links";
   import CommunityPlatformLink from "$lib/components/community/CommunityPlatformLink.svelte";
   import {
     fetchGithubContributors,
@@ -18,7 +18,7 @@
   import LandingGuideSteps from "./LandingGuideSteps.svelte";
   import VisitorCounter from "$lib/components/VisitorCounter.svelte";
   import GithubStarLink from "$lib/components/GithubStarLink.svelte";
-  import { GITHUB_ROOM_TBA_URL } from ""$lib/constants/community-links";
+  import { GITHUB_ROOM_TBA_URL } from "$lib/constants/community-links";
   import Download from "@lucide/svelte/icons/download";
   import { untrack } from "svelte";
 

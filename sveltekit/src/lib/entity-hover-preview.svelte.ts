@@ -1,5 +1,5 @@
-import { orgCategoryLabel } from ""$lib/constants/org-categories";
-import { placeDirectoryLabel } from ""$lib/constants/place-categories";
+import { orgCategoryLabel } from "$lib/constants/org-categories";
+import { placeDirectoryLabel } from "$lib/constants/place-categories";
 import type {
   BuildingData,
   DormData,

@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { getAllJeepneyRoutes } from "@lib/services/transit-service";
-import { campusTransit } from "../../campus.config";
+import { campusTransit } from "$lib/campus.config";
 
 export const prerender = false;
 

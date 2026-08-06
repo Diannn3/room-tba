@@ -4,7 +4,7 @@
   import {
     ISOCHRONE_CAP_MINUTES,
     VIRIDIS_STOPS,
-  } from ""$lib/constants/travel-modes";
+  } from "$lib/constants/travel-modes";
 
   const gradient = `linear-gradient(90deg, ${VIRIDIS_STOPS.join(", ")})`;
   const ticks = ["0", "10", "20", `${ISOCHRONE_CAP_MINUTES}+ min`];

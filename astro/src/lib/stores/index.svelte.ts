@@ -2,7 +2,7 @@
 
 import { CAMPUS_BOUNDS } from "@constants/map-terrain";
 import { describeLocationFix } from "@lib/geolocation";
-import { campusTransit } from "../../campus.config";
+import { campusTransit } from "$lib/campus.config";
 import { getJSONFetch, getLocalRoomByCode } from "../local/data/utils.js";
 import type { BuildingTypeFilter } from "@constants/building-types";
 import type { RouteTotals } from "../campus-route.js";

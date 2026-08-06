@@ -12,7 +12,7 @@ import {
 
 const TEMPLATE_PATH = join(
   import.meta.dir,
-  "../../data/campus-gate-coordinates-template.csv",
+  "$lib/data/campus-gate-coordinates-template.csv",
 );
 const CONTRIBUTING_PATH = join(import.meta.dir, "../../CONTRIBUTING.md");
 const VOLUNTEER_TRIAGE_PATH = join(

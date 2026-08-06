@@ -15,7 +15,7 @@
   import {
     buildingMatchesTypeFilter,
     dormMatchesTypeFilter,
-  } from ""$lib/constants/building-types";
+  } from "$lib/constants/building-types";
   import SearchQuerySuggestion from "./SearchQuerySuggestion.svelte";
   import FinalExamSuggestion from "./FinalExamSuggestion.svelte";
   import Suggestion from "./Suggestion.svelte";

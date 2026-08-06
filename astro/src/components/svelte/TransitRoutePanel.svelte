@@ -1,6 +1,6 @@
 <script lang="ts">
   import { jeepneyStore, transitStore } from "@lib/store.svelte";
-  import { campusTransit } from "../../campus.config";
+  import { campusTransit } from "$lib/campus.config";
 
   type Props = {
     /** Compact row for the search chrome sub-panel. */

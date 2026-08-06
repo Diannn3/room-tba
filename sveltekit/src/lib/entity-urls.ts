@@ -1,6 +1,6 @@
 import type { SearchCategory } from "./app-data";
-import { isLandmarkPlaceCategory } from ""$lib/constants/place-categories";
-import { isStudentOrganization } from ""$lib/constants/org-categories";
+import { isLandmarkPlaceCategory } from "$lib/constants/place-categories";
+import { isStudentOrganization } from "$lib/constants/org-categories";
 import { slugifySegment } from "./site";
 import {
   getDormRouteSlug,

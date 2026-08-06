@@ -15,7 +15,7 @@
     terrainStore,
   } from "$lib/store.svelte";
   import { onMount } from "svelte";
-  import { THREE_D_PITCH, isMap2DPitch } from ""$lib/constants/map-dimension";
+  import { THREE_D_PITCH, isMap2DPitch } from "$lib/constants/map-dimension";
   import {
     enterFlatMapDimension,
     enterTiltedMapDimension,

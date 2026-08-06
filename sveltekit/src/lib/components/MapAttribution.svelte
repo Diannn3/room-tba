@@ -4,7 +4,7 @@
     DATA_LICENSE_FAQ_PATH,
     MAPTILER_COPYRIGHT_URL,
     OSM_COPYRIGHT_URL,
-  } from ""$lib/constants/data-license";
+  } from "$lib/constants/data-license";
   import { terrainStore } from "$lib/store.svelte";
   import { onMount } from "svelte";
   import {

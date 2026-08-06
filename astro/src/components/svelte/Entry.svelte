@@ -3,7 +3,7 @@
   import type { InitialSearchState } from "@lib/app-data";
   import { getAppData } from "@lib/context";
   import { findCampusPointBySlug } from "@lib/route-links";
-  import { campusTransit } from "../../campus.config";
+  import { campusTransit } from "$lib/campus.config";
   import {
     modalStore,
     queryStore,

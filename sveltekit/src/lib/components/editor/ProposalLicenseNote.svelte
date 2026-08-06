@@ -2,7 +2,7 @@
   import {
     CONTRIBUTOR_LICENSE_CONSENT,
     DATA_LICENSE_TERMS_PATH,
-  } from ""$lib/constants/data-license";
+  } from "$lib/constants/data-license";
 </script>
 
 <p class="proposal-license-note">

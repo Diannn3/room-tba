@@ -7,7 +7,7 @@
   import {
     TERRAIN_EXAGGERATION_OPTIONS,
     TERRAIN_UNAVAILABLE_OFFLINE_MESSAGE,
-  } from ""$lib/constants/map-terrain";
+  } from "$lib/constants/map-terrain";
   import { floatingControlPanelStore, terrainStore } from "$lib/store.svelte";
   import "./map-chrome/map-chrome.css";
 

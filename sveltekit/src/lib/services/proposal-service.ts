@@ -19,7 +19,7 @@ import { db } from "$lib/db";
 import {
   validateSubmitterName,
   validateSubmitterNote,
-} from ""$lib/constants/proposals";
+} from "$lib/constants/proposals";
 import { recordProposalContribution } from "./contribution-service";
 import { parseImageUrl } from "$lib/r2-upload";
 import { R2_PUBLIC_URL } from "astro:env/server";

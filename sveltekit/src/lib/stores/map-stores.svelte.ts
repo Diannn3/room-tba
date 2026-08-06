@@ -2,7 +2,7 @@ import type * as maplibre from "maplibre-gl";
 import {
   DEFAULT_TERRAIN_EXAGGERATION,
   TERRAIN_ENABLED,
-} from ""$lib/constants/map-terrain";
+} from "$lib/constants/map-terrain";
 import { dismissEphemeralOverlays } from "../overlay-stack.js";
 import { deactivateMapModesExcept } from "./map-modes.js";
 import type { MapToolsSection, TerrainStatus } from "./store-types.js";

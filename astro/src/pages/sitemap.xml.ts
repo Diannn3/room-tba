@@ -13,7 +13,7 @@ import {
   loadAppData,
 } from "@lib/app-data";
 import { absoluteUrl } from "@lib/site";
-import { campusTransit } from "../campus.config";
+import { campusTransit } from "$lib/campus.config";
 import { JEEPNEY_ROUTES } from "@constants/jeepney-routes";
 import {
   getTransitRoutePath,

@@ -44,7 +44,7 @@
     ROOM_CATEGORIES,
     ROOM_CATEGORY_LABELS,
     roomCategoryLabel,
-  } from ""$lib/constants/room-categories";
+  } from "$lib/constants/room-categories";
   import type { FinalExamRow, RoomData } from "$lib/types";
   import Classes from "./Classes.svelte";
   import FinalExamsList from "./FinalExamsList.svelte";

@@ -10,7 +10,7 @@
     ANNOUNCEMENT_SEVERITIES,
     ANNOUNCEMENT_SEVERITY_LABELS,
     type AnnouncementSeverity,
-  } from ""$lib/constants/announcement-severities";
+  } from "$lib/constants/announcement-severities";
   import {
     isPublished,
     relativeDateLabel,

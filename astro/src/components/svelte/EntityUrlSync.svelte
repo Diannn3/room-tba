@@ -4,7 +4,7 @@
   import { createEntityUrlSync, isScreenId } from "@lib/entity-url-sync";
   import { openCampusBrowse } from "@lib/browse-campus";
   import { getTransitStopIndex } from "@lib/transit-urls";
-  import { campusTransit } from "../../campus.config";
+  import { campusTransit } from "$lib/campus.config";
   import {
     getBuildingCanonicalPath,
     getOrganizationCanonicalPath,

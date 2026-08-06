@@ -7,7 +7,7 @@
   import {
     getBuildingTypeFilterOptions,
     type BuildingTypeFilter,
-  } from ""$lib/constants/building-types";
+  } from "$lib/constants/building-types";
   import { getAppData } from "$lib/context";
   import {
     buildingTypeFilter,

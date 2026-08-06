@@ -1,6 +1,6 @@
 <script lang="ts">
   import Star from "@lucide/svelte/icons/star";
-  import { GITHUB_ROOM_TBA_URL } from ""$lib/constants/community-links";
+  import { GITHUB_ROOM_TBA_URL } from "$lib/constants/community-links";
   import { fetchGithubStarCountCached } from "$lib/github-stars";
 
   let stars = $state<number | null>(null);

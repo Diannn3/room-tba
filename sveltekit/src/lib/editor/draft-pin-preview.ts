@@ -1,11 +1,11 @@
 import {
   isLandmarkPlaceCategory,
   type PlaceCategory,
-} from ""$lib/constants/place-categories";
+} from "$lib/constants/place-categories";
 import {
   isStudentOrganization,
   type OrgCategory,
-} from ""$lib/constants/org-categories";
+} from "$lib/constants/org-categories";
 import { formatCampusDateShort } from "$lib/event-time";
 import type { ProposalCreateType } from "$lib/proposals/client";
 

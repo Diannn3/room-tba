@@ -15,7 +15,7 @@
     openEphemeralOverlay,
     registerEphemeralOverlayDismisser,
   } from "@lib/overlay-stack";
-  import { campusTransit } from "../../campus.config";
+  import { campusTransit } from "$lib/campus.config";
 
   type Props = {
     embedded?: boolean;

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { RefreshCw } from "@lucide/svelte";
   import { syncToastStore, modalStore } from "$lib/store.svelte";
-  import { APP_VERSION_LABEL } from ""$lib/constants/version";
+  import { APP_VERSION_LABEL } from "$lib/constants/version";
   import { parseChangelogEntries } from "$lib/changelog-highlights";
   import { releaseTimestampLabel } from "$lib/release-timestamps";
   import changelogRaw from "../../../../CHANGELOG.md?raw";

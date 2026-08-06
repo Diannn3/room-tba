@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { APP_VERSION, APP_VERSION_LABEL } from ""$lib/constants/version";
+import { APP_VERSION, APP_VERSION_LABEL } from "$lib/constants/version";
 import packageJson from "../../../package.json";
 
 describe("version constants", () => {

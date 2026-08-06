@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { campusCommunity } from "../../campus.config";
+  import { campusCommunity } from "$lib/campus.config";
   import type { InitialSearchState } from "$lib/app-data";
   import {
     type AppContextData,

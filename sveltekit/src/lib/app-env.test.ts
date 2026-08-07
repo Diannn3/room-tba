@@ -1,7 +1,7 @@
-import { describe, expect, mock, test } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 
-mock.module("astro:env/client", () => ({
-  PUBLIC_APP_ENV: undefined,
+vi.mock("$env/dynamic/public", () => ({
+  env: { PUBLIC_APP_ENV: undefined },
 }));
 
 const { isStagingApp, isStagingAppEnv } = await import("./app-env");

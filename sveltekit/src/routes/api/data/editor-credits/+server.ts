@@ -2,7 +2,6 @@ import { sql } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 export const GET: RequestHandler = async () => {
 	// Inlined from astro editor-credits-service getEditorCredits: public,

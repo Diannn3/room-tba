@@ -1,17 +1,21 @@
-import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 // Record which sync functions the offline directory download invokes.
-const calls: string[] = [];
+// Hoisted so the vi.mock factories below can reference them.
+const { calls, emptyLoad, oneRowLoad, syncSpy } = vi.hoisted(() => {
+  const calls: string[] = [];
+  const emptyLoad = () =>
+    Promise.resolve({ rows: [], source: "local" as const });
+  const oneRowLoad = () =>
+    Promise.resolve({ rows: [{ id: 1 }], source: "remote" as const });
+  const syncSpy = (name: string) => () => {
+    calls.push(name);
+    return Promise.resolve();
+  };
+  return { calls, emptyLoad, oneRowLoad, syncSpy };
+});
 
-const emptyLoad = () => Promise.resolve({ rows: [], source: "local" as const });
-const oneRowLoad = () =>
-  Promise.resolve({ rows: [{ id: 1 }], source: "remote" as const });
-const syncSpy = (name: string) => () => {
-  calls.push(name);
-  return Promise.resolve();
-};
-
-mock.module("./utils", () => ({
+vi.mock("./utils", () => ({
   getBuildings: emptyLoad,
   getColleges: emptyLoad,
   getDivisions: emptyLoad,
@@ -24,7 +28,7 @@ mock.module("./utils", () => ({
   getDivisionRooms: emptyLoad,
 }));
 
-mock.module("./sync", () => ({
+vi.mock("./sync", () => ({
   localTableSyncCheck: () => Promise.resolve({ newKey: "k", localKey: null }),
   checkLocalBuildingRoom: () => Promise.resolve(false),
   checkLocalCollegeRoom: () => Promise.resolve(false),

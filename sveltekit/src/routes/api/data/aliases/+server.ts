@@ -3,7 +3,6 @@ import { db } from '$lib/server/db';
 import { aliasesTable, buildingsTable } from '$lib/server/db/schema';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // Inlined from astro src/lib/site.ts normalizeAlias (#155): NFKD, lowercase,
 // strip everything that is not a letter or digit.

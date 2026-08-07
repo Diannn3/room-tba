@@ -3,7 +3,6 @@ import type { RequestHandler } from "@sveltejs/kit";
 import { updateTable } from "$lib/server/db/schema";
 import { db } from "$lib/server/db";
 
-export const ssr = true;
 
 const PATHS = [
   "announcements",

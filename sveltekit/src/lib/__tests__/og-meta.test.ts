@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from "vitest";
 import { absoluteUrl, ogCardPath, ogImageUrl } from "$lib/site";
 
 describe("OG meta helpers", () => {

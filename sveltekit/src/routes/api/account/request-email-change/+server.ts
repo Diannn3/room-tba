@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // TODO: port from astro/src/pages/api/account/request-email-change.ts — needs editor session, rate limit, mailer
 const notImplemented: RequestHandler = async () =>

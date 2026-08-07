@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { parseOsaOrganizations } from "./osa-organization-directory.ts";
 
 describe("parseOsaOrganizations", () => {

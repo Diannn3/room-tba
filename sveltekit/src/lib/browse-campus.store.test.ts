@@ -105,35 +105,35 @@ describe("openBrowseClasses", () => {
 describe("browse helper call sites keep the side panel wired", () => {
   const CALL_SITES: Array<{ file: string; helper: string }> = [
     {
-      file: "src/components/svelte/search/CampusBrowseChips.svelte",
+      file: "src/lib/components/search/CampusBrowseChips.svelte",
       helper: "openBrowseClasses",
     },
     {
-      file: "src/components/svelte/search/CampusBrowseChips.svelte",
+      file: "src/lib/components/search/CampusBrowseChips.svelte",
       helper: "openCampusBrowse",
     },
     {
-      file: "src/components/svelte/navigation/Sidebar.svelte",
+      file: "src/lib/components/navigation/Sidebar.svelte",
       helper: "openCampusBrowse",
     },
     {
-      file: "src/components/svelte/navigation/Sidebar.svelte",
+      file: "src/lib/components/navigation/Sidebar.svelte",
       helper: "openBrowseClasses",
     },
     {
-      file: "src/components/svelte/modal/StudentOrgsModal.svelte",
+      file: "src/lib/components/modal/StudentOrgsModal.svelte",
       helper: "openCampusBrowse",
     },
     {
-      file: "src/components/svelte/controls/EntityBackToList.svelte",
+      file: "src/lib/components/controls/EntityBackToList.svelte",
       helper: "openCampusBrowse",
     },
     {
-      file: "src/components/svelte/Entry.svelte",
+      file: "src/lib/components/Entry.svelte",
       helper: "openCampusBrowse",
     },
     {
-      file: "src/components/svelte/EntityUrlSync.svelte",
+      file: "src/lib/components/EntityUrlSync.svelte",
       helper: "openCampusBrowse",
     },
   ];

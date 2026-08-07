@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, mock, test } from "bun:test";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import {
   getStoredPendingCreateProposal,
   publishEntityPatch,
@@ -31,7 +31,7 @@ if (typeof globalThis.localStorage === "undefined") {
 
 afterEach(() => {
   globalThis.fetch = originalFetch;
-  mock.restore();
+  vi.restoreAllMocks();
   storage.clear();
 });
 
@@ -69,7 +69,7 @@ describe("submitEntityProposal", () => {
       entityId: 7,
       status: "pending",
     });
-    globalThis.fetch = mock(async (_url, init) => {
+    globalThis.fetch = vi.fn(async (_url, init) => {
       expect(JSON.parse(String(init?.body))).toMatchObject({
         proposalId: 42,
         entityType: "room",
@@ -100,7 +100,7 @@ describe("submitEntityProposal", () => {
 
 describe("publishEntityPatch", () => {
   test("returns conflict payload on 409", async () => {
-    globalThis.fetch = mock(async () =>
+    globalThis.fetch = vi.fn(async () =>
       Response.json(
         {
           error: "This building was changed by another editor.",
@@ -126,7 +126,7 @@ describe("publishEntityPatch", () => {
   });
 
   test("returns published entity on success", async () => {
-    globalThis.fetch = mock(async () =>
+    globalThis.fetch = vi.fn(async () =>
       Response.json({
         success: true,
         building: { id: 1, version: 4, lat: 1.1, lon: 2.2 },

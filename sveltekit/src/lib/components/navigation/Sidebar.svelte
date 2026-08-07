@@ -21,8 +21,12 @@
   import UserPlus from "@lucide/svelte/icons/user-plus";
   import Users from "@lucide/svelte/icons/users";
   import Megaphone from "@lucide/svelte/icons/megaphone";
-  import { openBrowseClasses, openCampusBrowse } from "$lib/browse-campus";
-  import { campusTransit } from "../$lib/campus.config";
+  import {
+    openBrowseClasses,
+    openCampusBrowse,
+    type CampusBrowseTab,
+  } from "$lib/browse-campus";
+  import { campusTransit } from "$lib/campus.config";
   import {
     adminAuthStore,
     announcementsStore,
@@ -46,7 +50,7 @@
   import NavLink from "./NavLink.svelte";
 
   const entityButtonsInfo: {
-    id: string;
+    id: CampusBrowseTab | "classes" | "events";
     label: string;
     icon: typeof University;
   }[] = [
@@ -61,10 +65,10 @@
     { id: "classes", label: "Classes", icon: BookText },
     { id: "events", label: "Events", icon: Ticket },
     ...(campusTransit.enabled
-      ? [{ id: "jeepney", label: campusTransit.label, icon: BusFront }]
+      ? [{ id: "jeepney" as const, label: campusTransit.label, icon: BusFront }]
       : []),
   ];
-  function handleBrowse(id: string) {
+  function handleBrowse(id: CampusBrowseTab | "classes" | "events") {
     if (id === "classes") {
       openBrowseClasses(queryStore, sidePanelStore);
       return;

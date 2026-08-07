@@ -309,12 +309,12 @@
 					<h3>Profile</h3>
 					<EntityEditorFormField label="Username" inputId="account-username">
 						{#snippet control()}
-							<input id="account-username" value={profile.username} disabled />
+							<input id="account-username" value={profile?.username ?? ''} disabled />
 						{/snippet}
 					</EntityEditorFormField>
 					<EntityEditorFormField label="Role" inputId="account-role">
 						{#snippet control()}
-							<input id="account-role" value={profile.role} disabled />
+							<input id="account-role" value={profile?.role ?? ''} disabled />
 						{/snippet}
 					</EntityEditorFormField>
 					<EntityEditorFormField label="Display name" inputId="account-display-name">
@@ -399,7 +399,7 @@
 
 					<EntityEditorFormField label="Email" inputId="account-email">
 						{#snippet control()}
-							<input id="account-email" value={profile.email ?? '(none)'} disabled />
+							<input id="account-email" value={profile?.email ?? '(none)'} disabled />
 						{/snippet}
 					</EntityEditorFormField>
 					{#if !showChangeEmail}

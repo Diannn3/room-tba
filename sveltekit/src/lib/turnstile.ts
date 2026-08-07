@@ -1,4 +1,5 @@
-import { TURNSTILE_SECRET_KEY } from "astro:env/server";
+import { env } from "$env/dynamic/private";
+const { TURNSTILE_SECRET_KEY } = env;
 import { verifyTurnstileToken as verifyTurnstileTokenCore } from "./turnstile-core";
 
 export function isTurnstileConfigured(): boolean {

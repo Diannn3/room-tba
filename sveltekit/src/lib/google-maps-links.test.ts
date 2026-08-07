@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { getGoogleMapsPinUrl } from "./google-maps-links";
 
 describe("getGoogleMapsPinUrl", () => {

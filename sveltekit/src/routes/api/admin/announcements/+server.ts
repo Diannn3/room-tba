@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // TODO: port from astro/src/pages/api/admin/announcements/index.ts — needs publish session, announcement parsing helpers
 const notImplemented: RequestHandler = async () =>

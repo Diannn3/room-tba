@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { campusOfficeDirectoryEntries } from "./campus-office-directory.ts";
 
 describe("campusOfficeDirectoryEntries", () => {

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, it, expect } from "vitest";
 import { APP_VERSION, APP_VERSION_LABEL } from "$lib/constants/version";
 import packageJson from "../../../package.json";
 

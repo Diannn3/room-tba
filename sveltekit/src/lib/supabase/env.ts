@@ -1,7 +1,5 @@
-import {
-  PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-  PUBLIC_SUPABASE_URL,
-} from "astro:env/client";
+import { env } from "$env/dynamic/public";
+const { PUBLIC_SUPABASE_PUBLISHABLE_KEY, PUBLIC_SUPABASE_URL } = env;
 
 export function isSupabaseConfigured(): boolean {
   return Boolean(PUBLIC_SUPABASE_URL && PUBLIC_SUPABASE_PUBLISHABLE_KEY);

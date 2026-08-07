@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { buildAgenda, formatTimeRange } from "./today-agenda";
 import type { PlannedSection } from "./planner/types";
 

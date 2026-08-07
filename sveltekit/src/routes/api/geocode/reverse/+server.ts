@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // From astro/src/campus.config.ts via astro/src/lib/site.ts
 const SITE_NAME = 'Room TBA';

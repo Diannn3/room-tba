@@ -39,13 +39,7 @@ export type SuggestAdditionDraft = {
   placeDescription?: string;
   placeHours?: string;
   organizationName?: string;
-  organizationCategory?:
-    | "student-org"
-    | "college-org"
-    | "office"
-    | "unit"
-    | "academic"
-    | "service";
+  organizationCategory?: import("$lib/constants/org-categories").OrgCategory;
   organizationDescription?: string;
   organizationBuildingDraft?: string;
   roomCode: string;

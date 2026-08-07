@@ -3,7 +3,6 @@ import { db } from '$lib/server/db';
 import { sponsorImpressionsTable } from '$lib/server/db/schema';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // Constants inlined from astro/src/pages/api/sponsor-event.ts.
 const BOT_UA = /bot|crawl|spider|slurp|lighthouse/i;

@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // TODO: port from astro/src/pages/api/admin/upload.ts — needs editor session, rate limit, R2 client, image magic-byte sniffing (POST body is multipart/form-data)
 const notImplemented: RequestHandler = async () =>

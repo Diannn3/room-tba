@@ -11,7 +11,6 @@ import {
 } from '$lib/server/db/schema';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // Inlined from astro src/lib/campus-calendar.ts CAMPUS_SEMESTER_MONTHS.
 const CAMPUS_SEMESTER_MONTHS: Record<'every_1st_sem' | 'every_2nd_sem', readonly number[]> = {

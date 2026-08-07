@@ -1,5 +1,5 @@
 import { eq, desc, sql } from "drizzle-orm";
-import { classesTable, termsTable } from "@drizzle/schema";
+import { classesTable, termsTable } from "$lib/server/db/schema";
 import { db } from "$lib/db";
 import { resolveDefaultTermFromList } from "$lib/term-calendar";
 import type { Term, TermWithCount } from "$lib/types";

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { buildProposalDigest } from "./digest-core";
 
 const SITE = "https://room-tba.uplb.tools";

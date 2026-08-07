@@ -54,11 +54,11 @@
       loaded,
       filteredBuildings,
       filteredDorms,
-      colleges,
-      divisions,
-      events,
-      organizations,
-      places,
+      colleges: colleges ?? [],
+      divisions: divisions ?? [],
+      events: events ?? [],
+      organizations: organizations ?? [],
+      places: places ?? [],
     }),
   );
 

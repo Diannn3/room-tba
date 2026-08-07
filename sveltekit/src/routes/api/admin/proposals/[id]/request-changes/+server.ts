@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // TODO: port from astro/src/pages/api/admin/proposals/[id]/request-changes.ts — needs review session, proposal service, notification emit
 const notImplemented: RequestHandler = async () =>

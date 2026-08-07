@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { resolveSheetDragReleaseIntent } from "./sheet-drag-intent";
 
 const base = { followThreshold: 4, flickVelocity: 0.5 };

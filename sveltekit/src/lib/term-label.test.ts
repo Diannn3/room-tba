@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { termChipLabel, termFullLabel } from "./term-label";
 
 const term = (over: Partial<Parameters<typeof termFullLabel>[0]>) => ({

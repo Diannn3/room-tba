@@ -21,13 +21,13 @@ const REMOTE: BuildingData[] = [
     buildingName: "Physical Sciences",
     lon: 121,
     lat: 14,
-    directions: null,
-    buildingType: "academic",
+    directions: "",
+    buildingType: "non-admin",
     imageUrl: null,
     crFacilities: null,
     version: 1,
     updatedAt: "2026-08-04T00:00:00.000Z",
-  } as BuildingData,
+  },
 ];
 
 const realFetch = globalThis.fetch;

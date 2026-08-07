@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { ONLINE_WINDOW_SECONDS, isValidSid } from "./presence";
 
 describe("isValidSid", () => {

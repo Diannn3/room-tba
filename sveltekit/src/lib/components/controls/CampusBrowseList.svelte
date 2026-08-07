@@ -27,7 +27,7 @@
   import OrgResult from "./OrgResult.svelte";
   import DormResult from "./DormResult.svelte";
   import PlaceResult from "./PlaceResult.svelte";
-  import { campusTransit } from "../$lib/campus.config";
+  import { campusTransit } from "$lib/campus.config";
 
   // Derived from campusTransit.label so a fork edits one place:
   // label Jeepney routes → title Jeepney Routes, plural jeepney routes,

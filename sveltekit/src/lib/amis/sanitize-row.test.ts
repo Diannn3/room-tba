@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import {
   amisExportContainsInstructorPii,
   sanitizeAmisRow,
@@ -28,7 +28,9 @@ describe("sanitizeAmisRow", () => {
 
     expect(JSON.stringify(sanitized)).not.toContain("BOMBIO");
     expect(JSON.stringify(sanitized)).not.toContain("formatted_name");
-    expect(sanitized.class_dates?.[0]).toEqual({
+    expect(
+      (sanitized.class_dates as Record<string, unknown>[] | undefined)?.[0],
+    ).toEqual({
       date: "MW",
       start_time: "07:00 AM",
       end_time: "08:00 AM",

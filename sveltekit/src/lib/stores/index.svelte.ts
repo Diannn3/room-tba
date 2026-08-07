@@ -7,6 +7,7 @@ import { getJSONFetch, getLocalRoomByCode } from "../local/data/utils.js";
 import type { BuildingTypeFilter } from "$lib/constants/building-types";
 import type { RouteTotals } from "../campus-route.js";
 import { orderDayStops, type Weekday } from "../schedule-import/day-stops.js";
+export type { Weekday } from "../schedule-import/day-stops.js";
 import { matchImportedScheduleRows } from "../schedule-import/match-classes.js";
 import type { ClassQueryPage } from "../classes-api.js";
 import type {
@@ -57,25 +58,7 @@ export type {
 export { deactivateMapModesExcept, syncTableLabel };
 export type { MeasureLeg, MeasureSummaries } from "./map-stores.svelte";
 
-type RoomData = {
-  id: number;
-  code: string;
-  directions: string | null;
-  building: {
-    name: string;
-    lat: number | null;
-    lon: number | null;
-    directions: string | null;
-  } | null;
-  buildingId: number | null;
-  collegeId: number | null;
-  divisionId: number | null;
-  collegeName: string | null;
-  divisionName: string | null;
-  imageUrl?: string | null;
-  version: number;
-  updatedAt: string;
-};
+import type { ClassMapValue, RoomData } from "$lib/types";
 
 export {
   buildingTypeFilter,

@@ -1,5 +1,5 @@
 import { and, desc, eq } from "drizzle-orm";
-import { editorHistoryTable } from "@drizzle/schema";
+import { editorHistoryTable } from "$lib/server/db/schema";
 import { db } from "$lib/db";
 import {
   updateBuilding,

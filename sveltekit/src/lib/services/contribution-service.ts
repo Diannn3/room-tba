@@ -1,5 +1,5 @@
 import { db } from "$lib/db";
-import { contributionsTable, adminUsersTable } from "@drizzle/schema";
+import { contributionsTable, adminUsersTable } from "$lib/server/db/schema";
 import { and, count, desc, eq, gte, sql } from "drizzle-orm";
 import type { EditProposalSummary } from "./proposal-service";
 

@@ -17,7 +17,7 @@ import {
   roomsTable,
   roomPositionsTable,
   updateTable,
-} from "@drizzle/schema";
+} from "$lib/server/db/schema";
 import { normalizeEntityName } from "$lib/entity-names";
 import { sanitizeCrFacilities } from "$lib/constants/cr-facilities";
 import { normalizePlaceCategory } from "$lib/constants/place-categories";
@@ -867,10 +867,10 @@ export async function updateCollege(
     },
     history,
     syncKeyType: "colleges",
-    syncKeyPaths: (updated, before) => [
-      collegeIsrPath(updated ?? before),
-      "/college/",
-    ],
+    syncKeyPaths: (updated, before) => {
+      const row = updated ?? before;
+      return row ? [collegeIsrPath(row), "/college/"] : ["/college/"];
+    },
   });
 }
 
@@ -971,10 +971,10 @@ export async function updateDivision(
     },
     history,
     syncKeyType: "divisions",
-    syncKeyPaths: (updated, before) => [
-      divisionIsrPath(updated ?? before),
-      "/division/",
-    ],
+    syncKeyPaths: (updated, before) => {
+      const row = updated ?? before;
+      return row ? [divisionIsrPath(row), "/division/"] : ["/division/"];
+    },
   });
 }
 
@@ -1675,10 +1675,13 @@ function getEventLocationFields(
   };
 }
 
+/** The db pool or a transaction handle — helpers accept either. */
+type DbClient = Pick<typeof db, "select" | "insert" | "update" | "delete">;
+
 async function upsertEventLocations(
   eventId: number,
   locations: EventLocationWriteInput[],
-  tx: typeof db = db,
+  tx: DbClient = db,
 ) {
   const existingLocations = await tx
     .select()
@@ -1727,7 +1730,7 @@ async function upsertEventLocations(
 async function replaceEventChildren(
   eventId: number,
   input: Pick<EventWriteInput, "locations" | "routes">,
-  tx: typeof db = db,
+  tx: DbClient = db,
 ) {
   if (input.routes !== undefined) {
     const existingRoutes = await tx

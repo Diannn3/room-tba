@@ -10,7 +10,7 @@ import {
   eventRouteStopsTable,
   eventRoutesTable,
   eventsTable,
-} from "@drizzle/schema";
+} from "$lib/server/db/schema";
 import { db } from "$lib/db";
 import { getBuildCache } from "./ssg-cache";
 import type {

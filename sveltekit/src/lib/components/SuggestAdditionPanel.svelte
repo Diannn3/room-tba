@@ -131,7 +131,7 @@
   const colleges = $derived(appData().loaded ? appData().colleges : []);
   const buildings = $derived(
     appData().loaded
-      ? [...appData().buildings].sort((a, b) =>
+      ? [...(appData().buildings ?? [])].sort((a, b) =>
           a.buildingName.localeCompare(b.buildingName),
         )
       : [],
@@ -497,6 +497,9 @@
           collegeId:
             divisionCollegeDraft === "" ? null : Number(divisionCollegeDraft),
         };
+      default:
+        // The panel only offers the kinds above; anything else is a bug.
+        throw new Error(`Unsupported suggestion kind: ${kind}`);
     }
   }
 

@@ -74,7 +74,9 @@ describe("OnlineCounter", () => {
   });
 
   test("posts only an anonymous sessionStorage sid, reused across heartbeats", async () => {
-    const fetchMock = vi.fn(async () => jsonResponse({ online: 3 }));
+    const fetchMock = vi.fn(async (..._args: [string, RequestInit?]) =>
+      jsonResponse({ online: 3 }),
+    );
     vi.stubGlobal("fetch", fetchMock);
     vi.useFakeTimers();
 
@@ -96,7 +98,9 @@ describe("OnlineCounter", () => {
   });
 
   test("stops heartbeating after unmount", async () => {
-    const fetchMock = vi.fn(async () => jsonResponse({ online: 3 }));
+    const fetchMock = vi.fn(async (..._args: [string, RequestInit?]) =>
+      jsonResponse({ online: 3 }),
+    );
     vi.stubGlobal("fetch", fetchMock);
     vi.useFakeTimers();
 

@@ -54,7 +54,7 @@
     { id: "campus", label: "Campus team" },
   ];
 
-  function toAvatarPeople(list: typeof contributors) {
+  function toAvatarPeople(list: typeof designers) {
     return list.map((person) => ({
       name: person.name,
       href: person.href,

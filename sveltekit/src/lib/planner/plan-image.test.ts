@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { packColumns, type PlanBlock } from "./plan-image";
 
 function block(start: number, end: number): PlanBlock {

@@ -4,7 +4,6 @@ import { db } from '$lib/server/db';
 import { presenceTable } from '$lib/server/db/schema';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // Constants + sid validation inlined from astro/src/lib/presence.ts.
 /** Sessions seen within this window count as online. */

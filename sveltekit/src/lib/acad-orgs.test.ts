@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import rawAcadOrgs from "$lib/data/acad-orgs.json";
 import { decodeAcadOrg } from "./acad-orgs";
 

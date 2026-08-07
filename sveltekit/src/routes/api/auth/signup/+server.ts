@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // TODO: port from astro/src/pages/api/auth/signup.ts — needs Turnstile, rate limit, session cookie signing, account service
 const notImplemented: RequestHandler = async () =>

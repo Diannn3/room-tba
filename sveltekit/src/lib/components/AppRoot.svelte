@@ -110,7 +110,7 @@
     colleges = data.colleges;
     directionCount = data.directionCount;
     divisions = data.divisions;
-    dorms = data.dorms.map(normalizeDormListFields);
+    dorms = (data.dorms ?? []).map(normalizeDormListFields);
     events = data.events;
     organizations = data.organizations;
     places = data.places;
@@ -119,12 +119,12 @@
 
   function hasUsableCampusData(data: DBData) {
     return (
-      data.buildings.length > 0 ||
-      data.colleges.length > 0 ||
-      data.divisions.length > 0 ||
-      data.dorms.length > 0 ||
-      data.events.length > 0 ||
-      data.totalRooms > 0
+      (data.buildings?.length ?? 0) > 0 ||
+      (data.colleges?.length ?? 0) > 0 ||
+      (data.divisions?.length ?? 0) > 0 ||
+      (data.dorms?.length ?? 0) > 0 ||
+      (data.events?.length ?? 0) > 0 ||
+      (data.totalRooms ?? 0) > 0
     );
   }
 
@@ -325,6 +325,8 @@
         divisions: divisions ?? [],
         dorms: dorms ?? [],
         events: events ?? [],
+        organizations: organizations ?? [],
+        places: places ?? [],
         directionCount: directionCount ?? 0,
         totalRooms: totalRooms ?? 0,
       });

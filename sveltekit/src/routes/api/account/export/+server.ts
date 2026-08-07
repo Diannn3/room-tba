@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // TODO: port from astro/src/pages/api/account/export.ts — needs editor session, export service (Content-Disposition attachment)
 const notImplemented: RequestHandler = async () =>

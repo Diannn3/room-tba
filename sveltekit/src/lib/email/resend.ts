@@ -1,4 +1,5 @@
-import { RESEND_API_KEY, RESEND_FROM_EMAIL } from "astro:env/server";
+import { env } from "$env/dynamic/private";
+const { RESEND_API_KEY, RESEND_FROM_EMAIL } = env;
 
 export function isResendConfigured(): boolean {
   return Boolean(RESEND_API_KEY && RESEND_FROM_EMAIL);

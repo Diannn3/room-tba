@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import {
   getBuildingCanonicalPath,
   getDormCanonicalPath,
@@ -96,10 +96,12 @@ describe("entity-urls", () => {
           {
             id: 1,
             buildingName: "Baker Hall",
-            lat: null,
-            lon: null,
-            directions: null,
+            lat: 14.16,
+            lon: 121.24,
+            directions: "",
             buildingType: "non-admin",
+            imageUrl: null,
+            crFacilities: null,
             version: 1,
             updatedAt: "",
           },

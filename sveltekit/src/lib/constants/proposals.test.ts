@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   MAX_SUBMITTER_NAME_LENGTH,
   MAX_SUBMITTER_NOTE_LENGTH,

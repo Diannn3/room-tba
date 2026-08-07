@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import {
   classTypeDisplayLabel,
   CLASS_BROWSE_SCOPE_NOTE,

@@ -20,7 +20,9 @@ function classType(row: ClassMapValue): string {
   return (row.type ?? "").trim().toUpperCase();
 }
 
-export function parentLectureSection(row: ClassMapValue): string | null {
+export function parentLectureSection(
+  row: Pick<ClassMapValue, "section">,
+): string | null {
   if (!row.section) return null;
   const section = row.section.trim().toUpperCase();
   // Hyphenated child slot: "G-1L", "UV-1R", "B-1R" → parent before "-<n>".

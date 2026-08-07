@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   CAMPUS_DATA_LICENSE,
   CAMPUS_DATA_LICENSE_URL,

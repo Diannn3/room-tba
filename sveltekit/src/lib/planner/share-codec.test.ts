@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { decodeSharePlan, encodeSharePlan } from "./share-codec.js";
 import type { PlannerPlan } from "./types.js";
 

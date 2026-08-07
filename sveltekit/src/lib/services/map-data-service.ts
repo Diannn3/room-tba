@@ -12,7 +12,7 @@ import {
   placesTable,
   finalExamsTable,
   roomsTable,
-} from "@drizzle/schema";
+} from "$lib/server/db/schema";
 import { encodeClassCursor, type ClassCursor } from "$lib/api/class-cursor";
 import { clampLimitValue } from "$lib/api/pagination";
 import { escapeLikePattern } from "$lib/like-escape";

@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // TODO: port from astro/src/pages/api/account/change-password.ts — needs editor session, rate limit, account service
 const notImplemented: RequestHandler = async () =>

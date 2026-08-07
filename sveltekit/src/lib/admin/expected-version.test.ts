@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { parseRequiredEditorVersion } from "./expected-version";
 
 describe("parseRequiredEditorVersion", () => {

@@ -15,6 +15,7 @@ import {
 	websiteSchema,
 } from "$lib/site";
 
+const {children}: {children: Snippet} = $props()
 const title =
 	"Room TBA | Find Rooms, Dorms, Buildings, Colleges, and Divisions at UPLB";
 // Short share title (og:title / twitter:title): og:site_name already says
@@ -94,6 +95,7 @@ const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : "");
 		rel="stylesheet"
 	/>
 
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html webManifestLink}
 	<!-- #716: desktop/mobile split is viewport-based (not User-Agent), so the
          same check works for every render path (SSR and prerendered) without
@@ -165,7 +167,7 @@ const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : "");
     </style> -->
 </svelte:head>
 
-<AppRoot />
+{@render children()}
 <!--
 <Layout
 	{title}
@@ -175,7 +177,6 @@ const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : "");
 	{structuredData}
 >
 </Layout>
-
 <style>
 	.directions-status {
 		position: fixed;

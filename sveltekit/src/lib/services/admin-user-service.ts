@@ -1,13 +1,14 @@
 import { createHash, timingSafeEqual } from "node:crypto";
 import bcrypt from "bcrypt";
 import { and, desc, eq, ne, sql } from "drizzle-orm";
-import { ADMIN_PASSWORD } from "astro:env/server";
+import { env } from "$env/dynamic/private";
+const { ADMIN_PASSWORD } = env;
 import {
   adminUsersTable,
   contributionsTable,
   editProposalsTable,
   plannerPlansTable,
-} from "@drizzle/schema";
+} from "$lib/server/db/schema";
 import { db } from "$lib/db";
 import type { SessionUser } from "$lib/admin/auth";
 import { createSignedToken, verifySignedToken } from "$lib/admin/signed-token";

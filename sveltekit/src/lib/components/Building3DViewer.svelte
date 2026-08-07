@@ -130,7 +130,7 @@
 
 	let buildingRooms = $state<RoomData[]>([]);
 
-	const buildingMeta = $derived(buildings.find((b) => b.buildingName === name) ?? null);
+	const buildingMeta = $derived((buildings ?? []).find((b) => b.buildingName === name) ?? null);
 
 	const roomInputs = $derived(
 		buildingRooms.map<RoomPlacementInput>((r) => ({
@@ -139,6 +139,8 @@
 			directions: r.directions
 		}))
 	);
+
+	let polygon: LocalPolygonData | null = $state(null);
 
 	const placements = $derived(
 		polygon ? placeRooms(roomInputs, polygon, totalFloors, savedOverrides) : ([] as RoomPlacement[])
@@ -157,8 +159,6 @@
 			new Set(savedOverrides.keys())
 		);
 	});
-
-	let polygon: LocalPolygonData | null = $state(null);
 
 	const floorOptions = $derived.by(() => {
 		const opts: Array<{ value: number | 'all'; label: string }> = [
@@ -200,7 +200,7 @@
 
 		try {
 			const buildingChecker = await checkLocalBuildingRoom(buildingMeta.id);
-			const roomsForBuilding = await getBuildingRooms(buildingChecker.valid, buildingMeta.id);
+			const roomsForBuilding = await getBuildingRooms(buildingChecker, buildingMeta.id);
 			buildingRooms = roomsForBuilding;
 			await syncBuildingRooms(buildingChecker, buildingMeta.id, roomsForBuilding);
 
@@ -1064,7 +1064,7 @@
 				return;
 			}
 			// Only give up once the dataset is in and the building still isn't there.
-			if (ready && buildings.length > 0) {
+			if (ready && (buildings ?? []).length > 0) {
 				initStarted = true;
 				errorMsg = 'This building is not in the campus data yet.';
 				loading = false;

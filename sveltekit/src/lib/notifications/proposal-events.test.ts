@@ -1,9 +1,12 @@
-import { describe, expect, test, mock } from "bun:test";
+import { describe, expect, test, vi } from "vitest";
 import type { EditProposalSummary } from "$lib/services/proposal-service";
 
-const notify = mock(async () => {});
+// Hoisted so the vi.mock factory below can reference it.
+const { notify } = vi.hoisted(() => ({
+  notify: vi.fn(async (_envelope: unknown) => {}),
+}));
 
-mock.module("./index", () => ({
+vi.mock("./index", () => ({
   getNotificationAdapter: () => ({ notify }),
 }));
 
@@ -17,6 +20,7 @@ const sampleProposal = {
   entityId: 230,
   entityLabel: "CEM 203",
   submitterName: "Yeyel",
+  submitterNote: null,
   submitterUserId: null,
   status: "approved",
   proposedPatch: {},

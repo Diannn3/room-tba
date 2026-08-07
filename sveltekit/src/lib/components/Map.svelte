@@ -236,7 +236,7 @@
     let lat = org.lat;
     let lon = org.lon;
     if ((lat === null || lon === null) && org.buildingId !== null) {
-      const host = buildings.find((building) => building.id === org.buildingId);
+      const host = (buildings ?? []).find((building) => building.id === org.buildingId);
       if (host) {
         lat = host.lat;
         lon = host.lon;
@@ -352,7 +352,7 @@
   const EVENT_ROUTE_LAYER_ID = "event-route-line";
   const EVENT_ROUTE_LAYER_CASING_ID = "event-route-line-casing";
   let activeRouteId = $state<string | null>(null);
-  let activeRouteStops = $state<DisplayJeepneyRoute["stops"]>([]);
+  let activeRouteStops = $state<JeepneyStop[]>([]);
   let activeRouteColor = $state<string>("#dc2626");
   let terrainModeWasEnabled = false;
   let selectedEditKey = $state<string | null>(null);
@@ -1190,7 +1190,7 @@
   }
 
   function getLoadedVersion(version: number | undefined): number {
-    return Number.isInteger(version) ? version : 1;
+    return typeof version === "number" && Number.isInteger(version) ? version : 1;
   }
 
   function isMapEditEnabled() {
@@ -1321,7 +1321,7 @@
     positionOverrides = { ...positionOverrides, [key]: coords };
 
     if (type === "building") {
-      const building = buildings.find((b) => b.id === id);
+      const building = (buildings ?? []).find((b) => b.id === id);
       if (building) {
         building.lat = coords.lat;
         building.lon = coords.lon;
@@ -1330,7 +1330,7 @@
       return;
     }
 
-    const dorm = dorms.find((d) => d.id === id);
+    const dorm = (dorms ?? []).find((d) => d.id === id);
     if (dorm) {
       dorm.lat = coords.lat;
       dorm.lon = coords.lon;
@@ -1743,7 +1743,7 @@
       return updated.version;
     }
 
-    const event = events.find((event) => event.id === move.eventId);
+    const event = (events ?? []).find((event) => event.id === move.eventId);
     if (!event) throw new Error(`${move.name} is no longer loaded.`);
 
     const updated = await patchEventLocations(
@@ -2005,7 +2005,11 @@
           // map already fetched carries per-leg distance/duration.
           directions.on("fetchroutesend", (event) => {
             const legs = event.data?.directions?.routes?.[0]?.legs;
-            scheduleRouteStore.setRouteTotals(legs ? sumRouteLegs(legs) : null);
+            scheduleRouteStore.setRouteTotals(
+              legs
+                ? sumRouteLegs(legs as { distance?: unknown; duration?: unknown }[])
+                : null,
+            );
           });
         }
       };

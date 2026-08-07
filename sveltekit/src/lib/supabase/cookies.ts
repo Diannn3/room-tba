@@ -1,7 +1,9 @@
 import { parseCookieHeader } from "@supabase/ssr";
-import type { AstroCookies } from "astro";
+import type { Cookies } from "@sveltejs/kit";
 
-type CookieOptions = Parameters<AstroCookies["set"]>[2];
+// Partial: @supabase/ssr passes serialize options without SvelteKit's
+// required `path`; the setAll handler below fills it in.
+type CookieOptions = Partial<Parameters<Cookies["set"]>[2]>;
 
 export type SupabaseCookieHandlers = {
   getAll(): { name: string; value: string }[];
@@ -13,7 +15,7 @@ export type SupabaseCookieHandlers = {
 
 export function astroCookieHandlers(
   request: Request,
-  cookies: AstroCookies,
+  cookies: Cookies,
   onCacheHeaders?: (headers: Record<string, string>) => void,
 ): SupabaseCookieHandlers {
   return {
@@ -27,7 +29,8 @@ export function astroCookieHandlers(
     },
     setAll(cookiesToSet, cacheHeaders) {
       cookiesToSet.forEach(({ name, value, options }) => {
-        cookies.set(name, value, options);
+        // SvelteKit requires an explicit path on every cookie write.
+        cookies.set(name, value, { ...options, path: options?.path ?? "/" });
       });
       if (cacheHeaders && onCacheHeaders) {
         onCacheHeaders(cacheHeaders);

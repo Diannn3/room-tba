@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { matchImportedScheduleRows } from "./match-classes";
 import type { ClassMapValue } from "$lib/types";
 import type { ImportedScheduleRow } from "./types";

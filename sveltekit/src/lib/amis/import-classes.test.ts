@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   buildRoomLookup,
   classNaturalKey,
@@ -150,6 +150,8 @@ describe("resolveImportRows", () => {
           schedule: ["MWF 8-9"],
           facilityCode: "PS B 203",
           termId: 1252,
+          acadGroup: null,
+          acadOrg: null,
         },
         {
           courseCode: "ENG 2",
@@ -159,6 +161,8 @@ describe("resolveImportRows", () => {
           schedule: ["TTH 1-4"],
           facilityCode: "PSB203",
           termId: 1252,
+          acadGroup: null,
+          acadOrg: null,
         },
         {
           courseCode: "THESIS",
@@ -168,6 +172,8 @@ describe("resolveImportRows", () => {
           schedule: [],
           facilityCode: "",
           termId: 1252,
+          acadGroup: null,
+          acadOrg: null,
         },
       ],
       lookup,
@@ -193,6 +199,8 @@ describe("resolveImportRows", () => {
           schedule: ["W 09:00AM-10:00AM"],
           facilityCode: "ASI B-126",
           termId: 1261,
+          acadGroup: null,
+          acadOrg: null,
         },
       ],
       lookup,
@@ -217,6 +225,8 @@ describe("resolveImportRows", () => {
           schedule: [],
           facilityCode: "",
           termId: 1252,
+          acadGroup: null,
+          acadOrg: null,
         },
         {
           courseCode: "CMSC 190",
@@ -226,6 +236,8 @@ describe("resolveImportRows", () => {
           schedule: ["TBA"],
           facilityCode: "",
           termId: 1252,
+          acadGroup: null,
+          acadOrg: null,
         },
       ],
       lookup,
@@ -250,6 +262,8 @@ describe("resolveImportRows", () => {
           schedule: ["WF 4-5"],
           facilityCode: "EAA LH",
           termId: 1252,
+          acadGroup: null,
+          acadOrg: null,
         },
         {
           courseCode: "CMSC 12",
@@ -259,6 +273,8 @@ describe("resolveImportRows", () => {
           schedule: ["T 7-10"],
           facilityCode: "",
           termId: 1252,
+          acadGroup: null,
+          acadOrg: null,
         },
       ],
       lookup,
@@ -313,6 +329,8 @@ describe("summarizeImportChanges", () => {
           schedule: ["MWF 8-9"],
           roomId: 10,
           termId: 1252,
+          acadGroup: null,
+          acadOrg: null,
         },
         {
           courseCode: "ENG 3",
@@ -322,6 +340,8 @@ describe("summarizeImportChanges", () => {
           schedule: ["MWF 10-11"],
           roomId: 12,
           termId: 1252,
+          acadGroup: null,
+          acadOrg: null,
         },
       ],
     });

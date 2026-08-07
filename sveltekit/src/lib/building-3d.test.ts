@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { pickNonOverlappingLabels, type LabelBox } from "./building-3d";
 
 const label = (over: Partial<LabelBox> = {}): LabelBox => ({

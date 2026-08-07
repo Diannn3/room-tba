@@ -54,7 +54,7 @@
 	const parentCollege = $derived.by(() => {
 		const current = division;
 		if (!current?.collegeId) return null;
-		return colleges.find((college) => college.id === current.collegeId) ?? null;
+		return (colleges ?? []).find((college) => college.id === current.collegeId) ?? null;
 	});
 
 	let divisionRooms = $state<RoomData[] | null>(null);
@@ -406,7 +406,7 @@
 						disabled={savingField !== null}
 						fieldSaving={savingField === 'divisionName'}
 						unchanged={nameDraft.trim() === division.divisionName}
-						onsave={() => saveField('divisionName')}
+						onsave={submitAllChanges}
 					>
 						{#snippet control()}
 							<input
@@ -438,7 +438,7 @@
 						disabled={savingField !== null}
 						fieldSaving={savingField === 'collegeId'}
 						unchanged={collegeDraft === String(division.collegeId ?? '')}
-						onsave={() => saveField('collegeId')}
+						onsave={submitAllChanges}
 					>
 						{#snippet control()}
 							<select

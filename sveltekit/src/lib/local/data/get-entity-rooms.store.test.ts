@@ -24,7 +24,7 @@ const sampleRoom = (id: number): RoomData =>
     category: null,
     version: 1,
     updatedAt: null,
-  }) as RoomData;
+  }) as unknown as RoomData;
 
 describe("getEntityRooms", () => {
   test("returns cached rows without hitting the API when PGlite has data (#415)", async () => {

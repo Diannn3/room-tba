@@ -4,7 +4,6 @@ import { and, eq, ilike } from "drizzle-orm";
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 
-export const ssr = true;
 
 export const GET: RequestHandler = async ({ url }) => {
   const roomCode = url.searchParams.get("room_code");

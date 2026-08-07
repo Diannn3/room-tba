@@ -1,6 +1,6 @@
-import type { AstroCookies } from "astro";
+import type { Cookies } from "@sveltejs/kit";
 import { and, eq } from "drizzle-orm";
-import { adminUsersTable } from "@drizzle/schema";
+import { adminUsersTable } from "$lib/server/db/schema";
 import { db } from "$lib/db";
 import {
   ADMIN_COOKIE_NAME,
@@ -13,8 +13,8 @@ import {
   type SessionUser,
 } from "./auth";
 
-export function getEditorSession(cookies: AstroCookies): SessionUser | null {
-  const cookie = cookies.get(ADMIN_COOKIE_NAME)?.value;
+export function getEditorSession(cookies: Cookies): SessionUser | null {
+  const cookie = cookies.get(ADMIN_COOKIE_NAME);
   return getSessionUser(cookie);
 }
 
@@ -60,7 +60,7 @@ async function revalidateSession(
 }
 
 export async function editorSessionOrUnauthorized(
-  cookies: AstroCookies,
+  cookies: Cookies,
   options: EditorSessionOptions = {},
 ): Promise<
   { session: SessionUser; editedBy: string; role: AdminRole } | Response

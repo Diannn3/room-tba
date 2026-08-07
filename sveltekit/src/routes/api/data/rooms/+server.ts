@@ -8,7 +8,6 @@ import {
 	searchRooms,
 } from "./room-utils";
 
-export const ssr = true;
 
 export const GET: RequestHandler = async ({ url }) => {
 	const searchKeys = Array.from(url.searchParams.keys());

@@ -1154,17 +1154,7 @@ export async function syncAliasCache() {
 /** Sync classes into PGlite cache (#231). */
 export async function syncClasses(
   checker: TableSyncInfo,
-  remoteClasses: {
-    id: number;
-    courseCode: string;
-    section: string;
-    type: string;
-    schedule: string;
-    directions: string | null;
-    courseTitle: string;
-    termId: number;
-    roomId: number | null;
-  }[],
+  remoteClasses: import("$lib/types").ClassMapValue[],
   trustedRemote = false,
 ) {
   syncToastStore.markWritingPhase("classes");

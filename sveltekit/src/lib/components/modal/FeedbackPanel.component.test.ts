@@ -31,7 +31,10 @@ describe("FeedbackPanel", () => {
     render(FeedbackPanel);
     const note = screen.getByText(/Sent with your message/i);
     expect(note.textContent).toMatch(/app version v/);
-    expect(note.textContent).toMatch(/No email and no IP address are stored/i);
+    // Template reflow may wrap the sentence; compare with collapsed whitespace.
+    expect(note.textContent?.replace(/\s+/g, " ")).toMatch(
+      /No email and no IP address are stored/i,
+    );
   });
 
   test("keeps send disabled until the message has content", async () => {
@@ -47,7 +50,7 @@ describe("FeedbackPanel", () => {
   });
 
   test("posts the message with its context and shows a success state", async () => {
-    const fetchMock = vi.fn(() =>
+    const fetchMock = vi.fn((..._args: [string, RequestInit?]) =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ success: true }),

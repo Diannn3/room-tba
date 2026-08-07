@@ -1,4 +1,5 @@
-import { DATABASE_URL } from "astro:env/server";
+import { env } from "$env/dynamic/private";
+const { DATABASE_URL } = env;
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { e2eSchema } from "../../scripts/e2e-schema";

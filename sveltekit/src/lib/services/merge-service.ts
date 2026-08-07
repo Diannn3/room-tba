@@ -8,7 +8,7 @@ import {
   eventLocationsTable,
   roomsTable,
   roomPositionsTable,
-} from "@drizzle/schema";
+} from "$lib/server/db/schema";
 import { normalizeEntityName } from "$lib/entity-names";
 import { db } from "$lib/db";
 import type { RoomData } from "$lib/types";

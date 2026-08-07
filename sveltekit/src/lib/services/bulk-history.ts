@@ -17,7 +17,7 @@
 
 import { like } from "drizzle-orm";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
-import { editorHistoryTable } from "@drizzle/schema";
+import { editorHistoryTable } from "$lib/server/db/schema";
 
 /** Actor label for rows written by a maintenance script rather than a person. */
 export const BULK_ACTOR = "maintenance-script";

@@ -1,4 +1,5 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
+import { readFileSync } from "node:fs";
 import { PGlite } from "@electric-sql/pglite";
 import {
   buildGeneratedModule,
@@ -8,9 +9,10 @@ import { PGLITE_INIT_SQL } from "./pglite-schema.generated";
 
 describe("pglite offline schema", () => {
   test("generated file is up to date with drizzle/schema.ts", async () => {
-    const committed = await Bun.file(
+    const committed = readFileSync(
       new URL("./pglite-schema.generated.ts", import.meta.url),
-    ).text();
+      "utf8",
+    );
     expect(committed).toBe(buildGeneratedModule());
   });
 

@@ -3,7 +3,6 @@ import { collegesTable, eventsTable } from "$lib/server/db/schema";
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 
-export const ssr = true;
 
 export const GET: RequestHandler = async () => {
     try {

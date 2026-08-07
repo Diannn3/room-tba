@@ -45,6 +45,7 @@ export type RoutableQueryState = {
     | "place"
     | "event"
     | "events"
+    | "classes"
     | "browse"
     | null;
   value: string;

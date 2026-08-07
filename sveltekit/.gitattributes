@@ -1,0 +1,3 @@
+# pglite-schema.test.ts byte-compares this file against the generator's LF
+# output; autocrlf must not convert it on checkout.
+src/lib/local/data/pglite-schema.generated.ts eol=lf

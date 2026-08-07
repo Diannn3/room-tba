@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   buildUploadKey,
   detectImageContentType,
@@ -42,8 +42,12 @@ describe("detectImageContentType", () => {
 
 describe("buildUploadKey", () => {
   test("uses sanitized prefix and extension", () => {
-    const key = buildUploadKey("events/my-event", "image/png", "test-id");
-    expect(key).toBe("events/my-event/test-id.png");
+    const key = buildUploadKey(
+      "events/my-event",
+      "image/png",
+      "test-1111-2222-3333-4444",
+    );
+    expect(key).toBe("events/my-event/test-1111-2222-3333-4444.png");
   });
 });
 

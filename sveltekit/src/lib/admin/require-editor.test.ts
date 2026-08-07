@@ -1,26 +1,27 @@
-import { describe, expect, mock, test } from "bun:test";
-import type { AstroCookies } from "astro";
+import { describe, expect, test, vi } from "vitest";
+import type { Cookies } from "@sveltejs/kit";
 
-mock.module("astro:env/server", () => ({
-  ADMIN_PASSWORD: "test-password",
-  ADMIN_SESSION_SECRET: "test-secret-key-for-tests",
-  // require-editor pulls in @lib/db for session revalidation; the pg Pool
-  // is lazy, so an empty URL is fine — these tests never reach a query.
-  DATABASE_URL: "",
+vi.mock("$env/dynamic/private", () => ({
+  env: {
+    ADMIN_PASSWORD: "test-password",
+    ADMIN_SESSION_SECRET: "test-secret-key-for-tests",
+    // require-editor pulls in $lib/db for session revalidation; the pg Pool
+    // is lazy, so an empty URL is fine — these tests never reach a query.
+    DATABASE_URL: "",
+  },
 }));
 
 const { editorSessionOrUnauthorized } = await import("./require-editor");
 
-function mockCookies(value?: string): AstroCookies {
+function mockCookies(value?: string): Cookies {
   return {
     get: (name: string) =>
-      name === "admin_session" && value ? { value } : undefined,
-    has: () => Boolean(value),
+      name === "admin_session" && value ? value : undefined,
+    getAll: () => [],
     set: () => {},
     delete: () => {},
-    merge: () => {},
-    headers: () => new Headers(),
-  } as AstroCookies;
+    serialize: () => "",
+  } as unknown as Cookies;
 }
 
 describe("editorSessionOrUnauthorized", () => {

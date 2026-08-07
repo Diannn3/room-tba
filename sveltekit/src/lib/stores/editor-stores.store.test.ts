@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test } from "vitest";
+import type { MapProposalTarget } from "./store-types.js";
 import {
   AdditionProposalStore,
   EditorChromeStore,
@@ -53,14 +54,15 @@ describe("MapProposalStore", () => {
   });
 
   test("pinKey for room target", () => {
-    store.enable({ type: "room", id: 42 });
+    // Rooms are not in MapProposalTarget's union but the store keys any type.
+    store.enable({ type: "room", id: 42 } as unknown as MapProposalTarget);
     expect(store.pinKey()).toBe("room:42");
     expect(store.allowsKey("room:42")).toBe(true);
     expect(store.allowsKey("room:99")).toBe(false);
   });
 
   test("disable clears target", () => {
-    store.enable({ type: "building", id: 1 });
+    store.enable({ type: "building", id: 1, label: "", version: 1 });
     store.disable();
     expect(store.enabled).toBe(false);
   });
@@ -102,12 +104,12 @@ describe("EventPlacementStore", () => {
   test("start sets draft and proposing flag", () => {
     store.start(
       {
+        slug: "test-event",
         title: "Test Event",
         category: "other",
         startsAt: "2026-01-01T08:00:00+08:00",
         endsAt: "2026-01-01T10:00:00+08:00",
-        timezone: "Asia/Manila",
-        recurrence: "none",
+        imageUrl: null,
       },
       { propose: true, submitterName: "Contributor" },
     );
@@ -118,12 +120,12 @@ describe("EventPlacementStore", () => {
 
   test("cancel clears draft", () => {
     store.start({
+      slug: "test-event",
       title: "Test Event",
       category: "other",
       startsAt: "2026-01-01T08:00:00+08:00",
       endsAt: "2026-01-01T10:00:00+08:00",
-      timezone: "Asia/Manila",
-      recurrence: "none",
+      imageUrl: null,
     });
     store.cancel();
     expect(store.active).toBe(false);

@@ -3,7 +3,6 @@ import { db } from "$lib/server/db";
 import { placesTable } from "$lib/server/db/schema";
 import type { RequestHandler } from "./$types";
 
-export const ssr = true;
 
 export const GET: RequestHandler = async () => {
 	try {

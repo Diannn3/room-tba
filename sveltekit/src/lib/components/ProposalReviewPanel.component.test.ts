@@ -194,7 +194,7 @@ describe("ProposalReviewPanel bulk actions", () => {
   test("select all then approve posts an approve for every selected proposal", async () => {
     // Response omits proposal.entityType so approveOne skips the
     // published-entity side effects (no app-context dependency in the test).
-    const fetchMock = vi.fn(() =>
+    const fetchMock = vi.fn((..._args: [string, RequestInit?]) =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve({}),
@@ -226,7 +226,7 @@ describe("ProposalReviewPanel bulk actions", () => {
   });
 
   test("bulk reject posts a reject with the shared note", async () => {
-    const fetchMock = vi.fn(() =>
+    const fetchMock = vi.fn((..._args: [string, RequestInit?]) =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve({}),
@@ -328,7 +328,7 @@ describe("ProposalReviewPanel undo after approve", () => {
   });
 
   test("approve is held, not written, while undo is offered", async () => {
-    const fetchMock = vi.fn(() =>
+    const fetchMock = vi.fn((..._args: [string, RequestInit?]) =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve({}),
@@ -352,7 +352,7 @@ describe("ProposalReviewPanel undo after approve", () => {
   });
 
   test("undo restores the suggestion and never posts", async () => {
-    const fetchMock = vi.fn(() =>
+    const fetchMock = vi.fn((..._args: [string, RequestInit?]) =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve({}),
@@ -379,7 +379,7 @@ describe("ProposalReviewPanel undo after approve", () => {
   });
 
   test("publish now commits the held approve immediately", async () => {
-    const fetchMock = vi.fn(() =>
+    const fetchMock = vi.fn((..._args: [string, RequestInit?]) =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve({}),
@@ -421,7 +421,7 @@ describe("ProposalReviewPanel keyboard shortcuts", () => {
   });
 
   test("J focuses a row and A approves it", async () => {
-    const fetchMock = vi.fn(() =>
+    const fetchMock = vi.fn((..._args: [string, RequestInit?]) =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve({}),
@@ -441,7 +441,7 @@ describe("ProposalReviewPanel keyboard shortcuts", () => {
   });
 
   test("R opens the reject note step rather than rejecting outright", async () => {
-    const fetchMock = vi.fn(() =>
+    const fetchMock = vi.fn((..._args: [string, RequestInit?]) =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve({}),
@@ -461,7 +461,7 @@ describe("ProposalReviewPanel keyboard shortcuts", () => {
 
   // The reason the typing guard exists: "a" and "r" are common letters.
   test("typing a note never triggers a review action", async () => {
-    const fetchMock = vi.fn(() =>
+    const fetchMock = vi.fn((..._args: [string, RequestInit?]) =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve({}),

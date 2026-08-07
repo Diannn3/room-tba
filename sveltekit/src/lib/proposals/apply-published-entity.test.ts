@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   applyPublishedEntity,
   syncTablesForEntityType,
@@ -43,9 +43,10 @@ const loadedData = (): AppContextData => ({
       lon: 121.1,
       buildingType: "non-admin",
       directions: "Old directions",
+      imageUrl: null,
+      crFacilities: null,
       version: 1,
       updatedAt: "2026-01-01",
-      osmLink: null,
     },
   ],
   colleges: [],
@@ -84,9 +85,10 @@ describe("applyPublishedEntity", () => {
       lon: 121.1,
       buildingType: "non-admin",
       directions: "New directions",
+      imageUrl: null,
+      crFacilities: null,
       version: 2,
       updatedAt: "2026-01-01",
-      osmLink: null,
     });
   });
 

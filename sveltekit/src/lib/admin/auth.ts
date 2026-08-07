@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { ADMIN_SESSION_SECRET } from "astro:env/server";
+import { env } from "$env/dynamic/private";
+const { ADMIN_SESSION_SECRET } = env;
 import type { AdminRole } from "./roles";
 export type { AdminRole } from "./roles";
 export { canPublishDirectly, canReviewProposals } from "./roles";

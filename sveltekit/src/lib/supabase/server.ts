@@ -1,17 +1,17 @@
 import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { AstroCookies } from "astro";
+import type { Cookies } from "@sveltejs/kit";
 import { astroCookieHandlers } from "./cookies";
 import { getSupabasePublishableKey, getSupabaseUrl } from "./env";
 
 export type CreateServerSupabaseOptions = {
   request: Request;
-  cookies: AstroCookies;
+  cookies: Cookies;
   /** Apply CDN cache-busting headers when auth cookies refresh. */
   applyCacheHeaders?: (headers: Record<string, string>) => void;
 };
 
-/** SSR Supabase client for Astro pages, API routes, and middleware. */
+/** SSR Supabase client for server load functions, API routes, and hooks. */
 export function createServerSupabaseClient({
   request,
   cookies,
@@ -19,22 +19,5 @@ export function createServerSupabaseClient({
 }: CreateServerSupabaseOptions): SupabaseClient {
   return createServerClient(getSupabaseUrl(), getSupabasePublishableKey(), {
     cookies: astroCookieHandlers(request, cookies, applyCacheHeaders),
-  });
-}
-
-/** Convenience wrapper for `.astro` frontmatter with `Astro.response`. */
-export function createServerSupabaseFromAstro(astro: {
-  request: Request;
-  cookies: AstroCookies;
-  response: { headers: Headers };
-}): SupabaseClient {
-  return createServerSupabaseClient({
-    request: astro.request,
-    cookies: astro.cookies,
-    applyCacheHeaders: (headers) => {
-      for (const [key, value] of Object.entries(headers)) {
-        astro.response.headers.set(key, value);
-      }
-    },
   });
 }

@@ -12,7 +12,7 @@ import {
   classesTable,
   organizationsTable,
   roomsTable,
-} from "@drizzle/schema";
+} from "$lib/server/db/schema";
 import { isRoomScheduledClassType } from "$lib/amis/room-scheduled-types";
 import { db } from "$lib/db";
 import {

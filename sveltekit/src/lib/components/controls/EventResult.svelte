@@ -211,7 +211,7 @@
 
   function handleBuildingAnchorChange() {
     if (locationForm.buildingId === "") return;
-    const building = buildings.find(
+    const building = (buildings ?? []).find(
       (item) => item.id === Number(locationForm.buildingId),
     );
     if (!building) return;
@@ -225,7 +225,7 @@
 
   function handleDormAnchorChange() {
     if (locationForm.dormId === "") return;
-    const dorm = dorms.find((item) => item.id === Number(locationForm.dormId));
+    const dorm = (dorms ?? []).find((item) => item.id === Number(locationForm.dormId));
     if (!dorm) return;
     if (!locationForm.label.trim() || locationForm.label === "Event marker") {
       locationForm.label = dorm.dormName;

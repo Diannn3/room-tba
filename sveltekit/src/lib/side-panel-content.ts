@@ -47,7 +47,7 @@ export function resolvePanelContent(
   if (state) {
     if (state.type === "admin-suggestions") return ProposalReviewPanel;
     if (state.type === "browsing-events") return EventsList;
-    if (state.component) return state.component;
+    if ("component" in state && state.component) return state.component;
   }
   return category ? (CATEGORY_PANELS[category] ?? null) : null;
 }

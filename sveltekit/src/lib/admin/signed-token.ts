@@ -1,4 +1,5 @@
-import { ADMIN_SESSION_SECRET } from "astro:env/server";
+import { env } from "$env/dynamic/private";
+const { ADMIN_SESSION_SECRET } = env;
 import {
   createSignedToken as createSignedTokenCore,
   verifySignedToken as verifySignedTokenCore,

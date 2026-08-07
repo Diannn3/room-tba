@@ -3,7 +3,6 @@ import { db } from '$lib/server/db';
 import { floraSpeciesTable, floraSpecimensTable } from '$lib/server/db/schema';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 /**
  * Public flora read. `?notable=1` restricts to the notable specimens the phase 1

@@ -56,6 +56,7 @@ export type MapToolsSection =
   | "legend"
   | "terrain"
   | "trail"
+  | "schedule"
   | "jeepney";
 
 export type MapProposalTarget = {

@@ -59,6 +59,7 @@
 	import MapControlsStack from './map-chrome/MapControlsStack.svelte';
 	import MobileBottomNav from './map-chrome/MobileBottomNav.svelte';
 	import { MediaQuery } from 'svelte/reactivity';
+	import { isRecentSearch } from '$lib/locStorage';
 	import type { RecentSearch } from '$lib/types';
 
 	type Props = {

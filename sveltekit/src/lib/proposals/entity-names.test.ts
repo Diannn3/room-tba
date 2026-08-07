@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import type { AppContextData } from "$lib/context";
 import { appEntityNameResolver } from "./entity-names";
 

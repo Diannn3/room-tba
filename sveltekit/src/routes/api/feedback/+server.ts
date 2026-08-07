@@ -4,7 +4,6 @@ import { db } from '$lib/server/db';
 import { feedbackTable } from '$lib/server/db/schema';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // Caps inlined from astro/src/constants/feedback.ts.
 const FEEDBACK_MESSAGE_MAX = 2000;

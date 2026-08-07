@@ -3,7 +3,6 @@ import { db } from '$lib/server/db';
 import { jeepneyRoutesTable, jeepneyStopsTable } from '$lib/server/db/schema';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // Inlined from astro src/campus.config.ts campusTransit.enabled: campus
 // transit overlay flag (map layer, browse tab, /transit/ links).

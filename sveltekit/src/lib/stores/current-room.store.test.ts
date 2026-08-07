@@ -16,8 +16,8 @@ vi.mock("../local/data/utils.js", () => ({
 
 import { currentRoom } from "./index.svelte.js";
 
-const room = (roomCode: string): RoomData =>
-  ({ id: 1, roomCode, buildingId: 1 }) as unknown as RoomData;
+const room = (code: string): RoomData =>
+  ({ id: 1, code, buildingId: 1 }) as unknown as RoomData;
 
 /** Resolves only when the returned trigger is called. */
 function deferred<T>() {
@@ -45,7 +45,7 @@ describe("currentRoom.notFound", () => {
     local.resolve(room("E2E-101"));
     await lookup;
     expect(currentRoom.notFound).toBe(false);
-    expect(currentRoom.value?.roomCode).toBe("E2E-101");
+    expect(currentRoom.value?.code).toBe("E2E-101");
   });
 
   test("is true only after a completed lookup found nothing", async () => {
@@ -78,13 +78,13 @@ describe("currentRoom.notFound", () => {
 
     getLocalRoomByCode.mockResolvedValueOnce(room("FAST"));
     await currentRoom.getRoomByCode("FAST");
-    expect(currentRoom.value?.roomCode).toBe("FAST");
+    expect(currentRoom.value?.code).toBe("FAST");
 
     // The first lookup finally resolves with a miss; it must not win.
     slow.resolve(null);
     await stale;
 
-    expect(currentRoom.value?.roomCode).toBe("FAST");
+    expect(currentRoom.value?.code).toBe("FAST");
     expect(currentRoom.notFound).toBe(false);
   });
 });

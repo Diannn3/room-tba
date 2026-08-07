@@ -2,7 +2,6 @@ import { db } from '$lib/server/db';
 import { updateTable } from '$lib/server/db/schema';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 /**
  * Every table's sync key in one response (#866). Boot needs eight of them, and

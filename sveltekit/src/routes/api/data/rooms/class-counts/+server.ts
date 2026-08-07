@@ -3,7 +3,6 @@ import { db } from '$lib/server/db';
 import { classesTable, roomsTable } from '$lib/server/db/schema';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 export const GET: RequestHandler = async ({ url }) => {
 	const buildingId = url.searchParams.get('building_id');

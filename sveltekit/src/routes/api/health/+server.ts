@@ -1,6 +1,5 @@
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 export const GET: RequestHandler = async () => {
 	// TODO: latency stats need @lib/latency-tracker (astro/src/lib/latency-tracker.ts);

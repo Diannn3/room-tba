@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // TODO: port from astro/src/pages/api/auth/link-callback.ts — needs editor session, Supabase OAuth
 // Astro 303-redirects to /?account=google-linked (or /?account_error=...)

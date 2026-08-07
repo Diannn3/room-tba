@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import {
   changeOfMatriculationLabel,
   finalsWindowLabel,
@@ -24,6 +24,7 @@ function term(id: number, overrides: Partial<Term> = {}): Term {
     isDefault: id === 1253,
     isActive: true,
     sortOrder: id,
+    classesImportedAt: null,
     version: 1,
     updatedAt: "2026-01-01",
     ...overrides,

@@ -1,4 +1,4 @@
-import type { APIRoute } from "astro";
+import type { RequestHandler } from "@sveltejs/kit";
 import { editorSessionOrUnauthorized } from "$lib/admin/require-editor";
 import { json } from "$lib/api/json";
 import {
@@ -31,7 +31,7 @@ export function createEntityMergeRoute<TEntity>(options: {
   targetIdKey: keyof EntityMergeBody;
   preferredNameKey?: keyof EntityMergeBody;
   merge: MergeHandler<TEntity>;
-}): APIRoute {
+}): RequestHandler {
   return async ({ cookies, params, request }) => {
     const auth = await editorSessionOrUnauthorized(cookies, {
       requirePublish: true,

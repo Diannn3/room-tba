@@ -47,7 +47,7 @@
           day: parsed.days,
           time: parsed.time,
           courseCode: label,
-          section: sectionClass.section,
+          section: sectionClass.section ?? "",
           color,
           groupKey: offeringGroupKey(
             sectionClass.courseCode,

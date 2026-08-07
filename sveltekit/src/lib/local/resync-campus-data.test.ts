@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { resyncCampusData, type SyncStatus } from "./resync-campus-data";
 import { SYNC_TABLE_NAMES } from "./data/sync-keys";
 

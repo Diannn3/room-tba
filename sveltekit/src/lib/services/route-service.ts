@@ -1,4 +1,4 @@
-import { buildingsTable, dormsTable, placesTable } from "@drizzle/schema";
+import { buildingsTable, dormsTable, placesTable } from "$lib/server/db/schema";
 import { db } from "$lib/db";
 import { slugifySegment } from "$lib/site";
 import type { RoutePlace } from "$lib/campus-route";

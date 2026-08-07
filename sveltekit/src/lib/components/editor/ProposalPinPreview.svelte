@@ -17,7 +17,7 @@
 
   let mapStyle = $state<StyleSpecification | null>(null);
   let styleError = $state(false);
-  let map = $state.raw<maplibregl.Map | null>(null);
+  let map = $state.raw<maplibregl.Map | undefined>(undefined);
 
   const distance = $derived(pinMoveDistanceMeters(change));
 
@@ -63,7 +63,11 @@
       )}
     </p>
   {:else if mapStyle}
-    <div class="proposal-pin-preview__canvas">
+    <div
+      class="proposal-pin-preview__canvas"
+      role="img"
+      aria-label={`Map preview of the proposed position for ${label}`}
+    >
       <MapLibre
         bind:map
         style={mapStyle}
@@ -72,7 +76,6 @@
         attributionControl={false}
         interactive={false}
         class="proposal-pin-preview__map"
-        aria-label={`Map preview of the proposed position for ${label}`}
       >
         {#if change.before}
           <Marker lngLat={[change.before.lon, change.before.lat]}>

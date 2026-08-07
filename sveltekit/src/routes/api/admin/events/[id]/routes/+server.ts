@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // TODO: port from astro/src/pages/api/admin/events/[id]/routes.ts — needs publish session, event service, version guard
 const notImplemented: RequestHandler = async () =>

@@ -1,5 +1,5 @@
 import { and, eq, inArray, isNotNull, sql } from "drizzle-orm";
-import { adminUsersTable } from "@drizzle/schema";
+import { adminUsersTable } from "$lib/server/db/schema";
 import { db } from "$lib/db";
 import { buildProposalDigest } from "$lib/email/digest-core";
 import { isResendConfigured, sendEmail } from "$lib/email/resend";

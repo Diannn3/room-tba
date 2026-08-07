@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { findConflicts, isUnscheduled, sectionBlocks } from "./conflicts.js";
 import type { PlannedSection } from "./types.js";
 

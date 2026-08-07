@@ -1,5 +1,5 @@
 import { and, asc, eq, max, sql } from "drizzle-orm";
-import { jeepneyRoutesTable, jeepneyStopsTable } from "@drizzle/schema";
+import { jeepneyRoutesTable, jeepneyStopsTable } from "$lib/server/db/schema";
 import { db } from "$lib/db";
 import type { JeepneyRoute, JeepneyStop } from "$lib/constants/jeepney-routes";
 import { refreshSyncKey, recordEditorHistory } from "./admin-service";

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { getReviewShortcutAction, stepIndex } from "./review-shortcuts";
 
 function keyEvent(

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { createSignedToken, verifySignedToken } from "./signed-token-core";
 
 type Payload = { userId: number; newEmail: string };

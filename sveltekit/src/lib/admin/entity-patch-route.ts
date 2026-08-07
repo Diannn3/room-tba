@@ -1,4 +1,4 @@
-import type { APIRoute } from "astro";
+import type { RequestHandler } from "@sveltejs/kit";
 import { editorSessionOrUnauthorized } from "$lib/admin/require-editor";
 import { parseRequiredEditorVersion } from "$lib/admin/expected-version";
 import { json, errorResponse, parseIdParam } from "$lib/api/json";
@@ -34,7 +34,7 @@ export function createEntityPatchRoute<TEntity, TInput>(options: {
     expectedVersion: number,
     editedBy: string,
   ) => Promise<TEntity | null>;
-}): APIRoute {
+}): RequestHandler {
   return async ({ cookies, params, request }) => {
     const auth = await editorSessionOrUnauthorized(cookies, {
       requirePublish: true,

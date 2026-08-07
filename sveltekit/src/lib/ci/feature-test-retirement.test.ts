@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { featureTestRetirementFailures } from "./feature-test-retirement";
 
 describe("feature test retirement", () => {

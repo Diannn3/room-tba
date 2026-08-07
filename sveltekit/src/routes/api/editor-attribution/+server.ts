@@ -4,7 +4,6 @@ import { db } from '$lib/server/db';
 import { editorHistoryTable } from '$lib/server/db/schema';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // Inlined from astro/src/lib/editor/entity-attribution.ts.
 const ATTRIBUTABLE_ENTITY_TYPES = new Set([

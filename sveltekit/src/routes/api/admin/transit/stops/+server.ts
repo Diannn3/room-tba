@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // TODO: port from astro/src/pages/api/admin/transit/stops/index.ts — needs publish session, jeepney stop service
 const notImplemented: RequestHandler = async () =>

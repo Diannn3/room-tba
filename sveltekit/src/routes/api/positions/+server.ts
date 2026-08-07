@@ -4,7 +4,6 @@ import { db } from '$lib/server/db';
 import { buildingsTable, roomPositionsTable, roomsTable } from '$lib/server/db/schema';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 export const GET: RequestHandler = async ({ url }) => {
 	const buildingName = url.searchParams.get('building');

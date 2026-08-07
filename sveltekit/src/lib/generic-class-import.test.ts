@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -11,7 +11,7 @@ import {
 } from "./generic-class-import";
 import { parseScheduleTime } from "./schedule-renderer";
 
-const SAMPLE_DIR = join(import.meta.dir, "$lib/data/sample-campus");
+const SAMPLE_DIR = join(import.meta.dirname, "data/sample-campus");
 const HEADER =
   "course_code,section,type,days,start,end,room_code,building_code,term_id,course_title";
 

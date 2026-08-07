@@ -8,7 +8,7 @@ import {
   organizationsTable,
   placesTable,
   roomsTable,
-} from "@drizzle/schema";
+} from "$lib/server/db/schema";
 import {
   getBuildingSlug,
   getCollegeSlug,

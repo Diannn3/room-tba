@@ -29,6 +29,7 @@ describe("cache-first local class queries (#415)", () => {
       {
         id: 1,
         courseCode: "CS 11",
+        roomCode: "abc-101",
         section: "A",
         type: "LEC",
         schedule: [],

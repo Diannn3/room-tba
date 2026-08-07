@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   JEEPNEY_ROUTES,
   ROUTE_GEOMETRY_NOTES,

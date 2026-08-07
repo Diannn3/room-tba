@@ -1,5 +1,6 @@
 import { parseScheduleTime } from "$lib/schedule-renderer";
 import type { ScheduleDayStop, ScheduleMatchResult, Weekday } from "./types";
+export type { Weekday } from "./types";
 
 const SCHEDULE_TIME_RE =
   /^([MTWThFSa]+)\s+(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)$/i;

@@ -63,7 +63,7 @@
   });
 
   $effect(() => {
-    let timeout: number | null = null;
+    let timeout: ReturnType<typeof setTimeout> | null = null;
     if (syncToastStore.allSynced && syncToastStore.syncError === null) {
       timeout = setTimeout(() => {
         manualClosed = true;

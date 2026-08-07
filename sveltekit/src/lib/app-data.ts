@@ -8,7 +8,7 @@ import {
   divisionsTable,
   dormsTable,
   roomsTable,
-} from "@drizzle/schema";
+} from "$lib/server/db/schema";
 import { db } from "./db";
 import { getDefaultTerm } from "./services/term-service";
 import { slugifySegment } from "./site";
@@ -76,8 +76,13 @@ async function fetchAppData(): Promise<AppPageData> {
         lon: buildingsTable.lon,
         directions: buildingsTable.directions,
       },
+      buildingId: roomsTable.buildingId,
+      collegeId: roomsTable.collegeId,
+      divisionId: roomsTable.divisionId,
       collegeName: collegesTable.collegeName,
       divisionName: divisionsTable.divisionName,
+      version: roomsTable.version,
+      updatedAt: roomsTable.updatedAt,
     })
     .from(roomsTable)
     .leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))
@@ -90,6 +95,7 @@ async function fetchAppData(): Promise<AppPageData> {
 
   const classes = await db
     .select({
+      id: classesTable.id,
       courseCode: classesTable.courseCode,
       roomCode: roomsTable.roomCode,
       section: classesTable.section,
@@ -97,6 +103,8 @@ async function fetchAppData(): Promise<AppPageData> {
       schedule: classesTable.schedule,
       directions: roomsTable.directions,
       courseTitle: classesTable.courseTitle,
+      roomId: classesTable.roomId,
+      termId: classesTable.termId,
     })
     .from(classesTable)
     .leftJoin(roomsTable, eq(roomsTable.id, classesTable.roomId))
@@ -124,13 +132,11 @@ async function fetchAppData(): Promise<AppPageData> {
     return countB - countA;
   });
 
-  // @ts-expect-error drizzle returns count as a scalar row here.
   const [{ count: directionCount }] = await db
     .select({ count: count() })
     .from(roomsTable)
     .where(isNotNull(roomsTable.directions));
 
-  // @ts-expect-error drizzle returns count as a scalar row here.
   const [{ count: totalRooms }] = await db
     .select({ count: count() })
     .from(roomsTable);

@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // TODO: port from astro/src/pages/api/admin/events/[id].ts — needs publish session, event service, version guard (DELETE is a soft deactivate)
 const notImplemented: RequestHandler = async () =>

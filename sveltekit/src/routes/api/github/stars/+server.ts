@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 const GITHUB_REPO = 'uplbtools/room-tba';
 const CACHE_SECONDS = 60 * 60;

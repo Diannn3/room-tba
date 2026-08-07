@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 
 /**
  * Pure mirror of getMapChromeVisibility rules for browse vs edit (see map-chrome.ts).

@@ -809,7 +809,7 @@ export async function getRoomsData(): Promise<
     }
     // Offline / empty response: derive counts from cached PGlite rows.
     const local = await getLocalRoomsCounts();
-    return local.totalRooms > 0 ? local : fetchedRoomsData;
+    return (local.totalRooms ?? 0) > 0 ? local : fetchedRoomsData;
   } catch {
     return getLocalRoomsCounts();
   }

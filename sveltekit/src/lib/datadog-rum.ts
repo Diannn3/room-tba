@@ -1,12 +1,15 @@
 import { datadogRum } from "@datadog/browser-rum";
-import {
-  DD_ENV,
-  DD_RUM_APPLICATION_ID,
-  DD_RUM_CLIENT_TOKEN,
-  DD_SERVICE,
-  DD_SITE,
-  DD_VERSION,
-} from "astro:env/client";
+import { env as publicEnv } from "$env/dynamic/public";
+
+// Renamed from astro's DD_* — SvelteKit only exposes PUBLIC_-prefixed vars to the client.
+const {
+  PUBLIC_DD_ENV: DD_ENV,
+  PUBLIC_DD_RUM_APPLICATION_ID: DD_RUM_APPLICATION_ID,
+  PUBLIC_DD_RUM_CLIENT_TOKEN: DD_RUM_CLIENT_TOKEN,
+  PUBLIC_DD_SERVICE: DD_SERVICE,
+  PUBLIC_DD_SITE: DD_SITE,
+  PUBLIC_DD_VERSION: DD_VERSION,
+} = publicEnv;
 
 let initialized = false;
 

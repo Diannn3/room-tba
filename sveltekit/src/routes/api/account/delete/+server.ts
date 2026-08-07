@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // TODO: port from astro/src/pages/api/account/delete.ts — needs editor session, rate limit, soft-delete + session cookie clear
 const notImplemented: RequestHandler = async () =>

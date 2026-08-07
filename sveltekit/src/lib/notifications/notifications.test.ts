@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import { NoOpNotificationAdapter } from "./noop-adapter";
 import type { NotificationEvent } from "./types";
 

@@ -100,8 +100,9 @@ export function dormPreviewFromRow(dorm: DormData): EntityHoverPreview {
     kind: "dorm",
     id: dorm.id,
     name: dorm.dormName,
-    isUpManaged: dorm.isUpManaged,
-    directions: dorm.directions ?? null,
+    isUpManaged: dorm.isUpManaged ?? false,
+    // Dorms have no directions column; the card shows the description blurb.
+    directions: dorm.description ?? null,
   };
 }
 

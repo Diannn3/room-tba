@@ -69,7 +69,7 @@
 			{
 				courseCode: string;
 				title: string | null;
-				sections: (typeof plan)['sections'];
+				sections: NonNullable<typeof plan>['sections'];
 			}
 		>();
 		for (const s of plan?.sections ?? []) {

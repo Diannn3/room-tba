@@ -12,7 +12,7 @@ import {
   jeepneyStopsTable,
   organizationsTable,
   roomsTable,
-} from "@drizzle/schema";
+} from "$lib/server/db/schema";
 import { normalizeAlias } from "$lib/site";
 import type { SessionUser } from "$lib/admin/auth";
 import { db } from "$lib/db";
@@ -22,7 +22,8 @@ import {
 } from "$lib/constants/proposals";
 import { recordProposalContribution } from "./contribution-service";
 import { parseImageUrl } from "$lib/r2-upload";
-import { R2_PUBLIC_URL } from "astro:env/server";
+import { env } from "$env/dynamic/private";
+const { R2_PUBLIC_URL } = env;
 import { canWithdrawProposal } from "./proposal-access";
 export {
   canViewProposalSubmitterDetails,
@@ -686,7 +687,10 @@ export async function submitProposal(
     ) {
       existing = undefined;
     }
-  } else if (allowEntityScopedProposalMerge(isCreate, input.submitterUserId)) {
+  } else if (
+    input.submitterUserId != null &&
+    allowEntityScopedProposalMerge(isCreate, input.submitterUserId)
+  ) {
     [existing] = await db
       .select()
       .from(editProposalsTable)
@@ -712,7 +716,8 @@ export async function submitProposal(
     : input.patch;
 
   if (isCreate) {
-    validateCreateProposalPatch(input.entityType, mergedPatch);
+    // isCreate proves entityType is a create type; TS loses the narrowing here.
+    validateCreateProposalPatch(input.entityType as ProposalCreateType, mergedPatch);
     if (input.entityType === "create_room") {
       const buildingId = Number(mergedPatch.buildingId);
       const [row] = await db

@@ -1,20 +1,18 @@
-import type { MiddlewareHandler } from "astro";
+import type { Handle, RequestEvent } from "@sveltejs/kit";
 import { isSupabaseConfigured } from "./env";
 import { createServerSupabaseClient } from "./server";
 
-type MiddlewareContext = Parameters<MiddlewareHandler>[0];
-
-/** Refresh the Supabase session and attach the client to `context.locals`. */
+/** Refresh the Supabase session and attach the client to `event.locals`. */
 export async function refreshSupabaseSession(
-  context: MiddlewareContext,
+  event: RequestEvent,
 ): Promise<void> {
   if (!isSupabaseConfigured()) return;
 
   const pendingCacheHeaders: Record<string, string> = {};
   try {
     const supabase = createServerSupabaseClient({
-      request: context.request,
-      cookies: context.cookies,
+      request: event.request,
+      cookies: event.cookies,
       applyCacheHeaders: (headers) => {
         Object.assign(pendingCacheHeaders, headers);
       },
@@ -24,9 +22,9 @@ export async function refreshSupabaseSession(
       data: { user },
     } = await supabase.auth.getUser();
 
-    context.locals.supabase = supabase;
-    context.locals.supabaseUser = user ?? undefined;
-    context.locals.supabaseCacheHeaders = pendingCacheHeaders;
+    event.locals.supabase = supabase;
+    event.locals.supabaseUser = user ?? undefined;
+    event.locals.supabaseCacheHeaders = pendingCacheHeaders;
   } catch (error) {
     console.error("Supabase session refresh failed:", error);
   }
@@ -34,9 +32,9 @@ export async function refreshSupabaseSession(
 
 export function applySupabaseCacheHeaders(
   response: Response,
-  context: MiddlewareContext,
+  event: RequestEvent,
 ): Response {
-  const cacheHeaders = context.locals.supabaseCacheHeaders;
+  const cacheHeaders = event.locals.supabaseCacheHeaders;
   if (!cacheHeaders) return response;
 
   for (const [key, value] of Object.entries(cacheHeaders)) {
@@ -44,3 +42,9 @@ export function applySupabaseCacheHeaders(
   }
   return response;
 }
+
+export const supabaseHandle: Handle = async ({ event, resolve }) => {
+  await refreshSupabaseSession(event);
+  const response = await resolve(event);
+  return applySupabaseCacheHeaders(response, event);
+};

@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from "vitest";
 import {
   distanceMeters,
   formatDistance,
@@ -259,7 +259,7 @@ describe("sumRouteLegs", () => {
       sumRouteLegs([
         { distance: 100, duration: 80 },
         { distance: undefined, duration: 80 },
-        { annotation: undefined },
+        {},
       ]),
     ).toEqual({ meters: 100, seconds: 80 });
   });

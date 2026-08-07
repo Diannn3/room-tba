@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { readAmisPageMeta } from "$lib/amis/fetch-classes";
 
 describe("readAmisPageMeta", () => {

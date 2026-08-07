@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { plannerPlansTable } from "@drizzle/schema";
+import { plannerPlansTable } from "$lib/server/db/schema";
 import { db } from "$lib/db";
 
 /** The stored planner blob for a user, or null if they've never saved one. */

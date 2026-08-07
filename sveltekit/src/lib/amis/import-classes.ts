@@ -212,7 +212,7 @@ export function matchRoomId(
 }
 
 function applyRoomMatch(
-  facility: string | undefined,
+  facility: string | null | undefined,
   lookup: ReturnType<typeof buildRoomLookup>,
   stats: ImportRowStats,
   unmatched: Map<string, number>,

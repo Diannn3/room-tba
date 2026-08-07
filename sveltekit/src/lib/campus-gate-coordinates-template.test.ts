@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -11,16 +11,16 @@ import {
 } from "./campus-gate-coordinates-template";
 
 const TEMPLATE_PATH = join(
-  import.meta.dir,
-  "$lib/data/campus-gate-coordinates-template.csv",
+  import.meta.dirname,
+  "data/campus-gate-coordinates-template.csv",
 );
-const CONTRIBUTING_PATH = join(import.meta.dir, "../../CONTRIBUTING.md");
+const CONTRIBUTING_PATH = join(import.meta.dirname, "../../CONTRIBUTING.md");
 const VOLUNTEER_TRIAGE_PATH = join(
-  import.meta.dir,
+  import.meta.dirname,
   "../../docs/volunteer-triage.md",
 );
 const ISSUE_TEMPLATE_PATH = join(
-  import.meta.dir,
+  import.meta.dirname,
   "../../.github/ISSUE_TEMPLATE/gate_coordinates_batch.yml",
 );
 

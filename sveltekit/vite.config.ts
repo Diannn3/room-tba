@@ -20,6 +20,10 @@ export default defineConfig({
 			// See https://svelte.dev/docs/kit/adapters for more information about adapters.
 			adapter: adapter(),
 
+			alias: {
+				'@test': 'src/test'
+			},
+
 			typescript: {
 				config: (config) => {
 					config.include.push('../drizzle.config.ts');
@@ -187,11 +191,36 @@ export default defineConfig({
 
 			{
 				extends: './vite.config.ts',
+				// Without the browser condition Svelte resolves its server build and
+				// @testing-library/svelte cannot mount components under happy-dom.
+				// $env/dynamic/public needs the kit runtime, absent under vitest.
+				resolve: {
+					conditions: ['browser'],
+					alias: {
+						'$env/dynamic/public': new URL(
+							'./src/test/env-dynamic-public-stub.ts',
+							import.meta.url
+						).pathname
+					}
+				},
+				test: {
+					name: 'component',
+					environment: 'happy-dom',
+					include: ['src/**/*.{component,store}.test.ts'],
+					setupFiles: ['src/test/setup-components.ts']
+				}
+			},
+
+			{
+				extends: './vite.config.ts',
 				test: {
 					name: 'server',
 					environment: 'node',
 					include: ['src/**/*.{test,spec}.{js,ts}'],
-					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']
+					exclude: [
+						'src/**/*.svelte.{test,spec}.{js,ts}',
+						'src/**/*.{component,store}.test.ts'
+					]
 				}
 			}
 		]

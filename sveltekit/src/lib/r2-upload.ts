@@ -1,11 +1,12 @@
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import {
+import { env } from "$env/dynamic/private";
+const {
   R2_ACCESS_KEY_ID,
   R2_ACCOUNT_ID,
   R2_BUCKET_NAME,
   R2_PUBLIC_URL,
   R2_SECRET_ACCESS_KEY,
-} from "astro:env/server";
+} = env;
 import { publicUrlForKey } from "./r2-upload-core";
 
 export {

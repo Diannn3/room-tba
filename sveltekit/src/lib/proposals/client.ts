@@ -2,6 +2,10 @@ import type {
   ProposalCreateType,
   ProposalEntityType,
 } from "$lib/services/proposal-service";
+export type {
+  ProposalCreateType,
+  ProposalEntityType,
+} from "$lib/services/proposal-service";
 import { FIELD_LABELS } from "./diff";
 import {
   validateSubmitterName,
@@ -105,7 +109,7 @@ export async function loadOpenPendingProposals(options?: {
         const data = (await res.json()) as {
           proposals?: Array<{
             id: number;
-            entityType: string;
+            entityType: ProposalEntityType;
             entityId: number;
             status: string;
             entityLabel?: string;
@@ -375,10 +379,15 @@ type MergeEntityConfig = {
   responseKey: string;
 };
 
-const MERGE_ENTITY_CONFIG: Record<
-  Exclude<ProposalEntityType, "event" | "event_locations" | "organization">,
-  MergeEntityConfig
-> = {
+/** The entity types that support merging (have a /merge endpoint). */
+export type MergeEntityType =
+  | "building"
+  | "college"
+  | "division"
+  | "dorm"
+  | "room";
+
+const MERGE_ENTITY_CONFIG: Record<MergeEntityType, MergeEntityConfig> = {
   building: {
     path: "buildings",
     targetKey: "targetBuildingId",
@@ -407,10 +416,7 @@ const MERGE_ENTITY_CONFIG: Record<
 };
 
 export async function mergeEntityRecord(input: {
-  entityType: Exclude<
-    ProposalEntityType,
-    "event" | "event_locations" | "organization"
-  >;
+  entityType: MergeEntityType;
   sourceId: number;
   targetId: number;
   sourceVersion: number;

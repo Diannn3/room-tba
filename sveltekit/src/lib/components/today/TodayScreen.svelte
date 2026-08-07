@@ -27,9 +27,6 @@
   // Read-only over the planner's saved plan for the active term (#774).
   const sections = $derived(plannerStore.activePlan?.sections ?? []);
   const hasPlan = $derived(sections.length > 0);
-  const activeSections = $derived(offTermNote ? [] : sections);
-  const days = $derived(buildAgenda(activeSections));
-
   // A plan for a term that is not in session would otherwise read as "you have
   // nothing all week"; say which window the term actually covers instead.
   const offTermNote = $derived.by(() => {
@@ -38,6 +35,9 @@
     const range = formatTermDateRange(term);
     return range ? `${term.label} runs ${range}.` : null;
   });
+  const activeSections = $derived(offTermNote ? [] : sections);
+  const days = $derived(buildAgenda(activeSections));
+
 
   function close() {
     sidebarStore.changeOpened("map");

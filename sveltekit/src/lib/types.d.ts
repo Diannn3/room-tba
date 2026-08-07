@@ -10,7 +10,7 @@ import {
   placesTable,
   roomPositionsTable,
   termsTable,
-} from "@drizzle/schema";
+} from "$lib/server/db/schema";
 import type { QueryStoreState } from "./store.svelte";
 
 export type AppData = {
@@ -106,6 +106,7 @@ type FinalExamRow = {
 type CollegeData = {
   id: number;
   collegeName: string;
+  websiteLink?: string | null;
   version: number;
   updatedAt: string;
   floor?: number | null;
@@ -115,6 +116,7 @@ type DivisionData = {
   id: number;
   divisionName: string;
   collegeId: number | null;
+  websiteLink?: string | null;
   version: number;
   updatedAt: string;
   floor?: number | null;

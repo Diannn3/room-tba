@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import type { LocalPolygonData } from "./building-3d";
 import {
   inferBuildingPlacements,

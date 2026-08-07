@@ -1,4 +1,5 @@
-import { PUBLIC_APP_ENV } from "astro:env/client";
+import { env } from "$env/dynamic/public";
+const { PUBLIC_APP_ENV } = env;
 
 export type AppEnv = "staging" | "production";
 

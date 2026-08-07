@@ -10,7 +10,6 @@ import {
 } from '$lib/server/db/schema';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 // Inlined from astro/src/lib/contributor-progress.ts
 const ROOM_FIELD_CATEGORIES = ['directions', 'schedule', 'position'] as const;

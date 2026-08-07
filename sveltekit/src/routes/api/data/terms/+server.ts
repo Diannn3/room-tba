@@ -3,7 +3,6 @@ import { db } from '$lib/server/db';
 import { classesTable, termsTable } from '$lib/server/db/schema';
 import type { RequestHandler } from './$types';
 
-export const ssr = true;
 
 export const GET: RequestHandler = async () => {
 	// Inlined from astro src/lib/services/term-service.ts getAllTerms:

@@ -4,7 +4,6 @@ import { db } from "$lib/server/db";
 import { finalExamsTable, roomsTable } from "$lib/server/db/schema";
 import type { RequestHandler } from "./$types";
 
-export const ssr = true;
 
 export const GET: RequestHandler = async ({ url }) => {
 	const courseCode = url.searchParams.get("course_code");

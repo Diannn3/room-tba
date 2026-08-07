@@ -1,10 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { waitForAppBoot } from "../helpers/app";
-import {
-  openAppSidebar,
-  openHelpSettingsSection,
-  clickSidebarNav,
-} from "../helpers/map-tools";
+import { openSettingsModal } from "../helpers/map-tools";
 
 /**
  * The Basemap toggle only renders while MapTiler is the live provider, so the
@@ -57,11 +53,7 @@ test.describe("satellite basemap toggle", () => {
     await page.goto("/");
     await waitForAppBoot(page);
 
-    const sidebar = await openAppSidebar(page);
-    await openHelpSettingsSection(sidebar);
-    await clickSidebarNav(sidebar, "Settings", { exact: true });
-    const settings = page.getByRole("dialog", { name: "Settings" });
-    await expect(settings).toBeVisible();
+    const settings = await openSettingsModal(page);
 
     const toggle = settings.getByRole("button", {
       name: /switch to satellite imagery/i,

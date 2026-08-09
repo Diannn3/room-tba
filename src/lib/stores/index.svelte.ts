@@ -178,6 +178,7 @@ import {
 import { PlannerStore } from "./planner-store.svelte";
 import { TransitStore } from "./transit-store.svelte";
 import { AnnouncementsStore } from "./announcements-store.svelte";
+import { DirectionsStore } from "./directions-store.svelte";
 
 export { plannerRoomCodes } from "./data-stores.svelte";
 
@@ -1023,6 +1024,7 @@ export const measureRouteStore = new MeasureRouteStore();
 export const jeepneyStore = new JeepneyStore();
 export const transitStore = new TransitStore();
 export const announcementsStore = new AnnouncementsStore();
+export const directionsStore = new DirectionsStore();
 export const appBootstrapStore = new AppBootstrapStore();
 export const syncToastStore = new SyncToastStore();
 export const building3DStore = new Building3DStore();

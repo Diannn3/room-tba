@@ -37,6 +37,7 @@
     plannerStore,
     plannerBuildingsStore,
     plannerRoomCodes,
+    directionsStore,
   } from "@lib/store.svelte";
   import { untrack } from "svelte";
   import { onMount } from "svelte";
@@ -561,6 +562,64 @@
     }
     if (map.getSource(MEASURE_ROUTE_SOURCE_ID)) {
       map.removeSource(MEASURE_ROUTE_SOURCE_ID);
+    }
+  }
+
+  const JOURNEY_SOURCE_ID = "directions-journey";
+  const JOURNEY_WALK_LAYER_ID = "directions-journey-walk";
+  const JOURNEY_RIDE_LAYER_ID = "directions-journey-ride";
+
+  /**
+   * The planned journey (#966): ride legs solid in the route's own colour,
+   * walk legs dotted, so a rider can see at a glance where they are on foot
+   * and where they are on a jeep.
+   */
+  function ensureJourneyLayers(map: mapGl.MapLibreMap) {
+    if (!map.getSource(JOURNEY_SOURCE_ID)) {
+      map.addSource(JOURNEY_SOURCE_ID, {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+    }
+
+    if (!map.getLayer(JOURNEY_RIDE_LAYER_ID)) {
+      map.addLayer({
+        id: JOURNEY_RIDE_LAYER_ID,
+        type: "line",
+        source: JOURNEY_SOURCE_ID,
+        filter: ["==", ["get", "kind"], "ride"],
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": ["get", "color"],
+          "line-width": 6,
+          "line-opacity": 0.9,
+        },
+      });
+    }
+
+    if (!map.getLayer(JOURNEY_WALK_LAYER_ID)) {
+      map.addLayer({
+        id: JOURNEY_WALK_LAYER_ID,
+        type: "line",
+        source: JOURNEY_SOURCE_ID,
+        filter: ["==", ["get", "kind"], "walk"],
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": "#1d4ed8",
+          "line-width": 5,
+          "line-opacity": 0.85,
+          "line-dasharray": [0.1, 1.8],
+        },
+      });
+    }
+  }
+
+  function clearJourneyLayers(map: mapGl.MapLibreMap) {
+    for (const id of [JOURNEY_WALK_LAYER_ID, JOURNEY_RIDE_LAYER_ID]) {
+      if (map.getLayer(id)) map.removeLayer(id);
+    }
+    if (map.getSource(JOURNEY_SOURCE_ID)) {
+      map.removeSource(JOURNEY_SOURCE_ID);
     }
   }
 
@@ -2018,8 +2077,111 @@
     }
   });
 
+  /**
+   * Follow camera for navigation (#966): a tilted, heading-up view locked to
+   * the rider, like GMaps navigation. A manual pan releases the lock rather
+   * than fighting the user for the camera; the bar's re-centre button takes
+   * it back.
+   */
+  const NAV_PITCH = 60;
+  const NAV_ZOOM = 18;
+
+  $effect(() => {
+    const map = mapStore.mapInstance;
+    if (!map || !directionsStore.navigating) return;
+
+    const onUserPan = (event: { originalEvent?: unknown }) => {
+      // Only a real gesture releases the lock; our own easeTo has no
+      // originalEvent, so the camera does not fight itself.
+      if (event.originalEvent) directionsStore.releaseCamera();
+    };
+    map.on("dragstart", onUserPan);
+    map.on("rotatestart", onUserPan);
+    map.on("zoomstart", onUserPan);
+    return () => {
+      map.off("dragstart", onUserPan);
+      map.off("rotatestart", onUserPan);
+      map.off("zoomstart", onUserPan);
+    };
+  });
+
+  $effect(() => {
+    const map = mapStore.mapInstance;
+    const coords = locationStore.coords;
+    if (
+      !map ||
+      !directionsStore.navigating ||
+      !directionsStore.cameraFollowing ||
+      !coords
+    ) {
+      return;
+    }
+
+    map.easeTo({
+      center: coords,
+      zoom: NAV_ZOOM,
+      pitch: NAV_PITCH,
+      // Hold the current bearing when the device gives no heading, rather
+      // than snapping north-up mid-walk.
+      bearing: locationStore.bearing ?? map.getBearing(),
+      duration: 900,
+      essential: true,
+    });
+  });
+
+  /** Restore a plain north-up view when navigation ends. */
+  $effect(() => {
+    const map = mapStore.mapInstance;
+    if (!map || directionsStore.navigating) return;
+    if (map.getPitch() === 0 && map.getBearing() === 0) return;
+    if (terrainStore.enabled) return; // terrain owns the camera
+    map.easeTo({ pitch: 0, bearing: 0, duration: 600 });
+  });
+
+  /** Draw the selected multi-modal journey (#966). */
+  $effect(() => {
+    const map = mapStore.mapInstance;
+    if (!map) return;
+
+    const journey = directionsStore.selected;
+    if (!journey) {
+      if (map.isStyleLoaded()) clearJourneyLayers(map);
+      return;
+    }
+
+    const draw = () => {
+      ensureJourneyLayers(map);
+      const source = map.getSource(JOURNEY_SOURCE_ID);
+      if (!source || !("setData" in source)) return;
+      source.setData({
+        type: "FeatureCollection",
+        features: journey.legs.map((leg) => ({
+          type: "Feature" as const,
+          geometry: {
+            type: "LineString" as const,
+            coordinates: leg.coordinates,
+          },
+          properties: {
+            kind: leg.kind,
+            color: leg.kind === "ride" ? leg.color : "#1d4ed8",
+          },
+        })),
+      });
+    };
+
+    if (map.isStyleLoaded()) draw();
+    else map.once("load", draw);
+  });
+
   $effect(() => {
     if (!directions) return;
+
+    // The multi-modal planner owns the drawn route while it is open; letting
+    // the OSRM polyline render too would put two different lines on the map.
+    if (directionsStore.active) {
+      directions.clear();
+      return;
+    }
 
     const waypoints = locationStore.routeWaypoints;
     if (waypoints && waypoints.length >= 2) {
@@ -3153,7 +3315,18 @@
       >
         {#if locationStore.coords}
           <Marker lngLat={locationStore.coords}>
-            <div class="user-location-pin"></div>
+            {#if directionsStore.navigating}
+              <!-- Heading arrow while navigating (#966); falls back to the
+                   plain dot when the device reports no heading. -->
+              <div
+                class="user-location-puck"
+                class:user-location-puck--heading={locationStore.bearing !==
+                  null}
+                style:--puck-rotation="{locationStore.bearing ?? 0}deg"
+              ></div>
+            {:else}
+              <div class="user-location-pin"></div>
+            {/if}
           </Marker>
         {/if}
         {#if measureRouteStore.active}
@@ -4178,6 +4351,49 @@
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
     position: relative;
     z-index: 70;
+  }
+
+  /* Navigation puck (#966): a white disc with a heading arrow, GMaps-style.
+     Without a heading the arrow is hidden and only the disc shows, so the
+     puck never points somewhere the device did not actually report. */
+  .user-location-puck {
+    position: relative;
+    z-index: 70;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 6px rgb(0 0 0 / 0.35);
+  }
+
+  .user-location-puck::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    background: #4285f4;
+  }
+
+  .user-location-puck--heading::before {
+    /* Arrowhead pointing along the reported bearing. */
+    width: 0;
+    height: 0;
+    border-right: 0.4375rem solid transparent;
+    border-bottom: 0.75rem solid #4285f4;
+    border-left: 0.4375rem solid transparent;
+    border-radius: 0;
+    background: none;
+    rotate: var(--puck-rotation, 0deg);
+    transition: rotate 300ms linear;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .user-location-puck--heading::before {
+      transition: none;
+    }
   }
 
   .measure-waypoint {

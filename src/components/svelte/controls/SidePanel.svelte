@@ -1,6 +1,12 @@
 <script lang="ts">
   import BottomSheet from "@ui/BottomSheet.svelte";
-  import { queryStore, sidePanelStore, jeepneyStore } from "@lib/store.svelte";
+  import DirectionsPanel from "@ui/directions/DirectionsPanel.svelte";
+  import {
+    queryStore,
+    sidePanelStore,
+    jeepneyStore,
+    directionsStore,
+  } from "@lib/store.svelte";
   import JeepneyStopPanel from "./JeepneyStopPanel.svelte";
   import JeepneyRouteModal from "@ui/modal/JeepneyRouteModal.svelte";
   import SponsorBanner from "@ui/SponsorBanner.svelte";
@@ -25,11 +31,22 @@
   const showSponsorBanner = $derived(
     queryStore.category !== null &&
       SPONSOR_CATEGORIES.has(queryStore.category) &&
-      jeepneyStore.selectedStopIndex === null,
+      jeepneyStore.selectedStopIndex === null &&
+      // Directions is a task view, not an entity detail view (docs/ad-policy.md).
+      !directionsStore.active,
   );
   let lastPanelIdentity = $state<string | null>(null);
   /** Mobile sheet snap, independent of sidePanelStore.collapsed (Map.expand race). */
   let mobileSnap = $state<BottomSheetSnap>("peek");
+
+  /** Navigation is a map-first view: the bar takes a strip, the map the rest. */
+  const navPeek = $derived(directionsStore.navigating);
+
+  // Entering follow mode from an expanded sheet would otherwise leave the map
+  // hidden behind the very panel that is meant to be guiding it.
+  $effect(() => {
+    if (directionsStore.navigating) mobileSnap = "peek";
+  });
 
   const panelIdentity = $derived(
     queryStore.category === null && jeepneyStore.selectedStopIndex === null
@@ -51,7 +68,9 @@
   );
 
   const panelOpen = $derived(
-    PanelContent !== null || jeepneyStore.selectedStopIndex !== null,
+    PanelContent !== null ||
+      jeepneyStore.selectedStopIndex !== null ||
+      directionsStore.active,
   );
 
   const toggleLabel = $derived(
@@ -91,6 +110,7 @@
   }
 
   function dismissMobileSheet() {
+    directionsStore.close();
     jeepneyStore.closeStop();
     queryStore.clearQuery();
     sidePanelStore.closePanel();
@@ -100,7 +120,9 @@
 </script>
 
 {#snippet panelBody()}
-  {#if jeepneyStore.selectedStopIndex !== null}
+  {#if directionsStore.active}
+    <DirectionsPanel />
+  {:else if jeepneyStore.selectedStopIndex !== null}
     <JeepneyStopPanel />
   {:else if jeepneyStore.selectedRouteId !== null && queryStore.category === "browse" && queryStore.queryValue === "jeepney"}
     <JeepneyRouteModal
@@ -119,7 +141,7 @@
   <BottomSheet
     open={panelOpen}
     bind:snap={mobileSnap}
-    peekRatio={0.48}
+    peekRatio={navPeek ? 0.22 : 0.48}
     topInset="var(--mobile-detail-sheet-top-inset, 0px)"
     bottomInset="0px"
     onDismiss={dismissMobileSheet}

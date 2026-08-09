@@ -182,11 +182,6 @@
     snap = snap === "peek" ? "expanded" : "peek";
   }
 
-  function onScrimClick() {
-    // Tap map strip outside the sheet → dismiss (same as drag-down past peek).
-    onDismiss?.();
-  }
-
   const transitionMs = $derived(reducedMotion.current ? 0 : 320);
 </script>
 
@@ -198,13 +193,10 @@
     style:--bs-bottom={bottomInset}
     style:--bs-duration="{transitionMs}ms"
   >
-    <!-- Map strip above the sheet: tap dismisses back to map/search. -->
-    <button
-      type="button"
-      class="bottom-sheet__scrim"
-      aria-label="Close details"
-      onclick={onScrimClick}
-    ></button>
+    <!-- No scrim: the map strip above the sheet stays live, so panning,
+         pinching and tapping pins keep working while details are open (GMaps).
+         Dismissal is the drag-down past peek plus the search bar's
+         "Close details" button. -->
 
     <!-- svelte-ignore a11y_no_static_element_interactions -->
     <div
@@ -250,20 +242,6 @@
     /* Above map-tools + bottom nav so locate/3D/zoom never paint over it. */
     z-index: var(--z-mobile-sheet, 16);
     pointer-events: none;
-  }
-
-  .bottom-sheet__scrim {
-    /* Fills the root under the sheet; sheet sits on top so only the map
-       strip above the visible sheet receives these taps → dismiss. */
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    margin: 0;
-    padding: 0;
-    border: none;
-    background: transparent;
-    pointer-events: auto;
-    cursor: pointer;
   }
 
   .bottom-sheet {

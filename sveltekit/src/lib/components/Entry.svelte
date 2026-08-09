@@ -121,25 +121,25 @@
 
 		if (urlParams.get('editor') === 'login') {
 			adminAuthStore.openLogin();
-			window.history.replaceState({}, '', window.location.pathname);
+			// window.history.replaceState({}, '', window.location.pathname);
 		}
 
 		const authError = urlParams.get('auth_error');
 		if (authError) {
 			adminAuthStore.oauthError = authError;
 			adminAuthStore.openLogin();
-			window.history.replaceState({}, '', window.location.pathname);
+			// window.history.replaceState({}, '', window.location.pathname);
 		}
 
 		const accountEvent = urlParams.get('account');
 		if (accountEvent === 'email-changed') {
 			toastStore.show('Email address updated.', 'success');
 			adminAuthStore.openAccountSettings();
-			window.history.replaceState({}, '', window.location.pathname);
+			// window.history.replaceState({}, '', window.location.pathname);
 		} else if (accountEvent === 'google-linked') {
 			toastStore.show('Google account connected.', 'success');
 			adminAuthStore.openAccountSettings();
-			window.history.replaceState({}, '', window.location.pathname);
+			// window.history.replaceState({}, '', window.location.pathname);
 		}
 
 		const accountError = urlParams.get('account_error');
@@ -155,18 +155,18 @@
 			};
 			toastStore.show(messages[accountError] ?? 'Something went wrong. Try again.', 'error');
 			adminAuthStore.openAccountSettings();
-			window.history.replaceState({}, '', window.location.pathname);
+			// window.history.replaceState({}, '', window.location.pathname);
 		}
 
 		if (urlParams.get('contribute') === '1') {
 			editorChromeStore.openAdditionModal();
-			window.history.replaceState({}, '', window.location.pathname);
+			// window.history.replaceState({}, '', window.location.pathname);
 		}
 
 		// 3D deep link: /building/<slug>/?3d=1 opens the building's 3D viewer.
 		if (urlParams.get('3d') === '1' && initialSearch?.category === 'building') {
 			building3DStore.open(initialSearch.value);
-			window.history.replaceState({}, '', window.location.pathname);
+			// window.history.replaceState({}, '', window.location.pathname);
 		}
 
 		// Jeepney deep link: ?jeepney=<routeId>[&stop=<index>] opens the route on
@@ -180,13 +180,13 @@
 			if (Number.isInteger(stopParam)) {
 				jeepneyStore.openStop(stopParam);
 			}
-			window.history.replaceState(
-				{},
-				'',
-				Number.isInteger(stopParam)
-					? getTransitStopPath(jeepneyRouteId, stopParam)
-					: getTransitRoutePath(jeepneyRouteId)
-			);
+			// window.history.replaceState(
+			// 	{},
+			// 	'',
+			// 	Number.isInteger(stopParam)
+			// 		? getTransitStopPath(jeepneyRouteId, stopParam)
+			// 		: getTransitRoutePath(jeepneyRouteId)
+			// );
 		}
 
 		// /route/<from>/<to> sends its two endpoints here as slugs. Resolving them
@@ -202,7 +202,7 @@
 			if (waypoints.length === 2) {
 				locationStore.setRouteWaypoints(waypoints);
 			}
-			window.history.replaceState({}, '', window.location.pathname);
+			// window.history.replaceState({}, '', window.location.pathname);
 		}
 
 		plannerStore.init();
@@ -239,7 +239,7 @@
 
 		const planParam = urlParams.get('plan');
 		if (planParam) {
-			window.history.replaceState({}, '', window.location.pathname);
+			// window.history.replaceState({}, '', window.location.pathname);
 			const decoded = decodeSharePlan(planParam);
 			if (!decoded) {
 				toastStore.show('That plan link is invalid.', 'error');

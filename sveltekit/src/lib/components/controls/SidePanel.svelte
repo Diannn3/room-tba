@@ -2,7 +2,7 @@
 	
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
-import type { Snippet } from 'svelte';
+	import type { Snippet } from 'svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { page } from '$app/state';
 	import type { BottomSheetSnap } from '$lib/bottom-sheet-snap';

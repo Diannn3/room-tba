@@ -1,9 +1,49 @@
-import { json } from '@sveltejs/kit';
+import { createEntityPatchRoute } from '$lib/admin/entity-patch-route';
+import { errorResponse } from '$lib/api/json';
+import {
+	type DivisionAdmin,
+	type DivisionUpdateInput,
+	updateDivision
+} from '$lib/services/admin-service';
 import type { RequestHandler } from './$types';
 
+type DivisionPatchBody = {
+	divisionName?: string;
+	collegeId?: number | null;
+	version?: number;
+};
 
-// TODO: port from astro/src/pages/api/admin/divisions/[id].ts — needs publish session, entity patch factory, version guard
-const notImplemented: RequestHandler = async () =>
-	json({ success: false, error: 'Not implemented' }, { status: 501 });
+function invalidCollegeId(value: unknown) {
+	return value !== undefined && value !== null && !Number.isInteger(value);
+}
 
-export const PATCH = notImplemented;
+export const PATCH: RequestHandler = createEntityPatchRoute<DivisionAdmin, DivisionUpdateInput>({
+	entityLabel: 'division',
+	responseKey: 'division',
+	validateAndBuild: (body) => {
+		const b = body as DivisionPatchBody;
+		if (b.divisionName !== undefined && b.divisionName.trim().length === 0) {
+			return {
+				ok: false,
+				response: errorResponse('Division name is required', 400)
+			};
+		}
+		if (invalidCollegeId(b.collegeId)) {
+			return {
+				ok: false,
+				response: errorResponse('College must be a valid selection', 400)
+			};
+		}
+		const input: DivisionUpdateInput = {};
+		if (b.divisionName !== undefined) input.divisionName = b.divisionName.trim();
+		if (b.collegeId !== undefined) input.collegeId = b.collegeId;
+		if (Object.keys(input).length === 0) {
+			return {
+				ok: false,
+				response: errorResponse('No division fields to update', 400)
+			};
+		}
+		return { ok: true, input, version: b.version };
+	},
+	update: updateDivision
+});

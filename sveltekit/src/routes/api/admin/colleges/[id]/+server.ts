@@ -1,9 +1,25 @@
-import { json } from '@sveltejs/kit';
+import { createEntityPatchRoute } from '$lib/admin/entity-patch-route';
+import { errorResponse } from '$lib/api/json';
+import { type CollegeAdmin, updateCollege } from '$lib/services/admin-service';
 import type { RequestHandler } from './$types';
 
+type CollegePatchBody = {
+	collegeName?: string;
+	version?: number;
+};
 
-// TODO: port from astro/src/pages/api/admin/colleges/[id].ts — needs publish session, entity patch factory, version guard
-const notImplemented: RequestHandler = async () =>
-	json({ success: false, error: 'Not implemented' }, { status: 501 });
-
-export const PATCH = notImplemented;
+export const PATCH: RequestHandler = createEntityPatchRoute<CollegeAdmin, string>({
+	entityLabel: 'college',
+	responseKey: 'college',
+	validateAndBuild: (body) => {
+		const b = body as CollegePatchBody;
+		if (!b.collegeName || b.collegeName.trim().length === 0) {
+			return {
+				ok: false,
+				response: errorResponse('College name is required', 400)
+			};
+		}
+		return { ok: true, input: b.collegeName.trim(), version: b.version };
+	},
+	update: updateCollege
+});

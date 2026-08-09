@@ -6,7 +6,7 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"includes": ["**", "!**/.svelte-kit/**", "!**/build/**", "!**/static/**"]
+		"includes": ["**", "!**/.svelte-kit", "!**/build", "!**/static"]
 	},
 	"formatter": {
 		"enabled": true,

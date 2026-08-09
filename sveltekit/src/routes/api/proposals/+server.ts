@@ -1,9 +1,88 @@
-import { json } from '@sveltejs/kit';
+import { getEditorSession } from '$lib/admin/require-editor';
+import {
+	enforceProposalSubmitLimits,
+	isProposalHoneypotTripped
+} from '$lib/api/proposal-rate-limit';
+import { clientIp, rateLimitResponse } from '$lib/api/rate-limit';
+import { validateSubmitterName } from '$lib/constants/proposals';
+import {
+	emitProposalSubmitted,
+	logNotificationEmitFailure
+} from '$lib/notifications/proposal-events';
+import { ProposalValidationError, submitProposal } from '$lib/services/proposal-service';
 import type { RequestHandler } from './$types';
 
+type ProposalBody = {
+	entityType?: string;
+	entityId?: number;
+	baseVersion?: number;
+	patch?: Record<string, unknown>;
+	submitterName?: string;
+	submitterNote?: string;
+	proposalId?: number;
+	_hp?: string;
+};
 
-// TODO: port from astro/src/pages/api/proposals/index.ts — needs proposal service, anon/auth rate limits, honeypot, notification emit
-const notImplemented: RequestHandler = async () =>
-	json({ success: false, error: 'Not implemented' }, { status: 501 });
+export const POST: RequestHandler = async ({ cookies, request }) => {
+	const session = getEditorSession(cookies);
+	const ip = clientIp(request);
+	const denied = enforceProposalSubmitLimits(session, ip);
+	if (denied) {
+		return rateLimitResponse(denied.resetAt);
+	}
 
-export const POST = notImplemented;
+	let body: ProposalBody;
+	try {
+		body = await request.json();
+	} catch {
+		return json({ error: 'Invalid JSON body' }, 400);
+	}
+
+	if (isProposalHoneypotTripped(body as Record<string, unknown>)) {
+		return json({ success: true }, 201);
+	}
+
+	const submitterName =
+		session?.displayName ||
+		session?.username ||
+		(typeof body.submitterName === 'string' ? body.submitterName : '');
+
+	if (!session) {
+		const validation = validateSubmitterName(submitterName);
+		if (!validation.ok) {
+			return json({ error: validation.error }, 400);
+		}
+	}
+
+	try {
+		const proposal = await submitProposal({
+			entityType: body.entityType ?? '',
+			entityId: Number(body.entityId),
+			baseVersion: Number(body.baseVersion),
+			patch: body.patch ?? {},
+			submitterName,
+			submitterNote: typeof body.submitterNote === 'string' ? body.submitterNote : null,
+			submitterUserId: session?.id && session.id > 0 ? session.id : null,
+			proposalId: Number.isInteger(body.proposalId) ? body.proposalId : null
+		});
+
+		void emitProposalSubmitted(proposal, session?.id).catch((err) => {
+			logNotificationEmitFailure('Notification emit failed', err);
+		});
+
+		return json({ success: true, proposal }, 201);
+	} catch (err) {
+		if (err instanceof ProposalValidationError) {
+			return json({ error: err.message }, 400);
+		}
+		console.error('Failed to submit proposal:', err);
+		return json({ error: 'Failed to submit proposal' }, 500);
+	}
+};
+
+function json(body: unknown, status = 200) {
+	return new Response(JSON.stringify(body), {
+		status,
+		headers: { 'Content-Type': 'application/json' }
+	});
+}

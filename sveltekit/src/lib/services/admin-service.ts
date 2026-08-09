@@ -1,78 +1,72 @@
-import { and, eq, ne, sql } from "drizzle-orm";
-import { randomUUID } from "node:crypto";
-import { parsePublishingActor } from "$lib/admin/auth";
-import { recordEditorContribution } from "./contribution-service";
+import { randomUUID } from 'node:crypto';
+import { and, eq, ne, sql } from 'drizzle-orm';
+import { parsePublishingActor } from '$lib/admin/auth';
+import { sanitizeCrFacilities } from '$lib/constants/cr-facilities';
+import { normalizePlaceCategory } from '$lib/constants/place-categories';
+import { normalizeRoomCategory } from '$lib/constants/room-categories';
+import { db } from '$lib/db';
+import { normalizeEntityName } from '$lib/entity-names';
+import { entityIndexPath } from '$lib/entity-urls';
 import {
-  buildingsTable,
-  collegesTable,
-  divisionsTable,
-  dormsTable,
-  editorHistoryTable,
-  eventLocationsTable,
-  eventRouteStopsTable,
-  eventRoutesTable,
-  eventsTable,
-  organizationsTable,
-  placesTable,
-  roomsTable,
-  roomPositionsTable,
-  updateTable,
-} from "$lib/server/db/schema";
-import { normalizeEntityName } from "$lib/entity-names";
-import { sanitizeCrFacilities } from "$lib/constants/cr-facilities";
-import { normalizePlaceCategory } from "$lib/constants/place-categories";
-import { normalizeRoomCategory } from "$lib/constants/room-categories";
-import { db } from "$lib/db";
+	buildingIsrPath,
+	collegeIsrPath,
+	divisionIsrPath,
+	dormIsrPath,
+	eventIsrPath,
+	organizationIsrPaths,
+	placeIsrPaths,
+	revalidateIsrPaths,
+	roomIsrPath
+} from '$lib/isr-revalidate';
 import {
-  buildingIsrPath,
-  collegeIsrPath,
-  divisionIsrPath,
-  dormIsrPath,
-  eventIsrPath,
-  revalidateIsrPaths,
-  roomIsrPath,
-} from "$lib/isr-revalidate";
-import { getEventById } from "./event-service";
-import type { EventData, PlaceData, RoomData } from "$lib/types";
-import { EditConflictError } from "./edit-conflict-error";
+	buildingsTable,
+	collegesTable,
+	divisionsTable,
+	dormsTable,
+	editorHistoryTable,
+	eventLocationsTable,
+	eventRouteStopsTable,
+	eventRoutesTable,
+	eventsTable,
+	organizationsTable,
+	placesTable,
+	roomPositionsTable,
+	roomsTable,
+	updateTable
+} from '$lib/server/db/schema';
+import type { EventData, PlaceData, RoomData } from '$lib/types';
+import { recordEditorContribution } from './contribution-service';
+import { EditConflictError } from './edit-conflict-error';
+import { getEventById } from './event-service';
 
-export { EditConflictError } from "./edit-conflict-error";
+export { EditConflictError } from './edit-conflict-error';
 
 // ── Sync key refresh ──
 
 export class DuplicateSlugError extends Error {
-  slug: string;
+	slug: string;
 
-  constructor(slug: string) {
-    super(`An event with slug "${slug}" already exists.`);
-    this.name = "DuplicateSlugError";
-    this.slug = slug;
-  }
+	constructor(slug: string) {
+		super(`An event with slug "${slug}" already exists.`);
+		this.name = 'DuplicateSlugError';
+		this.slug = slug;
+	}
 }
 
-export type MergeEntityType =
-  | "room"
-  | "building"
-  | "college"
-  | "division"
-  | "dorm";
+export type MergeEntityType = 'room' | 'building' | 'college' | 'division' | 'dorm';
 
 export class DuplicateNameError<TCandidate = unknown> extends Error {
-  entityType: MergeEntityType;
-  candidate: TCandidate;
-  attemptedName: string;
+	entityType: MergeEntityType;
+	candidate: TCandidate;
+	attemptedName: string;
 
-  constructor(
-    entityType: MergeEntityType,
-    candidate: TCandidate,
-    attemptedName: string,
-  ) {
-    super(`A ${entityType} with a similar name already exists.`);
-    this.name = "DuplicateNameError";
-    this.entityType = entityType;
-    this.candidate = candidate;
-    this.attemptedName = attemptedName;
-  }
+	constructor(entityType: MergeEntityType, candidate: TCandidate, attemptedName: string) {
+		super(`A ${entityType} with a similar name already exists.`);
+		this.name = 'DuplicateNameError';
+		this.entityType = entityType;
+		this.candidate = candidate;
+		this.attemptedName = attemptedName;
+	}
 }
 
 /**
@@ -82,84 +76,80 @@ export class DuplicateNameError<TCandidate = unknown> extends Error {
  * help. Routes map it to 409 with `code: "manual_position"`.
  */
 export class ManualPositionError<TLatest = unknown> extends Error {
-  latest: TLatest | null;
+	latest: TLatest | null;
 
-  constructor(latest: TLatest | null) {
-    super("This room already has a position an editor placed by hand.");
-    this.name = "ManualPositionError";
-    this.latest = latest;
-  }
+	constructor(latest: TLatest | null) {
+		super('This room already has a position an editor placed by hand.');
+		this.name = 'ManualPositionError';
+		this.latest = latest;
+	}
 }
 
 /** Refresh the sync key for a table so viewers detect the change and re-sync. */
-export async function refreshSyncKey(
-  tableName: string,
-  revalidatePaths?: string[],
-): Promise<void> {
-  await db
-    .update(updateTable)
-    .set({ syncKey: randomUUID() })
-    .where(eq(updateTable.tableName, tableName));
-  revalidateIsrPaths(revalidatePaths);
+export async function refreshSyncKey(tableName: string, revalidatePaths?: string[]): Promise<void> {
+	await db
+		.update(updateTable)
+		.set({ syncKey: randomUUID() })
+		.where(eq(updateTable.tableName, tableName));
+	revalidateIsrPaths(revalidatePaths);
 }
 
 type EditorHistoryInput = {
-  entityType: string;
-  entityId: number;
-  action: string;
-  before: unknown;
-  after: unknown;
-  versionBefore?: number | null;
-  versionAfter?: number | null;
-  editedBy?: string;
-  summary?: string | null;
+	entityType: string;
+	entityId: number;
+	action: string;
+	before: unknown;
+	after: unknown;
+	versionBefore?: number | null;
+	versionAfter?: number | null;
+	editedBy?: string;
+	summary?: string | null;
 };
 
 export type EditorHistoryOverride = {
-  action?: string;
-  summary?: string | null;
+	action?: string;
+	summary?: string | null;
 };
 
 export async function recordEditorHistory({
-  entityType,
-  entityId,
-  action,
-  before,
-  after,
-  versionBefore,
-  versionAfter,
-  editedBy = "admin",
-  summary = null,
+	entityType,
+	entityId,
+	action,
+	before,
+	after,
+	versionBefore,
+	versionAfter,
+	editedBy = 'admin',
+	summary = null
 }: EditorHistoryInput): Promise<void> {
-  const publishingActor = parsePublishingActor(editedBy);
-  const actorName = publishingActor?.displayName ?? editedBy;
-  await db.insert(editorHistoryTable).values({
-    entityType,
-    entityId,
-    action,
-    before,
-    after,
-    versionBefore,
-    versionAfter,
-    editedBy: actorName,
-    summary,
-  });
-  if (publishingActor) {
-    const label =
-      typeof after === "object" && after
-        ? Object.values(after as Record<string, unknown>).find(
-            (value) => typeof value === "string" && value.trim(),
-          )
-        : null;
-    await recordEditorContribution({
-      userId: publishingActor.userId,
-      submitterName: publishingActor.displayName,
-      entityType,
-      entityId,
-      entityLabel:
-        typeof label === "string" ? label : `${entityType} #${entityId}`,
-    });
-  }
+	const publishingActor = parsePublishingActor(editedBy);
+	const actorName = publishingActor?.displayName ?? editedBy;
+	await db.insert(editorHistoryTable).values({
+		entityType,
+		entityId,
+		action,
+		before,
+		after,
+		versionBefore,
+		versionAfter,
+		editedBy: actorName,
+		summary
+	});
+	if (publishingActor) {
+		const label =
+			typeof after === 'object' && after
+				? Object.values(after as Record<string, unknown>).find(
+						(value) => typeof value === 'string' && value.trim()
+					)
+				: null;
+		await recordEditorContribution({
+			userId: publishingActor.userId,
+			submitterName: publishingActor.displayName,
+			entityType,
+			entityId,
+			entityLabel: typeof label === 'string' ? label : `${entityType} #${entityId}`
+		});
+	}
 }
 
 /**
@@ -170,48 +160,43 @@ export async function recordEditorHistory({
  * The caller provides entity-specific parts (building updates, dup checks,
  * the Drizzle update query) via callbacks.
  */
-async function performEntityUpdate<
-  TEntity extends { id: number; version: number },
->(options: {
-  id: number;
-  expectedVersion?: number;
-  editedBy: string;
-  entityType: string;
-  getById: (id: number) => Promise<TEntity | null>;
-  executeUpdate: () => Promise<TEntity[]>;
-  history?: EditorHistoryOverride;
-  syncKeyType: string;
-  syncKeyPaths: (updated: TEntity | null, before: TEntity | null) => string[];
+async function performEntityUpdate<TEntity extends { id: number; version: number }>(options: {
+	id: number;
+	expectedVersion?: number;
+	editedBy: string;
+	entityType: string;
+	getById: (id: number) => Promise<TEntity | null>;
+	executeUpdate: () => Promise<TEntity[]>;
+	history?: EditorHistoryOverride;
+	syncKeyType: string;
+	syncKeyPaths: (updated: TEntity | null, before: TEntity | null) => string[];
 }): Promise<TEntity | null> {
-  const before = await options.getById(options.id);
+	const before = await options.getById(options.id);
 
-  const rows = await options.executeUpdate();
-  const updated = rows[0];
+	const rows = await options.executeUpdate();
+	const updated = rows[0];
 
-  if (!updated && options.expectedVersion !== undefined) {
-    throw new EditConflictError(await options.getById(options.id));
-  }
+	if (!updated && options.expectedVersion !== undefined) {
+		throw new EditConflictError(await options.getById(options.id));
+	}
 
-  if (before && updated) {
-    await recordEditorHistory({
-      entityType: options.entityType,
-      entityId: options.id,
-      action: options.history?.action ?? "update",
-      before,
-      after: updated,
-      versionBefore: before.version,
-      versionAfter: updated.version,
-      editedBy: options.editedBy,
-      summary: options.history?.summary ?? null,
-    });
-  }
+	if (before && updated) {
+		await recordEditorHistory({
+			entityType: options.entityType,
+			entityId: options.id,
+			action: options.history?.action ?? 'update',
+			before,
+			after: updated,
+			versionBefore: before.version,
+			versionAfter: updated.version,
+			editedBy: options.editedBy,
+			summary: options.history?.summary ?? null
+		});
+	}
 
-  await refreshSyncKey(
-    options.syncKeyType,
-    options.syncKeyPaths(updated ?? null, before),
-  );
+	await refreshSyncKey(options.syncKeyType, options.syncKeyPaths(updated ?? null, before));
 
-  return updated ?? (await options.getById(options.id));
+	return updated ?? (await options.getById(options.id));
 }
 
 // ── Rooms ──
@@ -219,601 +204,574 @@ async function performEntityUpdate<
 export type RoomWithRelations = RoomData;
 
 export async function getRoomById(id: number): Promise<RoomData | null> {
-  const rows = await db
-    .select({
-      id: roomsTable.id,
-      code: roomsTable.roomCode,
-      directions: roomsTable.directions,
-      building: {
-        name: buildingsTable.buildingName,
-        lat: buildingsTable.lat,
-        lon: buildingsTable.lon,
-        directions: buildingsTable.directions,
-      },
-      collegeName: collegesTable.collegeName,
-      divisionName: divisionsTable.divisionName,
-      buildingId: roomsTable.buildingId,
-      collegeId: roomsTable.collegeId,
-      divisionId: roomsTable.divisionId,
-      imageUrl: roomsTable.imageUrl,
-      version: roomsTable.version,
-      updatedAt: roomsTable.updatedAt,
-    })
-    .from(roomsTable)
-    .leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))
-    .leftJoin(collegesTable, eq(collegesTable.id, roomsTable.collegeId))
-    .leftJoin(divisionsTable, eq(divisionsTable.id, roomsTable.divisionId))
-    .where(eq(roomsTable.id, id))
-    .limit(1);
-  return rows[0] ?? null;
+	const rows = await db
+		.select({
+			id: roomsTable.id,
+			code: roomsTable.roomCode,
+			directions: roomsTable.directions,
+			building: {
+				name: buildingsTable.buildingName,
+				lat: buildingsTable.lat,
+				lon: buildingsTable.lon,
+				directions: buildingsTable.directions
+			},
+			collegeName: collegesTable.collegeName,
+			divisionName: divisionsTable.divisionName,
+			buildingId: roomsTable.buildingId,
+			collegeId: roomsTable.collegeId,
+			divisionId: roomsTable.divisionId,
+			imageUrl: roomsTable.imageUrl,
+			version: roomsTable.version,
+			updatedAt: roomsTable.updatedAt
+		})
+		.from(roomsTable)
+		.leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))
+		.leftJoin(collegesTable, eq(collegesTable.id, roomsTable.collegeId))
+		.leftJoin(divisionsTable, eq(divisionsTable.id, roomsTable.divisionId))
+		.where(eq(roomsTable.id, id))
+		.limit(1);
+	return rows[0] ?? null;
 }
 
 export async function getAllRoomsAdmin(): Promise<RoomWithRelations[]> {
-  return db
-    .select({
-      id: roomsTable.id,
-      code: roomsTable.roomCode,
-      directions: roomsTable.directions,
-      building: {
-        name: buildingsTable.buildingName,
-        lat: buildingsTable.lat,
-        lon: buildingsTable.lon,
-        directions: buildingsTable.directions,
-      },
-      collegeName: collegesTable.collegeName,
-      divisionName: divisionsTable.divisionName,
-      buildingId: roomsTable.buildingId,
-      collegeId: roomsTable.collegeId,
-      divisionId: roomsTable.divisionId,
-      imageUrl: roomsTable.imageUrl,
-      version: roomsTable.version,
-      updatedAt: roomsTable.updatedAt,
-    })
-    .from(roomsTable)
-    .leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))
-    .leftJoin(collegesTable, eq(collegesTable.id, roomsTable.collegeId))
-    .leftJoin(divisionsTable, eq(divisionsTable.id, roomsTable.divisionId))
-    .orderBy(roomsTable.roomCode);
+	return db
+		.select({
+			id: roomsTable.id,
+			code: roomsTable.roomCode,
+			directions: roomsTable.directions,
+			building: {
+				name: buildingsTable.buildingName,
+				lat: buildingsTable.lat,
+				lon: buildingsTable.lon,
+				directions: buildingsTable.directions
+			},
+			collegeName: collegesTable.collegeName,
+			divisionName: divisionsTable.divisionName,
+			buildingId: roomsTable.buildingId,
+			collegeId: roomsTable.collegeId,
+			divisionId: roomsTable.divisionId,
+			imageUrl: roomsTable.imageUrl,
+			version: roomsTable.version,
+			updatedAt: roomsTable.updatedAt
+		})
+		.from(roomsTable)
+		.leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))
+		.leftJoin(collegesTable, eq(collegesTable.id, roomsTable.collegeId))
+		.leftJoin(divisionsTable, eq(divisionsTable.id, roomsTable.divisionId))
+		.orderBy(roomsTable.roomCode);
 }
 
 export type RoomUpdateInput = {
-  roomCode?: string;
-  directions?: string | null;
-  buildingId?: number | null;
-  collegeId?: number | null;
-  divisionId?: number | null;
-  imageUrl?: string | null;
-  category?: string | null;
+	roomCode?: string;
+	directions?: string | null;
+	buildingId?: number | null;
+	collegeId?: number | null;
+	divisionId?: number | null;
+	imageUrl?: string | null;
+	category?: string | null;
 };
 
 export async function findRoomMergeCandidate(
-  roomCode: string,
-  excludeId: number,
+	roomCode: string,
+	excludeId: number
 ): Promise<RoomData | null> {
-  const normalized = normalizeEntityName(roomCode);
-  if (!normalized) return null;
+	const normalized = normalizeEntityName(roomCode);
+	if (!normalized) return null;
 
-  const rows = await db
-    .select({ id: roomsTable.id, roomCode: roomsTable.roomCode })
-    .from(roomsTable)
-    .where(ne(roomsTable.id, excludeId));
+	const rows = await db
+		.select({ id: roomsTable.id, roomCode: roomsTable.roomCode })
+		.from(roomsTable)
+		.where(ne(roomsTable.id, excludeId));
 
-  for (const row of rows) {
-    if (normalizeEntityName(row.roomCode) === normalized) {
-      return getRoomById(row.id);
-    }
-  }
+	for (const row of rows) {
+		if (normalizeEntityName(row.roomCode) === normalized) {
+			return getRoomById(row.id);
+		}
+	}
 
-  return null;
+	return null;
 }
 
 export async function findBuildingMergeCandidate(
-  buildingName: string,
-  excludeId: number,
+	buildingName: string,
+	excludeId: number
 ): Promise<BuildingAdmin | null> {
-  const normalized = normalizeEntityName(buildingName);
-  if (!normalized) return null;
+	const normalized = normalizeEntityName(buildingName);
+	if (!normalized) return null;
 
-  const rows = await db
-    .select({
-      id: buildingsTable.id,
-      buildingName: buildingsTable.buildingName,
-    })
-    .from(buildingsTable)
-    .where(ne(buildingsTable.id, excludeId));
+	const rows = await db
+		.select({
+			id: buildingsTable.id,
+			buildingName: buildingsTable.buildingName
+		})
+		.from(buildingsTable)
+		.where(ne(buildingsTable.id, excludeId));
 
-  for (const row of rows) {
-    if (normalizeEntityName(row.buildingName) === normalized) {
-      return getBuildingById(row.id);
-    }
-  }
+	for (const row of rows) {
+		if (normalizeEntityName(row.buildingName) === normalized) {
+			return getBuildingById(row.id);
+		}
+	}
 
-  return null;
+	return null;
 }
 
 export async function findCollegeMergeCandidate(
-  collegeName: string,
-  excludeId: number,
+	collegeName: string,
+	excludeId: number
 ): Promise<CollegeAdmin | null> {
-  const normalized = normalizeEntityName(collegeName);
-  if (!normalized) return null;
+	const normalized = normalizeEntityName(collegeName);
+	if (!normalized) return null;
 
-  const rows = await db
-    .select({ id: collegesTable.id, collegeName: collegesTable.collegeName })
-    .from(collegesTable)
-    .where(ne(collegesTable.id, excludeId));
+	const rows = await db
+		.select({ id: collegesTable.id, collegeName: collegesTable.collegeName })
+		.from(collegesTable)
+		.where(ne(collegesTable.id, excludeId));
 
-  for (const row of rows) {
-    if (normalizeEntityName(row.collegeName) === normalized) {
-      return getCollegeById(row.id);
-    }
-  }
+	for (const row of rows) {
+		if (normalizeEntityName(row.collegeName) === normalized) {
+			return getCollegeById(row.id);
+		}
+	}
 
-  return null;
+	return null;
 }
 
 export async function findDivisionMergeCandidate(
-  divisionName: string,
-  excludeId: number,
+	divisionName: string,
+	excludeId: number
 ): Promise<DivisionAdmin | null> {
-  const normalized = normalizeEntityName(divisionName);
-  if (!normalized) return null;
+	const normalized = normalizeEntityName(divisionName);
+	if (!normalized) return null;
 
-  const rows = await db
-    .select({
-      id: divisionsTable.id,
-      divisionName: divisionsTable.divisionName,
-    })
-    .from(divisionsTable)
-    .where(ne(divisionsTable.id, excludeId));
+	const rows = await db
+		.select({
+			id: divisionsTable.id,
+			divisionName: divisionsTable.divisionName
+		})
+		.from(divisionsTable)
+		.where(ne(divisionsTable.id, excludeId));
 
-  for (const row of rows) {
-    if (normalizeEntityName(row.divisionName) === normalized) {
-      return getDivisionById(row.id);
-    }
-  }
+	for (const row of rows) {
+		if (normalizeEntityName(row.divisionName) === normalized) {
+			return getDivisionById(row.id);
+		}
+	}
 
-  return null;
+	return null;
 }
 
 export async function findDormMergeCandidate(
-  dormName: string,
-  excludeId: number,
+	dormName: string,
+	excludeId: number
 ): Promise<DormAdmin | null> {
-  const normalized = normalizeEntityName(dormName);
-  if (!normalized) return null;
+	const normalized = normalizeEntityName(dormName);
+	if (!normalized) return null;
 
-  const rows = await db
-    .select({ id: dormsTable.id, dormName: dormsTable.dormName })
-    .from(dormsTable)
-    .where(ne(dormsTable.id, excludeId));
+	const rows = await db
+		.select({ id: dormsTable.id, dormName: dormsTable.dormName })
+		.from(dormsTable)
+		.where(ne(dormsTable.id, excludeId));
 
-  for (const row of rows) {
-    if (normalizeEntityName(row.dormName) === normalized) {
-      return getDormById(row.id);
-    }
-  }
+	for (const row of rows) {
+		if (normalizeEntityName(row.dormName) === normalized) {
+			return getDormById(row.id);
+		}
+	}
 
-  return null;
+	return null;
 }
 
 export async function updateRoom(
-  id: number,
-  input: RoomUpdateInput,
-  expectedVersion?: number,
-  editedBy = "admin",
-  history?: EditorHistoryOverride,
+	id: number,
+	input: RoomUpdateInput,
+	expectedVersion?: number,
+	editedBy = 'admin',
+	history?: EditorHistoryOverride
 ): Promise<RoomData | null> {
-  const updates: Record<string, unknown> = {};
-  if (input.roomCode !== undefined) updates.roomCode = input.roomCode;
-  if (input.directions !== undefined)
-    updates.directions = input.directions || null;
-  if (input.buildingId !== undefined)
-    updates.buildingId = input.buildingId ?? null;
-  if (input.collegeId !== undefined)
-    updates.collegeId = input.collegeId ?? null;
-  if (input.divisionId !== undefined)
-    updates.divisionId = input.divisionId ?? null;
-  if (input.imageUrl !== undefined) updates.imageUrl = input.imageUrl;
-  if (input.category !== undefined)
-    updates.category = normalizeRoomCategory(input.category);
+	const updates: Record<string, unknown> = {};
+	if (input.roomCode !== undefined) updates.roomCode = input.roomCode;
+	if (input.directions !== undefined) updates.directions = input.directions || null;
+	if (input.buildingId !== undefined) updates.buildingId = input.buildingId ?? null;
+	if (input.collegeId !== undefined) updates.collegeId = input.collegeId ?? null;
+	if (input.divisionId !== undefined) updates.divisionId = input.divisionId ?? null;
+	if (input.imageUrl !== undefined) updates.imageUrl = input.imageUrl;
+	if (input.category !== undefined) updates.category = normalizeRoomCategory(input.category);
 
-  if (Object.keys(updates).length > 0) {
-    if (input.roomCode !== undefined) {
-      const candidate = await findRoomMergeCandidate(input.roomCode, id);
-      if (candidate) {
-        throw new DuplicateNameError("room", candidate, input.roomCode);
-      }
-    }
+	if (Object.keys(updates).length > 0) {
+		if (input.roomCode !== undefined) {
+			const candidate = await findRoomMergeCandidate(input.roomCode, id);
+			if (candidate) {
+				throw new DuplicateNameError('room', candidate, input.roomCode);
+			}
+		}
 
-    const before = await getRoomById(id);
-    const where =
-      expectedVersion === undefined
-        ? eq(roomsTable.id, id)
-        : and(eq(roomsTable.id, id), eq(roomsTable.version, expectedVersion));
-    const [updated] = await db
-      .update(roomsTable)
-      .set({
-        ...updates,
-        version: sql`"version" + 1`,
-        updatedAt: sql`now()`,
-      })
-      .where(where)
-      .returning({ id: roomsTable.id });
+		const before = await getRoomById(id);
+		const where =
+			expectedVersion === undefined
+				? eq(roomsTable.id, id)
+				: and(eq(roomsTable.id, id), eq(roomsTable.version, expectedVersion));
+		const [updated] = await db
+			.update(roomsTable)
+			.set({
+				...updates,
+				version: sql`"version" + 1`,
+				updatedAt: sql`now()`
+			})
+			.where(where)
+			.returning({ id: roomsTable.id });
 
-    if (!updated && expectedVersion !== undefined) {
-      throw new EditConflictError(await getRoomById(id));
-    }
+		if (!updated && expectedVersion !== undefined) {
+			throw new EditConflictError(await getRoomById(id));
+		}
 
-    const after = updated ? await getRoomById(id) : null;
-    if (before && after) {
-      await recordEditorHistory({
-        entityType: "room",
-        entityId: id,
-        action: history?.action ?? "update",
-        before,
-        after,
-        versionBefore: before.version,
-        versionAfter: after.version,
-        editedBy,
-        summary: history?.summary ?? null,
-      });
-    }
+		const after = updated ? await getRoomById(id) : null;
+		if (before && after) {
+			await recordEditorHistory({
+				entityType: 'room',
+				entityId: id,
+				action: history?.action ?? 'update',
+				before,
+				after,
+				versionBefore: before.version,
+				versionAfter: after.version,
+				editedBy,
+				summary: history?.summary ?? null
+			});
+		}
 
-    const revalidatePaths = ["/room/"];
-    if (after) revalidatePaths.push(roomIsrPath(after));
-    if (before && after && before.code !== after.code) {
-      revalidatePaths.push(roomIsrPath(before));
-    }
-    await refreshSyncKey("rooms", revalidatePaths);
-    return after ?? (await getRoomById(id));
-  }
+		const revalidatePaths = [entityIndexPath('rooms')];
+		if (after) revalidatePaths.push(roomIsrPath(after));
+		if (before && after && before.code !== after.code) {
+			revalidatePaths.push(roomIsrPath(before));
+		}
+		await refreshSyncKey('rooms', revalidatePaths);
+		return after ?? (await getRoomById(id));
+	}
 
-  return getRoomById(id);
+	return getRoomById(id);
 }
 
 export type RoomCreateInput = {
-  roomCode: string;
-  directions?: string | null;
-  buildingId?: number | null;
-  collegeId?: number | null;
-  divisionId?: number | null;
+	roomCode: string;
+	directions?: string | null;
+	buildingId?: number | null;
+	collegeId?: number | null;
+	divisionId?: number | null;
 };
 
 export async function createRoom(
-  input: RoomCreateInput,
-  editedBy = "admin",
+	input: RoomCreateInput,
+	editedBy = 'admin'
 ): Promise<RoomData | null> {
-  const [inserted] = await db
-    .insert(roomsTable)
-    .values({
-      roomCode: input.roomCode.trim(),
-      directions: input.directions?.trim() || null,
-      buildingId: input.buildingId ?? null,
-      collegeId: input.collegeId ?? null,
-      divisionId: input.divisionId ?? null,
-    })
-    .returning({ id: roomsTable.id });
+	const [inserted] = await db
+		.insert(roomsTable)
+		.values({
+			roomCode: input.roomCode.trim(),
+			directions: input.directions?.trim() || null,
+			buildingId: input.buildingId ?? null,
+			collegeId: input.collegeId ?? null,
+			divisionId: input.divisionId ?? null
+		})
+		.returning({ id: roomsTable.id });
 
-  if (!inserted) return null;
+	if (!inserted) return null;
 
-  const after = await getRoomById(inserted.id);
-  if (after) {
-    await recordEditorHistory({
-      entityType: "room",
-      entityId: inserted.id,
-      action: "create",
-      before: null,
-      after,
-      versionAfter: after.version,
-      editedBy,
-    });
-  }
-  await refreshSyncKey(
-    "rooms",
-    after ? [roomIsrPath(after), "/room/"] : ["/room/"],
-  );
-  return after;
+	const after = await getRoomById(inserted.id);
+	if (after) {
+		await recordEditorHistory({
+			entityType: 'room',
+			entityId: inserted.id,
+			action: 'create',
+			before: null,
+			after,
+			versionAfter: after.version,
+			editedBy
+		});
+	}
+	await refreshSyncKey(
+		'rooms',
+		after ? [roomIsrPath(after), entityIndexPath('rooms')] : [entityIndexPath('rooms')]
+	);
+	return after;
 }
 
 // ── Room positions ──
 
-export type RoomPositionSource = "manual" | "inferred";
+export type RoomPositionSource = 'manual' | 'inferred';
 
 export type RoomPosition = {
-  id: number;
-  floor: number;
-  posX: string;
-  posY: string;
-  updatedAt: string;
-  roomId: number;
-  source: string;
+	id: number;
+	floor: number;
+	posX: string;
+	posY: string;
+	updatedAt: string;
+	roomId: number;
+	source: string;
 };
 
-export async function getRoomPosition(
-  roomId: number,
-): Promise<RoomPosition | null> {
-  const rows = await db
-    .select()
-    .from(roomPositionsTable)
-    .where(eq(roomPositionsTable.roomId, roomId))
-    .limit(1);
-  return rows[0] ?? null;
+export async function getRoomPosition(roomId: number): Promise<RoomPosition | null> {
+	const rows = await db
+		.select()
+		.from(roomPositionsTable)
+		.where(eq(roomPositionsTable.roomId, roomId))
+		.limit(1);
+	return rows[0] ?? null;
 }
 
 export type RoomPositionUpdateInput = {
-  floor: number;
-  posX: string;
-  posY: string;
-  /** Defaults to 'manual' — only the inference assist sends 'inferred'. */
-  source?: RoomPositionSource;
+	floor: number;
+	posX: string;
+	posY: string;
+	/** Defaults to 'manual' — only the inference assist sends 'inferred'. */
+	source?: RoomPositionSource;
 };
 
 function serializeRoomPosition(position: RoomPosition | null) {
-  if (!position) return null;
-  return {
-    floor: position.floor,
-    posX: position.posX,
-    posY: position.posY,
-    updatedAt: position.updatedAt,
-    roomId: position.roomId,
-    source: position.source,
-  };
+	if (!position) return null;
+	return {
+		floor: position.floor,
+		posX: position.posX,
+		posY: position.posY,
+		updatedAt: position.updatedAt,
+		roomId: position.roomId,
+		source: position.source
+	};
 }
 
 export async function updateRoomPosition(
-  roomId: number,
-  input: RoomPositionUpdateInput,
-  expectedVersion?: number,
-  editedBy = "admin",
+	roomId: number,
+	input: RoomPositionUpdateInput,
+	expectedVersion?: number,
+	editedBy = 'admin'
 ): Promise<RoomData | null> {
-  const before = await getRoomById(roomId);
-  if (!before) return null;
+	const before = await getRoomById(roomId);
+	if (!before) return null;
 
-  const beforePosition = await getRoomPosition(roomId);
-  const source: RoomPositionSource = input.source ?? "manual";
+	const beforePosition = await getRoomPosition(roomId);
+	const source: RoomPositionSource = input.source ?? 'manual';
 
-  // Optimistic concurrency is checked before any other refusal: a client working
-  // from a stale version must get a 409 whatever it was trying to write, or two
-  // editors moving the same pin silently clobber each other. The conditional
-  // UPDATE below is still the race-safe check; this one only makes sure the
-  // refusal underneath it can never mask a conflict.
-  if (expectedVersion !== undefined && before.version !== expectedVersion) {
-    throw new EditConflictError(before);
-  }
+	// Optimistic concurrency is checked before any other refusal: a client working
+	// from a stale version must get a 409 whatever it was trying to write, or two
+	// editors moving the same pin silently clobber each other. The conditional
+	// UPDATE below is still the race-safe check; this one only makes sure the
+	// refusal underneath it can never mask a conflict.
+	if (expectedVersion !== undefined && before.version !== expectedVersion) {
+		throw new EditConflictError(before);
+	}
 
-  // A suggestion never overwrites a position a human dragged into place, and
-  // never bumps the room version to say it tried. Throw rather than return the
-  // unchanged room: callers cannot tell a refusal from a successful save by the
-  // return value, so the route would answer `{ success: true }` and the editor
-  // would mark the pin saved.
-  if (source === "inferred" && beforePosition?.source === "manual") {
-    throw new ManualPositionError(before);
-  }
+	// A suggestion never overwrites a position a human dragged into place, and
+	// never bumps the room version to say it tried. Throw rather than return the
+	// unchanged room: callers cannot tell a refusal from a successful save by the
+	// return value, so the route would answer `{ success: true }` and the editor
+	// would mark the pin saved.
+	if (source === 'inferred' && beforePosition?.source === 'manual') {
+		throw new ManualPositionError(before);
+	}
 
-  const updatedAt = new Date().toISOString();
+	const updatedAt = new Date().toISOString();
 
-  await db.transaction(async (tx) => {
-    const where =
-      expectedVersion === undefined
-        ? eq(roomsTable.id, roomId)
-        : and(
-            eq(roomsTable.id, roomId),
-            eq(roomsTable.version, expectedVersion),
-          );
+	await db.transaction(async (tx) => {
+		const where =
+			expectedVersion === undefined
+				? eq(roomsTable.id, roomId)
+				: and(eq(roomsTable.id, roomId), eq(roomsTable.version, expectedVersion));
 
-    const [updated] = await tx
-      .update(roomsTable)
-      .set({
-        version: sql`"version" + 1`,
-        updatedAt: sql`now()`,
-      })
-      .where(where)
-      .returning({ id: roomsTable.id });
+		const [updated] = await tx
+			.update(roomsTable)
+			.set({
+				version: sql`"version" + 1`,
+				updatedAt: sql`now()`
+			})
+			.where(where)
+			.returning({ id: roomsTable.id });
 
-    if (!updated && expectedVersion !== undefined) {
-      throw new EditConflictError(await getRoomById(roomId));
-    }
+		if (!updated && expectedVersion !== undefined) {
+			throw new EditConflictError(await getRoomById(roomId));
+		}
 
-    const existing = await tx
-      .select({ id: roomPositionsTable.id })
-      .from(roomPositionsTable)
-      .where(eq(roomPositionsTable.roomId, roomId))
-      .limit(1);
+		const existing = await tx
+			.select({ id: roomPositionsTable.id })
+			.from(roomPositionsTable)
+			.where(eq(roomPositionsTable.roomId, roomId))
+			.limit(1);
 
-    if (existing[0]) {
-      await tx
-        .update(roomPositionsTable)
-        .set({
-          floor: input.floor,
-          posX: input.posX,
-          posY: input.posY,
-          updatedAt,
-          source,
-        })
-        .where(eq(roomPositionsTable.id, existing[0].id));
-    } else {
-      await tx.insert(roomPositionsTable).values({
-        floor: input.floor,
-        posX: input.posX,
-        posY: input.posY,
-        updatedAt,
-        roomId,
-        source,
-      });
-    }
-  });
+		if (existing[0]) {
+			await tx
+				.update(roomPositionsTable)
+				.set({
+					floor: input.floor,
+					posX: input.posX,
+					posY: input.posY,
+					updatedAt,
+					source
+				})
+				.where(eq(roomPositionsTable.id, existing[0].id));
+		} else {
+			await tx.insert(roomPositionsTable).values({
+				floor: input.floor,
+				posX: input.posX,
+				posY: input.posY,
+				updatedAt,
+				roomId,
+				source
+			});
+		}
+	});
 
-  const [after, afterPosition] = await Promise.all([
-    getRoomById(roomId),
-    getRoomPosition(roomId),
-  ]);
+	const [after, afterPosition] = await Promise.all([getRoomById(roomId), getRoomPosition(roomId)]);
 
-  if (after) {
-    await recordEditorHistory({
-      entityType: "room",
-      entityId: roomId,
-      action: "update_position",
-      before: {
-        ...before,
-        position: serializeRoomPosition(beforePosition),
-      },
-      after: {
-        ...after,
-        position: serializeRoomPosition(afterPosition),
-      },
-      versionBefore: before.version,
-      versionAfter: after.version,
-      editedBy,
-    });
-  }
+	if (after) {
+		await recordEditorHistory({
+			entityType: 'room',
+			entityId: roomId,
+			action: 'update_position',
+			before: {
+				...before,
+				position: serializeRoomPosition(beforePosition)
+			},
+			after: {
+				...after,
+				position: serializeRoomPosition(afterPosition)
+			},
+			versionBefore: before.version,
+			versionAfter: after.version,
+			editedBy
+		});
+	}
 
-  await refreshSyncKey(
-    "rooms",
-    after ? [roomIsrPath(after), "/room/"] : ["/room/"],
-  );
-  return after;
+	await refreshSyncKey(
+		'rooms',
+		after ? [roomIsrPath(after), entityIndexPath('rooms')] : [entityIndexPath('rooms')]
+	);
+	return after;
 }
 
 // ── Buildings ──
 
 export type BuildingAdmin = typeof buildingsTable.$inferSelect;
 
-export async function getBuildingById(
-  id: number,
-): Promise<BuildingAdmin | null> {
-  const rows = await db
-    .select()
-    .from(buildingsTable)
-    .where(eq(buildingsTable.id, id))
-    .limit(1);
-  return rows[0] ?? null;
+export async function getBuildingById(id: number): Promise<BuildingAdmin | null> {
+	const rows = await db.select().from(buildingsTable).where(eq(buildingsTable.id, id)).limit(1);
+	return rows[0] ?? null;
 }
 
 export type BuildingUpdateInput = {
-  buildingName?: string;
-  lat?: number;
-  lon?: number;
-  buildingType?: "admin" | "non-admin";
-  directions?: string;
-  imageUrl?: string | null;
-  crFacilities?: string[] | null;
+	buildingName?: string;
+	lat?: number;
+	lon?: number;
+	buildingType?: 'admin' | 'non-admin';
+	directions?: string;
+	imageUrl?: string | null;
+	crFacilities?: string[] | null;
 };
 
 export async function updateBuilding(
-  id: number,
-  input: BuildingUpdateInput,
-  expectedVersion?: number,
-  editedBy = "admin",
-  history?: EditorHistoryOverride,
+	id: number,
+	input: BuildingUpdateInput,
+	expectedVersion?: number,
+	editedBy = 'admin',
+	history?: EditorHistoryOverride
 ): Promise<BuildingAdmin | null> {
-  const updates: Record<string, unknown> = {};
-  if (input.buildingName !== undefined)
-    updates.buildingName = input.buildingName;
-  if (input.lat !== undefined) updates.lat = input.lat;
-  if (input.lon !== undefined) updates.lon = input.lon;
-  if (input.buildingType !== undefined)
-    updates.buildingType = input.buildingType;
-  if (input.directions !== undefined) updates.directions = input.directions;
-  if (input.imageUrl !== undefined) updates.imageUrl = input.imageUrl;
-  if (input.crFacilities !== undefined)
-    updates.crFacilities = sanitizeCrFacilities(input.crFacilities);
+	const updates: Record<string, unknown> = {};
+	if (input.buildingName !== undefined) updates.buildingName = input.buildingName;
+	if (input.lat !== undefined) updates.lat = input.lat;
+	if (input.lon !== undefined) updates.lon = input.lon;
+	if (input.buildingType !== undefined) updates.buildingType = input.buildingType;
+	if (input.directions !== undefined) updates.directions = input.directions;
+	if (input.imageUrl !== undefined) updates.imageUrl = input.imageUrl;
+	if (input.crFacilities !== undefined)
+		updates.crFacilities = sanitizeCrFacilities(input.crFacilities);
 
-  if (Object.keys(updates).length > 0) {
-    if (input.buildingName !== undefined) {
-      const candidate = await findBuildingMergeCandidate(
-        input.buildingName,
-        id,
-      );
-      if (candidate) {
-        throw new DuplicateNameError("building", candidate, input.buildingName);
-      }
-    }
+	if (Object.keys(updates).length > 0) {
+		if (input.buildingName !== undefined) {
+			const candidate = await findBuildingMergeCandidate(input.buildingName, id);
+			if (candidate) {
+				throw new DuplicateNameError('building', candidate, input.buildingName);
+			}
+		}
 
-    const before = await getBuildingById(id);
-    const where =
-      expectedVersion === undefined
-        ? eq(buildingsTable.id, id)
-        : and(
-            eq(buildingsTable.id, id),
-            eq(buildingsTable.version, expectedVersion),
-          );
-    const [updated] = await db
-      .update(buildingsTable)
-      .set({
-        ...updates,
-        version: sql`"version" + 1`,
-        updatedAt: sql`now()`,
-      })
-      .where(where)
-      .returning();
+		const before = await getBuildingById(id);
+		const where =
+			expectedVersion === undefined
+				? eq(buildingsTable.id, id)
+				: and(eq(buildingsTable.id, id), eq(buildingsTable.version, expectedVersion));
+		const [updated] = await db
+			.update(buildingsTable)
+			.set({
+				...updates,
+				version: sql`"version" + 1`,
+				updatedAt: sql`now()`
+			})
+			.where(where)
+			.returning();
 
-    if (!updated && expectedVersion !== undefined) {
-      throw new EditConflictError(await getBuildingById(id));
-    }
+		if (!updated && expectedVersion !== undefined) {
+			throw new EditConflictError(await getBuildingById(id));
+		}
 
-    if (before && updated) {
-      await recordEditorHistory({
-        entityType: "building",
-        entityId: id,
-        action: history?.action ?? "update",
-        before,
-        after: updated,
-        versionBefore: before.version,
-        versionAfter: updated.version,
-        editedBy,
-        summary: history?.summary ?? null,
-      });
-    }
+		if (before && updated) {
+			await recordEditorHistory({
+				entityType: 'building',
+				entityId: id,
+				action: history?.action ?? 'update',
+				before,
+				after: updated,
+				versionBefore: before.version,
+				versionAfter: updated.version,
+				editedBy,
+				summary: history?.summary ?? null
+			});
+		}
 
-    const revalidatePaths = ["/building/"];
-    if (updated) revalidatePaths.push(buildingIsrPath(updated));
-    if (before && updated && before.buildingName !== updated.buildingName) {
-      revalidatePaths.push(buildingIsrPath(before));
-    }
-    await refreshSyncKey("buildings", revalidatePaths);
-    return updated ?? (await getBuildingById(id));
-  }
+		const revalidatePaths = [entityIndexPath('buildings')];
+		if (updated) revalidatePaths.push(buildingIsrPath(updated));
+		if (before && updated && before.buildingName !== updated.buildingName) {
+			revalidatePaths.push(buildingIsrPath(before));
+		}
+		await refreshSyncKey('buildings', revalidatePaths);
+		return updated ?? (await getBuildingById(id));
+	}
 
-  return getBuildingById(id);
+	return getBuildingById(id);
 }
 
 export type BuildingCreateInput = {
-  buildingName: string;
-  lat: number;
-  lon: number;
-  buildingType?: "admin" | "non-admin";
-  directions?: string;
+	buildingName: string;
+	lat: number;
+	lon: number;
+	buildingType?: 'admin' | 'non-admin';
+	directions?: string;
 };
 
 export async function createBuilding(
-  input: BuildingCreateInput,
-  editedBy = "admin",
+	input: BuildingCreateInput,
+	editedBy = 'admin'
 ): Promise<BuildingAdmin | null> {
-  const [inserted] = await db
-    .insert(buildingsTable)
-    .values({
-      buildingName: input.buildingName.trim(),
-      lat: input.lat,
-      lon: input.lon,
-      buildingType: input.buildingType ?? "non-admin",
-      directions: input.directions?.trim() ?? "",
-    })
-    .returning();
+	const [inserted] = await db
+		.insert(buildingsTable)
+		.values({
+			buildingName: input.buildingName.trim(),
+			lat: input.lat,
+			lon: input.lon,
+			buildingType: input.buildingType ?? 'non-admin',
+			directions: input.directions?.trim() ?? ''
+		})
+		.returning();
 
-  if (!inserted) return null;
+	if (!inserted) return null;
 
-  await recordEditorHistory({
-    entityType: "building",
-    entityId: inserted.id,
-    action: "create",
-    before: null,
-    after: inserted,
-    versionAfter: inserted.version,
-    editedBy,
-  });
-  await refreshSyncKey("buildings", [buildingIsrPath(inserted), "/building/"]);
-  return inserted;
+	await recordEditorHistory({
+		entityType: 'building',
+		entityId: inserted.id,
+		action: 'create',
+		before: null,
+		after: inserted,
+		versionAfter: inserted.version,
+		editedBy
+	});
+	await refreshSyncKey('buildings', [buildingIsrPath(inserted), entityIndexPath('buildings')]);
+	return inserted;
 }
 
 // ── Colleges ──
@@ -821,201 +779,186 @@ export async function createBuilding(
 export type CollegeAdmin = typeof collegesTable.$inferSelect;
 
 export async function getCollegeById(id: number): Promise<CollegeAdmin | null> {
-  const rows = await db
-    .select()
-    .from(collegesTable)
-    .where(eq(collegesTable.id, id))
-    .limit(1);
-  return rows[0] ?? null;
+	const rows = await db.select().from(collegesTable).where(eq(collegesTable.id, id)).limit(1);
+	return rows[0] ?? null;
 }
 
 export async function updateCollege(
-  id: number,
-  collegeName: string,
-  expectedVersion?: number,
-  editedBy = "admin",
-  history?: EditorHistoryOverride,
+	id: number,
+	collegeName: string,
+	expectedVersion?: number,
+	editedBy = 'admin',
+	history?: EditorHistoryOverride
 ): Promise<CollegeAdmin | null> {
-  const candidate = await findCollegeMergeCandidate(collegeName, id);
-  if (candidate) {
-    throw new DuplicateNameError("college", candidate, collegeName);
-  }
+	const candidate = await findCollegeMergeCandidate(collegeName, id);
+	if (candidate) {
+		throw new DuplicateNameError('college', candidate, collegeName);
+	}
 
-  return performEntityUpdate({
-    id,
-    expectedVersion,
-    editedBy,
-    entityType: "college",
-    getById: getCollegeById,
-    executeUpdate: async () => {
-      const where =
-        expectedVersion === undefined
-          ? eq(collegesTable.id, id)
-          : and(
-              eq(collegesTable.id, id),
-              eq(collegesTable.version, expectedVersion),
-            );
-      return db
-        .update(collegesTable)
-        .set({
-          collegeName,
-          version: sql`"version" + 1`,
-          updatedAt: sql`now()`,
-        })
-        .where(where)
-        .returning();
-    },
-    history,
-    syncKeyType: "colleges",
-    syncKeyPaths: (updated, before) => {
-      const row = updated ?? before;
-      return row ? [collegeIsrPath(row), "/college/"] : ["/college/"];
-    },
-  });
+	return performEntityUpdate({
+		id,
+		expectedVersion,
+		editedBy,
+		entityType: 'college',
+		getById: getCollegeById,
+		executeUpdate: async () => {
+			const where =
+				expectedVersion === undefined
+					? eq(collegesTable.id, id)
+					: and(eq(collegesTable.id, id), eq(collegesTable.version, expectedVersion));
+			return db
+				.update(collegesTable)
+				.set({
+					collegeName,
+					version: sql`"version" + 1`,
+					updatedAt: sql`now()`
+				})
+				.where(where)
+				.returning();
+		},
+		history,
+		syncKeyType: 'colleges',
+		syncKeyPaths: (updated, before) => {
+			const row = updated ?? before;
+			return row
+				? [collegeIsrPath(row), entityIndexPath('colleges')]
+				: [entityIndexPath('colleges')];
+		}
+	});
 }
 
 export async function createCollege(
-  collegeName: string,
-  editedBy = "admin",
+	collegeName: string,
+	editedBy = 'admin'
 ): Promise<CollegeAdmin | null> {
-  const trimmed = collegeName.trim();
-  const [inserted] = await db
-    .insert(collegesTable)
-    .values({ collegeName: trimmed })
-    .returning();
+	const trimmed = collegeName.trim();
+	const [inserted] = await db.insert(collegesTable).values({ collegeName: trimmed }).returning();
 
-  if (!inserted) return null;
+	if (!inserted) return null;
 
-  await recordEditorHistory({
-    entityType: "college",
-    entityId: inserted.id,
-    action: "create",
-    before: null,
-    after: inserted,
-    versionAfter: inserted.version,
-    editedBy,
-  });
-  await refreshSyncKey("colleges", [collegeIsrPath(inserted), "/college/"]);
-  return inserted;
+	await recordEditorHistory({
+		entityType: 'college',
+		entityId: inserted.id,
+		action: 'create',
+		before: null,
+		after: inserted,
+		versionAfter: inserted.version,
+		editedBy
+	});
+	await refreshSyncKey('colleges', [collegeIsrPath(inserted), entityIndexPath('colleges')]);
+	return inserted;
 }
 
 // ── Divisions ──
 
 export type DivisionAdmin = typeof divisionsTable.$inferSelect;
 
-export async function getDivisionById(
-  id: number,
-): Promise<DivisionAdmin | null> {
-  const rows = await db
-    .select()
-    .from(divisionsTable)
-    .where(eq(divisionsTable.id, id))
-    .limit(1);
-  return rows[0] ?? null;
+export async function getDivisionById(id: number): Promise<DivisionAdmin | null> {
+	const rows = await db.select().from(divisionsTable).where(eq(divisionsTable.id, id)).limit(1);
+	return rows[0] ?? null;
 }
 
 export type DivisionUpdateInput = {
-  divisionName?: string;
-  collegeId?: number | null;
+	divisionName?: string;
+	collegeId?: number | null;
 };
 
 export async function updateDivision(
-  id: number,
-  input: DivisionUpdateInput,
-  expectedVersion?: number,
-  editedBy = "admin",
-  history?: EditorHistoryOverride,
+	id: number,
+	input: DivisionUpdateInput,
+	expectedVersion?: number,
+	editedBy = 'admin',
+	history?: EditorHistoryOverride
 ): Promise<DivisionAdmin | null> {
-  const updates: Record<string, unknown> = {};
-  if (input.divisionName !== undefined) {
-    updates.divisionName = input.divisionName;
-  }
-  if (input.collegeId !== undefined) {
-    updates.collegeId = input.collegeId ?? null;
-  }
+	const updates: Record<string, unknown> = {};
+	if (input.divisionName !== undefined) {
+		updates.divisionName = input.divisionName;
+	}
+	if (input.collegeId !== undefined) {
+		updates.collegeId = input.collegeId ?? null;
+	}
 
-  if (Object.keys(updates).length === 0) {
-    return getDivisionById(id);
-  }
+	if (Object.keys(updates).length === 0) {
+		return getDivisionById(id);
+	}
 
-  if (input.divisionName !== undefined) {
-    const candidate = await findDivisionMergeCandidate(input.divisionName, id);
-    if (candidate) {
-      throw new DuplicateNameError("division", candidate, input.divisionName);
-    }
-  }
+	if (input.divisionName !== undefined) {
+		const candidate = await findDivisionMergeCandidate(input.divisionName, id);
+		if (candidate) {
+			throw new DuplicateNameError('division', candidate, input.divisionName);
+		}
+	}
 
-  return performEntityUpdate({
-    id,
-    expectedVersion,
-    editedBy,
-    entityType: "division",
-    getById: getDivisionById,
-    executeUpdate: async () => {
-      const where =
-        expectedVersion === undefined
-          ? eq(divisionsTable.id, id)
-          : and(
-              eq(divisionsTable.id, id),
-              eq(divisionsTable.version, expectedVersion),
-            );
-      return db
-        .update(divisionsTable)
-        .set({
-          ...updates,
-          version: sql`"version" + 1`,
-          updatedAt: sql`now()`,
-        })
-        .where(where)
-        .returning();
-    },
-    history,
-    syncKeyType: "divisions",
-    syncKeyPaths: (updated, before) => {
-      const row = updated ?? before;
-      return row ? [divisionIsrPath(row), "/division/"] : ["/division/"];
-    },
-  });
+	return performEntityUpdate({
+		id,
+		expectedVersion,
+		editedBy,
+		entityType: 'division',
+		getById: getDivisionById,
+		executeUpdate: async () => {
+			const where =
+				expectedVersion === undefined
+					? eq(divisionsTable.id, id)
+					: and(eq(divisionsTable.id, id), eq(divisionsTable.version, expectedVersion));
+			return db
+				.update(divisionsTable)
+				.set({
+					...updates,
+					version: sql`"version" + 1`,
+					updatedAt: sql`now()`
+				})
+				.where(where)
+				.returning();
+		},
+		history,
+		syncKeyType: 'divisions',
+		syncKeyPaths: (updated, before) => {
+			const row = updated ?? before;
+			return row
+				? [divisionIsrPath(row), entityIndexPath('divisions')]
+				: [entityIndexPath('divisions')];
+		}
+	});
 }
 
 export type DivisionCreateInput = {
-  divisionName: string;
-  collegeId?: number | null;
+	divisionName: string;
+	collegeId?: number | null;
 };
 
 export async function createDivision(
-  input: DivisionCreateInput | string,
-  editedBy = "admin",
+	input: DivisionCreateInput | string,
+	editedBy = 'admin'
 ): Promise<DivisionAdmin | null> {
-  const normalized =
-    typeof input === "string"
-      ? { divisionName: input.trim(), collegeId: null as number | null }
-      : {
-          divisionName: input.divisionName.trim(),
-          collegeId: input.collegeId ?? null,
-        };
+	const normalized =
+		typeof input === 'string'
+			? { divisionName: input.trim(), collegeId: null as number | null }
+			: {
+					divisionName: input.divisionName.trim(),
+					collegeId: input.collegeId ?? null
+				};
 
-  const [inserted] = await db
-    .insert(divisionsTable)
-    .values({
-      divisionName: normalized.divisionName,
-      collegeId: normalized.collegeId,
-    })
-    .returning();
+	const [inserted] = await db
+		.insert(divisionsTable)
+		.values({
+			divisionName: normalized.divisionName,
+			collegeId: normalized.collegeId
+		})
+		.returning();
 
-  if (!inserted) return null;
+	if (!inserted) return null;
 
-  await recordEditorHistory({
-    entityType: "division",
-    entityId: inserted.id,
-    action: "create",
-    before: null,
-    after: inserted,
-    versionAfter: inserted.version,
-    editedBy,
-  });
-  await refreshSyncKey("divisions", [divisionIsrPath(inserted), "/division/"]);
-  return inserted;
+	await recordEditorHistory({
+		entityType: 'division',
+		entityId: inserted.id,
+		action: 'create',
+		before: null,
+		after: inserted,
+		versionAfter: inserted.version,
+		editedBy
+	});
+	await refreshSyncKey('divisions', [divisionIsrPath(inserted), entityIndexPath('divisions')]);
+	return inserted;
 }
 
 // ── Dorms ──
@@ -1023,836 +966,808 @@ export async function createDivision(
 export type DormAdmin = typeof dormsTable.$inferSelect;
 
 export async function getDormById(id: number): Promise<DormAdmin | null> {
-  const rows = await db
-    .select()
-    .from(dormsTable)
-    .where(eq(dormsTable.id, id))
-    .limit(1);
-  return rows[0] ?? null;
+	const rows = await db.select().from(dormsTable).where(eq(dormsTable.id, id)).limit(1);
+	return rows[0] ?? null;
 }
 
 export type DormUpdateInput = Partial<{
-  dormName: string;
-  shortName: string | null;
-  lat: number | null;
-  lon: number | null;
-  gender: string | null;
-  capacity: number | null;
-  managingOffice: string | null;
-  contactEmail: string | null;
-  amenities: string[];
-  osmLink: string | null;
-  description: string | null;
-  isUpManaged: boolean;
-  priceRange: string | null;
-  contactPhone: string[];
-  facebookLink: string | null;
-  imageUrl: string | null;
+	dormName: string;
+	shortName: string | null;
+	lat: number | null;
+	lon: number | null;
+	gender: string | null;
+	capacity: number | null;
+	managingOffice: string | null;
+	contactEmail: string | null;
+	amenities: string[];
+	osmLink: string | null;
+	description: string | null;
+	isUpManaged: boolean;
+	priceRange: string | null;
+	contactPhone: string[];
+	facebookLink: string | null;
+	imageUrl: string | null;
 }>;
 
 export async function updateDorm(
-  id: number,
-  input: DormUpdateInput,
-  expectedVersion?: number,
-  editedBy = "admin",
-  history?: EditorHistoryOverride,
+	id: number,
+	input: DormUpdateInput,
+	expectedVersion?: number,
+	editedBy = 'admin',
+	history?: EditorHistoryOverride
 ): Promise<DormAdmin | null> {
-  const updates: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(input)) {
-    if (value !== undefined) updates[key] = value;
-  }
-  // Clearing the policy in the editor sends "", which would store an empty
-  // string that reads as "recorded, and it is nothing". Null is the honest
-  // value for a policy nobody has told us.
-  if (typeof updates.gender === "string" && updates.gender.trim() === "") {
-    updates.gender = null;
-  }
-  if (Object.keys(updates).length > 0) {
-    if (input.dormName !== undefined) {
-      const candidate = await findDormMergeCandidate(input.dormName, id);
-      if (candidate) {
-        throw new DuplicateNameError("dorm", candidate, input.dormName);
-      }
-    }
+	const updates: Record<string, unknown> = {};
+	for (const [key, value] of Object.entries(input)) {
+		if (value !== undefined) updates[key] = value;
+	}
+	// Clearing the policy in the editor sends "", which would store an empty
+	// string that reads as "recorded, and it is nothing". Null is the honest
+	// value for a policy nobody has told us.
+	if (typeof updates.gender === 'string' && updates.gender.trim() === '') {
+		updates.gender = null;
+	}
+	if (Object.keys(updates).length > 0) {
+		if (input.dormName !== undefined) {
+			const candidate = await findDormMergeCandidate(input.dormName, id);
+			if (candidate) {
+				throw new DuplicateNameError('dorm', candidate, input.dormName);
+			}
+		}
 
-    const before = await getDormById(id);
-    const where =
-      expectedVersion === undefined
-        ? eq(dormsTable.id, id)
-        : and(eq(dormsTable.id, id), eq(dormsTable.version, expectedVersion));
-    const [updated] = await db
-      .update(dormsTable)
-      .set({
-        ...updates,
-        version: sql`"version" + 1`,
-        updatedAt: sql`now()`,
-      })
-      .where(where)
-      .returning();
+		const before = await getDormById(id);
+		const where =
+			expectedVersion === undefined
+				? eq(dormsTable.id, id)
+				: and(eq(dormsTable.id, id), eq(dormsTable.version, expectedVersion));
+		const [updated] = await db
+			.update(dormsTable)
+			.set({
+				...updates,
+				version: sql`"version" + 1`,
+				updatedAt: sql`now()`
+			})
+			.where(where)
+			.returning();
 
-    if (!updated && expectedVersion !== undefined) {
-      throw new EditConflictError(await getDormById(id));
-    }
+		if (!updated && expectedVersion !== undefined) {
+			throw new EditConflictError(await getDormById(id));
+		}
 
-    if (before && updated) {
-      await recordEditorHistory({
-        entityType: "dorm",
-        entityId: id,
-        action: history?.action ?? "update",
-        before,
-        after: updated,
-        versionBefore: before.version,
-        versionAfter: updated.version,
-        editedBy,
-        summary: history?.summary ?? null,
-      });
-    }
+		if (before && updated) {
+			await recordEditorHistory({
+				entityType: 'dorm',
+				entityId: id,
+				action: history?.action ?? 'update',
+				before,
+				after: updated,
+				versionBefore: before.version,
+				versionAfter: updated.version,
+				editedBy,
+				summary: history?.summary ?? null
+			});
+		}
 
-    await refreshSyncKey("dorms", [dormIsrPath(updated ?? before), "/dorm/"]);
-    return updated ?? (await getDormById(id));
-  }
+		await refreshSyncKey('dorms', [dormIsrPath(updated ?? before), entityIndexPath('dorms')]);
+		return updated ?? (await getDormById(id));
+	}
 
-  return getDormById(id);
+	return getDormById(id);
 }
 
 export type PlaceUpdateInput = Partial<{
-  name: string;
-  category: string;
-  lat: number | null;
-  lon: number | null;
-  description: string | null;
-  hours: string | null;
-  websiteLink: string | null;
-  facebookLink: string | null;
-  imageUrl: string | null;
+	name: string;
+	category: string;
+	lat: number | null;
+	lon: number | null;
+	description: string | null;
+	hours: string | null;
+	websiteLink: string | null;
+	facebookLink: string | null;
+	imageUrl: string | null;
 }>;
 
 async function getPlaceById(id: number): Promise<PlaceData | null> {
-  const [row] = await db
-    .select()
-    .from(placesTable)
-    .where(eq(placesTable.id, id))
-    .limit(1);
-  return row ?? null;
+	const [row] = await db.select().from(placesTable).where(eq(placesTable.id, id)).limit(1);
+	return row ?? null;
 }
 
 export async function updatePlace(
-  id: number,
-  input: PlaceUpdateInput,
-  expectedVersion?: number,
-  _editedBy = "admin",
-  _history?: EditorHistoryOverride,
+	id: number,
+	input: PlaceUpdateInput,
+	expectedVersion?: number,
+	_editedBy = 'admin',
+	_history?: EditorHistoryOverride
 ): Promise<PlaceData | null> {
-  const updates: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(input)) {
-    if (value !== undefined) updates[key] = value;
-  }
-  if (input.category !== undefined) {
-    updates.category = normalizePlaceCategory(input.category) ?? "landmark";
-  }
-  if (Object.keys(updates).length === 0) return getPlaceById(id);
+	const updates: Record<string, unknown> = {};
+	for (const [key, value] of Object.entries(input)) {
+		if (value !== undefined) updates[key] = value;
+	}
+	if (input.category !== undefined) {
+		updates.category = normalizePlaceCategory(input.category) ?? 'landmark';
+	}
+	if (Object.keys(updates).length === 0) return getPlaceById(id);
 
-  const where =
-    expectedVersion === undefined
-      ? eq(placesTable.id, id)
-      : and(eq(placesTable.id, id), eq(placesTable.version, expectedVersion));
-  const [updated] = await db
-    .update(placesTable)
-    .set({ ...updates, version: sql`"version" + 1`, updatedAt: sql`now()` })
-    .where(where)
-    .returning();
+	// Only a category change can move the row between /map/landmarks/ and
+	// /map/establishments/, so the extra read to learn the old segment is worth
+	// paying only then.
+	const before = input.category !== undefined ? await getPlaceById(id) : null;
 
-  if (!updated && expectedVersion !== undefined) {
-    throw new EditConflictError(await getPlaceById(id));
-  }
-  await refreshSyncKey("places");
-  return updated ?? (await getPlaceById(id));
+	const where =
+		expectedVersion === undefined
+			? eq(placesTable.id, id)
+			: and(eq(placesTable.id, id), eq(placesTable.version, expectedVersion));
+	const [updated] = await db
+		.update(placesTable)
+		.set({ ...updates, version: sql`"version" + 1`, updatedAt: sql`now()` })
+		.where(where)
+		.returning();
+
+	if (!updated && expectedVersion !== undefined) {
+		throw new EditConflictError(await getPlaceById(id));
+	}
+	const placeAfter = updated ?? (await getPlaceById(id));
+	// Revalidate the old listing too, so a re-categorised place stops showing on
+	// the segment it left.
+	await refreshSyncKey('places', [
+		...new Set([
+			...(before ? placeIsrPaths(before) : []),
+			...(placeAfter ? placeIsrPaths(placeAfter) : [])
+		])
+	]);
+	return placeAfter;
 }
 
 export type PlaceCreateInput = PlaceUpdateInput & {
-  name: string;
-  category: string;
+	name: string;
+	category: string;
 };
 
 export async function createPlace(
-  input: PlaceCreateInput,
-  _editedBy = "admin",
+	input: PlaceCreateInput,
+	_editedBy = 'admin'
 ): Promise<PlaceData | null> {
-  const [inserted] = await db
-    .insert(placesTable)
-    .values({
-      name: input.name.trim(),
-      category: normalizePlaceCategory(input.category) ?? "landmark",
-      lat: input.lat ?? null,
-      lon: input.lon ?? null,
-      description: input.description ?? null,
-      hours: input.hours ?? null,
-      websiteLink: input.websiteLink ?? null,
-      facebookLink: input.facebookLink ?? null,
-      imageUrl: input.imageUrl ?? null,
-    })
-    .returning();
-  await refreshSyncKey("places");
-  return inserted ?? null;
+	const [inserted] = await db
+		.insert(placesTable)
+		.values({
+			name: input.name.trim(),
+			category: normalizePlaceCategory(input.category) ?? 'landmark',
+			lat: input.lat ?? null,
+			lon: input.lon ?? null,
+			description: input.description ?? null,
+			hours: input.hours ?? null,
+			websiteLink: input.websiteLink ?? null,
+			facebookLink: input.facebookLink ?? null,
+			imageUrl: input.imageUrl ?? null
+		})
+		.returning();
+	await refreshSyncKey('places', inserted ? placeIsrPaths(inserted) : []);
+	return inserted ?? null;
 }
 
 export type DormCreateInput = DormUpdateInput & {
-  dormName: string;
+	dormName: string;
 };
 
 export async function createDorm(
-  input: DormCreateInput,
-  editedBy = "admin",
+	input: DormCreateInput,
+	editedBy = 'admin'
 ): Promise<DormAdmin | null> {
-  const [inserted] = await db
-    .insert(dormsTable)
-    .values({
-      dormName: input.dormName.trim(),
-      gender: input.gender?.trim() || null,
-      shortName: input.shortName ?? null,
-      lat: input.lat ?? null,
-      lon: input.lon ?? null,
-      capacity: input.capacity ?? null,
-      managingOffice: input.managingOffice ?? null,
-      contactEmail: input.contactEmail ?? null,
-      amenities: input.amenities ?? null,
-      osmLink: input.osmLink ?? null,
-      description: input.description ?? null,
-      isUpManaged: input.isUpManaged ?? true,
-      priceRange: input.priceRange ?? null,
-      contactPhone: input.contactPhone ?? null,
-      facebookLink: input.facebookLink ?? null,
-    })
-    .returning();
+	const [inserted] = await db
+		.insert(dormsTable)
+		.values({
+			dormName: input.dormName.trim(),
+			gender: input.gender?.trim() || null,
+			shortName: input.shortName ?? null,
+			lat: input.lat ?? null,
+			lon: input.lon ?? null,
+			capacity: input.capacity ?? null,
+			managingOffice: input.managingOffice ?? null,
+			contactEmail: input.contactEmail ?? null,
+			amenities: input.amenities ?? null,
+			osmLink: input.osmLink ?? null,
+			description: input.description ?? null,
+			isUpManaged: input.isUpManaged ?? true,
+			priceRange: input.priceRange ?? null,
+			contactPhone: input.contactPhone ?? null,
+			facebookLink: input.facebookLink ?? null
+		})
+		.returning();
 
-  if (!inserted) return null;
+	if (!inserted) return null;
 
-  await recordEditorHistory({
-    entityType: "dorm",
-    entityId: inserted.id,
-    action: "create",
-    before: null,
-    after: inserted,
-    versionAfter: inserted.version,
-    editedBy,
-  });
-  await refreshSyncKey("dorms", [dormIsrPath(inserted), "/dorm/"]);
-  return inserted;
+	await recordEditorHistory({
+		entityType: 'dorm',
+		entityId: inserted.id,
+		action: 'create',
+		before: null,
+		after: inserted,
+		versionAfter: inserted.version,
+		editedBy
+	});
+	await refreshSyncKey('dorms', [dormIsrPath(inserted), entityIndexPath('dorms')]);
+	return inserted;
 }
 
 // ── Organizations ──
 
 export type OrgAdmin = typeof organizationsTable.$inferSelect;
 
-export async function getOrganizationById(
-  id: number,
-): Promise<OrgAdmin | null> {
-  const rows = await db
-    .select()
-    .from(organizationsTable)
-    .where(eq(organizationsTable.id, id))
-    .limit(1);
-  return rows[0] ?? null;
+export async function getOrganizationById(id: number): Promise<OrgAdmin | null> {
+	const rows = await db
+		.select()
+		.from(organizationsTable)
+		.where(eq(organizationsTable.id, id))
+		.limit(1);
+	return rows[0] ?? null;
 }
 
 export type OrgUpdateInput = Partial<{
-  name: string;
-  category: string;
-  buildingId: number | null;
-  roomId: number | null;
-  lat: number | null;
-  lon: number | null;
-  description: string | null;
-  websiteLink: string | null;
-  facebookLink: string | null;
-  email: string | null;
-  imageUrl: string | null;
+	name: string;
+	category: string;
+	buildingId: number | null;
+	roomId: number | null;
+	lat: number | null;
+	lon: number | null;
+	description: string | null;
+	websiteLink: string | null;
+	facebookLink: string | null;
+	email: string | null;
+	imageUrl: string | null;
 }>;
 
 export async function updateOrganization(
-  id: number,
-  input: OrgUpdateInput,
-  expectedVersion?: number,
-  editedBy = "admin",
-  history?: EditorHistoryOverride,
+	id: number,
+	input: OrgUpdateInput,
+	expectedVersion?: number,
+	editedBy = 'admin',
+	history?: EditorHistoryOverride
 ): Promise<OrgAdmin | null> {
-  const updates: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(input)) {
-    if (value !== undefined) updates[key] = value;
-  }
-  if (Object.keys(updates).length > 0) {
-    const before = await getOrganizationById(id);
-    const where =
-      expectedVersion === undefined
-        ? eq(organizationsTable.id, id)
-        : and(
-            eq(organizationsTable.id, id),
-            eq(organizationsTable.version, expectedVersion),
-          );
-    const [updated] = await db
-      .update(organizationsTable)
-      .set({
-        ...updates,
-        version: sql`"version" + 1`,
-        updatedAt: sql`now()`,
-      })
-      .where(where)
-      .returning();
+	const updates: Record<string, unknown> = {};
+	for (const [key, value] of Object.entries(input)) {
+		if (value !== undefined) updates[key] = value;
+	}
+	if (Object.keys(updates).length > 0) {
+		const before = await getOrganizationById(id);
+		const where =
+			expectedVersion === undefined
+				? eq(organizationsTable.id, id)
+				: and(eq(organizationsTable.id, id), eq(organizationsTable.version, expectedVersion));
+		const [updated] = await db
+			.update(organizationsTable)
+			.set({
+				...updates,
+				version: sql`"version" + 1`,
+				updatedAt: sql`now()`
+			})
+			.where(where)
+			.returning();
 
-    if (!updated && expectedVersion !== undefined) {
-      throw new EditConflictError(await getOrganizationById(id));
-    }
+		if (!updated && expectedVersion !== undefined) {
+			throw new EditConflictError(await getOrganizationById(id));
+		}
 
-    if (before && updated) {
-      await recordEditorHistory({
-        entityType: "organization",
-        entityId: id,
-        action: history?.action ?? "update",
-        before,
-        after: updated,
-        versionBefore: before.version,
-        versionAfter: updated.version,
-        editedBy,
-        summary: history?.summary ?? null,
-      });
-    }
+		if (before && updated) {
+			await recordEditorHistory({
+				entityType: 'organization',
+				entityId: id,
+				action: history?.action ?? 'update',
+				before,
+				after: updated,
+				versionBefore: before.version,
+				versionAfter: updated.version,
+				editedBy,
+				summary: history?.summary ?? null
+			});
+		}
 
-    await refreshSyncKey("organizations", []);
-    return updated ?? (await getOrganizationById(id));
-  }
+		// Category can change, which moves the row between /map/organizations/ and
+		// /map/units/ — revalidate the old listing too so it stops showing there.
+		await refreshSyncKey('organizations', [
+			...new Set([
+				...(before ? organizationIsrPaths(before) : []),
+				...(updated ? organizationIsrPaths(updated) : [])
+			])
+		]);
+		return updated ?? (await getOrganizationById(id));
+	}
 
-  return getOrganizationById(id);
+	return getOrganizationById(id);
 }
 
 export type OrgCreateInput = OrgUpdateInput & {
-  name: string;
-  category: string;
+	name: string;
+	category: string;
 };
 
 export async function createOrganization(
-  input: OrgCreateInput,
-  editedBy = "admin",
+	input: OrgCreateInput,
+	editedBy = 'admin'
 ): Promise<OrgAdmin | null> {
-  const [inserted] = await db
-    .insert(organizationsTable)
-    .values({
-      name: input.name.trim(),
-      category: input.category.trim(),
-      buildingId: input.buildingId ?? null,
-      roomId: input.roomId ?? null,
-      lat: input.lat ?? null,
-      lon: input.lon ?? null,
-      description: input.description ?? null,
-      websiteLink: input.websiteLink ?? null,
-      facebookLink: input.facebookLink ?? null,
-      email: input.email ?? null,
-      imageUrl: input.imageUrl ?? null,
-    })
-    .returning();
+	const [inserted] = await db
+		.insert(organizationsTable)
+		.values({
+			name: input.name.trim(),
+			category: input.category.trim(),
+			buildingId: input.buildingId ?? null,
+			roomId: input.roomId ?? null,
+			lat: input.lat ?? null,
+			lon: input.lon ?? null,
+			description: input.description ?? null,
+			websiteLink: input.websiteLink ?? null,
+			facebookLink: input.facebookLink ?? null,
+			email: input.email ?? null,
+			imageUrl: input.imageUrl ?? null
+		})
+		.returning();
 
-  if (!inserted) return null;
+	if (!inserted) return null;
 
-  await recordEditorHistory({
-    entityType: "organization",
-    entityId: inserted.id,
-    action: "create",
-    before: null,
-    after: inserted,
-    versionAfter: inserted.version,
-    editedBy,
-  });
-  await refreshSyncKey("organizations", []);
-  return inserted;
+	await recordEditorHistory({
+		entityType: 'organization',
+		entityId: inserted.id,
+		action: 'create',
+		before: null,
+		after: inserted,
+		versionAfter: inserted.version,
+		editedBy
+	});
+	await refreshSyncKey('organizations', organizationIsrPaths(inserted));
+	return inserted;
 }
 
 // ── Events ──
 
 export type EventLocationWriteInput = Partial<{
-  id: number;
-  anchorType: "building" | "dorm" | "custom";
-  buildingId: number | null;
-  dormId: number | null;
-  label: string;
-  lat: number | null;
-  lon: number | null;
-  highlightPriority: number;
-  sortOrder: number;
-  isPrimary: boolean;
+	id: number;
+	anchorType: 'building' | 'dorm' | 'custom';
+	buildingId: number | null;
+	dormId: number | null;
+	label: string;
+	lat: number | null;
+	lon: number | null;
+	highlightPriority: number;
+	sortOrder: number;
+	isPrimary: boolean;
 }>;
 
 export type EventRouteStopWriteInput = Partial<{
-  id: number;
-  eventLocationId: number | null;
-  label: string;
-  lat: number | null;
-  lon: number | null;
-  sortOrder: number;
+	id: number;
+	eventLocationId: number | null;
+	label: string;
+	lat: number | null;
+	lon: number | null;
+	sortOrder: number;
 }>;
 
 export type EventRouteWriteInput = Partial<{
-  id: number;
-  name: string;
-  description: string | null;
-  sortOrder: number;
-  stops: EventRouteStopWriteInput[];
+	id: number;
+	name: string;
+	description: string | null;
+	sortOrder: number;
+	stops: EventRouteStopWriteInput[];
 }>;
 
 export type EventWriteInput = Partial<{
-  slug: string;
-  title: string;
-  description: string | null;
-  category: "tradition" | "fair" | "ceremony" | "sports" | "other";
-  startsAt: string;
-  endsAt: string;
-  timezone: string;
-  recurrence: "none" | "annual" | "every_1st_sem" | "every_2nd_sem";
-  isActive: boolean;
-  sourceUrl: string | null;
-  imageUrl: string | null;
-  priority: number;
-  includeInSeo: boolean;
-  locations: EventLocationWriteInput[];
-  routes: EventRouteWriteInput[];
+	slug: string;
+	title: string;
+	description: string | null;
+	category: 'tradition' | 'fair' | 'ceremony' | 'sports' | 'other';
+	startsAt: string;
+	endsAt: string;
+	timezone: string;
+	recurrence: 'none' | 'annual' | 'every_1st_sem' | 'every_2nd_sem';
+	isActive: boolean;
+	sourceUrl: string | null;
+	imageUrl: string | null;
+	priority: number;
+	includeInSeo: boolean;
+	locations: EventLocationWriteInput[];
+	routes: EventRouteWriteInput[];
 }>;
 
-const EVENT_SYNC_TABLES = [
-  "events",
-  "event_locations",
-  "event_routes",
-  "event_route_stops",
-];
+const EVENT_SYNC_TABLES = ['events', 'event_locations', 'event_routes', 'event_route_stops'];
 
 async function refreshEventSyncKeys(revalidatePaths?: string[]) {
-  await Promise.all(
-    EVENT_SYNC_TABLES.map((tableName) => refreshSyncKey(tableName)),
-  );
-  revalidateIsrPaths(revalidatePaths);
+	await Promise.all(EVENT_SYNC_TABLES.map((tableName) => refreshSyncKey(tableName)));
+	revalidateIsrPaths(revalidatePaths);
 }
 
 function getEventUpdates(input: EventWriteInput) {
-  const updates: Record<string, unknown> = {};
-  if (input.slug !== undefined) updates.slug = input.slug;
-  if (input.title !== undefined) updates.title = input.title;
-  if (input.description !== undefined) updates.description = input.description;
-  if (input.category !== undefined) updates.category = input.category;
-  if (input.startsAt !== undefined) updates.startsAt = input.startsAt;
-  if (input.endsAt !== undefined) updates.endsAt = input.endsAt;
-  if (input.timezone !== undefined) updates.timezone = input.timezone;
-  if (input.recurrence !== undefined) updates.recurrence = input.recurrence;
-  if (input.isActive !== undefined) updates.isActive = input.isActive;
-  if (input.sourceUrl !== undefined) updates.sourceUrl = input.sourceUrl;
-  if (input.imageUrl !== undefined) updates.imageUrl = input.imageUrl;
-  if (input.priority !== undefined) updates.priority = input.priority;
-  if (input.includeInSeo !== undefined)
-    updates.includeInSeo = input.includeInSeo;
-  return updates;
+	const updates: Record<string, unknown> = {};
+	if (input.slug !== undefined) updates.slug = input.slug;
+	if (input.title !== undefined) updates.title = input.title;
+	if (input.description !== undefined) updates.description = input.description;
+	if (input.category !== undefined) updates.category = input.category;
+	if (input.startsAt !== undefined) updates.startsAt = input.startsAt;
+	if (input.endsAt !== undefined) updates.endsAt = input.endsAt;
+	if (input.timezone !== undefined) updates.timezone = input.timezone;
+	if (input.recurrence !== undefined) updates.recurrence = input.recurrence;
+	if (input.isActive !== undefined) updates.isActive = input.isActive;
+	if (input.sourceUrl !== undefined) updates.sourceUrl = input.sourceUrl;
+	if (input.imageUrl !== undefined) updates.imageUrl = input.imageUrl;
+	if (input.priority !== undefined) updates.priority = input.priority;
+	if (input.includeInSeo !== undefined) updates.includeInSeo = input.includeInSeo;
+	return updates;
 }
 
 export async function createEvent(
-  input: EventWriteInput,
-  editedBy = "admin",
+	input: EventWriteInput,
+	editedBy = 'admin'
 ): Promise<EventData | null> {
-  const slug = input.slug ?? "";
-  if (slug) {
-    const [existing] = await db
-      .select({ id: eventsTable.id })
-      .from(eventsTable)
-      .where(eq(eventsTable.slug, slug))
-      .limit(1);
-    if (existing) throw new DuplicateSlugError(slug);
-  }
+	const slug = input.slug ?? '';
+	if (slug) {
+		const [existing] = await db
+			.select({ id: eventsTable.id })
+			.from(eventsTable)
+			.where(eq(eventsTable.slug, slug))
+			.limit(1);
+		if (existing) throw new DuplicateSlugError(slug);
+	}
 
-  const [inserted] = await db
-    .insert(eventsTable)
-    .values({
-      slug: input.slug ?? "",
-      title: input.title ?? "",
-      description: input.description ?? null,
-      category: input.category ?? "other",
-      startsAt: input.startsAt ?? new Date().toISOString(),
-      endsAt: input.endsAt ?? new Date().toISOString(),
-      timezone: input.timezone ?? "Asia/Manila",
-      recurrence: input.recurrence ?? "none",
-      isActive: input.isActive ?? true,
-      sourceUrl: input.sourceUrl ?? null,
-      imageUrl: input.imageUrl ?? null,
-      priority: input.priority ?? 0,
-      includeInSeo: input.includeInSeo ?? false,
-    })
-    .returning({ id: eventsTable.id });
+	const [inserted] = await db
+		.insert(eventsTable)
+		.values({
+			slug: input.slug ?? '',
+			title: input.title ?? '',
+			description: input.description ?? null,
+			category: input.category ?? 'other',
+			startsAt: input.startsAt ?? new Date().toISOString(),
+			endsAt: input.endsAt ?? new Date().toISOString(),
+			timezone: input.timezone ?? 'Asia/Manila',
+			recurrence: input.recurrence ?? 'none',
+			isActive: input.isActive ?? true,
+			sourceUrl: input.sourceUrl ?? null,
+			imageUrl: input.imageUrl ?? null,
+			priority: input.priority ?? 0,
+			includeInSeo: input.includeInSeo ?? false
+		})
+		.returning({ id: eventsTable.id });
 
-  if (!inserted) return null;
-  await replaceEventChildren(inserted.id, input);
+	if (!inserted) return null;
+	await replaceEventChildren(inserted.id, input);
 
-  const after = await getEventById(inserted.id, { includeInactive: true });
-  if (after) {
-    await recordEditorHistory({
-      entityType: "event",
-      entityId: inserted.id,
-      action: "create",
-      before: null,
-      after,
-      versionAfter: after.version,
-      editedBy,
-    });
-  }
-  await refreshEventSyncKeys(
-    after?.slug ? [eventIsrPath(after.slug), "/event/"] : ["/event/"],
-  );
-  return after;
+	const after = await getEventById(inserted.id, { includeInactive: true });
+	if (after) {
+		await recordEditorHistory({
+			entityType: 'event',
+			entityId: inserted.id,
+			action: 'create',
+			before: null,
+			after,
+			versionAfter: after.version,
+			editedBy
+		});
+	}
+	await refreshEventSyncKeys(
+		after?.slug
+			? [eventIsrPath(after.slug), entityIndexPath('events')]
+			: [entityIndexPath('events')]
+	);
+	return after;
 }
 
 export async function updateEvent(
-  id: number,
-  input: EventWriteInput,
-  expectedVersion?: number,
-  editedBy = "admin",
-  history?: EditorHistoryOverride,
+	id: number,
+	input: EventWriteInput,
+	expectedVersion?: number,
+	editedBy = 'admin',
+	history?: EditorHistoryOverride
 ): Promise<EventData | null> {
-  const before = await getEventById(id, { includeInactive: true });
-  if (!before) return null;
+	const before = await getEventById(id, { includeInactive: true });
+	if (!before) return null;
 
-  // Check slug uniqueness if slug is changing (mirrors createEvent guard)
-  if (input.slug !== undefined && input.slug !== before.slug) {
-    const slug = input.slug;
-    if (slug) {
-      const [existing] = await db
-        .select({ id: eventsTable.id })
-        .from(eventsTable)
-        .where(and(eq(eventsTable.slug, slug), ne(eventsTable.id, id)))
-        .limit(1);
-      if (existing) throw new DuplicateSlugError(slug);
-    }
-  }
+	// Check slug uniqueness if slug is changing (mirrors createEvent guard)
+	if (input.slug !== undefined && input.slug !== before.slug) {
+		const slug = input.slug;
+		if (slug) {
+			const [existing] = await db
+				.select({ id: eventsTable.id })
+				.from(eventsTable)
+				.where(and(eq(eventsTable.slug, slug), ne(eventsTable.id, id)))
+				.limit(1);
+			if (existing) throw new DuplicateSlugError(slug);
+		}
+	}
 
-  const updates = getEventUpdates(input);
-  const shouldReplaceChildren =
-    input.locations !== undefined || input.routes !== undefined;
-  if (Object.keys(updates).length === 0 && !shouldReplaceChildren) {
-    return before;
-  }
+	const updates = getEventUpdates(input);
+	const shouldReplaceChildren = input.locations !== undefined || input.routes !== undefined;
+	if (Object.keys(updates).length === 0 && !shouldReplaceChildren) {
+		return before;
+	}
 
-  await db.transaction(async (tx) => {
-    const where =
-      expectedVersion === undefined
-        ? eq(eventsTable.id, id)
-        : and(eq(eventsTable.id, id), eq(eventsTable.version, expectedVersion));
-    const [updated] = await tx
-      .update(eventsTable)
-      .set({
-        ...updates,
-        version: sql`"version" + 1`,
-        updatedAt: sql`now()`,
-      })
-      .where(where)
-      .returning({ id: eventsTable.id });
+	await db.transaction(async (tx) => {
+		const where =
+			expectedVersion === undefined
+				? eq(eventsTable.id, id)
+				: and(eq(eventsTable.id, id), eq(eventsTable.version, expectedVersion));
+		const [updated] = await tx
+			.update(eventsTable)
+			.set({
+				...updates,
+				version: sql`"version" + 1`,
+				updatedAt: sql`now()`
+			})
+			.where(where)
+			.returning({ id: eventsTable.id });
 
-    if (!updated && expectedVersion !== undefined) {
-      throw new EditConflictError(
-        await getEventById(id, { includeInactive: true }),
-      );
-    }
+		if (!updated && expectedVersion !== undefined) {
+			throw new EditConflictError(await getEventById(id, { includeInactive: true }));
+		}
 
-    if (shouldReplaceChildren) {
-      await replaceEventChildren(id, input, tx);
-    }
-  });
+		if (shouldReplaceChildren) {
+			await replaceEventChildren(id, input, tx);
+		}
+	});
 
-  const after = await getEventById(id, { includeInactive: true });
-  if (before && after) {
-    await recordEditorHistory({
-      entityType: "event",
-      entityId: id,
-      action: history?.action ?? "update",
-      before,
-      after,
-      versionBefore: before.version,
-      versionAfter: after.version,
-      editedBy,
-      summary: history?.summary ?? null,
-    });
-  }
-  const eventPaths = ["/event/"];
-  if (after?.slug) eventPaths.push(eventIsrPath(after.slug));
-  if (before.slug !== after?.slug) eventPaths.push(eventIsrPath(before.slug));
-  await refreshEventSyncKeys(eventPaths);
-  return after;
+	const after = await getEventById(id, { includeInactive: true });
+	if (before && after) {
+		await recordEditorHistory({
+			entityType: 'event',
+			entityId: id,
+			action: history?.action ?? 'update',
+			before,
+			after,
+			versionBefore: before.version,
+			versionAfter: after.version,
+			editedBy,
+			summary: history?.summary ?? null
+		});
+	}
+	const eventPaths = [entityIndexPath('events')];
+	if (after?.slug) eventPaths.push(eventIsrPath(after.slug));
+	if (before.slug !== after?.slug) eventPaths.push(eventIsrPath(before.slug));
+	await refreshEventSyncKeys(eventPaths);
+	return after;
 }
 
-export async function deactivateEvent(
-  id: number,
-  expectedVersion?: number,
-  editedBy = "admin",
-) {
-  return updateEvent(id, { isActive: false }, expectedVersion, editedBy);
+export async function deactivateEvent(id: number, expectedVersion?: number, editedBy = 'admin') {
+	return updateEvent(id, { isActive: false }, expectedVersion, editedBy);
 }
 
 export async function updateEventLocations(
-  id: number,
-  locations: EventLocationWriteInput[],
-  expectedVersion?: number,
-  editedBy = "admin",
+	id: number,
+	locations: EventLocationWriteInput[],
+	expectedVersion?: number,
+	editedBy = 'admin'
 ): Promise<EventData | null> {
-  const before = await getEventById(id, { includeInactive: true });
+	const before = await getEventById(id, { includeInactive: true });
 
-  await db.transaction(async (tx) => {
-    const where =
-      expectedVersion === undefined
-        ? eq(eventsTable.id, id)
-        : and(eq(eventsTable.id, id), eq(eventsTable.version, expectedVersion));
-    const [updated] = await tx
-      .update(eventsTable)
-      .set({
-        version: sql`"version" + 1`,
-        updatedAt: sql`now()`,
-      })
-      .where(where)
-      .returning({ id: eventsTable.id });
+	await db.transaction(async (tx) => {
+		const where =
+			expectedVersion === undefined
+				? eq(eventsTable.id, id)
+				: and(eq(eventsTable.id, id), eq(eventsTable.version, expectedVersion));
+		const [updated] = await tx
+			.update(eventsTable)
+			.set({
+				version: sql`"version" + 1`,
+				updatedAt: sql`now()`
+			})
+			.where(where)
+			.returning({ id: eventsTable.id });
 
-    if (!updated && expectedVersion !== undefined) {
-      throw new EditConflictError(
-        await getEventById(id, { includeInactive: true }),
-      );
-    }
+		if (!updated && expectedVersion !== undefined) {
+			throw new EditConflictError(await getEventById(id, { includeInactive: true }));
+		}
 
-    await upsertEventLocations(id, locations, tx);
-  });
+		await upsertEventLocations(id, locations, tx);
+	});
 
-  const after = await getEventById(id, { includeInactive: true });
-  if (before && after) {
-    await recordEditorHistory({
-      entityType: "event",
-      entityId: id,
-      action: "update_locations",
-      before,
-      after,
-      versionBefore: before.version,
-      versionAfter: after.version,
-      editedBy,
-    });
-  }
-  await refreshEventSyncKeys(
-    after?.slug ? [eventIsrPath(after.slug), "/event/"] : ["/event/"],
-  );
-  return after;
+	const after = await getEventById(id, { includeInactive: true });
+	if (before && after) {
+		await recordEditorHistory({
+			entityType: 'event',
+			entityId: id,
+			action: 'update_locations',
+			before,
+			after,
+			versionBefore: before.version,
+			versionAfter: after.version,
+			editedBy
+		});
+	}
+	await refreshEventSyncKeys(
+		after?.slug
+			? [eventIsrPath(after.slug), entityIndexPath('events')]
+			: [entityIndexPath('events')]
+	);
+	return after;
 }
 
 type EventLocationRow = typeof eventLocationsTable.$inferSelect;
 
 function getEventLocationFields(
-  location: EventLocationWriteInput,
-  index: number,
-  existing?: EventLocationRow,
+	location: EventLocationWriteInput,
+	index: number,
+	existing?: EventLocationRow
 ) {
-  const anchorType = location.anchorType ?? existing?.anchorType ?? "custom";
-  const customCoords =
-    anchorType === "custom"
-      ? {
-          lat:
-            location.lat !== undefined ? location.lat : (existing?.lat ?? null),
-          lon:
-            location.lon !== undefined ? location.lon : (existing?.lon ?? null),
-        }
-      : { lat: null, lon: null };
+	const anchorType = location.anchorType ?? existing?.anchorType ?? 'custom';
+	const customCoords =
+		anchorType === 'custom'
+			? {
+					lat: location.lat !== undefined ? location.lat : (existing?.lat ?? null),
+					lon: location.lon !== undefined ? location.lon : (existing?.lon ?? null)
+				}
+			: { lat: null, lon: null };
 
-  return {
-    anchorType,
-    buildingId:
-      location.buildingId !== undefined
-        ? location.buildingId
-        : (existing?.buildingId ?? null),
-    dormId:
-      location.dormId !== undefined
-        ? location.dormId
-        : (existing?.dormId ?? null),
-    label: location.label ?? existing?.label ?? "Event marker",
-    lat: customCoords.lat,
-    lon: customCoords.lon,
-    highlightPriority:
-      location.highlightPriority ?? existing?.highlightPriority ?? 0,
-    sortOrder: location.sortOrder ?? existing?.sortOrder ?? index,
-    isPrimary: location.isPrimary ?? existing?.isPrimary ?? index === 0,
-  };
+	return {
+		anchorType,
+		buildingId:
+			location.buildingId !== undefined ? location.buildingId : (existing?.buildingId ?? null),
+		dormId: location.dormId !== undefined ? location.dormId : (existing?.dormId ?? null),
+		label: location.label ?? existing?.label ?? 'Event marker',
+		lat: customCoords.lat,
+		lon: customCoords.lon,
+		highlightPriority: location.highlightPriority ?? existing?.highlightPriority ?? 0,
+		sortOrder: location.sortOrder ?? existing?.sortOrder ?? index,
+		isPrimary: location.isPrimary ?? existing?.isPrimary ?? index === 0
+	};
 }
 
 /** The db pool or a transaction handle — helpers accept either. */
-type DbClient = Pick<typeof db, "select" | "insert" | "update" | "delete">;
+type DbClient = Pick<typeof db, 'select' | 'insert' | 'update' | 'delete'>;
 
 async function upsertEventLocations(
-  eventId: number,
-  locations: EventLocationWriteInput[],
-  tx: DbClient = db,
+	eventId: number,
+	locations: EventLocationWriteInput[],
+	tx: DbClient = db
 ) {
-  const existingLocations = await tx
-    .select()
-    .from(eventLocationsTable)
-    .where(eq(eventLocationsTable.eventId, eventId));
-  const existingById = new Map(
-    existingLocations.map((location) => [location.id, location]),
-  );
-  const retainedLocationIds = new Set<number>();
+	const existingLocations = await tx
+		.select()
+		.from(eventLocationsTable)
+		.where(eq(eventLocationsTable.eventId, eventId));
+	const existingById = new Map(existingLocations.map((location) => [location.id, location]));
+	const retainedLocationIds = new Set<number>();
 
-  for (const [index, location] of locations.entries()) {
-    const existing =
-      location.id !== undefined ? existingById.get(location.id) : undefined;
-    const fields = getEventLocationFields(location, index, existing);
+	for (const [index, location] of locations.entries()) {
+		const existing = location.id !== undefined ? existingById.get(location.id) : undefined;
+		const fields = getEventLocationFields(location, index, existing);
 
-    if (existing) {
-      await tx
-        .update(eventLocationsTable)
-        .set({ ...fields, updatedAt: sql`now()` })
-        .where(eq(eventLocationsTable.id, existing.id));
-      retainedLocationIds.add(existing.id);
-      continue;
-    }
+		if (existing) {
+			await tx
+				.update(eventLocationsTable)
+				.set({ ...fields, updatedAt: sql`now()` })
+				.where(eq(eventLocationsTable.id, existing.id));
+			retainedLocationIds.add(existing.id);
+			continue;
+		}
 
-    const [inserted] = await tx
-      .insert(eventLocationsTable)
-      .values({ eventId, ...fields })
-      .returning({ id: eventLocationsTable.id });
-    if (inserted) retainedLocationIds.add(inserted.id);
-  }
+		const [inserted] = await tx
+			.insert(eventLocationsTable)
+			.values({ eventId, ...fields })
+			.returning({ id: eventLocationsTable.id });
+		if (inserted) retainedLocationIds.add(inserted.id);
+	}
 
-  const removedLocations = existingLocations.filter(
-    (location) => !retainedLocationIds.has(location.id),
-  );
-  for (const location of removedLocations) {
-    await tx
-      .update(eventRouteStopsTable)
-      .set({ eventLocationId: null })
-      .where(eq(eventRouteStopsTable.eventLocationId, location.id));
-    await tx
-      .delete(eventLocationsTable)
-      .where(eq(eventLocationsTable.id, location.id));
-  }
+	const removedLocations = existingLocations.filter(
+		(location) => !retainedLocationIds.has(location.id)
+	);
+	for (const location of removedLocations) {
+		await tx
+			.update(eventRouteStopsTable)
+			.set({ eventLocationId: null })
+			.where(eq(eventRouteStopsTable.eventLocationId, location.id));
+		await tx.delete(eventLocationsTable).where(eq(eventLocationsTable.id, location.id));
+	}
 }
 
 async function replaceEventChildren(
-  eventId: number,
-  input: Pick<EventWriteInput, "locations" | "routes">,
-  tx: DbClient = db,
+	eventId: number,
+	input: Pick<EventWriteInput, 'locations' | 'routes'>,
+	tx: DbClient = db
 ) {
-  if (input.routes !== undefined) {
-    const existingRoutes = await tx
-      .select({ id: eventRoutesTable.id })
-      .from(eventRoutesTable)
-      .where(eq(eventRoutesTable.eventId, eventId));
-    for (const route of existingRoutes) {
-      await tx
-        .delete(eventRouteStopsTable)
-        .where(eq(eventRouteStopsTable.routeId, route.id));
-    }
-    await tx
-      .delete(eventRoutesTable)
-      .where(eq(eventRoutesTable.eventId, eventId));
-  }
+	if (input.routes !== undefined) {
+		const existingRoutes = await tx
+			.select({ id: eventRoutesTable.id })
+			.from(eventRoutesTable)
+			.where(eq(eventRoutesTable.eventId, eventId));
+		for (const route of existingRoutes) {
+			await tx.delete(eventRouteStopsTable).where(eq(eventRouteStopsTable.routeId, route.id));
+		}
+		await tx.delete(eventRoutesTable).where(eq(eventRoutesTable.eventId, eventId));
+	}
 
-  const locationsReplaced = input.locations !== undefined;
-  const locationsHaveIds =
-    input.locations?.some((location) => location.id !== undefined) ?? false;
-  const locationIdByOldId = new Map<number, number>();
-  const locationIdByIndex = new Map<number, number>();
+	const locationsReplaced = input.locations !== undefined;
+	const locationsHaveIds = input.locations?.some((location) => location.id !== undefined) ?? false;
+	const locationIdByOldId = new Map<number, number>();
+	const locationIdByIndex = new Map<number, number>();
 
-  if (input.locations !== undefined) {
-    if (input.routes === undefined) {
-      const existingLocations = await tx
-        .select({ id: eventLocationsTable.id })
-        .from(eventLocationsTable)
-        .where(eq(eventLocationsTable.eventId, eventId));
-      for (const location of existingLocations) {
-        await tx
-          .update(eventRouteStopsTable)
-          .set({ eventLocationId: null })
-          .where(eq(eventRouteStopsTable.eventLocationId, location.id));
-      }
-    }
-    await tx
-      .delete(eventLocationsTable)
-      .where(eq(eventLocationsTable.eventId, eventId));
-  }
+	if (input.locations !== undefined) {
+		if (input.routes === undefined) {
+			const existingLocations = await tx
+				.select({ id: eventLocationsTable.id })
+				.from(eventLocationsTable)
+				.where(eq(eventLocationsTable.eventId, eventId));
+			for (const location of existingLocations) {
+				await tx
+					.update(eventRouteStopsTable)
+					.set({ eventLocationId: null })
+					.where(eq(eventRouteStopsTable.eventLocationId, location.id));
+			}
+		}
+		await tx.delete(eventLocationsTable).where(eq(eventLocationsTable.eventId, eventId));
+	}
 
-  if (input.locations !== undefined && input.locations.length > 0) {
-    const insertedLocations = await tx
-      .insert(eventLocationsTable)
-      .values(
-        input.locations.map((location, index) => ({
-          eventId,
-          anchorType: location.anchorType ?? "custom",
-          buildingId: location.buildingId ?? null,
-          dormId: location.dormId ?? null,
-          label: location.label ?? "Event marker",
-          lat: location.lat ?? null,
-          lon: location.lon ?? null,
-          highlightPriority: location.highlightPriority ?? 0,
-          sortOrder: location.sortOrder ?? index,
-          isPrimary: location.isPrimary ?? index === 0,
-        })),
-      )
-      .returning({ id: eventLocationsTable.id });
+	if (input.locations !== undefined && input.locations.length > 0) {
+		const insertedLocations = await tx
+			.insert(eventLocationsTable)
+			.values(
+				input.locations.map((location, index) => ({
+					eventId,
+					anchorType: location.anchorType ?? 'custom',
+					buildingId: location.buildingId ?? null,
+					dormId: location.dormId ?? null,
+					label: location.label ?? 'Event marker',
+					lat: location.lat ?? null,
+					lon: location.lon ?? null,
+					highlightPriority: location.highlightPriority ?? 0,
+					sortOrder: location.sortOrder ?? index,
+					isPrimary: location.isPrimary ?? index === 0
+				}))
+			)
+			.returning({ id: eventLocationsTable.id });
 
-    input.locations.forEach((location, index) => {
-      const newId = insertedLocations[index]?.id;
-      if (newId === undefined) return;
-      locationIdByIndex.set(index, newId);
-      if (location.id !== undefined) locationIdByOldId.set(location.id, newId);
-    });
-  }
+		input.locations.forEach((location, index) => {
+			const newId = insertedLocations[index]?.id;
+			if (newId === undefined) return;
+			locationIdByIndex.set(index, newId);
+			if (location.id !== undefined) locationIdByOldId.set(location.id, newId);
+		});
+	}
 
-  const resolveStopLocationId = (
-    eventLocationId: number | null | undefined,
-  ): number | null => {
-    if (eventLocationId === null || eventLocationId === undefined) return null;
-    if (!locationsReplaced) return eventLocationId;
-    const byOldId = locationIdByOldId.get(eventLocationId);
-    if (byOldId !== undefined) return byOldId;
-    if (!locationsHaveIds) {
-      return locationIdByIndex.get(eventLocationId) ?? null;
-    }
-    return null;
-  };
+	const resolveStopLocationId = (eventLocationId: number | null | undefined): number | null => {
+		if (eventLocationId === null || eventLocationId === undefined) return null;
+		if (!locationsReplaced) return eventLocationId;
+		const byOldId = locationIdByOldId.get(eventLocationId);
+		if (byOldId !== undefined) return byOldId;
+		if (!locationsHaveIds) {
+			return locationIdByIndex.get(eventLocationId) ?? null;
+		}
+		return null;
+	};
 
-  if (input.routes !== undefined && input.routes.length > 0) {
-    for (const [routeIndex, route] of input.routes.entries()) {
-      const [insertedRoute] = await tx
-        .insert(eventRoutesTable)
-        .values({
-          eventId,
-          name: route.name ?? "Event route",
-          description: route.description ?? null,
-          sortOrder: route.sortOrder ?? routeIndex,
-        })
-        .returning({ id: eventRoutesTable.id });
+	if (input.routes !== undefined && input.routes.length > 0) {
+		for (const [routeIndex, route] of input.routes.entries()) {
+			const [insertedRoute] = await tx
+				.insert(eventRoutesTable)
+				.values({
+					eventId,
+					name: route.name ?? 'Event route',
+					description: route.description ?? null,
+					sortOrder: route.sortOrder ?? routeIndex
+				})
+				.returning({ id: eventRoutesTable.id });
 
-      if (!insertedRoute || !route.stops || route.stops.length === 0) continue;
-      await tx.insert(eventRouteStopsTable).values(
-        route.stops.map((stop, stopIndex) => ({
-          routeId: insertedRoute.id,
-          eventLocationId: resolveStopLocationId(stop.eventLocationId),
-          label: stop.label ?? "Route stop",
-          lat: stop.lat ?? null,
-          lon: stop.lon ?? null,
-          sortOrder: stop.sortOrder ?? stopIndex,
-        })),
-      );
-    }
-  }
+			if (!insertedRoute || !route.stops || route.stops.length === 0) continue;
+			await tx.insert(eventRouteStopsTable).values(
+				route.stops.map((stop, stopIndex) => ({
+					routeId: insertedRoute.id,
+					eventLocationId: resolveStopLocationId(stop.eventLocationId),
+					label: stop.label ?? 'Route stop',
+					lat: stop.lat ?? null,
+					lon: stop.lon ?? null,
+					sortOrder: stop.sortOrder ?? stopIndex
+				}))
+			);
+		}
+	}
 }
 
 // ── Counts (for dashboard) ──
 
 export async function getEntityCounts(): Promise<Record<string, number>> {
-  const [rooms, buildings, colleges, divisions, dorms] = await Promise.all([
-    db.select({ c: sql<number>`count(*)` }).from(roomsTable),
-    db.select({ c: sql<number>`count(*)` }).from(buildingsTable),
-    db.select({ c: sql<number>`count(*)` }).from(collegesTable),
-    db.select({ c: sql<number>`count(*)` }).from(divisionsTable),
-    db.select({ c: sql<number>`count(*)` }).from(dormsTable),
-  ]);
-  return {
-    rooms: Number(rooms[0]?.c ?? 0),
-    buildings: Number(buildings[0]?.c ?? 0),
-    colleges: Number(colleges[0]?.c ?? 0),
-    divisions: Number(divisions[0]?.c ?? 0),
-    dorms: Number(dorms[0]?.c ?? 0),
-  };
+	const [rooms, buildings, colleges, divisions, dorms] = await Promise.all([
+		db.select({ c: sql<number>`count(*)` }).from(roomsTable),
+		db.select({ c: sql<number>`count(*)` }).from(buildingsTable),
+		db.select({ c: sql<number>`count(*)` }).from(collegesTable),
+		db.select({ c: sql<number>`count(*)` }).from(divisionsTable),
+		db.select({ c: sql<number>`count(*)` }).from(dormsTable)
+	]);
+	return {
+		rooms: Number(rooms[0]?.c ?? 0),
+		buildings: Number(buildings[0]?.c ?? 0),
+		colleges: Number(colleges[0]?.c ?? 0),
+		divisions: Number(divisions[0]?.c ?? 0),
+		dorms: Number(dorms[0]?.c ?? 0)
+	};
 }

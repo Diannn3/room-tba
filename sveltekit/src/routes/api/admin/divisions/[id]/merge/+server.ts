@@ -1,9 +1,9 @@
-import { json } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
+import { createEntityMergeRoute } from '$lib/admin/entity-merge-route';
+import { mergeDivisions } from '$lib/services/merge-service';
 
-
-// TODO: port from astro/src/pages/api/admin/divisions/[id]/merge.ts — needs publish session, entity merge factory
-const notImplemented: RequestHandler = async () =>
-	json({ success: false, error: 'Not implemented' }, { status: 501 });
-
-export const POST = notImplemented;
+export const POST = createEntityMergeRoute({
+	entityLabel: 'division',
+	responseKey: 'division',
+	targetIdKey: 'targetDivisionId',
+	merge: mergeDivisions
+});

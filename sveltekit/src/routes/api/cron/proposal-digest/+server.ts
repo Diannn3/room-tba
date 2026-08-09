@@ -1,9 +1,33 @@
-import { json } from '@sveltejs/kit';
+import { timingSafeEqual } from 'node:crypto';
+import { env } from '$env/dynamic/private';
+import { sendProposalDigest } from '$lib/services/digest-service';
 import type { RequestHandler } from './$types';
 
+/** Daily editor digest of pending proposals (#272). Invoked by Vercel Cron. */
+export const GET: RequestHandler = async ({ request }) => {
+	if (!env.CRON_SECRET) {
+		return json({ error: 'Cron is not configured on this server.' }, 503);
+	}
+	const authHeader = request.headers.get('authorization') ?? '';
+	const expected = `Bearer ${env.CRON_SECRET}`;
+	const authBuf = Buffer.from(authHeader);
+	const expectedBuf = Buffer.from(expected);
+	if (authBuf.length !== expectedBuf.length || !timingSafeEqual(authBuf, expectedBuf)) {
+		return json({ error: 'Unauthorized' }, 401);
+	}
 
-// TODO: port from astro/src/pages/api/cron/proposal-digest.ts — needs CRON_SECRET timingSafeEqual check, digest service
-const notImplemented: RequestHandler = async () =>
-	json({ success: false, error: 'Not implemented' }, { status: 501 });
+	try {
+		const result = await sendProposalDigest();
+		return json({ success: true, ...result });
+	} catch (error) {
+		console.error('Proposal digest run failed:', error);
+		return json({ error: 'Digest run failed.' }, 500);
+	}
+};
 
-export const GET = notImplemented;
+function json(body: unknown, status = 200) {
+	return new Response(JSON.stringify(body), {
+		status,
+		headers: { 'Content-Type': 'application/json' }
+	});
+}

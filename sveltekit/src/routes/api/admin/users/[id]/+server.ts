@@ -1,9 +1,48 @@
-import { json } from '@sveltejs/kit';
+import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
+import { AccountActionError, updateManagedUser } from '$lib/services/admin-user-service';
 import type { RequestHandler } from './$types';
 
+export const PATCH: RequestHandler = async ({ cookies, params, request }) => {
+	const auth = await editorSessionOrUnauthorized(cookies, {
+		requireAdmin: true
+	});
+	if (auth instanceof Response) return auth;
 
-// TODO: port from astro/src/pages/api/admin/users/[id].ts — needs admin session
-const notImplemented: RequestHandler = async () =>
-	json({ success: false, error: 'Not implemented' }, { status: 501 });
+	const id = parseInt(params.id ?? '', 10);
+	if (Number.isNaN(id)) return json({ error: 'Invalid user ID' }, 400);
 
-export const PATCH = notImplemented;
+	let body: {
+		role?: 'admin' | 'editor' | 'contributor';
+		isActive?: boolean;
+	};
+	try {
+		body = await request.json();
+	} catch {
+		return json({ error: 'Invalid JSON body' }, 400);
+	}
+
+	if (body.role !== undefined && !['admin', 'editor', 'contributor'].includes(body.role)) {
+		return json({ error: 'Invalid role.' }, 400);
+	}
+
+	try {
+		const user = await updateManagedUser(id, {
+			role: body.role,
+			isActive: body.isActive
+		});
+		return json({ success: true, user });
+	} catch (error) {
+		if (error instanceof AccountActionError) {
+			return json({ error: error.message }, error.status);
+		}
+		console.error('Update managed user failed:', error);
+		return json({ error: 'Failed to update account.' }, 500);
+	}
+};
+
+function json(body: unknown, status = 200) {
+	return new Response(JSON.stringify(body), {
+		status,
+		headers: { 'Content-Type': 'application/json' }
+	});
+}

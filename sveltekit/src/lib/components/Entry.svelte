@@ -1,68 +1,70 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import type { InitialSearchState } from '$lib/app-data';
-	import { getAppData } from '$lib/context';
-	import { findCampusPointBySlug } from '$lib/route-links';
 	import { campusTransit } from '$lib/campus.config';
-	import {
-		modalStore,
-		queryStore,
-		sidePanelStore,
-		locationStore,
-		toastStore,
-		building3DStore,
-		adminAuthStore,
-		mapEditStore,
-		mapToolsStore,
-		travelTimeStore,
-		measureRouteStore,
-		editorChromeStore,
-		jeepneyStore,
-		appBootstrapStore,
-		plannerStore,
-		scheduleRouteStore,
-		termStore,
-		sidebarStore,
-		announcementsStore
-	} from '$lib/store.svelte';
-	import { decodeSharePlan } from '$lib/planner/share-codec';
-	import { resolveSharedPlan } from '$lib/planner/import-shared';
-	import Modal from '$lib/components/modal/Modal.svelte';
+	import AccountSettingsModal from '$lib/components/AccountSettingsModal.svelte';
+	import AdminLoginModal from '$lib/components/AdminLoginModal.svelte';
+	import Building3DViewer from '$lib/components/Building3DViewer.svelte';
+	import AcademicCalendarScreen from '$lib/components/calendar/AcademicCalendarScreen.svelte';
 	import MainControls from '$lib/components/controls/MainControls.svelte';
+	import EditorAdditionModal from '$lib/components/EditorAdditionModal.svelte';
+	import EntityUrlSync from '$lib/components/EntityUrlSync.svelte';
+	import FinalExamsScreen from '$lib/components/final-exams/FinalExamsScreen.svelte';
 	import Map from '$lib/components/Map.svelte';
 	import MapAttribution from '$lib/components/MapAttribution.svelte';
 	import MeasureRoutePanel from '$lib/components/MeasureRoutePanel.svelte';
-	import TravelTimeLegend from '$lib/components/TravelTimeLegend.svelte';
-	import Toast from '$lib/components/Toast.svelte';
-	import Building3DViewer from '$lib/components/Building3DViewer.svelte';
-	import AdminLoginModal from '$lib/components/AdminLoginModal.svelte';
-	import AccountSettingsModal from '$lib/components/AccountSettingsModal.svelte';
-	import ManageUsersModal from '$lib/components/modal/ManageUsersModal.svelte';
-	import EditorAdditionModal from '$lib/components/EditorAdditionModal.svelte';
-	import PlannerScreen from '$lib/components/planner/PlannerScreen.svelte';
-	import FinalExamsScreen from '$lib/components/final-exams/FinalExamsScreen.svelte';
-	import AcademicCalendarScreen from '$lib/components/calendar/AcademicCalendarScreen.svelte';
-	import TodayScreen from '$lib/components/today/TodayScreen.svelte';
-	import EntityUrlSync from '$lib/components/EntityUrlSync.svelte';
 	import EntityHoverPreview from '$lib/components/map/EntityHoverPreview.svelte';
+	import ManageUsersModal from '$lib/components/modal/ManageUsersModal.svelte';
+	import Modal from '$lib/components/modal/Modal.svelte';
+	import PlannerScreen from '$lib/components/planner/PlannerScreen.svelte';
+	import Toast from '$lib/components/Toast.svelte';
+	import TravelTimeLegend from '$lib/components/TravelTimeLegend.svelte';
+	import TodayScreen from '$lib/components/today/TodayScreen.svelte';
+	import { getAppData } from '$lib/context';
+	import { resolveSharedPlan } from '$lib/planner/import-shared';
+	import { decodeSharePlan } from '$lib/planner/share-codec';
+	import { findCampusPointBySlug } from '$lib/route-links';
+	import {
+		adminAuthStore,
+		announcementsStore, 
+		appBootstrapStore,
+		building3DStore,
+		editorChromeStore,
+		jeepneyStore,
+		locationStore,
+		mapEditStore,
+		mapToolsStore,
+		measureRouteStore,
+		modalStore,
+		plannerStore,
+		queryStore,
+		scheduleRouteStore,
+		sidebarStore,
+		sidePanelStore,
+		termStore,
+		toastStore,
+		travelTimeStore
+	} from '$lib/store.svelte';
 	import './map-chrome/map-chrome.css';
-	import { observeBlockHeight } from '$lib/layout-css-vars';
-	import { dispatchGlobalShortcut, getGlobalShortcutAction } from '$lib/keyboard-shortcuts';
-	import { dismissEphemeralOverlays } from '$lib/overlay-stack';
+	import { MediaQuery } from 'svelte/reactivity';
 	import { openCampusBrowse } from '$lib/browse-campus';
-	import { getTransitRoutePath, getTransitStopPath } from '$lib/transit-urls';
+	import { dispatchGlobalShortcut, getGlobalShortcutAction } from '$lib/keyboard-shortcuts';
 	import { shouldAutoOpenLandingModal } from '$lib/landing-modal-auto-open';
-	import StagingBanner from './StagingBanner.svelte';
+	import { observeBlockHeight } from '$lib/layout-css-vars';
+	import { isRecentSearch } from '$lib/locStorage';
+	import { dismissEphemeralOverlays } from '$lib/overlay-stack';
+	import { getTransitRoutePath, getTransitStopPath } from '$lib/transit-urls';
+	import type { RecentSearch } from '$lib/types';
 	import AnnouncementBar from './AnnouncementBar.svelte';
-	import KeyboardShortcutsPopup from './map-chrome/KeyboardShortcutsPopup.svelte';
 	import DesktopTopBar from './map-chrome/DesktopTopBar.svelte';
+	import KeyboardShortcutsPopup from './map-chrome/KeyboardShortcutsPopup.svelte';
 	import MapControlsStack from './map-chrome/MapControlsStack.svelte';
 	import MobileBottomNav from './map-chrome/MobileBottomNav.svelte';
-	import { MediaQuery } from 'svelte/reactivity';
-	import { isRecentSearch } from '$lib/locStorage';
-	import type { RecentSearch } from '$lib/types';
+	import StagingBanner from './StagingBanner.svelte';
 
 	type Props = {
+		/** The active route's panel body, rendered inside the side panel. */
+		children?: Snippet;
 		initialSearch?: InitialSearchState;
 		suppressLandingModal?: boolean;
 		openToday?: boolean;
@@ -73,6 +75,7 @@
 
 	const mobile = new MediaQuery('max-width:48rem');
 	const {
+		children,
 		initialSearch,
 		suppressLandingModal = false,
 		openToday = false,
@@ -114,15 +117,6 @@
 		} catch {
 			queryStore.recentSearches = [];
 		}
-		if (initialSearch) {
-			queryStore.hydrateQuery({
-				category: initialSearch.category,
-				type: 'result',
-				value: initialSearch.value,
-				eventSlug: initialSearch.eventSlug
-			});
-		}
-
 		const urlParams = new URLSearchParams(initialUrlSearch);
 
 		if (urlParams.get('editor') === 'login') {
@@ -440,7 +434,9 @@
 				</div>
 			{/if}
 			<div class="inner-layer">
-				<MainControls />
+				<MainControls>
+					{@render children?.()}
+				</MainControls>
 				<div class="bottom-band">
 					{#if travelTimeStore.active}
 						<TravelTimeLegend />

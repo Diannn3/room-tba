@@ -1,14 +1,25 @@
 <script lang="ts">
-	import BottomSheet from '$lib/components/BottomSheet.svelte';
-	import { queryStore, sidePanelStore, jeepneyStore } from '$lib/store.svelte';
-	import JeepneyStopPanel from './JeepneyStopPanel.svelte';
-	import JeepneyRouteModal from '$lib/components/modal/JeepneyRouteModal.svelte';
-	import SponsorBanner from '$lib/components/SponsorBanner.svelte';
+	
 	import ChevronLeft from '@lucide/svelte/icons/chevron-left';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+import type { Snippet } from 'svelte';
 	import { MediaQuery } from 'svelte/reactivity';
-	import { resolvePanelContent } from '$lib/side-panel-content';
+	import { page } from '$app/state';
 	import type { BottomSheetSnap } from '$lib/bottom-sheet-snap';
+	import BottomSheet from '$lib/components/BottomSheet.svelte';
+	import JeepneyRouteModal from '$lib/components/modal/JeepneyRouteModal.svelte';
+	import SponsorBanner from '$lib/components/SponsorBanner.svelte';
+	import { resolvePanelContent } from '$lib/side-panel-content';
+	import { jeepneyStore, queryStore, sidePanelStore } from '$lib/store.svelte';
+	import JeepneyStopPanel from './JeepneyStopPanel.svelte';
+
+	// The route always renders into the panel, but only a browse route replaces
+	// the body with its own list. An entity route hydrates the query instead and
+	// lets the category resolution below pick the same result view a click on the
+	// map would, so whatever it renders (crawlable copy, for instance) sits
+	// alongside that view rather than in place of it.
+	const { children }: { children?: Snippet } = $props();
+	const routeOwnsBody = $derived(page.data.panel === 'browse');
 
 	const mobile = new MediaQuery('max-width:48rem');
 	// Entity detail views only, never list/browse panels (docs/ad-policy.md).
@@ -48,7 +59,9 @@
 	 */
 	const PanelContent = $derived(resolvePanelContent(sidePanelStore.state, queryStore.category));
 
-	const panelOpen = $derived(PanelContent !== null || jeepneyStore.selectedStopIndex !== null);
+	const panelOpen = $derived(
+		routeOwnsBody || PanelContent !== null || jeepneyStore.selectedStopIndex !== null
+	);
 
 	const toggleLabel = $derived(
 		sidePanelStore.collapsed ? 'Expand details panel' : 'Collapse details panel'
@@ -101,8 +114,11 @@
 			routeId={jeepneyStore.selectedRouteId}
 			onback={() => jeepneyStore.clearRoute()}
 		/>
-	{:else if PanelContent}
-		<PanelContent />
+	{:else}
+		{@render children?.()}
+		{#if !routeOwnsBody && PanelContent}
+			<PanelContent />
+		{/if}
 	{/if}
 	{#if showSponsorBanner}
 		<SponsorBanner />

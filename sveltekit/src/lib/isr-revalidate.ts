@@ -6,69 +6,85 @@
  */
 
 import {
-  getBuildingSlug,
-  getCollegeSlug,
-  getDivisionSlug,
-  getDormRouteSlug,
-  getRoomRouteSlug,
-} from "$lib/app-data";
-import { SITE_URL } from "$lib/site";
+	getBuildingCanonicalPath,
+	getCollegeCanonicalPath,
+	getDivisionCanonicalPath,
+	getDormCanonicalPath,
+	getEventCanonicalPath,
+	getOrganizationCanonicalPath,
+	getOrganizationIndexPath,
+	getPlaceCanonicalPath,
+	getPlaceIndexPath,
+	getRoomCanonicalPath
+} from '$lib/entity-urls';
+import { SITE_URL } from '$lib/site';
 import type {
-  BuildingData,
-  CollegeData,
-  DivisionData,
-  DormData,
-  RoomData,
-} from "$lib/types";
+	BuildingData,
+	CollegeData,
+	DivisionData,
+	DormData,
+	OrgData,
+	PlaceData,
+	RoomData
+} from '$lib/types';
 
-const SITEMAP_PATH = "/sitemap.xml";
+const SITEMAP_PATH = '/sitemap.xml';
 
-export function roomIsrPath(room: Pick<RoomData, "id" | "code">): string {
-  return `/room/${getRoomRouteSlug(room)}/`;
+// The revalidated path is the canonical entity URL, so these delegate rather
+// than rebuilding it — a URL change stays in one place.
+export function roomIsrPath(room: Pick<RoomData, 'id' | 'code'>): string {
+	return getRoomCanonicalPath(room);
 }
 
-export function buildingIsrPath(
-  building: Pick<BuildingData, "buildingName">,
-): string {
-  return `/building/${getBuildingSlug(building)}/`;
+export function buildingIsrPath(building: Pick<BuildingData, 'buildingName'>): string {
+	return getBuildingCanonicalPath(building.buildingName);
 }
 
-export function collegeIsrPath(
-  college: Pick<CollegeData, "collegeName">,
-): string {
-  return `/college/${getCollegeSlug(college)}/`;
+export function collegeIsrPath(college: Pick<CollegeData, 'collegeName'>): string {
+	return getCollegeCanonicalPath(college.collegeName);
 }
 
-export function divisionIsrPath(
-  division: Pick<DivisionData, "divisionName">,
-): string {
-  return `/division/${getDivisionSlug(division)}/`;
+export function divisionIsrPath(division: Pick<DivisionData, 'divisionName'>): string {
+	return getDivisionCanonicalPath(division.divisionName);
 }
 
-export function dormIsrPath(dorm: Pick<DormData, "id" | "dormName">): string {
-  return `/dorm/${getDormRouteSlug(dorm)}/`;
+export function dormIsrPath(dorm: Pick<DormData, 'id' | 'dormName'>): string {
+	return getDormCanonicalPath(dorm);
 }
 
 export function eventIsrPath(slug: string): string {
-  return `/event/${slug}/`;
+	return getEventCanonicalPath(slug);
+}
+
+// Organizations and places each span two segments, so a mutation has to
+// revalidate the entity page and the index it is listed on — which index that
+// is follows from the row's own category.
+export function organizationIsrPaths(
+	organization: Pick<OrgData, 'id' | 'name'> & Partial<Pick<OrgData, 'category'>>
+): string[] {
+	return [getOrganizationCanonicalPath(organization), getOrganizationIndexPath(organization)];
+}
+
+export function placeIsrPaths(place: Pick<PlaceData, 'id' | 'name' | 'category'>): string[] {
+	return [getPlaceCanonicalPath(place), getPlaceIndexPath(place)];
 }
 
 /** Fire-and-forget ISR revalidation; always includes sitemap when paths are provided. */
 export function revalidateIsrPaths(paths: string[] | undefined): void {
-  if (!paths?.length) return;
+	if (!paths?.length) return;
 
-  const token = process.env.ISR_BYPASS_TOKEN?.trim();
-  if (!token) return;
+	const token = process.env.ISR_BYPASS_TOKEN?.trim();
+	if (!token) return;
 
-  const unique = [...new Set([...paths, SITEMAP_PATH])];
-  const base = SITE_URL.replace(/\/$/, "");
+	const unique = [...new Set([...paths, SITEMAP_PATH])];
+	const base = SITE_URL.replace(/\/$/, '');
 
-  void Promise.allSettled(
-    unique.map((path) =>
-      fetch(`${base}${path}`, {
-        method: "HEAD",
-        headers: { "x-prerender-revalidate": token },
-      }),
-    ),
-  );
+	void Promise.allSettled(
+		unique.map((path) =>
+			fetch(`${base}${path}`, {
+				method: 'HEAD',
+				headers: { 'x-prerender-revalidate': token }
+			})
+		)
+	);
 }

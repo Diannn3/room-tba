@@ -1,9 +1,36 @@
-import { json } from '@sveltejs/kit';
+import { and, desc, eq, inArray } from 'drizzle-orm';
+import { getEditorSession } from '$lib/admin/require-editor';
+import { db } from '$lib/db';
+import { editProposalsTable } from '$lib/server/db/schema';
+import { withEntityLabel } from '$lib/services/proposal-service';
 import type { RequestHandler } from './$types';
 
+const OPEN_STATUSES = ['pending', 'needs_changes'] as const;
 
-// TODO: port from astro/src/pages/api/proposals/mine.ts — needs session, proposal service
-const notImplemented: RequestHandler = async () =>
-	json({ success: false, error: 'Not implemented' }, { status: 501 });
+export const GET: RequestHandler = async ({ cookies }) => {
+	const session = getEditorSession(cookies);
+	if (!session) {
+		return json({ error: 'Sign in required.' }, 401);
+	}
 
-export const GET = notImplemented;
+	const rows = await db
+		.select()
+		.from(editProposalsTable)
+		.where(
+			and(
+				eq(editProposalsTable.submitterUserId, session.id),
+				inArray(editProposalsTable.status, [...OPEN_STATUSES])
+			)
+		)
+		.orderBy(desc(editProposalsTable.updatedAt));
+
+	const proposals = await Promise.all(rows.map((row) => withEntityLabel(row)));
+	return json({ proposals });
+};
+
+function json(body: unknown, status = 200) {
+	return new Response(JSON.stringify(body), {
+		status,
+		headers: { 'Content-Type': 'application/json' }
+	});
+}

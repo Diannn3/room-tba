@@ -1,9 +1,22 @@
-import { json } from '@sveltejs/kit';
+import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
+import { getMyContributions } from '$lib/services/contribution-service';
 import type { RequestHandler } from './$types';
 
+export const GET: RequestHandler = async ({ cookies }) => {
+	const auth = await editorSessionOrUnauthorized(cookies);
+	if (auth instanceof Response) return auth;
 
-// TODO: port from astro/src/pages/api/contributions/mine.ts — needs editor session, contributions service
-const notImplemented: RequestHandler = async () =>
-	json({ success: false, error: 'Not implemented' }, { status: 501 });
+	try {
+		return json({ contributions: await getMyContributions(auth.session.id) });
+	} catch (error) {
+		console.error('my contributions query failed:', error);
+		return json({ error: 'Contributions are temporarily unavailable.' }, 500);
+	}
+};
 
-export const GET = notImplemented;
+function json(body: unknown, status = 200) {
+	return new Response(JSON.stringify(body), {
+		status,
+		headers: { 'Content-Type': 'application/json' }
+	});
+}

@@ -1,6 +1,37 @@
 <script lang="ts">
-  import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
+  
+  import Box from "@lucide/svelte/icons/box";
+  import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import { onMount } from "svelte";
+  import { ROOM_SCHEDULE_SCOPE_NOTE } from "$lib/amis/room-scheduled-types";
+  import FollowPrompt from "$lib/components/community/FollowPrompt.svelte";
+  import BuildingResult from "$lib/components/controls/BuildingResult.svelte";
+import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
+  import EntityEditorField from "$lib/components/editor/EntityEditorField.svelte";
+  import EntityEditorPanel from "$lib/components/editor/EntityEditorPanel.svelte";
+  import EntityEditorToggle from "$lib/components/editor/EntityEditorToggle.svelte";
+  import ImageUpload from "$lib/components/editor/ImageUpload.svelte";
+  import TermSelector from "$lib/components/TermSelector.svelte";
+  import {
+    ROOM_CATEGORIES,
+    ROOM_CATEGORY_LABELS,
+    roomCategoryLabel,
+  } from "$lib/constants/room-categories";
+  import { getAppData } from "$lib/context";
+  import {
+    clearEntityContributorDraft,
+    readEntityContributorDraft,
+    scheduleEntityContributorDraftSave,
+  } from "$lib/contributor-drafts";
+  import { entityEditorSavedMessage, fieldSaveActionLabel } from "$lib/editor/field-action-label";
+  import { handlePersistEntityResult } from "$lib/editor/handle-persist-result";
+  import { FINALS_SCOPE_NOTE, fetchFinalExams } from "$lib/final-exams";
+  import {
+    getStoredProposalForEntity,
+    mergeEntityRooms,
+    persistEntityChange,
+  } from "$lib/proposals/client";
+  import { getRoomShareUrl } from "$lib/share-links";
   import {
     adminAuthStore,
     building3DStore,
@@ -12,45 +43,14 @@
     termStore,
     toastStore,
   } from "$lib/store.svelte";
-  import {
-    getStoredProposalForEntity,
-    mergeEntityRooms,
-    persistEntityChange,
-  } from "$lib/proposals/client";
-  import { handlePersistEntityResult } from "$lib/editor/handle-persist-result";
-  import {
-    clearEntityContributorDraft,
-    readEntityContributorDraft,
-    scheduleEntityContributorDraftSave,
-  } from "$lib/contributor-drafts";
-  import { getAppData } from "$lib/context";
-  import EntityGoogleMapsLink from "../controls/EntityGoogleMapsLink.svelte";
+  import type { FinalExamRow, RoomData } from "$lib/types";
   import EntityDirectionsChip from "../controls/EntityDirectionsChip.svelte";
-  import EntityEditorToggle from "$lib/components/editor/EntityEditorToggle.svelte";
-  import EntityEditorPanel from "$lib/components/editor/EntityEditorPanel.svelte";
-  import EntityEditorField from "$lib/components/editor/EntityEditorField.svelte";
-  import ImageUpload from "$lib/components/editor/ImageUpload.svelte";
-  import { fieldSaveActionLabel } from "$lib/editor/field-action-label";
-  import { entityEditorSavedMessage } from "$lib/editor/field-action-label";
-  import ChevronLeft from "@lucide/svelte/icons/chevron-left";
-  import Box from "@lucide/svelte/icons/box";
+  import EntityGoogleMapsLink from "../controls/EntityGoogleMapsLink.svelte";
   import EntityShareCopyLink from "../controls/EntityShareCopyLink.svelte";
   import EntityLastUpdated from "../EntityLastUpdated.svelte";
   import MapChromeActionChip from "../map-chrome/MapChromeActionChip.svelte";
-  import { getRoomShareUrl } from "$lib/share-links";
-  import { ROOM_SCHEDULE_SCOPE_NOTE } from "$lib/amis/room-scheduled-types";
-  import { fetchFinalExams, FINALS_SCOPE_NOTE } from "$lib/final-exams";
-  import {
-    ROOM_CATEGORIES,
-    ROOM_CATEGORY_LABELS,
-    roomCategoryLabel,
-  } from "$lib/constants/room-categories";
-  import type { FinalExamRow, RoomData } from "$lib/types";
   import Classes from "./Classes.svelte";
   import FinalExamsList from "./FinalExamsList.svelte";
-  import FollowPrompt from "$lib/components/community/FollowPrompt.svelte";
-  import TermSelector from "$lib/components/TermSelector.svelte";
-  import BuildingResult from "$lib/components/controls/BuildingResult.svelte";
 
   type RoomEditableField =
     | "roomCode"

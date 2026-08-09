@@ -1,9 +1,43 @@
-import { json } from '@sveltejs/kit';
+import { checkRateLimit, clientIp, rateLimitResponse } from '$lib/api/rate-limit';
+import { requestPasswordReset } from '$lib/services/admin-user-service';
 import type { RequestHandler } from './$types';
 
+const LIMIT = { max: 5, windowMs: 60 * 1000 };
 
-// TODO: port from astro/src/pages/api/account/request-password-reset.ts — needs rate limit, account service + mailer (always returns success to avoid enumeration)
-const notImplemented: RequestHandler = async () =>
-	json({ success: false, error: 'Not implemented' }, { status: 501 });
+/** Public — a locked-out user has no session yet. Always returns success
+ * regardless of whether the login matched, to avoid account enumeration. */
+export const POST: RequestHandler = async ({ request }) => {
+	const rate = checkRateLimit(
+		`account-request-password-reset:${clientIp(request)}`,
+		LIMIT.max,
+		LIMIT.windowMs
+	);
+	if (!rate.allowed) return rateLimitResponse(rate.resetAt);
 
-export const POST = notImplemented;
+	let body: { login?: string };
+	try {
+		body = await request.json();
+	} catch {
+		return json({ error: 'Invalid JSON body' }, 400);
+	}
+
+	if (typeof body.login !== 'string' || !body.login.trim()) {
+		return json({ error: 'login is required.' }, 400);
+	}
+
+	try {
+		await requestPasswordReset(body.login);
+	} catch (error) {
+		console.error('Request password reset failed:', error);
+		// Still report success to the client — avoid leaking whether the
+		// account exists or the email send failed.
+	}
+	return json({ success: true });
+};
+
+function json(body: unknown, status = 200) {
+	return new Response(JSON.stringify(body), {
+		status,
+		headers: { 'Content-Type': 'application/json' }
+	});
+}

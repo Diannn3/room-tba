@@ -1,6 +1,7 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
-import type { SupabaseClient, User } from "@supabase/supabase-js";
+import type { SupabaseClient, User } from '@supabase/supabase-js';
+import type { SeoData } from '$lib/components/seo/seo-data';
 
 declare global {
 	namespace App {
@@ -10,7 +11,10 @@ declare global {
 			supabaseUser?: User;
 			supabaseCacheHeaders?: Record<string, string>;
 		}
-		// interface PageData {}
+		interface PageData {
+			/** Set by entity routes; the (app) layout renders it into <head>. */
+			seo?: SeoData;
+		}
 		// interface PageState {}
 		// interface Platform {}
 	}
@@ -19,8 +23,8 @@ declare global {
 	interface TurnstileRenderOptions {
 		sitekey: string;
 		callback?: (token: string) => void;
-		"expired-callback"?: () => void;
-		"error-callback"?: () => void;
+		'expired-callback'?: () => void;
+		'error-callback'?: () => void;
 	}
 
 	interface Window {
@@ -33,8 +37,6 @@ declare global {
 	/** Chromium-only install prompt event; not in lib.dom. */
 	interface BeforeInstallPromptEvent extends Event {
 		prompt(): Promise<void>;
-		userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+		userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
 	}
 }
-
-export {};

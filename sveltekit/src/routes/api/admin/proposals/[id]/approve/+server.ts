@@ -1,9 +1,38 @@
-import { json } from '@sveltejs/kit';
+import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
+import {
+	emitProposalReviewed,
+	logNotificationEmitFailure
+} from '$lib/notifications/proposal-events';
+import { approveProposal, ProposalActionError } from '$lib/services/proposal-service';
 import type { RequestHandler } from './$types';
 
+export const POST: RequestHandler = async ({ cookies, params }) => {
+	const auth = await editorSessionOrUnauthorized(cookies, {
+		requireReview: true
+	});
+	if (auth instanceof Response) return auth;
 
-// TODO: port from astro/src/pages/api/admin/proposals/[id]/approve.ts — needs review session, proposal service, notification emit
-const notImplemented: RequestHandler = async () =>
-	json({ success: false, error: 'Not implemented' }, { status: 501 });
+	const id = Number(params.id);
+	if (!Number.isInteger(id)) return json({ error: 'Invalid proposal ID' }, 400);
 
-export const POST = notImplemented;
+	try {
+		const result = await approveProposal(id, auth.session);
+		void emitProposalReviewed(result.proposal, 'approved').catch((err) => {
+			logNotificationEmitFailure('Proposal reviewed notification failed', err);
+		});
+		return json({ success: true, ...result });
+	} catch (err) {
+		if (err instanceof ProposalActionError) {
+			return json({ error: err.message }, err.status);
+		}
+		console.error('Failed to approve proposal:', err);
+		return json({ error: 'Failed to approve proposal' }, 500);
+	}
+};
+
+function json(body: unknown, status = 200) {
+	return new Response(JSON.stringify(body), {
+		status,
+		headers: { 'Content-Type': 'application/json' }
+	});
+}

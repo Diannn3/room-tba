@@ -1,9 +1,40 @@
-import { json } from '@sveltejs/kit';
+import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
+import { createCollege } from '$lib/services/admin-service';
 import type { RequestHandler } from './$types';
 
+function json(data: unknown, status = 200) {
+	return new Response(JSON.stringify(data), {
+		status,
+		headers: { 'Content-Type': 'application/json' }
+	});
+}
 
-// TODO: port from astro/src/pages/api/admin/colleges/index.ts — needs publish session
-const notImplemented: RequestHandler = async () =>
-	json({ success: false, error: 'Not implemented' }, { status: 501 });
+export const POST: RequestHandler = async ({ cookies, request }) => {
+	const auth = await editorSessionOrUnauthorized(cookies, {
+		requirePublish: true
+	});
+	if (auth instanceof Response) return auth;
 
-export const POST = notImplemented;
+	let body: Record<string, unknown>;
+	try {
+		body = await request.json();
+	} catch {
+		return json({ error: 'Invalid JSON body' }, 400);
+	}
+
+	const collegeName = typeof body.collegeName === 'string' ? body.collegeName.trim() : '';
+	if (!collegeName) {
+		return json({ error: 'College name is required' }, 400);
+	}
+
+	try {
+		const college = await createCollege(collegeName, auth.editedBy);
+		if (!college) {
+			return json({ error: 'Failed to create college' }, 500);
+		}
+		return json({ success: true, college }, 201);
+	} catch (err) {
+		console.error('Failed to create college:', err);
+		return json({ error: 'Failed to create college' }, 500);
+	}
+};

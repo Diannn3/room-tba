@@ -1,9 +1,27 @@
-import { json } from '@sveltejs/kit';
+import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
+import {
+	countPendingProposals,
+	listPendingProposalsForReview
+} from '$lib/services/proposal-service';
 import type { RequestHandler } from './$types';
 
+export const GET: RequestHandler = async ({ cookies }) => {
+	const auth = await editorSessionOrUnauthorized(cookies, {
+		requireReview: true
+	});
+	if (auth instanceof Response) return auth;
 
-// TODO: port from astro/src/pages/api/admin/proposals/index.ts — needs review session, proposal review service
-const notImplemented: RequestHandler = async () =>
-	json({ success: false, error: 'Not implemented' }, { status: 501 });
+	const [proposals, pendingCount] = await Promise.all([
+		listPendingProposalsForReview(),
+		countPendingProposals()
+	]);
 
-export const GET = notImplemented;
+	return json({ proposals, pendingCount });
+};
+
+function json(body: unknown, status = 200) {
+	return new Response(JSON.stringify(body), {
+		status,
+		headers: { 'Content-Type': 'application/json' }
+	});
+}

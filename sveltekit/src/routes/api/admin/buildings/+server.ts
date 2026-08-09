@@ -1,9 +1,55 @@
-import { json } from '@sveltejs/kit';
+import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
+import { createBuilding } from '$lib/services/admin-service';
 import type { RequestHandler } from './$types';
 
+function json(data: unknown, status = 200) {
+	return new Response(JSON.stringify(data), {
+		status,
+		headers: { 'Content-Type': 'application/json' }
+	});
+}
 
-// TODO: port from astro/src/pages/api/admin/buildings/index.ts — needs publish session, building service
-const notImplemented: RequestHandler = async () =>
-	json({ success: false, error: 'Not implemented' }, { status: 501 });
+export const POST: RequestHandler = async ({ cookies, request }) => {
+	const auth = await editorSessionOrUnauthorized(cookies, {
+		requirePublish: true
+	});
+	if (auth instanceof Response) return auth;
 
-export const POST = notImplemented;
+	let body: Record<string, unknown>;
+	try {
+		body = await request.json();
+	} catch {
+		return json({ error: 'Invalid JSON body' }, 400);
+	}
+
+	const buildingName = typeof body.buildingName === 'string' ? body.buildingName.trim() : '';
+	const lat = Number(body.lat);
+	const lon = Number(body.lon);
+
+	if (!buildingName) {
+		return json({ error: 'Building name is required' }, 400);
+	}
+	if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+		return json({ error: 'Building map pin (lat and lon) is required' }, 400);
+	}
+
+	const buildingType =
+		body.buildingType === 'admin' || body.buildingType === 'non-admin'
+			? body.buildingType
+			: 'non-admin';
+	const directions = typeof body.directions === 'string' ? body.directions.trim() : '';
+
+	try {
+		const building = await createBuilding(
+			{ buildingName, lat, lon, buildingType, directions },
+			auth.editedBy
+		);
+		if (!building) {
+			return json({ error: 'Failed to create building' }, 500);
+		}
+		return json({ success: true, building }, 201);
+	} catch (err) {
+		console.error('Failed to create building:', err);
+		return json({ error: 'Failed to create building' }, 500);
+	}
+};

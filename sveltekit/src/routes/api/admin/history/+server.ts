@@ -1,9 +1,27 @@
-import { json } from '@sveltejs/kit';
+import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
+import { getEntityHistory } from '$lib/services/history-service';
 import type { RequestHandler } from './$types';
 
+export const GET: RequestHandler = async ({ cookies, url }) => {
+	const auth = await editorSessionOrUnauthorized(cookies, {
+		requirePublish: true
+	});
+	if (auth instanceof Response) return auth;
 
-// TODO: port from astro/src/pages/api/admin/history/index.ts — needs publish session, entity history service
-const notImplemented: RequestHandler = async () =>
-	json({ success: false, error: 'Not implemented' }, { status: 501 });
+	const entityType = url.searchParams.get('entityType') ?? '';
+	const entityId = Number(url.searchParams.get('entityId'));
+	if (!entityType || !Number.isInteger(entityId) || entityId < 1) {
+		return json({ error: 'entityType and entityId are required.' }, 400);
+	}
+	const offset = Math.max(0, Number(url.searchParams.get('offset')) || 0);
 
-export const GET = notImplemented;
+	const entries = await getEntityHistory(entityType, entityId, { offset });
+	return json({ entries });
+};
+
+function json(body: unknown, status = 200) {
+	return new Response(JSON.stringify(body), {
+		status,
+		headers: { 'Content-Type': 'application/json' }
+	});
+}

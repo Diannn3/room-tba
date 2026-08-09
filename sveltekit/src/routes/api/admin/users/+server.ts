@@ -1,10 +1,69 @@
-import { json } from '@sveltejs/kit';
+import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
+import {
+	AccountActionError,
+	createAdminUser,
+	listAllAdminUsers
+} from '$lib/services/admin-user-service';
 import type { RequestHandler } from './$types';
 
+export const GET: RequestHandler = async ({ cookies }) => {
+	const auth = await editorSessionOrUnauthorized(cookies, {
+		requireAdmin: true
+	});
+	if (auth instanceof Response) return auth;
 
-// TODO: port from astro/src/pages/api/admin/users/index.ts — needs admin session, account service
-const notImplemented: RequestHandler = async () =>
-	json({ success: false, error: 'Not implemented' }, { status: 501 });
+	const users = await listAllAdminUsers();
+	return json({ users });
+};
 
-export const GET = notImplemented;
-export const POST = notImplemented;
+export const POST: RequestHandler = async ({ cookies, request }) => {
+	const auth = await editorSessionOrUnauthorized(cookies, {
+		requireAdmin: true
+	});
+	if (auth instanceof Response) return auth;
+
+	let body: {
+		username?: string;
+		displayName?: string;
+		email?: string;
+		password?: string;
+		role?: 'admin' | 'editor' | 'contributor';
+	};
+	try {
+		body = await request.json();
+	} catch {
+		return json({ error: 'Invalid JSON body' }, 400);
+	}
+
+	if (typeof body.username !== 'string' || typeof body.password !== 'string') {
+		return json({ error: 'username and password are required.' }, 400);
+	}
+	const role = body.role ?? 'editor';
+	if (!['admin', 'editor', 'contributor'].includes(role)) {
+		return json({ error: 'Invalid role.' }, 400);
+	}
+
+	try {
+		const user = await createAdminUser({
+			username: body.username,
+			displayName: body.displayName,
+			email: body.email,
+			password: body.password,
+			role
+		});
+		return json({ success: true, user }, 201);
+	} catch (error) {
+		if (error instanceof AccountActionError) {
+			return json({ error: error.message }, error.status);
+		}
+		console.error('Create admin user failed:', error);
+		return json({ error: 'Failed to create account.' }, 500);
+	}
+};
+
+function json(body: unknown, status = 200) {
+	return new Response(JSON.stringify(body), {
+		status,
+		headers: { 'Content-Type': 'application/json' }
+	});
+}

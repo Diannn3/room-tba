@@ -1,38 +1,48 @@
 <script lang="ts">
 import { pwaInfo } from "virtual:pwa-info";
-import { onMount } from "svelte";
+import { onMount, type Snippet } from "svelte";
+import { browser } from "$app/environment";
 import { page } from "$app/state";
-import AppRoot from "$lib/components/AppRoot.svelte";
+import "../styles/font-face.css";
+import "../styles/global.css";
+import "../styles/app-loading.css";
+// #716: emitted as a standalone asset (never bundled into the main CSS) so
+// mobile viewports can skip downloading it entirely — see the matchMedia
+// block below and the `desktop-only-css` runtimeCaching rule in vite.config.
+import desktopOnlyUrl from "../styles/desktop-only.css?url";
+import SeoHead from "$lib/components/seo/SeoHead.svelte";
+import type { SeoData } from "$lib/components/seo/seo-data";
 import {
-	absoluteUrl,
 	breadcrumbSchema,
 	DEFAULT_OG_IMAGE,
 	jsonLd,
-	OG_IMAGE_HEIGHT,
-	OG_IMAGE_WIDTH,
-	SITE_URL,
 	webpageSchema,
 	websiteSchema,
 } from "$lib/site";
 
 const {children}: {children: Snippet} = $props()
-const title =
-	"Room TBA | Find Rooms, Dorms, Buildings, Colleges, and Divisions at UPLB";
-// Short share title (og:title / twitter:title): og:site_name already says
-// "Room TBA", so the full <title> chain is redundant on share cards.
-const ogTitle = "Find Rooms, Dorms, Buildings, Colleges, and Divisions at UPLB";
-const description =
-	"Search rooms, dorms, and buildings at UPLB, then plan your classes. Campus data caches locally for spotty Wi-Fi.";
-const imagePath = DEFAULT_OG_IMAGE;
-const structuredData = jsonLd(
-	websiteSchema(),
-	webpageSchema({ title, description, path: "/" }),
-	breadcrumbSchema([{ name: "Home", path: "/" }]),
-);
 
-const canonicalUrl = $derived(absoluteUrl(page.url.pathname));
-const imageUrl = absoluteUrl(imagePath);
-const shareTitle = ogTitle ?? title;
+const HOME_TITLE =
+	"Room TBA | Find Rooms, Dorms, Buildings, Colleges, and Divisions at UPLB";
+const HOME_DESCRIPTION =
+	"Search rooms, dorms, and buildings at UPLB, then plan your classes. Campus data caches locally for spotty Wi-Fi.";
+
+const HOME_SEO: SeoData = {
+	title: HOME_TITLE,
+	ogTitle: "Find Rooms, Dorms, Buildings, Colleges, and Divisions at UPLB",
+	description: HOME_DESCRIPTION,
+	canonicalPath: "/",
+	imagePath: DEFAULT_OG_IMAGE,
+	structuredData: jsonLd(
+		websiteSchema(),
+		webpageSchema({ title: HOME_TITLE, description: HOME_DESCRIPTION, path: "/" }),
+		breadcrumbSchema([{ name: "Home", path: "/" }]),
+	),
+};
+
+// Entity routes return their own metadata from `load`; everything else in the
+// group is the app itself and keeps the home card.
+const seo = $derived(page.data.seo ?? HOME_SEO);
 
 onMount(async () => {
 	if (pwaInfo) {
@@ -55,38 +65,44 @@ onMount(async () => {
 });
 
 const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : "");
+
+// #716: the desktop/mobile split is viewport-based (not User-Agent), so the
+// same check works for every render path — SSR, prerendered shell, and
+// client-side navigation — without varying cached HTML per request. Runs at
+// component init (before the tree paints), and the change listener keeps it
+// live across resizes and devtools responsive mode.
+if (browser) {
+	const html = document.documentElement;
+	const mql = window.matchMedia("(min-width: 48.0625rem)");
+	let link: HTMLLinkElement | null = null;
+
+	const apply = (isDesktop: boolean) => {
+		html.classList.toggle("desktop", isDesktop);
+		html.classList.toggle("mobile", !isDesktop);
+		if (isDesktop && !link) {
+			link = document.createElement("link");
+			link.rel = "stylesheet";
+			link.href = desktopOnlyUrl;
+			document.head.appendChild(link);
+		} else if (!isDesktop && link) {
+			link.remove();
+			link = null;
+		}
+	};
+
+	apply(mql.matches);
+	mql.addEventListener("change", (event) => {
+		apply(event.matches);
+	});
+}
 </script>
 
+<SeoHead {seo} />
+
 <svelte:head>
-	<meta charset="UTF-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<link rel="icon" href="/favicon.ico" sizes="48x48" />
 	<link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180" />
 	<meta name="theme-color" content="#a30e00" />
-	<title>{title}</title>
-	<meta name="description" content={description} />
-	<meta name="robots" content="index, follow" />
-	<link rel="canonical" href={canonicalUrl} />
-
-	<meta property="og:site_name" content="Room TBA" />
-	<meta property="og:url" content={canonicalUrl} />
-	<meta property="og:type" content="website" />
-	<meta property="og:title" content={shareTitle} />
-	<meta property="og:description" content={description} />
-	<meta property="og:image" content={imageUrl} />
-	<meta property="og:image:url" content={imageUrl} />
-	<meta property="og:image:width" content={String(OG_IMAGE_WIDTH)} />
-	<meta property="og:image:height" content={String(OG_IMAGE_HEIGHT)} />
-	<meta property="og:image:alt" content={shareTitle} />
-	<meta property="og:locale" content="en_US" />
-
-	<meta name="twitter:card" content="summary_large_image" />
-	<meta property="twitter:domain" content={new URL(SITE_URL).hostname} />
-	<meta property="twitter:url" content={canonicalUrl} />
-	<meta name="twitter:title" content={shareTitle} />
-	<meta name="twitter:description" content={description} />
-	<meta name="twitter:image" content={imageUrl} />
-	<meta name="twitter:image:alt" content={shareTitle} />
 
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
@@ -97,74 +113,6 @@ const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : "");
 
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 	{@html webManifestLink}
-	<!-- #716: desktop/mobile split is viewport-based (not User-Agent), so the
-         same check works for every render path (SSR and prerendered) without
-         varying cached HTML per request. CDN/ISR caching stays untouched.
-         Synchronous in <head>, before paint: no flash, and the change
-         listener keeps it live across resizes (devtools/QA responsive mode). -->
-	<!-- <script is:inline define:vars={{ desktopOnlyUrl }}>
-      (() => {
-        var html = document.documentElement;
-        var mql = window.matchMedia("(min-width: 48.0625rem)");
-        var link = null;
-
-        function apply(isDesktop) {
-          html.classList.toggle("desktop", isDesktop);
-          html.classList.toggle("mobile", !isDesktop);
-          if (isDesktop && !link) {
-            link = document.createElement("link");
-            link.rel = "stylesheet";
-            link.href = desktopOnlyUrl;
-            document.head.appendChild(link);
-          } else if (!isDesktop && link) {
-            link.remove();
-            link = null;
-          }
-        }
-
-        apply(mql.matches);
-        mql.addEventListener("change", (event) => {
-          apply(event.matches);
-        });
-      })();
-    </script> -->
-
-	<!-- <style is:global>
-      html,
-      body {
-        overflow-x: clip;
-      }
-
-      * {
-        font-family:
-          "Inter",
-          system-ui,
-          -apple-system,
-          BlinkMacSystemFont,
-          "Segoe UI",
-          Roboto,
-          sans-serif;
-        font-variation-settings: "opsz" 14;
-      }
-
-      :root {
-        --font-display: "Cormorant Garamond", serif;
-      }
-
-      button {
-        all: unset;
-      }
-      button,
-      a,
-      input {
-        outline: 2px solid transparent;
-        outline-offset: 2px;
-
-        &:focus-visible {
-          outline-color: hsl(5, 53%, 32%);
-        }
-      }
-    </style> -->
 </svelte:head>
 
 {@render children()}

@@ -1,9 +1,44 @@
-import { json } from '@sveltejs/kit';
+import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
+import {
+	emitProposalReviewed,
+	logNotificationEmitFailure
+} from '$lib/notifications/proposal-events';
+import { ProposalActionError, rejectProposal } from '$lib/services/proposal-service';
 import type { RequestHandler } from './$types';
 
+type RejectBody = { note?: string };
 
-// TODO: port from astro/src/pages/api/admin/proposals/[id]/reject.ts — needs review session, proposal service, notification emit
-const notImplemented: RequestHandler = async () =>
-	json({ success: false, error: 'Not implemented' }, { status: 501 });
+export const POST: RequestHandler = async ({ cookies, params, request }) => {
+	const auth = await editorSessionOrUnauthorized(cookies, {
+		requireReview: true
+	});
+	if (auth instanceof Response) return auth;
 
-export const POST = notImplemented;
+	const id = Number(params.id);
+	if (!Number.isInteger(id)) return json({ error: 'Invalid proposal ID' }, 400);
+
+	const body = await request.json().catch(() => ({}) as RejectBody);
+
+	try {
+		const proposal = await rejectProposal(id, auth.session, body.note);
+		if (proposal) {
+			void emitProposalReviewed(proposal, 'rejected').catch((err) => {
+				logNotificationEmitFailure('Proposal reviewed notification failed', err);
+			});
+		}
+		return json({ success: true, proposal });
+	} catch (err) {
+		if (err instanceof ProposalActionError) {
+			return json({ error: err.message }, err.status);
+		}
+		console.error('Failed to reject proposal:', err);
+		return json({ error: 'Failed to reject proposal' }, 500);
+	}
+};
+
+function json(body: unknown, status = 200) {
+	return new Response(JSON.stringify(body), {
+		status,
+		headers: { 'Content-Type': 'application/json' }
+	});
+}

@@ -1,61 +1,61 @@
 <script lang="ts">
-  import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
-  import {
-    adminAuthStore,
-    mapEditStore,
-    mapProposalStore,
-    queryStore,
-    building3DStore,
-    toastStore,
-    termStore,
-  } from "$lib/store.svelte";
-  import { getAppActions, getAppData } from "$lib/context";
+  
   import Box from "@lucide/svelte/icons/box";
-  import MapChromeActionChip from "$lib/components/map-chrome/MapChromeActionChip.svelte";
-  import type { BuildingData, RoomData } from "$lib/types";
-  import ResultDisplay from "./ResultDisplay.svelte";
-  import EntityShareCopyLink from "./EntityShareCopyLink.svelte";
-  import EntityBackToList from "./EntityBackToList.svelte";
-  import EntityGoogleMapsLink from "./EntityGoogleMapsLink.svelte";
-  import EntityStreetAddress from "./EntityStreetAddress.svelte";
-  import EntityDirectionsChip from "./EntityDirectionsChip.svelte";
-  import EntityLastUpdated from "../EntityLastUpdated.svelte";
-  import EntityEditorToggle from "$lib/components/editor/EntityEditorToggle.svelte";
-  import EntityEditorPanel from "$lib/components/editor/EntityEditorPanel.svelte";
-  import EntityEditorField from "$lib/components/editor/EntityEditorField.svelte";
-  import EntityEditorPinRow from "$lib/components/editor/EntityEditorPinRow.svelte";
-  import ImageUpload from "$lib/components/editor/ImageUpload.svelte";
-  import { fieldSaveActionLabel } from "$lib/editor/field-action-label";
-  import { entityEditorSavedMessage } from "$lib/editor/field-action-label";
   import { tick } from "svelte";
-  import {
-    getBuildingRooms,
-    fetchRoomClassCounts,
-    fetchEntityRoomsRemote,
-  } from "$lib/local/data/utils";
-  import {
-    checkLocalBuildingRoom,
-    getLocalBuildingRooms,
-    syncBuildingRooms,
-  } from "$lib/local/data/sync";
-  import { getBuildingShareUrl } from "$lib/share-links";
-  import {
-    getStoredProposalForEntity,
-    mergeEntityRecord,
-    persistEntityChange,
-  } from "$lib/proposals/client";
-  import { handlePersistEntityResult } from "$lib/editor/handle-persist-result";
+import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
+  import EntityEditorField from "$lib/components/editor/EntityEditorField.svelte";
+  import EntityEditorPanel from "$lib/components/editor/EntityEditorPanel.svelte";
+  import EntityEditorPinRow from "$lib/components/editor/EntityEditorPinRow.svelte";
+  import EntityEditorToggle from "$lib/components/editor/EntityEditorToggle.svelte";
+  import ImageUpload from "$lib/components/editor/ImageUpload.svelte";
   import MergeEntityPrompt from "$lib/components/editor/MergeEntityPrompt.svelte";
-  import {
-    clearEntityContributorDraft,
-    readEntityContributorDraft,
-    scheduleEntityContributorDraftSave,
-  } from "$lib/contributor-drafts";
+  import MapChromeActionChip from "$lib/components/map-chrome/MapChromeActionChip.svelte";
   import {
     CR_FACILITIES,
     crFacilityLabel,
     sanitizeCrFacilities,
   } from "$lib/constants/cr-facilities";
+  import { getAppActions, getAppData } from "$lib/context";
+  import {
+    clearEntityContributorDraft,
+    readEntityContributorDraft,
+    scheduleEntityContributorDraftSave,
+  } from "$lib/contributor-drafts";
+  import { entityEditorSavedMessage, fieldSaveActionLabel } from "$lib/editor/field-action-label";
+  import { handlePersistEntityResult } from "$lib/editor/handle-persist-result";
+  import {
+    checkLocalBuildingRoom,
+    getLocalBuildingRooms,
+    syncBuildingRooms,
+  } from "$lib/local/data/sync";
+  import {
+    fetchEntityRoomsRemote,
+    fetchRoomClassCounts,
+    getBuildingRooms,
+  } from "$lib/local/data/utils";
+  import {
+    getStoredProposalForEntity,
+    mergeEntityRecord,
+    persistEntityChange,
+  } from "$lib/proposals/client";
+  import { getBuildingShareUrl } from "$lib/share-links";
+  import {
+    adminAuthStore,
+    building3DStore,
+    mapEditStore,
+    mapProposalStore,
+    queryStore,
+    termStore,
+    toastStore,
+  } from "$lib/store.svelte";
+  import type { BuildingData, RoomData } from "$lib/types";
+  import EntityLastUpdated from "../EntityLastUpdated.svelte";
+  import EntityBackToList from "./EntityBackToList.svelte";
+  import EntityDirectionsChip from "./EntityDirectionsChip.svelte";
+  import EntityGoogleMapsLink from "./EntityGoogleMapsLink.svelte";
+  import EntityShareCopyLink from "./EntityShareCopyLink.svelte";
+  import EntityStreetAddress from "./EntityStreetAddress.svelte";
+  import ResultDisplay from "./ResultDisplay.svelte";
 
   type BuildingEditableField =
     | "buildingName"

@@ -1,13 +1,13 @@
 <script lang="ts">
-	import type { DormData } from '$lib/types';
+	
+	import EntityEditorCheckboxField from '$lib/components/editor/EntityEditorCheckboxField.svelte';
+	import EntityEditorField from '$lib/components/editor/EntityEditorField.svelte';
 	import EntityEditorPanel from '$lib/components/editor/EntityEditorPanel.svelte';
 	import EntityEditorPinRow from '$lib/components/editor/EntityEditorPinRow.svelte';
-	import EntityEditorField from '$lib/components/editor/EntityEditorField.svelte';
-	import EntityEditorCheckboxField from '$lib/components/editor/EntityEditorCheckboxField.svelte';
 	import ImageUpload from '$lib/components/editor/ImageUpload.svelte';
-	import { fieldSaveActionLabel } from '$lib/editor/field-action-label';
-	import { entityEditorSavedMessage } from '$lib/editor/field-action-label';
+	import { entityEditorSavedMessage, fieldSaveActionLabel } from '$lib/editor/field-action-label';
 	import { adminAuthStore, mapEditStore, mapProposalStore } from '$lib/store.svelte';
+import type { DormData } from '$lib/types';
 	import '../editor/entity-editor.css';
 
 	type DormEditableField =

@@ -1,0 +1,9 @@
+/* src/styles/font-face.css */
+
+@font-face {
+	font-family: "Inter";
+	src:
+		url("/InterVariable.ttf") format("truetype"),
+		url("/InterVariable-Italic.ttf") format("truetype");
+	font-display: swap;
+}

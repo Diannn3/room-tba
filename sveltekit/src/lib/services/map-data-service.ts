@@ -1,4 +1,4 @@
-import { and, asc, eq, ilike, like, or, sql } from "drizzle-orm";
+import { and, asc, eq, ilike, isNotNull, like, or, sql } from "drizzle-orm";
 import {
   aliasesTable,
   buildingsTable,
@@ -471,6 +471,63 @@ export async function getClassesForRoom(
  * scope are included with count 0 (LEFT JOIN + GROUP BY). One grouped query
  * feeds the room list preview so we avoid N+1 /api/classes calls per row
  * (#342). */
+/**
+ * Room totals per parent entity, keyed by that entity's id.
+ *
+ * The browse indexes only need a number beside each name. Loading every room to
+ * count them in JS is O(entities x rooms) and pulls the whole table across the
+ * wire; the database already groups in one pass. Rooms with no parent are
+ * dropped, which matches counting by joined name — a null parent never matched.
+ */
+export async function getRoomCountsByParent(
+  parent: "building" | "college" | "division",
+): Promise<Map<number, number>> {
+  try {
+    const column =
+      parent === "building"
+        ? roomsTable.buildingId
+        : parent === "college"
+          ? roomsTable.collegeId
+          : roomsTable.divisionId;
+    const data = await db
+      .select({ id: column, count: sql<number>`count(*)::int` })
+      .from(roomsTable)
+      .where(isNotNull(column))
+      .groupBy(column);
+    return new Map(
+      data.flatMap((row) => (row.id === null ? [] : [[row.id, row.count]])),
+    );
+  } catch (e) {
+    console.error("Error: ", e);
+    throw new Error(`Failed to fetch room counts by ${parent}`, { cause: e });
+  }
+}
+
+/**
+ * Class totals per room code for one term, keyed the way the room index labels
+ * its entries. A room with no classes is absent rather than zero, so callers can
+ * tell "none listed" from "none this term" the same way the old classesMap did.
+ */
+export async function getClassCountsByRoomCode(
+  termId?: number,
+): Promise<Map<string, number>> {
+  try {
+    const data = await db
+      .select({
+        roomCode: roomsTable.roomCode,
+        count: sql<number>`count(${classesTable.id})::int`,
+      })
+      .from(classesTable)
+      .innerJoin(roomsTable, eq(roomsTable.id, classesTable.roomId))
+      .where(termId != null ? eq(classesTable.termId, termId) : undefined)
+      .groupBy(roomsTable.roomCode);
+    return new Map(data.map((row) => [row.roomCode, row.count]));
+  } catch (e) {
+    console.error("Error: ", e);
+    throw new Error("Failed to fetch class counts by room", { cause: e });
+  }
+}
+
 export async function getRoomClassCounts(
   entityName: "building" | "college" | "division",
   id: number,

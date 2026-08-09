@@ -1,26 +1,26 @@
 <script lang="ts">
-  import { modalStore } from "$lib/store.svelte";
-  import { designers } from "$lib/constants/contributors";
+  
+  import Download from "@lucide/svelte/icons/download";
+  import { untrack } from "svelte";
+  import CommunityPlatformLink from "$lib/components/community/CommunityPlatformLink.svelte";
+  import GithubStarLink from "$lib/components/GithubStarLink.svelte";
+  import VisitorCounter from "$lib/components/VisitorCounter.svelte";
   import {
-    UPLB_TOOLS_URL,
-    DISCORD_URL,
+    DISCORD_URL,GITHUB_ROOM_TBA_URL, 
     MESSENGER_CONTRIBUTE_TARGET,
     MESSENGER_MAINTAIN_TARGET,
+    UPLB_TOOLS_URL
   } from "$lib/constants/community-links";
-  import CommunityPlatformLink from "$lib/components/community/CommunityPlatformLink.svelte";
+  import { designers } from "$lib/constants/contributors";
   import {
     fetchGithubContributors,
     type GithubContributor,
   } from "$lib/github-contributors";
   import { fetchGithubStarCountCached } from "$lib/github-stars";
-  import PeopleAvatarGrid from "./PeopleAvatarGrid.svelte";
+import { modalStore } from "$lib/store.svelte";
   import GithubContributorsSection from "./GithubContributorsSection.svelte";
   import LandingGuideSteps from "./LandingGuideSteps.svelte";
-  import VisitorCounter from "$lib/components/VisitorCounter.svelte";
-  import GithubStarLink from "$lib/components/GithubStarLink.svelte";
-  import { GITHUB_ROOM_TBA_URL } from "$lib/constants/community-links";
-  import Download from "@lucide/svelte/icons/download";
-  import { untrack } from "svelte";
+  import PeopleAvatarGrid from "./PeopleAvatarGrid.svelte";
 
   type LandingTab = "welcome" | "campus";
 

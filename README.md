@@ -64,6 +64,8 @@ No account needed to browse. Editors and contributors fix data in the same app (
 | Common questions | [Student FAQ](https://room-tba.uplb.tools/faq) (3D models, data sources, offline) |
 | Tell us something is wrong | Settings → Feedback; free text, optional contact, or reach the team on Messenger / Discord |
 | Understand section names | Wiki guide to the A–H / S–Z class time blocks |
+| Find emergency contacts | Menu → Emergency hotlines; bundled for offline use |
+| Check dorm curfew rules | UP-managed dorm details → Curfew & permits |
 
 <details>
 <summary><strong>Editor / contributor mode</strong> (password from the team)</summary>

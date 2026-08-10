@@ -14,6 +14,7 @@
   import Map from "@lucide/svelte/icons/map";
   import Megaphone from "@lucide/svelte/icons/megaphone";
   import UserRound from "@lucide/svelte/icons/user-round";
+  import Phone from "@lucide/svelte/icons/phone";
   import { onMount } from "svelte";
   import { APP_VERSION_LABEL } from "@constants/version";
   import { statusBarNavGroups } from "@constants/status-bar-links";
@@ -338,6 +339,17 @@
         aria-labelledby="app-menu-tools-heading"
       >
         <h3 id="app-menu-tools-heading" class="app-menu__heading">Tools</h3>
+        <button
+          type="button"
+          class="app-menu__nav-action"
+          onclick={() => {
+            closePanel();
+            modalStore.openModal("hotlines");
+          }}
+        >
+          <Phone size={18} aria-hidden="true" />
+          <span>Emergency hotlines</span>
+        </button>
         <button
           type="button"
           class="app-menu__nav-action"

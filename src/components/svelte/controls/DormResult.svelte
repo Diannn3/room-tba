@@ -18,6 +18,7 @@
   import KeyRound from "@lucide/svelte/icons/key-round";
   import CircleDollarSign from "@lucide/svelte/icons/circle-dollar-sign";
   import TriangleAlert from "@lucide/svelte/icons/triangle-alert";
+  import { CAMPUS_CURFEW } from "@constants/campus-curfew";
   import type { DormData } from "@lib/types";
   import {
     getStoredProposalForEntity,
@@ -874,6 +875,18 @@
           </div>
         {/if}
 
+        {#if dorm.isUpManaged}
+          <section class="entity-curfew" aria-labelledby="dorm-curfew-heading">
+            <h3 id="dorm-curfew-heading" class="entity-section-heading">
+              Curfew &amp; permits
+            </h3>
+            <p>
+              Curfew is {CAMPUS_CURFEW.hours}. {CAMPUS_CURFEW.latePermit}
+              <a href="/wiki/campus-curfew">Read the full policy.</a>
+            </p>
+          </section>
+        {/if}
+
         {#if dorm.isUpManaged || dorm.facebookLink || (!dorm.isUpManaged && dorm.priceRange)}
           <div class="entity-dorm-details__links">
             {#if dorm.isUpManaged}
@@ -937,6 +950,22 @@
     font-size: 0.6875rem;
     color: hsl(35, 80%, 45%);
     font-weight: 500;
+  }
+
+  .entity-curfew {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .entity-curfew p {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+  }
+
+  .entity-curfew a {
+    color: hsl(5, 53%, 32%);
+    font-weight: 600;
   }
 
   .no-results {

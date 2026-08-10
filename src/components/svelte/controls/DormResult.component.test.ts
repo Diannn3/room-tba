@@ -115,3 +115,33 @@ describe("DormResult Kubo link", () => {
     expect(screen.queryByText("View on Kubo")).not.toBeInTheDocument();
   });
 });
+
+describe("DormResult curfew information", () => {
+  beforeEach(() => {
+    kuboDormDirectory.set(new Map());
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(null, { status: 503 })),
+    );
+  });
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  test("shows curfew guidance only for UP-managed dorms", () => {
+    renderDormResult(dorm({ isUpManaged: true }));
+    expect(
+      screen.getByRole("heading", { name: "Curfew & permits" }),
+    ).toBeVisible();
+    expect(screen.getByRole("link", { name: /full policy/i })).toHaveAttribute(
+      "href",
+      "/wiki/campus-curfew",
+    );
+  });
+
+  test("hides curfew guidance for private dorms", () => {
+    renderDormResult(dorm({ isUpManaged: false }));
+    expect(
+      screen.queryByRole("heading", { name: "Curfew & permits" }),
+    ).toBeNull();
+  });
+});

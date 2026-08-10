@@ -69,6 +69,15 @@ describe("AppMenu help entry", () => {
     expect(modalStore.type).toBe("landing");
     expect(modalStore.landingTab).toBe("welcome");
   });
+
+  test("opens emergency hotlines", async () => {
+    render(AppMenu, { props: { onSignOut: () => {} } });
+    await fireEvent.click(screen.getByRole("button", { name: /app menu/i }));
+    await fireEvent.click(
+      screen.getByRole("button", { name: /emergency hotlines/i }),
+    );
+    expect(modalStore.type).toBe("hotlines");
+  });
 });
 
 describe("AppMenu navigation", () => {

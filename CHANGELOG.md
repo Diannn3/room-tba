@@ -1,3 +1,23 @@
+# [2.16.0](https://github.com/uplbtools/room-tba/compare/v2.15.0...v2.16.0) (2026-08-10)
+
+
+### Bug Fixes
+
+* **chrome:** remove Menu from desktop top bar ([62165eb](https://github.com/uplbtools/room-tba/commit/62165eb9e749fb506ddeff61e2802b33125540c0))
+* **chrome:** restore a Settings entry point on desktop and mobile ([a7a06df](https://github.com/uplbtools/room-tba/commit/a7a06dfb1d5d8f89115292aa772be74559e6fd3e)), closes [#930](https://github.com/uplbtools/room-tba/issues/930) [#960](https://github.com/uplbtools/room-tba/issues/960)
+* **directions:** keep journey path visible and clear it on close ([5f1c6f8](https://github.com/uplbtools/room-tba/commit/5f1c6f8b172ab8bf4fa63eaf10eff9c5c85ad92d))
+* **map-chrome:** align top filter chips with map chrome design ([25063dd](https://github.com/uplbtools/room-tba/commit/25063ddd7b29a46e8aedd9135737e9f7bbb1daaa))
+* **security:** drop unpaired angle brackets from scraped text ([#975](https://github.com/uplbtools/room-tba/issues/975)) ([b0d14c3](https://github.com/uplbtools/room-tba/commit/b0d14c3423c564c314a35e9e790b2e06e7bc59c5)), closes [#10](https://github.com/uplbtools/room-tba/issues/10) [#972](https://github.com/uplbtools/room-tba/issues/972)
+
+
+### Features
+
+* **buildings:** 1-10 photos per landmark from Street View angles + Wikimedia Commons ([995e793](https://github.com/uplbtools/room-tba/commit/995e793e2bb970cefff59210803d665b16733699)), closes [#764](https://github.com/uplbtools/room-tba/issues/764)
+* **data:** Places coordinate audit script ([#963](https://github.com/uplbtools/room-tba/issues/963)) ([fdac8a2](https://github.com/uplbtools/room-tba/commit/fdac8a2586606eb1bc2e8fda6b24282b17dce80a)), closes [#886](https://github.com/uplbtools/room-tba/issues/886)
+* **directions:** inline add-stop, stop list under search, edge-to-edge map fit ([a7b9b25](https://github.com/uplbtools/room-tba/commit/a7b9b2555163659491c1cbe7f38c82d0082aacba))
+* **directions:** multi-modal directions with GMaps-style follow mode ([9df964b](https://github.com/uplbtools/room-tba/commit/9df964b4c44333f6066a3d9262dba526bee8ae39)), closes [#836](https://github.com/uplbtools/room-tba/issues/836)
+* **map:** satellite basemap toggle in map display settings ([b078b66](https://github.com/uplbtools/room-tba/commit/b078b661220cdc1e8094ffb5aa69edefc2104861)), closes [#863](https://github.com/uplbtools/room-tba/issues/863)
+
 # [2.14.0](https://github.com/uplbtools/room-tba/compare/v2.13.4...v2.14.0) (2026-08-06)
 
 

@@ -13,6 +13,9 @@ type Suggestion = {
   eventSlug?: string;
   building?: BuildingData;
   event?: EventData;
+  /** Map pin for "Add stop" while Get Directions is open. */
+  lat?: number | null;
+  lon?: number | null;
 };
 
 const MAX_SUGGESTIONS = 8;
@@ -52,7 +55,13 @@ export function buildEntitySuggestions(
     ...takeMatches(
       data.filteredBuildings,
       ({ buildingName }) => buildingName.toLowerCase().includes(needle),
-      (b) => ({ value: b.buildingName, category: "building", building: b }),
+      (b) => ({
+        value: b.buildingName,
+        category: "building",
+        building: b,
+        lat: b.lat,
+        lon: b.lon,
+      }),
     ),
     ...takeMatches(
       data.colleges,
@@ -69,7 +78,12 @@ export function buildEntitySuggestions(
       ({ dormName, shortName }) =>
         dormName.toLowerCase().includes(needle) ||
         Boolean(shortName?.toLowerCase().includes(needle)),
-      ({ dormName }) => ({ value: dormName, category: "dorm" }),
+      (d) => ({
+        value: d.dormName,
+        category: "dorm",
+        lat: d.lat,
+        lon: d.lon,
+      }),
     ),
     ...takeMatches(
       data.events,
@@ -88,14 +102,24 @@ export function buildEntitySuggestions(
       ({ name, description }) =>
         name.toLowerCase().includes(needle) ||
         Boolean(description?.toLowerCase().includes(needle)),
-      ({ name }) => ({ value: name, category: "organization" }),
+      (o) => ({
+        value: o.name,
+        category: "organization",
+        lat: o.lat,
+        lon: o.lon,
+      }),
     ),
     ...takeMatches(
       data.places,
       ({ name, description }) =>
         name.toLowerCase().includes(needle) ||
         Boolean(description?.toLowerCase().includes(needle)),
-      ({ name }) => ({ value: name, category: "place" }),
+      (p) => ({
+        value: p.name,
+        category: "place",
+        lat: p.lat,
+        lon: p.lon,
+      }),
     ),
   ];
 

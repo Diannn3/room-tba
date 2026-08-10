@@ -226,6 +226,46 @@ export type TravelRoute = {
   coordinates: [number, number][];
 };
 
+/**
+ * Walk back up a settled Dijkstra result to the route from `from` to `to`.
+ *
+ * Split out from `shortestPath` so one full run can serve many targets — the
+ * journey planner reconstructs a path per candidate jeepney stop and must not
+ * pay for a fresh Dijkstra each time.
+ */
+export function reconstructPath(
+  graph: TravelGraph,
+  result: DijkstraResult,
+  from: number,
+  to: number,
+): TravelRoute | null {
+  if (from === to) {
+    return {
+      seconds: 0,
+      meters: 0,
+      coordinates: [[graph.lng[from], graph.lat[from]]],
+    };
+  }
+  const { seconds, prevEdge, prevNode } = result;
+  if (!Number.isFinite(seconds[to])) return null;
+  let meters = 0;
+  const segments: [number, number][][] = [];
+  for (let node = to; node !== from; node = prevNode[node]) {
+    const edgeIndex = prevEdge[node];
+    if (edgeIndex < 0) return null; // target settled in a run rooted elsewhere
+    const edge = graph.edges[edgeIndex];
+    meters += edge[2];
+    const coords = edgeCoordinates(graph, edgeIndex);
+    // Stored order is u -> v; flip when we traversed v -> u.
+    segments.push(edge[1] === node ? coords : [...coords].reverse());
+  }
+  segments.reverse();
+  const coordinates = segments.flatMap((coords, i) =>
+    i === 0 ? coords : coords.slice(1),
+  );
+  return { seconds: seconds[to], meters, coordinates };
+}
+
 /** Shortest path between two node indexes, or null when the mode has no route. */
 export function shortestPath(
   graph: TravelGraph,
@@ -240,23 +280,7 @@ export function shortestPath(
       coordinates: [[graph.lng[from], graph.lat[from]]],
     };
   }
-  const { seconds, prevEdge, prevNode } = dijkstra(graph, from, mode, to);
-  if (!Number.isFinite(seconds[to])) return null;
-  let meters = 0;
-  const segments: [number, number][][] = [];
-  for (let node = to; node !== from; node = prevNode[node]) {
-    const edgeIndex = prevEdge[node];
-    const edge = graph.edges[edgeIndex];
-    meters += edge[2];
-    const coords = edgeCoordinates(graph, edgeIndex);
-    // Stored order is u -> v; flip when we traversed v -> u.
-    segments.push(edge[1] === node ? coords : [...coords].reverse());
-  }
-  segments.reverse();
-  const coordinates = segments.flatMap((coords, i) =>
-    i === 0 ? coords : coords.slice(1),
-  );
-  return { seconds: seconds[to], meters, coordinates };
+  return reconstructPath(graph, dijkstra(graph, from, mode, to), from, to);
 }
 
 /**

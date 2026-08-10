@@ -12,6 +12,9 @@ Source of truth for which map chrome is visible in each mode.
 | Transit active                | yes             | yes          | yes          | legend available  | sidebar     | hidden                | status bar | bottom band     |
 | Travel time active (#847)     | yes             | yes          | yes          | closed default    | sidebar     | hidden                | status bar | bottom band     |
 | Measure route active (#848)   | yes             | yes          | yes          | closed default    | sidebar     | hidden                | status bar | bottom band     |
+| Directions active             | yes (+ Add stop on pill / result rows; stop list under search) | yes | yes | closed default | hidden while active | hidden | status bar | bottom band |
+
+Directions opens the mobile sheet at **peek**. Stop sequence (origin / waypoints / destination) lives under the search bar; the sheet only shows route options + Show on map / Start.
 
 Implementation: `getMapChromeVisibility()` in `src/lib/map-chrome.ts`.
 

@@ -1,6 +1,12 @@
 <script lang="ts">
   import type { BuildingData, EventData } from "@lib/types";
-  import { queryStore, type QueryStoreState } from "@lib/store.svelte";
+  import {
+    directionsStore,
+    MAX_DIRECTIONS_WAYPOINTS,
+    queryStore,
+    toastStore,
+    type QueryStoreState,
+  } from "@lib/store.svelte";
   import {
     entityHoverPreviewStore,
     buildingPreviewFromRow,
@@ -9,10 +15,12 @@
   import ArrowUpRight from "@lucide/svelte/icons/arrow-up-right";
   import BookText from "@lucide/svelte/icons/book-text";
   import CalendarDays from "@lucide/svelte/icons/calendar-days";
+  import Check from "@lucide/svelte/icons/check";
   import DoorClosed from "@lucide/svelte/icons/door-closed";
   import GraduationCap from "@lucide/svelte/icons/graduation-cap";
   import Home from "@lucide/svelte/icons/home";
   import MapPin from "@lucide/svelte/icons/map-pin";
+  import Plus from "@lucide/svelte/icons/plus";
   import School from "@lucide/svelte/icons/school";
   import University from "@lucide/svelte/icons/university";
   import Users from "@lucide/svelte/icons/users";
@@ -26,6 +34,8 @@
     building,
     event: eventData,
     secondary,
+    lat = null,
+    lon = null,
   }: {
     value: string;
     category: Exclude<QueryStoreState["category"], null>;
@@ -35,7 +45,25 @@
     event?: EventData;
     /** Supporting line under the value, e.g. a room's unabbreviated name (#875). */
     secondary?: string | null;
+    lat?: number | null;
+    lon?: number | null;
   } = $props();
+
+  const stopLat = $derived(lat ?? building?.lat ?? null);
+  const stopLon = $derived(lon ?? building?.lon ?? null);
+
+  const canAddStop = $derived(
+    directionsStore.active &&
+      !directionsStore.navigating &&
+      directionsStore.waypoints.length < MAX_DIRECTIONS_WAYPOINTS &&
+      stopLat != null &&
+      stopLon != null &&
+      Number.isFinite(stopLat) &&
+      Number.isFinite(stopLon),
+  );
+
+  let justAdded = $state(false);
+  let addedTimer: ReturnType<typeof setTimeout> | null = null;
 
   function handleSuggestionClick() {
     entityHoverPreviewStore.hideNow();
@@ -46,6 +74,33 @@
       eventSlug,
     });
     queryStore.inputValue = value;
+  }
+
+  function handleAddStop(event: MouseEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (stopLat == null || stopLon == null || !canAddStop) return;
+    entityHoverPreviewStore.hideNow();
+    const before = directionsStore.waypoints.length;
+    void directionsStore
+      .addWaypoint({
+        lat: stopLat,
+        lng: stopLon,
+        label: value,
+      })
+      .then(() => {
+        if (directionsStore.waypoints.length <= before) return;
+        toastStore.show(`Added ${value} as a stop`, "success");
+        justAdded = true;
+        if (addedTimer) clearTimeout(addedTimer);
+        addedTimer = setTimeout(() => {
+          justAdded = false;
+          addedTimer = null;
+        }, 900);
+      });
+    // Clear the query text but stay in search mode so another stop can be typed.
+    queryStore.exitResultMode();
+    queryStore.inputValue = "";
   }
 
   function handleRemoveRecent(event: MouseEvent) {
@@ -148,11 +203,30 @@
         <span class="text-secondary">{secondary}</span>
       {/if}
     </div>
-    {#if typeof id === "undefined"}
+    {#if typeof id === "undefined" && !canAddStop}
       <ArrowUpRight size={18} class="icon trailing" />
     {/if}
   </button>
-  {#if typeof id !== "undefined"}
+  {#if canAddStop || justAdded}
+    <button
+      type="button"
+      class="suggestion-add-stop"
+      class:suggestion-add-stop--added={justAdded}
+      aria-label={justAdded
+        ? `${value} added as a stop`
+        : `Add ${value} as a directions stop`}
+      disabled={justAdded}
+      onmousedown={handleAddStop}
+    >
+      {#if justAdded}
+        <Check size={16} aria-hidden="true" />
+        <span>Added</span>
+      {:else}
+        <Plus size={16} aria-hidden="true" />
+        <span>Add stop</span>
+      {/if}
+    </button>
+  {:else if typeof id !== "undefined"}
     <button
       type="button"
       class="suggestion-remove"
@@ -224,6 +298,45 @@
   .suggestion-remove:focus-visible {
     background-color: hsl(0, 0%, 90%);
     color: #18181b;
+  }
+
+  .suggestion-add-stop {
+    all: unset;
+    box-sizing: border-box;
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    min-height: 2rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    color: var(--color-brand, #8d1437);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .suggestion-add-stop:hover,
+  .suggestion-add-stop:focus-visible {
+    background-color: #fff7f7;
+  }
+
+  .suggestion-add-stop--added,
+  .suggestion-add-stop--added:hover,
+  .suggestion-add-stop--added:focus-visible {
+    background-color: #ecfdf5;
+    color: #047857;
+    cursor: default;
+  }
+
+  @media (max-width: 48rem) {
+    .suggestion-add-stop {
+      min-height: 2.75rem;
+      padding: 0.375rem 0.625rem;
+      font-size: 0.8125rem;
+    }
   }
 
   :global(.icon) {

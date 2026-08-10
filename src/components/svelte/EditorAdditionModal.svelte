@@ -4,7 +4,6 @@
   import X from "@lucide/svelte/icons/x";
   import IconButton from "@ui/IconButton.svelte";
   import { adminAuthStore, editorChromeStore } from "@lib/store.svelte";
-  import { trapFocus } from "@lib/focus-trap";
   import {
     modalContentDismiss,
     modalContentReveal,
@@ -25,20 +24,25 @@
     if (e.key === "Escape") close();
   }
 
-  $effect(() => {
-    if (!editorChromeStore.additionModalOpen || !dialogEl) return;
-    return trapFocus(dialogEl, { onEscape: close });
-  });
+  // No focus trap: this panel is non-modal now (#966). Trapping focus would
+  // lock keyboard users out of the very map they are placing a pin on.
+  // Escape still closes, via handleKeydown.
 
   // Same click-outside pattern as AppMenu / TermSelector / OfflineMaps /
   // KeyboardShortcutsPopup: a window-level pointerdown that bails when the
   // event lands inside the dialog. Keeps the dismiss affordance off the
   // static overlay div, which would need its own keyboard handler (a11y).
+  //
+  // #966 exempts the map surface. Adding a place means looking around and
+  // dropping a pin, so a pan or a marker tap is the user working *with* this
+  // panel — dismissing there would make the panel unusable. Clicks on other
+  // chrome still dismiss, which is what #836 asked for.
   function handleDocumentPointerDown(event: PointerEvent) {
     if (!editorChromeStore.additionModalOpen) return;
     const target = event.target;
     if (!(target instanceof Node)) return;
     if (dialogEl?.contains(target)) return;
+    if (target instanceof Element && target.closest(".map")) return;
     close();
   }
 </script>
@@ -57,7 +61,6 @@
       bind:this={dialogEl}
       class="editor-addition-frame"
       role="dialog"
-      aria-modal="true"
       aria-labelledby="editor-addition-title"
       in:fly={modalContentReveal(reducedMotion.current)}
       out:fly={modalContentDismiss(reducedMotion.current)}
@@ -93,16 +96,30 @@
     inset: 0;
     z-index: 200;
     display: flex;
-    align-items: center;
+    /* Docked, not centred: placing a pin needs the map visible and live, so
+       the panel sits at the bottom and the overlay itself catches nothing
+       (#966). No backdrop for the same reason. */
+    align-items: flex-end;
     justify-content: center;
     padding: 1rem;
-    background-color: rgba(8, 12, 22, 0.55);
+    pointer-events: none;
+  }
+
+  @media (min-width: 48rem) {
+    .editor-addition-overlay {
+      align-items: center;
+      justify-content: flex-end;
+      padding: 1.5rem;
+    }
   }
 
   .editor-addition-frame {
     display: flex;
+    /* The overlay is inert; the panel itself is the only live surface. */
+    pointer-events: auto;
     width: min(28rem, 100%);
-    max-height: min(85dvh, 40rem);
+    /* Leave a map strip above the docked panel to pan and drop a pin in. */
+    max-height: min(60dvh, 40rem);
     flex-direction: column;
     overflow: hidden;
     border-radius: 0.75rem;

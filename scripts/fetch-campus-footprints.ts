@@ -1,7 +1,9 @@
-import fs from "fs";
+import fs from "node:fs";
 
 async function fetchOverpass(query: string) {
-  const res = await fetch("https://overpass-api.de/api/interpreter?data=" + encodeURIComponent(query));
+  const res = await fetch(
+    `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`,
+  );
   const text = await res.text();
   try {
     return JSON.parse(text);

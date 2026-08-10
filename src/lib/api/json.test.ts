@@ -16,6 +16,11 @@ describe("cachedJson", () => {
     expect(res.headers.get("Access-Control-Allow-Origin")).toBe("*");
   });
 
+  test("does not cache non-2xx statuses", () => {
+    const res = cachedJson({ error: "nope" }, 500);
+    expect(res.headers.get("Cache-Control")).toBeNull();
+  });
+
   test("plain json stays uncached", () => {
     const res = json({ error: "nope" }, 400);
     expect(res.headers.get("Cache-Control")).toBeNull();

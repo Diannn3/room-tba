@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { cachedJson } from "@lib/api/json";
+import { cachedJson, json } from "@lib/api/json";
 import {
   listAliasesForCache,
   searchAliases,
@@ -8,9 +8,10 @@ import {
 export const prerender = false;
 
 export const GET = (async ({ url }) => {
+  // Full dump feeds PGlite DELETE+INSERT with no sync-key bust. Never edge-cache it.
   if (url.searchParams.get("export") === "all") {
     const data = await listAliasesForCache();
-    return cachedJson({ data, success: true });
+    return json({ data, success: true });
   }
 
   const q = url.searchParams.get("q") ?? "";

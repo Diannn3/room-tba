@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { cachedJson } from "@lib/api/json";
 import {
   listAliasesForCache,
   searchAliases,
@@ -9,19 +10,13 @@ export const prerender = false;
 export const GET = (async ({ url }) => {
   if (url.searchParams.get("export") === "all") {
     const data = await listAliasesForCache();
-    return new Response(JSON.stringify({ data, success: true }), {
-      headers: { "content-type": "application/json" },
-    });
+    return cachedJson({ data, success: true });
   }
 
   const q = url.searchParams.get("q") ?? "";
   if (q.trim() === "") {
-    return new Response(JSON.stringify({ data: [], success: true }), {
-      headers: { "content-type": "application/json" },
-    });
+    return cachedJson({ data: [], success: true });
   }
   const data = await searchAliases(q);
-  return new Response(JSON.stringify({ data, success: true }), {
-    headers: { "content-type": "application/json" },
-  });
+  return cachedJson({ data, success: true });
 }) satisfies APIRoute;

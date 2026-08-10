@@ -37,6 +37,7 @@
     plannerStore,
     plannerBuildingsStore,
     plannerRoomCodes,
+    directionsStore,
   } from "@lib/store.svelte";
   import { untrack } from "svelte";
   import { onMount } from "svelte";
@@ -48,6 +49,7 @@
   import { fade } from "svelte/transition";
   import { metersToLngLatCircle } from "@lib/geolocation";
   import { sumRouteLegs } from "@lib/campus-route";
+  import { isNearRoute } from "@lib/travel-graph/route-proximity";
   import MapLibreGlDirections from "@maplibre/maplibre-gl-directions";
   import CalendarDays from "@lucide/svelte/icons/calendar-days";
   import X from "@lucide/svelte/icons/x";
@@ -118,6 +120,7 @@
   } from "@lib/travel-graph/engine";
   import { loadTravelGraph } from "@lib/travel-graph/load";
   import { applyBasemapPalette } from "@lib/map-basemap-palette";
+  import { syncSatelliteLayer } from "@lib/map-satellite";
   import { loadCampusMapStyle } from "@lib/maptiler-key";
   import { isMap2DPitch } from "@constants/map-dimension";
   import { syncBuildingLayersForDimension } from "@lib/map-dimension-layers";
@@ -275,7 +278,24 @@
     return isLandmarkPlaceCategory(place.category);
   }
 
+  function tryAddDirectionsStop(
+    lat: number,
+    lon: number,
+    label: string,
+  ): boolean {
+    if (!directionsStore.addingStop) return false;
+    void directionsStore.addWaypoint({ lat, lng: lon, label });
+    return true;
+  }
+
   function handlePlaceMarkerClick(place: PlaceData) {
+    if (
+      place.lat != null &&
+      place.lon != null &&
+      tryAddDirectionsStop(place.lat, place.lon, place.name)
+    ) {
+      return;
+    }
     if (
       queryStore.category === "place" &&
       queryStore.inputValue === place.name
@@ -564,6 +584,151 @@
     }
   }
 
+  const JOURNEY_SOURCE_ID = "directions-journey";
+  const JOURNEY_WALK_LAYER_ID = "directions-journey-walk";
+  const JOURNEY_WALK_CASING_ID = "directions-journey-walk-casing";
+  const JOURNEY_RIDE_LAYER_ID = "directions-journey-ride";
+  const JOURNEY_RIDE_CASING_ID = "directions-journey-ride-casing";
+  /** Stock MapLibreGlDirections foot routeline (`layers.ts` routelineFoot). */
+  const JOURNEY_WALK_COLOR = "#3665ff";
+  /**
+   * Zoom-scaled widths from maplibre-gl-directions `layersFactory` — the fat
+   * translucent casing + thinner core is what made the old OSRM path look
+   * like a glow, not a flat stroke.
+   */
+  const JOURNEY_LINE_WIDTH: mapGl.ExpressionSpecification = [
+    "interpolate",
+    ["exponential", 1.5],
+    ["zoom"],
+    0,
+    3,
+    5,
+    3,
+    18,
+    10,
+  ];
+  const JOURNEY_CASING_WIDTH: mapGl.ExpressionSpecification = [
+    "interpolate",
+    ["exponential", 1.5],
+    ["zoom"],
+    0,
+    7,
+    5,
+    7,
+    18,
+    23,
+  ];
+
+  /**
+   * Journey polyline while Get directions is open (#966). Paint matches the
+   * stock MapLibreGlDirections foot routeline (casing @ 0.55 under core @
+   * 0.85) so walk looks like the pre–multi-modal OSRM path; ride legs use
+   * the jeepney route colour with the same widths.
+   */
+  function ensureJourneyLayers(map: mapGl.MapLibreMap) {
+    if (!map.getSource(JOURNEY_SOURCE_ID)) {
+      map.addSource(JOURNEY_SOURCE_ID, {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
+    }
+
+    if (!map.getLayer(JOURNEY_RIDE_CASING_ID)) {
+      map.addLayer({
+        id: JOURNEY_RIDE_CASING_ID,
+        type: "line",
+        source: JOURNEY_SOURCE_ID,
+        filter: ["==", ["get", "kind"], "ride"],
+        layout: { "line-cap": "butt", "line-join": "round" },
+        paint: {
+          "line-color": ["get", "color"],
+          "line-width": JOURNEY_CASING_WIDTH,
+          "line-opacity": 0.55,
+        },
+      });
+    }
+
+    if (!map.getLayer(JOURNEY_RIDE_LAYER_ID)) {
+      map.addLayer({
+        id: JOURNEY_RIDE_LAYER_ID,
+        type: "line",
+        source: JOURNEY_SOURCE_ID,
+        filter: ["==", ["get", "kind"], "ride"],
+        layout: { "line-cap": "butt", "line-join": "round" },
+        paint: {
+          "line-color": ["get", "color"],
+          "line-width": JOURNEY_LINE_WIDTH,
+          "line-opacity": 0.85,
+        },
+      });
+    }
+
+    if (!map.getLayer(JOURNEY_WALK_CASING_ID)) {
+      map.addLayer({
+        id: JOURNEY_WALK_CASING_ID,
+        type: "line",
+        source: JOURNEY_SOURCE_ID,
+        filter: ["==", ["get", "kind"], "walk"],
+        layout: { "line-cap": "butt", "line-join": "round" },
+        paint: {
+          "line-color": JOURNEY_WALK_COLOR,
+          "line-width": JOURNEY_CASING_WIDTH,
+          "line-opacity": 0.55,
+        },
+      });
+    }
+
+    if (!map.getLayer(JOURNEY_WALK_LAYER_ID)) {
+      map.addLayer({
+        id: JOURNEY_WALK_LAYER_ID,
+        type: "line",
+        source: JOURNEY_SOURCE_ID,
+        filter: ["==", ["get", "kind"], "walk"],
+        layout: { "line-cap": "butt", "line-join": "round" },
+        paint: {
+          "line-color": JOURNEY_WALK_COLOR,
+          "line-width": JOURNEY_LINE_WIDTH,
+          "line-opacity": 0.85,
+        },
+      });
+    }
+  }
+
+  /** Re-assert OSRM-matching paint when layers already exist from an older build. */
+  function applyJourneyPaint(map: mapGl.MapLibreMap) {
+    for (const id of [JOURNEY_WALK_CASING_ID, JOURNEY_RIDE_CASING_ID]) {
+      if (!map.getLayer(id)) continue;
+      map.setPaintProperty(id, "line-dasharray", null);
+      map.setPaintProperty(id, "line-opacity", 0.55);
+      map.setPaintProperty(id, "line-width", JOURNEY_CASING_WIDTH);
+      map.setLayoutProperty(id, "line-cap", "butt");
+    }
+    for (const id of [JOURNEY_WALK_LAYER_ID, JOURNEY_RIDE_LAYER_ID]) {
+      if (!map.getLayer(id)) continue;
+      map.setPaintProperty(id, "line-dasharray", null);
+      map.setPaintProperty(id, "line-opacity", 0.85);
+      map.setPaintProperty(id, "line-width", JOURNEY_LINE_WIDTH);
+      map.setLayoutProperty(id, "line-cap", "butt");
+    }
+    if (map.getLayer(JOURNEY_WALK_CASING_ID)) {
+      map.setPaintProperty(JOURNEY_WALK_CASING_ID, "line-color", JOURNEY_WALK_COLOR);
+    }
+    if (map.getLayer(JOURNEY_WALK_LAYER_ID)) {
+      map.setPaintProperty(JOURNEY_WALK_LAYER_ID, "line-color", JOURNEY_WALK_COLOR);
+    }
+  }  function clearJourneyLayers(map: mapGl.MapLibreMap) {
+    for (const id of [
+      JOURNEY_WALK_LAYER_ID,
+      JOURNEY_WALK_CASING_ID,
+      JOURNEY_RIDE_LAYER_ID,
+      JOURNEY_RIDE_CASING_ID,
+    ]) {
+      if (map.getLayer(id)) map.removeLayer(id);
+    }
+    if (map.getSource(JOURNEY_SOURCE_ID)) {
+      map.removeSource(JOURNEY_SOURCE_ID);
+    }
+  }
   function ensureEventRouteLayers(map: mapGl.MapLibreMap) {
     if (!map.getSource(EVENT_ROUTE_SOURCE_ID)) {
       map.addSource(EVENT_ROUTE_SOURCE_ID, {
@@ -1863,6 +2028,25 @@
   });
 
   $effect(() => {
+    const map = mapStore.mapInstance;
+    const satellite = mapViewStore.satellite;
+    if (!map) return;
+
+    let cancelled = false;
+    const applySatellite = () => {
+      if (!cancelled) syncSatelliteLayer(map, satellite);
+    };
+    if (map.isStyleLoaded()) {
+      applySatellite();
+    } else {
+      map.once("load", applySatellite);
+    }
+    return () => {
+      cancelled = true;
+    };
+  });
+
+  $effect(() => {
     if (mapStore.mapInstance) {
       const map = mapStore.mapInstance;
       const handleMapError = (event: mapGl.ErrorEvent) => {
@@ -2018,8 +2202,167 @@
     }
   });
 
+  /**
+   * Follow camera for navigation (#966): a tilted, heading-up view locked to
+   * the rider, like GMaps navigation. A manual pan releases the lock rather
+   * than fighting the user for the camera; the bar's re-centre button takes
+   * it back.
+   */
+  const NAV_PITCH = 60;
+  const NAV_ZOOM = 18;
+  /** Plain let: edge detector for nav exit; must not be $state or it loops. */
+  let wasNavigating = false;
+
+  $effect(() => {
+    const map = mapStore.mapInstance;
+    if (!map || !directionsStore.navigating) return;
+
+    const onUserPan = (event: { originalEvent?: unknown }) => {
+      // Only a real gesture releases the lock; our own easeTo has no
+      // originalEvent, so the camera does not fight itself.
+      if (event.originalEvent) directionsStore.releaseCamera();
+    };
+    map.on("dragstart", onUserPan);
+    map.on("rotatestart", onUserPan);
+    map.on("zoomstart", onUserPan);
+    return () => {
+      map.off("dragstart", onUserPan);
+      map.off("rotatestart", onUserPan);
+      map.off("zoomstart", onUserPan);
+    };
+  });
+
+  $effect(() => {
+    const map = mapStore.mapInstance;
+    const coords = locationStore.coords;
+    if (
+      !map ||
+      !directionsStore.navigating ||
+      !directionsStore.cameraFollowing ||
+      !coords
+    ) {
+      return;
+    }
+
+    // rAF: easeTo fires zoom/move handlers sync; keep those state writes out
+    // of this reactive flush (same guard as jeepney stop flyTo).
+    const bearing = locationStore.bearing ?? map.getBearing();
+    const frame = requestAnimationFrame(() => {
+      map.easeTo({
+        center: coords,
+        zoom: NAV_ZOOM,
+        pitch: NAV_PITCH,
+        // Hold the current bearing when the device gives no heading, rather
+        // than snapping north-up mid-walk.
+        bearing,
+        duration: 900,
+        essential: true,
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  });
+
+  /**
+   * After follow-mode ends, flatten north-up. Must NOT run on every boot:
+   * campus defaultCamera is pitched (pitch 60), and calling easeTo from this
+   * effect while !navigating re-entered via zoom handlers →
+   * effect_update_depth_exceeded (blank crash card).
+   */
+  $effect(() => {
+    const map = mapStore.mapInstance;
+    const navigating = directionsStore.navigating;
+    const leavingNav = wasNavigating && !navigating;
+    wasNavigating = navigating;
+
+    if (!map || !leavingNav) return;
+    if (untrack(() => terrainStore.enabled)) return; // terrain owns the camera
+
+    const frame = requestAnimationFrame(() => {
+      map.easeTo({ pitch: 0, bearing: 0, duration: 600 });
+    });
+    return () => cancelAnimationFrame(frame);
+  });
+
+  /**
+   * Draw the selected multi-modal journey (#966) while the directions modal
+   * (or follow mode) is open. Same readiness gate as jeepney routes:
+   * isStyleLoaded() is false during repaints and "load" fires once, so those
+   * gates deadlock and the polyline never appears.
+   */
+  $effect(() => {
+    const map = mapStore.mapInstance;
+    if (!map) return;
+
+    // Track the fields the selected getter reads so replan/select re-draws.
+    void directionsStore.journeys;
+    void directionsStore.selectedId;
+    const journey = directionsStore.selected;
+
+    if (!journey || !directionsStore.active) {
+      // Clear immediately — never queue clears on styledata (wipes a later draw).
+      try {
+        clearJourneyLayers(map);
+      } catch {
+        // Style not ready; nothing drawn yet.
+      }
+      return;
+    }
+
+    const draw = () => {
+      ensureJourneyLayers(map);
+      applyJourneyPaint(map);
+      const source = map.getSource(JOURNEY_SOURCE_ID) as
+        | mapGl.GeoJSONSource
+        | undefined;
+      source?.setData({
+        type: "FeatureCollection",
+        features: journey.legs
+          .filter((leg) => leg.coordinates.length >= 2)
+          .map((leg) => ({
+            type: "Feature" as const,
+            geometry: {
+              type: "LineString" as const,
+              coordinates: leg.coordinates,
+            },
+            properties: {
+              kind: leg.kind,
+              color: leg.kind === "ride" ? leg.color : JOURNEY_WALK_COLOR,
+            },
+          })),
+      });
+    };
+
+    const tryDraw = () => {
+      try {
+        draw();
+        return true;
+      } catch (error) {
+        console.warn("journey draw failed; retrying on styledata", error);
+        return false;
+      }
+    };
+
+    if (tryDraw()) return;
+    const onStyleData = () => {
+      if (tryDraw()) map.off("styledata", onStyleData);
+    };
+    map.on("styledata", onStyleData);
+    return () => {
+      map.off("styledata", onStyleData);
+    };
+  });
+
   $effect(() => {
     if (!directions) return;
+
+    // Multi-modal Get directions owns the drawn journey; keep OSRM clear while
+    // that session is open. Schedule-day routes still use routeWaypoints.
+    // Do not revive OSRM from locationStore.destination — that leftover used
+    // to redraw the foot polyline after the directions modal closed (#966).
+    if (directionsStore.active) {
+      directions.clear();
+      return;
+    }
 
     const waypoints = locationStore.routeWaypoints;
     if (waypoints && waypoints.length >= 2) {
@@ -2033,22 +2376,6 @@
         map.fitBounds(bounds, {
           padding: { top: 80, bottom: 80, left: 80, right: 80 },
           duration: 1200,
-          maxZoom: 18,
-        });
-      }
-    } else if (locationStore.routeOrigin && locationStore.destination) {
-      directions.setWaypoints([
-        locationStore.routeOrigin,
-        locationStore.destination,
-      ]);
-      const map = mapStore.mapInstance;
-      if (map) {
-        const bounds = new mapGl.LngLatBounds();
-        bounds.extend(locationStore.routeOrigin);
-        bounds.extend(locationStore.destination);
-        map.fitBounds(bounds, {
-          padding: { top: 80, bottom: 120, left: 80, right: 80 },
-          duration: 1000,
           maxZoom: 18,
         });
       }
@@ -2673,9 +3000,20 @@
     });
   });
 
-  function handleBuildingMarkerClick(buildingName: string) {
+  function handleBuildingMarkerClick(
+    buildingName: string,
+    lat: number | null,
+    lon: number | null,
+  ) {
     if (eventPlacementStore.active) return;
     if (isMapEditEnabled() && selectedEditKey !== null) return;
+    if (
+      lat != null &&
+      lon != null &&
+      tryAddDirectionsStop(lat, lon, buildingName)
+    ) {
+      return;
+    }
     if (buildingName === queryStore.inputValue) return;
     queryStore.updateQuery({
       category: "building",
@@ -2689,9 +3027,20 @@
     });
   }
 
-  function handleDormMarkerClick(dormName: string) {
+  function handleDormMarkerClick(
+    dormName: string,
+    lat: number | null,
+    lon: number | null,
+  ) {
     if (eventPlacementStore.active) return;
     if (isMapEditEnabled() && selectedEditKey !== null) return;
+    if (
+      lat != null &&
+      lon != null &&
+      tryAddDirectionsStop(lat, lon, dormName)
+    ) {
+      return;
+    }
     if (dormName === queryStore.inputValue) return;
     queryStore.updateQuery({
       category: "dorm",
@@ -2705,9 +3054,16 @@
     });
   }
 
-  function handleOrgMarkerClick(name: string) {
+  function handleOrgMarkerClick(
+    name: string,
+    lat: number | null,
+    lon: number | null,
+  ) {
     if (eventPlacementStore.active) return;
     if (isMapEditEnabled() && selectedEditKey !== null) return;
+    if (lat != null && lon != null && tryAddDirectionsStop(lat, lon, name)) {
+      return;
+    }
     if (
       queryStore.category === "organization" &&
       name === queryStore.inputValue
@@ -3077,6 +3433,44 @@
     return classHighlightActive && !plannerBuildingsStore.buildingIds.has(buildingId);
   }
 
+  /**
+   * While Get Directions is open, fade pins that are not the destination,
+   * a waypoint, or within ~25 m of the drawn route (#966 route UI).
+   */
+  function isExemptFromDirectionsDim(lat: number, lon: number): boolean {
+    const dest = directionsStore.destination;
+    if (
+      dest &&
+      Math.abs(dest.lat - lat) < 1e-5 &&
+      Math.abs(dest.lng - lon) < 1e-5
+    ) {
+      return true;
+    }
+    for (const stop of directionsStore.waypoints) {
+      if (
+        Math.abs(stop.lat - lat) < 1e-5 &&
+        Math.abs(stop.lng - lon) < 1e-5
+      ) {
+        return true;
+      }
+    }
+    const line = directionsStore.selectedRouteCoords;
+    if (line.length >= 2 && isNearRoute({ lat, lon }, line)) return true;
+    return false;
+  }
+
+  function isDimmedForDirections(lat: number | null, lon: number | null): boolean {
+    if (
+      !directionsStore.active ||
+      !directionsStore.selected ||
+      lat == null ||
+      lon == null
+    ) {
+      return false;
+    }
+    return !isExemptFromDirectionsDim(lat, lon);
+  }
+
   let linkedActiveEventBuildingIds = $derived.by(() => {
     if (!loaded) return new Set<number>();
     return new Set(
@@ -3153,8 +3547,33 @@
       >
         {#if locationStore.coords}
           <Marker lngLat={locationStore.coords}>
-            <div class="user-location-pin"></div>
+            {#if directionsStore.navigating}
+              <!-- Heading arrow while navigating (#966); falls back to the
+                   plain dot when the device reports no heading. -->
+              <div
+                class="user-location-puck"
+                class:user-location-puck--heading={locationStore.bearing !==
+                  null}
+                style:--puck-rotation="{locationStore.bearing ?? 0}deg"
+              ></div>
+            {:else}
+              <div class="user-location-pin"></div>
+            {/if}
           </Marker>
+        {/if}
+        {#if directionsStore.active}
+          {#each directionsStore.waypoints as stop, i (`dir-wp-${i}-${stop.lat}-${stop.lng}`)}
+            <Marker lngLat={[stop.lng, stop.lat]}>
+              <button
+                type="button"
+                class="directions-waypoint"
+                aria-label={`Stop ${i + 1}: ${stop.label}. Remove stop.`}
+                onclick={() => void directionsStore.removeWaypoint(i)}
+              >
+                {i + 1}
+              </button>
+            </Marker>
+          {/each}
         {/if}
         {#if measureRouteStore.active}
           {#each measureRouteStore.waypoints as waypoint, i (i)}
@@ -3459,7 +3878,12 @@
                 <Marker
                   lngLat={[position.lon, position.lat]}
                   draggable={canDragPin(editKey)}
-                  onclick={() => handleBuildingMarkerClick(building.buildingName)}
+                  onclick={() =>
+                    handleBuildingMarkerClick(
+                      building.buildingName,
+                      position.lat,
+                      position.lon,
+                    )}
                   ondragstart={() => beginMarkerDrag(editKey)}
                   ondragend={(e) =>
                     handleBuildingDragEnd(
@@ -3475,7 +3899,8 @@
                     editable={canDragPin(editKey)}
                     editing={selectedEditKey === editKey}
                     dimmed={isBuildingDimmedForEventFocus(building.id) ||
-                      isBuildingDimmedForClassHighlight(building.id)}
+                      isBuildingDimmedForClassHighlight(building.id) ||
+                      isDimmedForDirections(position.lat, position.lon)}
                     eventLinked={isBuildingEventLinked(building.id)}
                     hovered={hoveredEditKey === editKey}
                     saveState={savingEditKey === editKey
@@ -3485,9 +3910,13 @@
                         : failedEditKey === editKey
                           ? "failed"
                           : "idle"}
-                    labelVisible={zoomLevel >= 17 ||
-                      activeBuildingName === building.buildingName ||
-                      isMyClassBuilding(building.id)}
+                    labelVisible={!isDimmedForDirections(
+                      position.lat,
+                      position.lon,
+                    ) &&
+                      (zoomLevel >= 17 ||
+                        activeBuildingName === building.buildingName ||
+                        isMyClassBuilding(building.id))}
                     useCentralHoverPreview={centralHoverPreview}
                     {previewSuppressed}
                     onpointerenter={(event) =>
@@ -3548,7 +3977,12 @@
                 <Marker
                   lngLat={[position.lon, position.lat]}
                   draggable={canDragPin(editKey)}
-                  onclick={() => handleDormMarkerClick(dorm.dormName)}
+                  onclick={() =>
+                    handleDormMarkerClick(
+                      dorm.dormName,
+                      position.lat,
+                      position.lon,
+                    )}
                   ondragstart={() => beginMarkerDrag(editKey)}
                   ondragend={(e) =>
                     handleDormDragEnd(e, dorm.id, dorm.dormName, position)}
@@ -3558,7 +3992,8 @@
                     tone={dorm.isUpManaged ? "dorm" : "privateDorm"}
                     active={activeDormName === dorm.dormName}
                     dimmed={isDormDimmedForEventFocus(dorm.id) ||
-                      classHighlightActive}
+                      classHighlightActive ||
+                      isDimmedForDirections(position.lat, position.lon)}
                     eventLinked={isDormEventLinked(dorm.id)}
                     editable={canDragPin(editKey)}
                     editing={selectedEditKey === editKey}
@@ -3570,8 +4005,11 @@
                         : failedEditKey === editKey
                           ? "failed"
                           : "idle"}
-                    labelVisible={zoomLevel >= 17 ||
-                      activeDormName === dorm.dormName}
+                    labelVisible={!isDimmedForDirections(
+                      position.lat,
+                      position.lon,
+                    ) &&
+                      (zoomLevel >= 17 || activeDormName === dorm.dormName)}
                     useCentralHoverPreview={centralHoverPreview}
                     {previewSuppressed}
                     onpointerenter={(event) =>
@@ -3598,10 +4036,13 @@
                   tone={isLandmarkPlace(place) ? "landmark" : "establishment"}
                   active={queryStore.category === "place" &&
                     queryStore.inputValue === place.name}
-                  dimmed={classHighlightActive && pinSponsorId === undefined}
-                  labelVisible={zoomLevel >= 17 ||
-                    (queryStore.category === "place" &&
-                      queryStore.inputValue === place.name)}
+                  dimmed={(classHighlightActive &&
+                    pinSponsorId === undefined) ||
+                    isDimmedForDirections(place.lat, place.lon)}
+                  labelVisible={!isDimmedForDirections(place.lat, place.lon) &&
+                    (zoomLevel >= 17 ||
+                      (queryStore.category === "place" &&
+                        queryStore.inputValue === place.name))}
                   sponsored={pinSponsorId !== undefined}
                   useCentralHoverPreview={centralHoverPreview}
                   {previewSuppressed}
@@ -3638,11 +4079,13 @@
                   ? "organization"
                   : "office"}
                 active={activeOrgName === org.name}
-                dimmed={classHighlightActive}
-                labelVisible={zoomLevel >= 17 || activeOrgName === org.name}
+                dimmed={classHighlightActive ||
+                  isDimmedForDirections(lat, lon)}
+                labelVisible={!isDimmedForDirections(lat, lon) &&
+                  (zoomLevel >= 17 || activeOrgName === org.name)}
                 useCentralHoverPreview={centralHoverPreview}
                 {previewSuppressed}
-                onclick={() => handleOrgMarkerClick(org.name)}
+                onclick={() => handleOrgMarkerClick(org.name, lat, lon)}
                 onpointerenter={(event) =>
                   handleOrganizationPinPointerEnter(org, event)}
                 onpointerleave={handleDetailPinPointerLeave}
@@ -4180,6 +4623,49 @@
     z-index: 70;
   }
 
+  /* Navigation puck (#966): a white disc with a heading arrow, GMaps-style.
+     Without a heading the arrow is hidden and only the disc shows, so the
+     puck never points somewhere the device did not actually report. */
+  .user-location-puck {
+    position: relative;
+    z-index: 70;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 6px rgb(0 0 0 / 0.35);
+  }
+
+  .user-location-puck::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    background: #4285f4;
+  }
+
+  .user-location-puck--heading::before {
+    /* Arrowhead pointing along the reported bearing. */
+    width: 0;
+    height: 0;
+    border-right: 0.4375rem solid transparent;
+    border-bottom: 0.75rem solid #4285f4;
+    border-left: 0.4375rem solid transparent;
+    border-radius: 0;
+    background: none;
+    rotate: var(--puck-rotation, 0deg);
+    transition: rotate 300ms linear;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .user-location-puck--heading::before {
+      transition: none;
+    }
+  }
+
   .measure-waypoint {
     display: flex;
     width: 1.5rem;
@@ -4199,6 +4685,30 @@
   }
 
   .measure-waypoint:focus-visible {
+    outline: 2px solid white;
+    outline-offset: 1px;
+  }
+
+  /* Numbered intermediate stops while Get Directions is open (#966). */
+  .directions-waypoint {
+    display: flex;
+    width: 1.5rem;
+    height: 1.5rem;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    border-radius: 50%;
+    background-color: var(--color-brand, #8d1437);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+    cursor: pointer;
+    position: relative;
+    z-index: 72;
+  }
+
+  .directions-waypoint:focus-visible {
     outline: 2px solid white;
     outline-offset: 1px;
   }

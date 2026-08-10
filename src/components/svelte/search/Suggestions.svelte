@@ -173,11 +173,20 @@
   {#if queryStore.inputValue !== ""}
     {#each aliasResults as alias (alias.value)}
       {#if !suggestedResult.some((s) => s.category === "building" && s.value === alias.value)}
+        {@const aliasBuilding = filteredBuildings.find(
+          (b) => b.buildingName === alias.value,
+        )}
         <div class="alias-hint">
           Showing results for <strong>{alias.alias}</strong> &rarr;
           {alias.value}
         </div>
-        <Suggestion value={alias.value} category="building" />
+        <Suggestion
+          value={alias.value}
+          category="building"
+          building={aliasBuilding}
+          lat={aliasBuilding?.lat}
+          lon={aliasBuilding?.lon}
+        />
       {/if}
     {/each}
   {/if}

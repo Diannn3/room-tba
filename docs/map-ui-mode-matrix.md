@@ -53,7 +53,7 @@ Portaled popovers use `use:portal` so they are not trapped in the bottom-chrome 
 ## Layout zones (Entry.svelte)
 
 - **Top band:** search column (editor icon button when signed in), term selector, and event banner. The sidebar directories are Buildings, Dorms, Colleges, Divisions, Student orgs, Units & offices, Landmarks, Services & establishments, Classes, Events, and Jeepney routes. Each directory opens its own `CampusBrowseList.svelte` view in the side drawer and an entry then opens the regular entity detail view; they are not centered modals. The search suggestions dropdown is for recent searches and typed results only. **Keyboard shortcuts** are opened from the Help & settings group or the `?` key. Editor tools open in a modal.
-- **Map face:** map canvas, desktop unified camera column (`camera-controls-card`: vertical 2D/3D + rotate/tilt/north)
+- **Map face:** map canvas and the persistent control stack (location, 2D/3D, satellite when available, and zoom). Satellite also remains in Settings → View.
 - **Bottom band:** unified bottom chrome tray (`.bottom-chrome` in `Entry.svelte`); attribution leading, status center, compact Map tools + Legend chips plus location/propose actions trailing; one shared surface. The Map tools chip opens `MapToolsFlyout` (`mapToolsStore`) with the travel tools; while Travel time is active its minutes legend stacks above the tray as the bottom band's first child.
 - **Ephemeral:** toast and modals
 

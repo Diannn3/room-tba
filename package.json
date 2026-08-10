@@ -49,6 +49,7 @@
     "seed:aliases": "bun run scripts/seed-aliases.ts",
     "seed:sample": "bun run scripts/seed-sample-campus.ts",
     "seed:deep-research": "bun run scripts/seed-deep-research.ts",
+    "seed:government-places": "bun run scripts/seed-government-places.ts",
     "generate:pglite-schema": "bun run scripts/generate-pglite-schema.ts",
     "import:osa-orgs": "bun run scripts/import-osa-organizations.ts",
     "import:trail-org-about": "bun run scripts/import-trail-org-about.ts",

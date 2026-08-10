@@ -2,9 +2,9 @@
  * Directions session state (#966): where the rider is going, the ranked ways
  * to get there, and which one is drawn on the map.
  *
- * The search itself is pure and lives in lib/travel-graph/journey.ts; this
- * only owns session state and the lazy graph fetch, so the planner stays
- * unit-testable without a store.
+ * The search itself is pure and lives in lib/travel-graph; this only owns
+ * session state and the lazy graph fetch, so the planner stays unit-testable
+ * without a store.
  */
 
 import { JEEPNEY_ROUTES } from "@constants/jeepney-routes";
@@ -12,18 +12,29 @@ import {
   type Journey,
   type LatLng,
   type PlanStatus,
-  planJourneys,
 } from "../travel-graph/journey";
+import { planMultiLegJourneys } from "../travel-graph/plan-multi-leg";
+import { journeyLineCoordinates } from "../travel-graph/route-proximity";
 import { loadTravelGraph } from "../travel-graph/load";
 
 export type DirectionsPhase = "idle" | "planning" | "ready" | "error";
 
 export type DirectionsEndpoint = LatLng & { label: string };
 
+/** Max intermediate stops between origin and destination. */
+export const MAX_DIRECTIONS_WAYPOINTS = 3;
+
 export class DirectionsStore {
   phase: DirectionsPhase = $state("idle");
   origin: DirectionsEndpoint | null = $state(null);
   destination: DirectionsEndpoint | null = $state(null);
+  /** Ordered intermediates between origin and destination. */
+  waypoints: DirectionsEndpoint[] = $state([]);
+  /**
+   * When true, the next entity pick (map tap / Directions chip) inserts a
+   * waypoint instead of replacing the destination.
+   */
+  addingStop: boolean = $state(false);
   journeys: Journey[] = $state([]);
   selectedId: string | null = $state(null);
   /** Why an empty result is empty; drives the rider-facing note. */
@@ -62,12 +73,30 @@ export class DirectionsStore {
     return this.selected?.seconds ?? null;
   }
 
+  /** Selected journey polyline for pin proximity / map draw. */
+  get selectedRouteCoords(): [number, number][] {
+    const journey = this.selected;
+    if (!journey) return [];
+    return journeyLineCoordinates(journey.legs);
+  }
+
+  /** Origin → waypoints → destination (for UI list and replan). */
+  get routePoints(): DirectionsEndpoint[] {
+    const points: DirectionsEndpoint[] = [];
+    if (this.origin) points.push(this.origin);
+    points.push(...this.waypoints);
+    if (this.destination) points.push(this.destination);
+    return points;
+  }
+
   open = async (
     destination: DirectionsEndpoint,
     origin: DirectionsEndpoint | null,
   ) => {
     this.destination = destination;
     this.origin = origin;
+    this.waypoints = [];
+    this.addingStop = false;
     this.selectedId = null;
     this.journeys = [];
     this.status = null;
@@ -94,10 +123,14 @@ export class DirectionsStore {
       const graph = await loadTravelGraph();
       if (token !== this.#planToken) return; // superseded
 
-      const plan = planJourneys({
-        graph,
+      const points: LatLng[] = [
         origin,
+        ...this.waypoints,
         destination,
+      ];
+      const plan = planMultiLegJourneys({
+        graph,
+        points,
         routes: JEEPNEY_ROUTES,
       });
 
@@ -113,6 +146,66 @@ export class DirectionsStore {
     }
   };
 
+  /** Replan using current origin/destination/waypoints. */
+  refresh = async () => {
+    if (!this.origin || !this.destination) return;
+    await this.replan(this.origin, this.destination);
+  };
+
+  beginAddStop = () => {
+    if (this.waypoints.length >= MAX_DIRECTIONS_WAYPOINTS) return;
+    this.addingStop = true;
+  };
+
+  cancelAddStop = () => {
+    this.addingStop = false;
+  };
+
+  addWaypoint = async (stop: DirectionsEndpoint) => {
+    if (this.waypoints.length >= MAX_DIRECTIONS_WAYPOINTS) {
+      this.addingStop = false;
+      return;
+    }
+    // Skip near-duplicates of an existing stop / destination.
+    const same = (a: DirectionsEndpoint, b: DirectionsEndpoint) =>
+      Math.abs(a.lat - b.lat) < 1e-5 && Math.abs(a.lng - b.lng) < 1e-5;
+    if (this.destination && same(stop, this.destination)) {
+      this.addingStop = false;
+      return;
+    }
+    if (this.waypoints.some((w) => same(w, stop))) {
+      this.addingStop = false;
+      return;
+    }
+
+    this.waypoints = [...this.waypoints, stop];
+    this.addingStop = false;
+    await this.refresh();
+  };
+
+  removeWaypoint = async (index: number) => {
+    if (index < 0 || index >= this.waypoints.length) return;
+    this.waypoints = this.waypoints.filter((_, i) => i !== index);
+    await this.refresh();
+  };
+
+  moveWaypoint = async (from: number, to: number) => {
+    if (
+      from < 0 ||
+      to < 0 ||
+      from >= this.waypoints.length ||
+      to >= this.waypoints.length ||
+      from === to
+    ) {
+      return;
+    }
+    const next = [...this.waypoints];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    this.waypoints = next;
+    await this.refresh();
+  };
+
   select = (id: string) => {
     this.selectedId = id;
   };
@@ -121,6 +214,7 @@ export class DirectionsStore {
     if (!this.selected) return;
     this.navigating = true;
     this.cameraFollowing = true;
+    this.addingStop = false;
   };
 
   stopNavigation = () => {
@@ -150,6 +244,8 @@ export class DirectionsStore {
     this.cameraFollowing = true;
     this.origin = null;
     this.destination = null;
+    this.waypoints = [];
+    this.addingStop = false;
     this.journeys = [];
     this.selectedId = null;
     this.status = null;

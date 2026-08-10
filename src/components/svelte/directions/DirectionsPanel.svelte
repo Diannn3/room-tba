@@ -9,11 +9,12 @@
   import { untrack } from "svelte";
   import Footprints from "@lucide/svelte/icons/footprints";
   import Bus from "@lucide/svelte/icons/bus";
-  import X from "@lucide/svelte/icons/x";
-  import Crosshair from "@lucide/svelte/icons/crosshair";
   import Navigation from "@lucide/svelte/icons/navigation";
-  import MapPin from "@lucide/svelte/icons/map-pin";
-  import { directionsStore, locationStore, mapStore } from "@lib/store.svelte";
+  import {
+    directionsStore,
+    locationStore,
+    mapStore,
+  } from "@lib/store.svelte";
   import { formatDistance, formatDuration } from "@lib/campus-route";
   import {
     describeJourney,
@@ -21,6 +22,13 @@
     type Journey,
     type RideLeg,
   } from "@lib/travel-graph/journey";
+  import { journeyOptionLabel } from "@lib/travel-graph/plan-multi-leg";
+  import {
+    computeDirectionsFitExtents,
+    directionsEdgeCamera,
+    directionsFitPaddingFromRects,
+    estimateDestinationLabelHalfWidthPx,
+  } from "@lib/travel-graph/directions-fit";
   import NavigationBar from "./NavigationBar.svelte";
   import { JEEPNEY_FARE_NOTE } from "@constants/jeepney-routes";
   import {
@@ -45,28 +53,108 @@
     return journey.legs.find((leg): leg is RideLeg => leg.kind === "ride");
   }
 
+  function measureDirectionsFitPadding(
+    map: { getContainer: () => HTMLElement },
+    destinationLabel: string,
+    destOnRight: boolean,
+  ) {
+    const mapRect = map.getContainer().getBoundingClientRect();
+    const mobile = window.matchMedia("(max-width: 48rem)").matches;
+
+    const topEl =
+      document.querySelector(".directions-route-chips") ??
+      document.querySelector(".map-search-chrome") ??
+      document.querySelector(".search-shell-main");
+    const topBottom =
+      topEl?.getBoundingClientRect().bottom ??
+      mapRect.top + (mobile ? 140 : 88);
+
+    const sheetEl = document.querySelector(".bottom-sheet");
+    const sheetTop =
+      sheetEl?.getBoundingClientRect().top ??
+      mapRect.bottom - (mobile ? mapRect.height * 0.44 : 64);
+
+    const statusEl = document.querySelector(".bottom-chrome");
+    const statusTop =
+      statusEl?.getBoundingClientRect().top ?? mapRect.bottom;
+    const coverBottom = mobile ? Math.min(sheetTop, statusTop) : statusTop;
+
+    const drawerEl = document.querySelector(".drawer:not(.is-collapsed)");
+    const drawerRight = drawerEl?.getBoundingClientRect().right ?? mapRect.left;
+
+    return directionsFitPaddingFromRects(mapRect, {
+      topBottom,
+      coverBottom,
+      leftCover: !mobile ? Math.max(0, drawerRight - mapRect.left) : 0,
+      mobile,
+      destinationLabelHalfWidthPx:
+        estimateDestinationLabelHalfWidthPx(destinationLabel),
+      destOnRight,
+      edgeGutterPx: 2,
+    });
+  }
+
   function fitSelected() {
     const map = mapStore.mapInstance;
-    const journey = selected;
-    if (!map || !journey) return;
-    const coords = journey.legs.flatMap((leg) => leg.coordinates);
-    if (coords.length === 0) return;
-    let [minLng, minLat] = coords[0];
-    let [maxLng, maxLat] = coords[0];
-    for (const [lng, lat] of coords) {
-      minLng = Math.min(minLng, lng);
-      maxLng = Math.max(maxLng, lng);
-      minLat = Math.min(minLat, lat);
-      maxLat = Math.max(maxLat, lat);
-    }
-    map.fitBounds(
-      [
-        [minLng, minLat],
-        [maxLng, maxLat],
-      ],
-      { padding: { top: 72, bottom: 72, left: 48, right: 48 }, maxZoom: 18 },
-    );
+    const destination = directionsStore.destination;
+    if (!map || !destination) return;
+
+    // Frame GPS puck ↔ destination pin only. Full polyline bbox is taller than
+    // wide on diagonal walks, so fitBounds zoomed out for height and left gaps.
+    const gps = locationStore.coords;
+    const origin = gps
+      ? { lng: gps[0], lat: gps[1] }
+      : directionsStore.origin;
+    if (!origin) return;
+
+    const extents = computeDirectionsFitExtents({
+      origin,
+      destination,
+      waypoints: directionsStore.waypoints,
+      accuracyMeters: locationStore.accuracyMeters ?? 25,
+    });
+    const destLabel = destination.label || "Destination";
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const padding = measureDirectionsFitPadding(
+          map,
+          destLabel,
+          extents.destOnRight,
+        );
+        const camera = directionsEdgeCamera(map, extents, padding);
+        map.easeTo({
+          center: camera.center,
+          zoom: camera.zoom,
+          bearing: 0,
+          pitch: 0,
+          duration: 900,
+          padding,
+        });
+      });
+    });
   }
+
+  /** Fit once per plan shape so open/replan/add-stop reframes both ends. */
+  let lastFittedKey: string | null = null;
+  let fitTimer: ReturnType<typeof setTimeout> | null = null;
+  $effect(() => {
+    const journey = selected;
+    const phase = directionsStore.phase;
+    const navigating = directionsStore.navigating;
+    const stopCount = directionsStore.waypoints.length;
+    const dest = directionsStore.destination;
+    if (phase !== "ready" || !journey || navigating) return;
+    const fitKey = `${journey.id}:${journey.meters}:${stopCount}:${dest?.lat}:${dest?.lng}`;
+    if (lastFittedKey === fitKey) return;
+    lastFittedKey = fitKey;
+    // Sheet peek animates in; measure after it settles or padding is stale.
+    if (fitTimer) clearTimeout(fitTimer);
+    fitTimer = setTimeout(() => {
+      fitTimer = null;
+      untrack(() => fitSelected());
+    }, 180);
+  });
 
   const statusNote = $derived(
     directionsStore.status ? PLAN_STATUS_NOTES[directionsStore.status] : null,
@@ -119,29 +207,7 @@
 <section class="directions" aria-label="Directions">
   {#if directionsStore.navigating}
     <NavigationBar />
-  {:else}
-  <header class="directions__head">
-    <div class="directions__ends">
-      <p class="directions__end">
-        <Crosshair size={14} aria-hidden="true" />
-        <span>{directionsStore.origin?.label ?? "Your location"}</span>
-      </p>
-      <p class="directions__end directions__end--to">
-        <MapPin size={14} aria-hidden="true" />
-        <span>{directionsStore.destination?.label ?? "Destination"}</span>
-      </p>
-    </div>
-    <button
-      type="button"
-      class="directions__close"
-      aria-label="Close directions"
-      onclick={() => directionsStore.close()}
-    >
-      <X size={18} aria-hidden="true" />
-    </button>
-  </header>
-
-  {#if directionsStore.phase === "planning"}
+  {:else if directionsStore.phase === "planning"}
     <p class="directions__note" role="status">
       {locationStore.coords
         ? "Finding the best ways there…"
@@ -160,6 +226,7 @@
       {#each journeys as journey (journey.id)}
         {@const ride = rideLeg(journey)}
         {@const isSelected = selected?.id === journey.id}
+        {@const modeLabel = journeyOptionLabel(journey)}
         <li>
           <button
             type="button"
@@ -181,7 +248,10 @@
             </span>
 
             <span class="option__body">
-              <span class="option__time">{formatDuration(journey.seconds)}</span>
+              <span class="option__mode">{modeLabel}</span>
+              <span class="option__time"
+                >{formatDuration(journey.seconds)}</span
+              >
               <span class="option__meta">
                 {formatDistance(journey.meters)} · arrives {arrivalLabel(
                   journey.seconds,
@@ -225,70 +295,17 @@
       {/if}
     </p>
   {/if}
-  {/if}
 </section>
 
 <style>
   .directions {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    width: 100%;
-  }
-
-  .directions__head {
-    display: flex;
-    align-items: flex-start;
     gap: 0.5rem;
-  }
-
-  .directions__ends {
-    display: flex;
-    flex: 1 1 auto;
-    flex-direction: column;
-    gap: 0.25rem;
+    width: 100%;
+    max-width: 100%;
     min-width: 0;
-  }
-
-  .directions__end {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    margin: 0;
-    color: #52525b;
-    font-size: 0.8125rem;
-    line-height: 1.3;
-  }
-
-  .directions__end span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .directions__end--to {
-    color: #18181b;
-    font-weight: 600;
-  }
-
-  .directions__close {
-    display: flex;
-    flex: 0 0 auto;
-    align-items: center;
-    justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    padding: 0;
-    border: none;
-    border-radius: 999px;
-    background: #f4f4f5;
-    color: #3f3f46;
-    cursor: pointer;
-  }
-
-  .directions__close:hover,
-  .directions__close:focus-visible {
-    background: #e4e4e7;
+    box-sizing: border-box;
   }
 
   .directions__note {
@@ -308,12 +325,22 @@
     margin: 0;
     padding: 0;
     list-style: none;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .directions__options > li {
+    min-width: 0;
+    max-width: 100%;
   }
 
   .option {
     display: flex;
     gap: 0.625rem;
     width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     /* 44px minimum target, matching the browse chips (#942). */
     min-height: 2.75rem;
     padding: 0.625rem;
@@ -349,6 +376,14 @@
     min-width: 0;
   }
 
+  .option__mode {
+    color: #52525b;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
   .option__time {
     color: #18181b;
     font-size: 1.125rem;
@@ -375,11 +410,14 @@
 
   .directions__actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
+    min-width: 0;
   }
 
   .directions__ghost {
     flex: 0 1 auto;
+    min-width: 0;
     min-height: 2.75rem;
     padding: 0.625rem 1rem;
     border: 1px solid #e4e4e7;
@@ -402,6 +440,7 @@
     align-items: center;
     justify-content: center;
     gap: 0.375rem;
+    min-width: 0;
     min-height: 2.75rem;
     padding: 0.625rem 1rem;
     border: none;

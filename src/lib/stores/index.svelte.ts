@@ -178,7 +178,11 @@ import {
 import { PlannerStore } from "./planner-store.svelte";
 import { TransitStore } from "./transit-store.svelte";
 import { AnnouncementsStore } from "./announcements-store.svelte";
-import { DirectionsStore } from "./directions-store.svelte";
+import {
+  DirectionsStore,
+  MAX_DIRECTIONS_WAYPOINTS,
+} from "./directions-store.svelte";
+export { MAX_DIRECTIONS_WAYPOINTS };
 
 export { plannerRoomCodes } from "./data-stores.svelte";
 

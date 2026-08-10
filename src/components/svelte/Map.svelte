@@ -49,6 +49,7 @@
   import { fade } from "svelte/transition";
   import { metersToLngLatCircle } from "@lib/geolocation";
   import { sumRouteLegs } from "@lib/campus-route";
+  import { isNearRoute } from "@lib/travel-graph/route-proximity";
   import MapLibreGlDirections from "@maplibre/maplibre-gl-directions";
   import CalendarDays from "@lucide/svelte/icons/calendar-days";
   import X from "@lucide/svelte/icons/x";
@@ -276,7 +277,24 @@
     return isLandmarkPlaceCategory(place.category);
   }
 
+  function tryAddDirectionsStop(
+    lat: number,
+    lon: number,
+    label: string,
+  ): boolean {
+    if (!directionsStore.addingStop) return false;
+    void directionsStore.addWaypoint({ lat, lng: lon, label });
+    return true;
+  }
+
   function handlePlaceMarkerClick(place: PlaceData) {
+    if (
+      place.lat != null &&
+      place.lon != null &&
+      tryAddDirectionsStop(place.lat, place.lon, place.name)
+    ) {
+      return;
+    }
     if (
       queryStore.category === "place" &&
       queryStore.inputValue === place.name
@@ -2962,9 +2980,20 @@
     });
   });
 
-  function handleBuildingMarkerClick(buildingName: string) {
+  function handleBuildingMarkerClick(
+    buildingName: string,
+    lat: number | null,
+    lon: number | null,
+  ) {
     if (eventPlacementStore.active) return;
     if (isMapEditEnabled() && selectedEditKey !== null) return;
+    if (
+      lat != null &&
+      lon != null &&
+      tryAddDirectionsStop(lat, lon, buildingName)
+    ) {
+      return;
+    }
     if (buildingName === queryStore.inputValue) return;
     queryStore.updateQuery({
       category: "building",
@@ -2978,9 +3007,20 @@
     });
   }
 
-  function handleDormMarkerClick(dormName: string) {
+  function handleDormMarkerClick(
+    dormName: string,
+    lat: number | null,
+    lon: number | null,
+  ) {
     if (eventPlacementStore.active) return;
     if (isMapEditEnabled() && selectedEditKey !== null) return;
+    if (
+      lat != null &&
+      lon != null &&
+      tryAddDirectionsStop(lat, lon, dormName)
+    ) {
+      return;
+    }
     if (dormName === queryStore.inputValue) return;
     queryStore.updateQuery({
       category: "dorm",
@@ -2994,9 +3034,16 @@
     });
   }
 
-  function handleOrgMarkerClick(name: string) {
+  function handleOrgMarkerClick(
+    name: string,
+    lat: number | null,
+    lon: number | null,
+  ) {
     if (eventPlacementStore.active) return;
     if (isMapEditEnabled() && selectedEditKey !== null) return;
+    if (lat != null && lon != null && tryAddDirectionsStop(lat, lon, name)) {
+      return;
+    }
     if (
       queryStore.category === "organization" &&
       name === queryStore.inputValue
@@ -3366,6 +3413,44 @@
     return classHighlightActive && !plannerBuildingsStore.buildingIds.has(buildingId);
   }
 
+  /**
+   * While Get Directions is open, fade pins that are not the destination,
+   * a waypoint, or within ~25 m of the drawn route (#966 route UI).
+   */
+  function isExemptFromDirectionsDim(lat: number, lon: number): boolean {
+    const dest = directionsStore.destination;
+    if (
+      dest &&
+      Math.abs(dest.lat - lat) < 1e-5 &&
+      Math.abs(dest.lng - lon) < 1e-5
+    ) {
+      return true;
+    }
+    for (const stop of directionsStore.waypoints) {
+      if (
+        Math.abs(stop.lat - lat) < 1e-5 &&
+        Math.abs(stop.lng - lon) < 1e-5
+      ) {
+        return true;
+      }
+    }
+    const line = directionsStore.selectedRouteCoords;
+    if (line.length >= 2 && isNearRoute({ lat, lon }, line)) return true;
+    return false;
+  }
+
+  function isDimmedForDirections(lat: number | null, lon: number | null): boolean {
+    if (
+      !directionsStore.active ||
+      !directionsStore.selected ||
+      lat == null ||
+      lon == null
+    ) {
+      return false;
+    }
+    return !isExemptFromDirectionsDim(lat, lon);
+  }
+
   let linkedActiveEventBuildingIds = $derived.by(() => {
     if (!loaded) return new Set<number>();
     return new Set(
@@ -3455,6 +3540,20 @@
               <div class="user-location-pin"></div>
             {/if}
           </Marker>
+        {/if}
+        {#if directionsStore.active}
+          {#each directionsStore.waypoints as stop, i (`dir-wp-${i}-${stop.lat}-${stop.lng}`)}
+            <Marker lngLat={[stop.lng, stop.lat]}>
+              <button
+                type="button"
+                class="directions-waypoint"
+                aria-label={`Stop ${i + 1}: ${stop.label}. Remove stop.`}
+                onclick={() => void directionsStore.removeWaypoint(i)}
+              >
+                {i + 1}
+              </button>
+            </Marker>
+          {/each}
         {/if}
         {#if measureRouteStore.active}
           {#each measureRouteStore.waypoints as waypoint, i (i)}
@@ -3759,7 +3858,12 @@
                 <Marker
                   lngLat={[position.lon, position.lat]}
                   draggable={canDragPin(editKey)}
-                  onclick={() => handleBuildingMarkerClick(building.buildingName)}
+                  onclick={() =>
+                    handleBuildingMarkerClick(
+                      building.buildingName,
+                      position.lat,
+                      position.lon,
+                    )}
                   ondragstart={() => beginMarkerDrag(editKey)}
                   ondragend={(e) =>
                     handleBuildingDragEnd(
@@ -3775,7 +3879,8 @@
                     editable={canDragPin(editKey)}
                     editing={selectedEditKey === editKey}
                     dimmed={isBuildingDimmedForEventFocus(building.id) ||
-                      isBuildingDimmedForClassHighlight(building.id)}
+                      isBuildingDimmedForClassHighlight(building.id) ||
+                      isDimmedForDirections(position.lat, position.lon)}
                     eventLinked={isBuildingEventLinked(building.id)}
                     hovered={hoveredEditKey === editKey}
                     saveState={savingEditKey === editKey
@@ -3785,9 +3890,13 @@
                         : failedEditKey === editKey
                           ? "failed"
                           : "idle"}
-                    labelVisible={zoomLevel >= 17 ||
-                      activeBuildingName === building.buildingName ||
-                      isMyClassBuilding(building.id)}
+                    labelVisible={!isDimmedForDirections(
+                      position.lat,
+                      position.lon,
+                    ) &&
+                      (zoomLevel >= 17 ||
+                        activeBuildingName === building.buildingName ||
+                        isMyClassBuilding(building.id))}
                     useCentralHoverPreview={centralHoverPreview}
                     {previewSuppressed}
                     onpointerenter={(event) =>
@@ -3848,7 +3957,12 @@
                 <Marker
                   lngLat={[position.lon, position.lat]}
                   draggable={canDragPin(editKey)}
-                  onclick={() => handleDormMarkerClick(dorm.dormName)}
+                  onclick={() =>
+                    handleDormMarkerClick(
+                      dorm.dormName,
+                      position.lat,
+                      position.lon,
+                    )}
                   ondragstart={() => beginMarkerDrag(editKey)}
                   ondragend={(e) =>
                     handleDormDragEnd(e, dorm.id, dorm.dormName, position)}
@@ -3858,7 +3972,8 @@
                     tone={dorm.isUpManaged ? "dorm" : "privateDorm"}
                     active={activeDormName === dorm.dormName}
                     dimmed={isDormDimmedForEventFocus(dorm.id) ||
-                      classHighlightActive}
+                      classHighlightActive ||
+                      isDimmedForDirections(position.lat, position.lon)}
                     eventLinked={isDormEventLinked(dorm.id)}
                     editable={canDragPin(editKey)}
                     editing={selectedEditKey === editKey}
@@ -3870,8 +3985,11 @@
                         : failedEditKey === editKey
                           ? "failed"
                           : "idle"}
-                    labelVisible={zoomLevel >= 17 ||
-                      activeDormName === dorm.dormName}
+                    labelVisible={!isDimmedForDirections(
+                      position.lat,
+                      position.lon,
+                    ) &&
+                      (zoomLevel >= 17 || activeDormName === dorm.dormName)}
                     useCentralHoverPreview={centralHoverPreview}
                     {previewSuppressed}
                     onpointerenter={(event) =>
@@ -3898,10 +4016,13 @@
                   tone={isLandmarkPlace(place) ? "landmark" : "establishment"}
                   active={queryStore.category === "place" &&
                     queryStore.inputValue === place.name}
-                  dimmed={classHighlightActive && pinSponsorId === undefined}
-                  labelVisible={zoomLevel >= 17 ||
-                    (queryStore.category === "place" &&
-                      queryStore.inputValue === place.name)}
+                  dimmed={(classHighlightActive &&
+                    pinSponsorId === undefined) ||
+                    isDimmedForDirections(place.lat, place.lon)}
+                  labelVisible={!isDimmedForDirections(place.lat, place.lon) &&
+                    (zoomLevel >= 17 ||
+                      (queryStore.category === "place" &&
+                        queryStore.inputValue === place.name))}
                   sponsored={pinSponsorId !== undefined}
                   useCentralHoverPreview={centralHoverPreview}
                   {previewSuppressed}
@@ -3938,11 +4059,13 @@
                   ? "organization"
                   : "office"}
                 active={activeOrgName === org.name}
-                dimmed={classHighlightActive}
-                labelVisible={zoomLevel >= 17 || activeOrgName === org.name}
+                dimmed={classHighlightActive ||
+                  isDimmedForDirections(lat, lon)}
+                labelVisible={!isDimmedForDirections(lat, lon) &&
+                  (zoomLevel >= 17 || activeOrgName === org.name)}
                 useCentralHoverPreview={centralHoverPreview}
                 {previewSuppressed}
-                onclick={() => handleOrgMarkerClick(org.name)}
+                onclick={() => handleOrgMarkerClick(org.name, lat, lon)}
                 onpointerenter={(event) =>
                   handleOrganizationPinPointerEnter(org, event)}
                 onpointerleave={handleDetailPinPointerLeave}
@@ -4542,6 +4665,30 @@
   }
 
   .measure-waypoint:focus-visible {
+    outline: 2px solid white;
+    outline-offset: 1px;
+  }
+
+  /* Numbered intermediate stops while Get Directions is open (#966). */
+  .directions-waypoint {
+    display: flex;
+    width: 1.5rem;
+    height: 1.5rem;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    border-radius: 50%;
+    background-color: var(--color-brand, #8d1437);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+    cursor: pointer;
+    position: relative;
+    z-index: 72;
+  }
+
+  .directions-waypoint:focus-visible {
     outline: 2px solid white;
     outline-offset: 1px;
   }

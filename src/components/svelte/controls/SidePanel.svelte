@@ -41,11 +41,32 @@
 
   /** Navigation is a map-first view: the bar takes a strip, the map the rest. */
   const navPeek = $derived(directionsStore.navigating);
+  /** Planning mode: thin summary strip so map + top search stay in view. */
+  const directionsPeek = $derived(
+    directionsStore.active && !directionsStore.navigating,
+  );
+  // Directions peek must clear the first option + Show on map / Start;
+  // 0.3 only showed the Walk card.
+  const sheetPeekRatio = $derived(
+    navPeek ? 0.22 : directionsPeek ? 0.44 : 0.48,
+  );
 
   // Entering follow mode from an expanded sheet would otherwise leave the map
   // hidden behind the very panel that is meant to be guiding it.
   $effect(() => {
     if (directionsStore.navigating) mobileSnap = "peek";
+  });
+
+  // Opening Get Directions starts at peek so the map + search stay usable;
+  // users expand via the sheet handle for the full option list.
+  let directionsWasActive = false;
+  $effect(() => {
+    const active = directionsStore.active;
+    if (active && !directionsWasActive) {
+      mobileSnap = "peek";
+      if (mobile.current) sidePanelStore.collapse();
+    }
+    directionsWasActive = active;
   });
 
   const panelIdentity = $derived(
@@ -141,7 +162,7 @@
   <BottomSheet
     open={panelOpen}
     bind:snap={mobileSnap}
-    peekRatio={navPeek ? 0.22 : 0.48}
+    peekRatio={sheetPeekRatio}
     topInset="var(--mobile-detail-sheet-top-inset, 0px)"
     bottomInset="0px"
     onDismiss={dismissMobileSheet}

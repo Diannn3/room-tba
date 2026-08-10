@@ -7,14 +7,17 @@
   import { getMapChromeVisibility } from "@lib/map-chrome";
   import {
     adminAuthStore,
+    directionsStore,
     editorChromeStore,
     mapEditStore,
+    MAX_DIRECTIONS_WAYPOINTS,
     modalStore,
     proposalsStore,
     queryStore,
     sidePanelStore,
   } from "@lib/store.svelte";
   import Suggestions from "./Suggestions.svelte";
+  import DirectionsRouteChips from "@ui/directions/DirectionsRouteChips.svelte";
   import MapFilterChips from "@ui/map-chrome/MapFilterChips.svelte";
   import { observeBlockHeight } from "@lib/layout-css-vars";
   import { registerSearchFocus } from "@lib/search-focus";
@@ -23,6 +26,7 @@
   import { MediaQuery } from "svelte/reactivity";
   import SearchIcon from "@lucide/svelte/icons/search";
   import MapPinPlus from "@lucide/svelte/icons/map-pin-plus";
+  import Plus from "@lucide/svelte/icons/plus";
   import ArrowLeft from "@lucide/svelte/icons/arrow-left";
 
   let searchElement = $state<HTMLInputElement | null>(null);
@@ -128,8 +132,38 @@
     chrome.showSearchSuggestions && searchFocused,
   );
 
+  const directionsSearchActive = $derived(
+    directionsStore.active && !directionsStore.navigating,
+  );
+
+  const canAddDirectionsStop = $derived(
+    directionsSearchActive &&
+      directionsStore.waypoints.length < MAX_DIRECTIONS_WAYPOINTS,
+  );
+
+  const searchPlaceholder = $derived(
+    directionsStore.addingStop
+      ? "Search a place to add as a stop"
+      : directionsSearchActive
+        ? "Search to add a stop"
+        : "ex. Institute of Computer Science",
+  );
+
+  function toggleDirectionsAddStop() {
+    if (!canAddDirectionsStop) return;
+    if (directionsStore.addingStop) {
+      directionsStore.cancelAddStop();
+    } else {
+      directionsStore.beginAddStop();
+    }
+    searchFocused = true;
+    searchElement?.focus();
+  }
+
   $effect(() => {
     if (queryStore.category !== null && queryStore.type === "result") {
+      // Keep the search open while adding multiple directions stops.
+      if (directionsSearchActive) return;
       searchElement?.blur();
     }
   });
@@ -195,7 +229,7 @@
                 aria-controls="search-suggestions"
                 aria-autocomplete="list"
                 aria-haspopup="listbox"
-                placeholder="ex. Institute of Computer Science"
+                placeholder={searchPlaceholder}
               />
               {#if draftInput !== "" || queryStore.category !== null}
                 <button
@@ -227,7 +261,25 @@
                   >
                 </button>
               {/if}
-              {#if !mobile.current}
+              {#if canAddDirectionsStop}
+                <button
+                  type="button"
+                  class="map-search-chrome__add map-search-chrome__add-stop"
+                  class:map-search-chrome__add-stop--armed={directionsStore.addingStop}
+                  aria-pressed={directionsStore.addingStop}
+                  aria-label={directionsStore.addingStop
+                    ? "Cancel adding a stop"
+                    : "Add a stop from search or the map"}
+                  title={directionsStore.addingStop
+                    ? "Cancel add stop"
+                    : "Add stop"}
+                  onmousedown={(event) => event.preventDefault()}
+                  onclick={toggleDirectionsAddStop}
+                >
+                  <Plus size={14} aria-hidden="true" />
+                  <span class="map-search-chrome__add-stop-text">Add stop</span>
+                </button>
+              {:else if !mobile.current && !directionsSearchActive}
                 <button
                   type="button"
                   class="map-search-chrome__add"
@@ -241,7 +293,7 @@
             </div>
           </div>
 
-          {#if !mobile.current && !searchFocused}
+          {#if !mobile.current && !searchFocused && !directionsSearchActive}
             <MapFilterChips />
           {/if}
 
@@ -268,9 +320,12 @@
             </button>
           {/if}
         </div>
+        {#if directionsSearchActive}
+          <DirectionsRouteChips />
+        {/if}
       </div>
 
-      {#if mobile.current && !searchFocused}
+      {#if mobile.current && !searchFocused && !directionsSearchActive}
         <div class="map-search-chrome__mobile-chips">
           <MapFilterChips />
         </div>
@@ -1006,9 +1061,8 @@
   }
 
   /* Figma: Add lives inside the search pill (pink wash). */
-  .search-root:not(.mobile-shell)
-    .map-search-chrome--redesign
-    .map-search-chrome__add {
+  .map-search-chrome__add,
+  .map-search-chrome__add-stop {
     display: inline-flex;
     flex: 0 0 auto;
     align-items: center;
@@ -1029,10 +1083,41 @@
     cursor: pointer;
   }
 
-  .search-root:not(.mobile-shell)
-    .map-search-chrome--redesign
-    .map-search-chrome__add:hover {
+  .map-search-chrome__add:hover,
+  .map-search-chrome__add-stop:hover,
+  .map-search-chrome__add:focus-visible,
+  .map-search-chrome__add-stop:focus-visible {
     background: #fcdada;
+  }
+
+  .map-search-chrome__add-stop--armed {
+    background: var(--color-brand, #8d1437);
+    color: #fff;
+  }
+
+  .map-search-chrome__add-stop--armed:hover,
+  .map-search-chrome__add-stop--armed:focus-visible {
+    background: #7a1130;
+  }
+
+  .search-root.mobile-shell .map-search-chrome__add-stop {
+    width: 2rem;
+    height: 2rem;
+    margin-right: 0.15rem;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .search-root.mobile-shell .map-search-chrome__add-stop-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   .search-root:not(.mobile-shell)

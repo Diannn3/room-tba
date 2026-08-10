@@ -567,12 +567,44 @@
 
   const JOURNEY_SOURCE_ID = "directions-journey";
   const JOURNEY_WALK_LAYER_ID = "directions-journey-walk";
+  const JOURNEY_WALK_CASING_ID = "directions-journey-walk-casing";
   const JOURNEY_RIDE_LAYER_ID = "directions-journey-ride";
+  const JOURNEY_RIDE_CASING_ID = "directions-journey-ride-casing";
+  /** Stock MapLibreGlDirections foot routeline (`layers.ts` routelineFoot). */
+  const JOURNEY_WALK_COLOR = "#3665ff";
+  /**
+   * Zoom-scaled widths from maplibre-gl-directions `layersFactory` — the fat
+   * translucent casing + thinner core is what made the old OSRM path look
+   * like a glow, not a flat stroke.
+   */
+  const JOURNEY_LINE_WIDTH: mapGl.ExpressionSpecification = [
+    "interpolate",
+    ["exponential", 1.5],
+    ["zoom"],
+    0,
+    3,
+    5,
+    3,
+    18,
+    10,
+  ];
+  const JOURNEY_CASING_WIDTH: mapGl.ExpressionSpecification = [
+    "interpolate",
+    ["exponential", 1.5],
+    ["zoom"],
+    0,
+    7,
+    5,
+    7,
+    18,
+    23,
+  ];
 
   /**
-   * The planned journey (#966): ride legs solid in the route's own colour,
-   * walk legs dotted, so a rider can see at a glance where they are on foot
-   * and where they are on a jeep.
+   * Journey polyline while Get directions is open (#966). Paint matches the
+   * stock MapLibreGlDirections foot routeline (casing @ 0.55 under core @
+   * 0.85) so walk looks like the pre–multi-modal OSRM path; ride legs use
+   * the jeepney route colour with the same widths.
    */
   function ensureJourneyLayers(map: mapGl.MapLibreMap) {
     if (!map.getSource(JOURNEY_SOURCE_ID)) {
@@ -582,17 +614,47 @@
       });
     }
 
+    if (!map.getLayer(JOURNEY_RIDE_CASING_ID)) {
+      map.addLayer({
+        id: JOURNEY_RIDE_CASING_ID,
+        type: "line",
+        source: JOURNEY_SOURCE_ID,
+        filter: ["==", ["get", "kind"], "ride"],
+        layout: { "line-cap": "butt", "line-join": "round" },
+        paint: {
+          "line-color": ["get", "color"],
+          "line-width": JOURNEY_CASING_WIDTH,
+          "line-opacity": 0.55,
+        },
+      });
+    }
+
     if (!map.getLayer(JOURNEY_RIDE_LAYER_ID)) {
       map.addLayer({
         id: JOURNEY_RIDE_LAYER_ID,
         type: "line",
         source: JOURNEY_SOURCE_ID,
         filter: ["==", ["get", "kind"], "ride"],
-        layout: { "line-cap": "round", "line-join": "round" },
+        layout: { "line-cap": "butt", "line-join": "round" },
         paint: {
           "line-color": ["get", "color"],
-          "line-width": 6,
-          "line-opacity": 0.9,
+          "line-width": JOURNEY_LINE_WIDTH,
+          "line-opacity": 0.85,
+        },
+      });
+    }
+
+    if (!map.getLayer(JOURNEY_WALK_CASING_ID)) {
+      map.addLayer({
+        id: JOURNEY_WALK_CASING_ID,
+        type: "line",
+        source: JOURNEY_SOURCE_ID,
+        filter: ["==", ["get", "kind"], "walk"],
+        layout: { "line-cap": "butt", "line-join": "round" },
+        paint: {
+          "line-color": JOURNEY_WALK_COLOR,
+          "line-width": JOURNEY_CASING_WIDTH,
+          "line-opacity": 0.55,
         },
       });
     }
@@ -603,26 +665,51 @@
         type: "line",
         source: JOURNEY_SOURCE_ID,
         filter: ["==", ["get", "kind"], "walk"],
-        layout: { "line-cap": "round", "line-join": "round" },
+        layout: { "line-cap": "butt", "line-join": "round" },
         paint: {
-          "line-color": "#1d4ed8",
-          "line-width": 5,
+          "line-color": JOURNEY_WALK_COLOR,
+          "line-width": JOURNEY_LINE_WIDTH,
           "line-opacity": 0.85,
-          "line-dasharray": [0.1, 1.8],
         },
       });
     }
   }
 
-  function clearJourneyLayers(map: mapGl.MapLibreMap) {
+  /** Re-assert OSRM-matching paint when layers already exist from an older build. */
+  function applyJourneyPaint(map: mapGl.MapLibreMap) {
+    for (const id of [JOURNEY_WALK_CASING_ID, JOURNEY_RIDE_CASING_ID]) {
+      if (!map.getLayer(id)) continue;
+      map.setPaintProperty(id, "line-dasharray", null);
+      map.setPaintProperty(id, "line-opacity", 0.55);
+      map.setPaintProperty(id, "line-width", JOURNEY_CASING_WIDTH);
+      map.setLayoutProperty(id, "line-cap", "butt");
+    }
     for (const id of [JOURNEY_WALK_LAYER_ID, JOURNEY_RIDE_LAYER_ID]) {
+      if (!map.getLayer(id)) continue;
+      map.setPaintProperty(id, "line-dasharray", null);
+      map.setPaintProperty(id, "line-opacity", 0.85);
+      map.setPaintProperty(id, "line-width", JOURNEY_LINE_WIDTH);
+      map.setLayoutProperty(id, "line-cap", "butt");
+    }
+    if (map.getLayer(JOURNEY_WALK_CASING_ID)) {
+      map.setPaintProperty(JOURNEY_WALK_CASING_ID, "line-color", JOURNEY_WALK_COLOR);
+    }
+    if (map.getLayer(JOURNEY_WALK_LAYER_ID)) {
+      map.setPaintProperty(JOURNEY_WALK_LAYER_ID, "line-color", JOURNEY_WALK_COLOR);
+    }
+  }  function clearJourneyLayers(map: mapGl.MapLibreMap) {
+    for (const id of [
+      JOURNEY_WALK_LAYER_ID,
+      JOURNEY_WALK_CASING_ID,
+      JOURNEY_RIDE_LAYER_ID,
+      JOURNEY_RIDE_CASING_ID,
+    ]) {
       if (map.getLayer(id)) map.removeLayer(id);
     }
     if (map.getSource(JOURNEY_SOURCE_ID)) {
       map.removeSource(JOURNEY_SOURCE_ID);
     }
   }
-
   function ensureEventRouteLayers(map: mapGl.MapLibreMap) {
     if (!map.getSource(EVENT_ROUTE_SOURCE_ID)) {
       map.addSource(EVENT_ROUTE_SOURCE_ID, {
@@ -2085,6 +2172,8 @@
    */
   const NAV_PITCH = 60;
   const NAV_ZOOM = 18;
+  /** Plain let: edge detector for nav exit; must not be $state or it loops. */
+  let wasNavigating = false;
 
   $effect(() => {
     const map = mapStore.mapInstance;
@@ -2117,67 +2206,121 @@
       return;
     }
 
-    map.easeTo({
-      center: coords,
-      zoom: NAV_ZOOM,
-      pitch: NAV_PITCH,
-      // Hold the current bearing when the device gives no heading, rather
-      // than snapping north-up mid-walk.
-      bearing: locationStore.bearing ?? map.getBearing(),
-      duration: 900,
-      essential: true,
+    // rAF: easeTo fires zoom/move handlers sync; keep those state writes out
+    // of this reactive flush (same guard as jeepney stop flyTo).
+    const bearing = locationStore.bearing ?? map.getBearing();
+    const frame = requestAnimationFrame(() => {
+      map.easeTo({
+        center: coords,
+        zoom: NAV_ZOOM,
+        pitch: NAV_PITCH,
+        // Hold the current bearing when the device gives no heading, rather
+        // than snapping north-up mid-walk.
+        bearing,
+        duration: 900,
+        essential: true,
+      });
     });
+    return () => cancelAnimationFrame(frame);
   });
 
-  /** Restore a plain north-up view when navigation ends. */
+  /**
+   * After follow-mode ends, flatten north-up. Must NOT run on every boot:
+   * campus defaultCamera is pitched (pitch 60), and calling easeTo from this
+   * effect while !navigating re-entered via zoom handlers →
+   * effect_update_depth_exceeded (blank crash card).
+   */
   $effect(() => {
     const map = mapStore.mapInstance;
-    if (!map || directionsStore.navigating) return;
-    if (map.getPitch() === 0 && map.getBearing() === 0) return;
-    if (terrainStore.enabled) return; // terrain owns the camera
-    map.easeTo({ pitch: 0, bearing: 0, duration: 600 });
+    const navigating = directionsStore.navigating;
+    const leavingNav = wasNavigating && !navigating;
+    wasNavigating = navigating;
+
+    if (!map || !leavingNav) return;
+    if (untrack(() => terrainStore.enabled)) return; // terrain owns the camera
+
+    const frame = requestAnimationFrame(() => {
+      map.easeTo({ pitch: 0, bearing: 0, duration: 600 });
+    });
+    return () => cancelAnimationFrame(frame);
   });
 
-  /** Draw the selected multi-modal journey (#966). */
+  /**
+   * Draw the selected multi-modal journey (#966) while the directions modal
+   * (or follow mode) is open. Same readiness gate as jeepney routes:
+   * isStyleLoaded() is false during repaints and "load" fires once, so those
+   * gates deadlock and the polyline never appears.
+   */
   $effect(() => {
     const map = mapStore.mapInstance;
     if (!map) return;
 
+    // Track the fields the selected getter reads so replan/select re-draws.
+    void directionsStore.journeys;
+    void directionsStore.selectedId;
     const journey = directionsStore.selected;
-    if (!journey) {
-      if (map.isStyleLoaded()) clearJourneyLayers(map);
+
+    if (!journey || !directionsStore.active) {
+      // Clear immediately — never queue clears on styledata (wipes a later draw).
+      try {
+        clearJourneyLayers(map);
+      } catch {
+        // Style not ready; nothing drawn yet.
+      }
       return;
     }
 
     const draw = () => {
       ensureJourneyLayers(map);
-      const source = map.getSource(JOURNEY_SOURCE_ID);
-      if (!source || !("setData" in source)) return;
-      source.setData({
+      applyJourneyPaint(map);
+      const source = map.getSource(JOURNEY_SOURCE_ID) as
+        | mapGl.GeoJSONSource
+        | undefined;
+      source?.setData({
         type: "FeatureCollection",
-        features: journey.legs.map((leg) => ({
-          type: "Feature" as const,
-          geometry: {
-            type: "LineString" as const,
-            coordinates: leg.coordinates,
-          },
-          properties: {
-            kind: leg.kind,
-            color: leg.kind === "ride" ? leg.color : "#1d4ed8",
-          },
-        })),
+        features: journey.legs
+          .filter((leg) => leg.coordinates.length >= 2)
+          .map((leg) => ({
+            type: "Feature" as const,
+            geometry: {
+              type: "LineString" as const,
+              coordinates: leg.coordinates,
+            },
+            properties: {
+              kind: leg.kind,
+              color: leg.kind === "ride" ? leg.color : JOURNEY_WALK_COLOR,
+            },
+          })),
       });
     };
 
-    if (map.isStyleLoaded()) draw();
-    else map.once("load", draw);
+    const tryDraw = () => {
+      try {
+        draw();
+        return true;
+      } catch (error) {
+        console.warn("journey draw failed; retrying on styledata", error);
+        return false;
+      }
+    };
+
+    if (tryDraw()) return;
+    const onStyleData = () => {
+      if (tryDraw()) map.off("styledata", onStyleData);
+    };
+    map.on("styledata", onStyleData);
+    return () => {
+      map.off("styledata", onStyleData);
+    };
   });
 
   $effect(() => {
     if (!directions) return;
 
-    // The multi-modal planner owns the drawn route while it is open; letting
-    // the OSRM polyline render too would put two different lines on the map.
+    // Multi-modal Get directions owns the drawn journey; keep OSRM clear while
+    // that session is open. Schedule-day routes still use routeWaypoints.
+    // Do not revive OSRM from locationStore.destination — that leftover used
+    // to redraw the foot polyline after the directions modal closed (#966).
     if (directionsStore.active) {
       directions.clear();
       return;
@@ -2195,22 +2338,6 @@
         map.fitBounds(bounds, {
           padding: { top: 80, bottom: 80, left: 80, right: 80 },
           duration: 1200,
-          maxZoom: 18,
-        });
-      }
-    } else if (locationStore.routeOrigin && locationStore.destination) {
-      directions.setWaypoints([
-        locationStore.routeOrigin,
-        locationStore.destination,
-      ]);
-      const map = mapStore.mapInstance;
-      if (map) {
-        const bounds = new mapGl.LngLatBounds();
-        bounds.extend(locationStore.routeOrigin);
-        bounds.extend(locationStore.destination);
-        map.fitBounds(bounds, {
-          padding: { top: 80, bottom: 120, left: 80, right: 80 },
-          duration: 1000,
           maxZoom: 18,
         });
       }

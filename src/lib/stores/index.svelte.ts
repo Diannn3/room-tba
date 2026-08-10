@@ -1025,6 +1025,11 @@ export const jeepneyStore = new JeepneyStore();
 export const transitStore = new TransitStore();
 export const announcementsStore = new AnnouncementsStore();
 export const directionsStore = new DirectionsStore();
+// Get directions used to also set locationStore.destination (OSRM). Clear it
+// on close so Map.svelte does not redraw the foot polyline after the modal goes.
+directionsStore.onClose = () => {
+  locationStore.clearDestination();
+};
 export const appBootstrapStore = new AppBootstrapStore();
 export const syncToastStore = new SyncToastStore();
 export const building3DStore = new Building3DStore();

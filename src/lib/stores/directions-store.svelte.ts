@@ -137,6 +137,12 @@ export class DirectionsStore {
     this.cameraFollowing = true;
   };
 
+  /**
+   * Tear down the session. `onClose` clears cross-store leftovers (legacy
+   * OSRM destination) without this module importing locationStore.
+   */
+  onClose: (() => void) | null = null;
+
   close = () => {
     this.#planToken++;
     this.phase = "idle";
@@ -147,5 +153,6 @@ export class DirectionsStore {
     this.journeys = [];
     this.selectedId = null;
     this.status = null;
+    this.onClose?.();
   };
 }

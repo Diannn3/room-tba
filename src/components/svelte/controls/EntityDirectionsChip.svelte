@@ -27,9 +27,9 @@
 
   function openDirections() {
     locationStore.requestLocation();
-    locationStore.setDestination([lon, lat]);
-    // Opens with whatever fix we already have; DirectionsSession replans as
-    // soon as the watch delivers one (or a better one).
+    // Multi-modal directionsStore owns the session. Do not also set
+    // locationStore.destination — that feeds the legacy OSRM polyline, which
+    // would redraw after close once directionsStore.active flips false.
     void directionsStore.open(
       { lat, lng: lon, label: destinationLabel ?? "Destination" },
       locationStore.coords

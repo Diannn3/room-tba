@@ -1,3 +1,15 @@
+# [2.17.0](https://github.com/uplbtools/room-tba/compare/v2.16.0...v2.17.0) (2026-08-10)
+
+
+### Bug Fixes
+
+* **menu:** prioritize app navigation ([#987](https://github.com/uplbtools/room-tba/issues/987)) ([95089f8](https://github.com/uplbtools/room-tba/commit/95089f87b966cbb27f4463121375da9ad537cb94))
+
+
+### Features
+
+* **map:** external campus footprints & government POIs ([#991](https://github.com/uplbtools/room-tba/issues/991)) ([c15c68d](https://github.com/uplbtools/room-tba/commit/c15c68d15f2a63323c2df54c66df4a9412b9b524))
+
 # [2.14.0](https://github.com/uplbtools/room-tba/compare/v2.13.4...v2.14.0) (2026-08-06)
 
 

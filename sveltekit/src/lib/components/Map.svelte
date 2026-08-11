@@ -1,3139 +1,3145 @@
 <script lang="ts">
-  
-  import maplibregl from "maplibre-gl";
-  import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-csp-worker.js?url";
+import maplibregl from "maplibre-gl";
+import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-csp-worker.js?url";
 import { MapLibre, Marker } from "svelte-maplibre";
 
-  // In production Vite inlines maplibre into the app chunk and boots its
-  // worker by importScripts-ing that same chunk; vector tiles survive but the
-  // GeoJSON source path dies inside the worker ("f is not defined"), so no
-  // geojson line layer (jeepney/event routes) ever rendered on prod. Point
-  // maplibre at its self-contained CSP worker bundle instead.
-  maplibregl.setWorkerUrl(maplibreWorkerUrl);
-
-  import CalendarDays from "@lucide/svelte/icons/calendar-days";
-  import Move from "@lucide/svelte/icons/move";
-  import Redo2 from "@lucide/svelte/icons/redo-2";
-  import Undo2 from "@lucide/svelte/icons/undo-2";
-  import X from "@lucide/svelte/icons/x";
-  import MapLibreGlDirections from "@maplibre/maplibre-gl-directions";
-  import type { FeatureCollection, LineString } from "geojson";
-  import type { StyleSpecification } from "maplibre-gl";
-  import * as mapGl from "maplibre-gl";
-  import { onMount, untrack } from "svelte";
-  import { MediaQuery } from "svelte/reactivity";
-  import { fade } from "svelte/transition";
-  import { sumRouteLegs } from "$lib/campus-route";
-  import {
-    buildingMatchesTypeFilter,
-    dormMatchesTypeFilter,
-  } from "$lib/constants/building-types";
-  import jeepneyGeometries from "$lib/constants/jeepney-geometries.json";
-  import {
-    type JeepneyRoute,
-    type JeepneyStop,
-    type ResolvedRouteGeometry,
-    type RouteGeometrySource,
-    resolveRouteGeometry,
-    type StoredRouteGeometry,
-  } from "$lib/constants/jeepney-routes";
-  import {
-    MAKILING_TRAIL_COLOR,
-    MAKILING_TRAIL_LAYER_CASING_ID,
-    MAKILING_TRAIL_LAYER_ID,
-    MAKILING_TRAIL_LINE,
-    MAKILING_TRAIL_SOURCE_ID,
-    MAKILING_TRAIL_STATIONS,
-    MAKILING_TRAIL_STATIONS_LAYER_ID,
-    MAKILING_TRAIL_STATIONS_SOURCE_ID,
-  } from "$lib/constants/makiling-trail";
-  import { isMap2DPitch } from "$lib/constants/map-dimension";
-  import {
-    CAMPUS_DEFAULT_CAMERA,
-    CAMPUS_MAX_BOUNDS,
-    getTerrainTileJsonUrl,
-    TERRAIN_CAMERA,
-    TERRAIN_HILLSHADE_BEFORE_LAYER_ID,
-    TERRAIN_HILLSHADE_LAYER_ID,
-    TERRAIN_MAX_BOUNDS,
-    TERRAIN_SOURCE_BOUNDS,
-    TERRAIN_SOURCE_ID,
-    TERRAIN_TILE_FAILURE_MESSAGE,
-    TERRAIN_UNAVAILABLE_OFFLINE_MESSAGE,
-  } from "$lib/constants/map-terrain";
-  import { isStudentOrganization } from "$lib/constants/org-categories";
-  import { isLandmarkPlaceCategory } from "$lib/constants/place-categories";
-  import {
-    ISOCHRONE_CAP_MINUTES,
-    VIRIDIS_STOPS,
-  } from "$lib/constants/travel-modes";
-  import { getAppActions, getAppData } from "$lib/context";
-  import {
-    buildingPreviewFromRow,
-    dormPreviewFromRow,
-    type EntityHoverPreview,
-    entityHoverPreviewStore,
-    eventPreviewFromRow,
-    isBuildingHoverPreview,
-    isDormHoverPreview,
-    isEventHoverPreview,
-    isOrganizationHoverPreview,
-    isPlaceHoverPreview,
-    organizationPreviewFromRow,
-    placePreviewFromRow,
-  } from "$lib/entity-hover-preview.svelte";
-  import { getEventImage } from "$lib/event-images";
-  import { formatCampusDateShort, formatCampusTime } from "$lib/event-time";
-  import { metersToLngLatCircle } from "$lib/geolocation";
-  import { observeBlockHeight } from "$lib/layout-css-vars";
-  import { applyBasemapPalette } from "$lib/map-basemap-palette";
-  import { syncBuildingLayersForDimension } from "$lib/map-dimension-layers";
-  import {
-    ClientEditConflictError,
-    ClientEventConflictError,
-    editErrorMessage,
-  } from "$lib/map-edit/errors";
-  import { patchEventLocations, patchPosition } from "$lib/map-edit/patch-api";
-  import type {
-    EditableCoords,
-    EditableEntityType,
-    EditableVersionedPosition,
-    EventLocationWriteValue,
-  } from "$lib/map-edit/types";
-  import {
-    completeMapMoveRedo,
-    completeMapMoveUndo,
-    getMapEditShortcutAction,
-    type MapMoveCoordinates,
-    recordMapMove,
-    type VersionedMapMove,
-  } from "$lib/map-move-history";
-  import { loadCampusMapStyle } from "$lib/maptiler-key";
-  import {
-    resolveSubmitterName,
-    submitCreateProposal,
-    submitPinPositionProposal,
-  } from "$lib/proposals/client";
-  import { formatMinutes } from "$lib/schedule-import/day-stops";
-  import {
-    trackSponsorClick,
-    trackSponsorImpression,
-  } from "$lib/sponsor-tracking";
-  import { getSponsoredPlacePins, loadSponsors } from "$lib/sponsors";
-  import {
-    additionProposalStore,
-    adminAuthStore,
-    buildingTypeFilter,
-    classVenuesStore,
-    currentRoom,
-    eventPlacementStore,
-    jeepneyStore,
-    locationStore,
-    mapEditStore,
-    mapProposalStore,
-    mapStore,
-    mapViewStore,
-    measureRouteStore,
-    plannerBuildingsStore,
-    plannerRoomCodes,
-    plannerStore,
-    queryStore,
-    scheduleRouteStore,
-    sidePanelStore,
-    syncToastStore,
-    termStore,
-    terrainStore,
-    toastStore,
-    trailStore,
-    transitStore,
-    travelTimeStore,
-  } from "$lib/store.svelte";
-  import {
-    dijkstra,
-    isochroneFeatures,
-    nearestNodeIndex,
-    shortestPath,
-    type TravelMode,
-  } from "$lib/travel-graph/engine";
-  import { loadTravelGraph } from "$lib/travel-graph/load";
-  import type {
-    BuildingData,
-    DormData,
-    EventData,
-    OrgData,
-    PlaceData,
-  } from "$lib/types";
-  import BuildingResult from "./controls/BuildingResult.svelte";
-  import DormResult from "./controls/DormResult.svelte";
-  import EventResult from "./controls/EventResult.svelte";
-  import OrgResult from "./controls/OrgResult.svelte";
-  import PlaceResult from "./controls/PlaceResult.svelte";
-  import ContributorDraftPinMarker from "./map/ContributorDraftPinMarker.svelte";
-  import EventMapPin from "./map/EventMapPin.svelte";
-  import MapEntityPin from "./map/MapEntityPin.svelte";
-  import PinGlyph from "./map/PinGlyph.svelte";
-  import EventPlacementImageField from "./map-chrome/EventPlacementImageField.svelte";
-
-  const data = getAppData();
-  const appActions = getAppActions();
-  const { buildings, dorms, events, organizations, places, loaded } =
-    $derived(data());
-  // Refresh the set of buildings that host classes whenever the term changes
-  // or an offline sync lands, so dual-role buildings (admin + class venue)
-  // filter correctly.
-  $effect(() => {
-    // Re-run after a sync lands (allSynced isn't read by load's argument).
-    void syncToastStore.allSynced;
-    void classVenuesStore.load(termStore.activeTermId);
-  });
-
-  // Browsing a sidebar directory declutters the map to just that category's
-  // pins; null means no browse filter (all pin kinds show).
-  const browseTab = $derived(
-    queryStore.category === "browse" ? queryStore.queryValue : null,
-  );
-  const showBuildingPins = $derived(
-    browseTab === null ||
-      browseTab === "buildings" ||
-      browseTab === "colleges" ||
-      browseTab === "divisions",
-  );
-  const showDormPins = $derived(browseTab === null || browseTab === "dorms");
-  const orgPinFilter = $derived.by((): "all" | "student" | "office" | "none" => {
-    if (browseTab === null) return "all";
-    if (browseTab === "organizations") return "student";
-    if (browseTab === "offices") return "office";
-    return "none";
-  });
-  const placePinFilter = $derived.by(
-    (): "all" | "landmark" | "establishment" | "none" => {
-      if (browseTab === null) return "all";
-      if (browseTab === "landmarks") return "landmark";
-      if (browseTab === "services") return "establishment";
-      return "none";
-    },
-  );
-
-  const filteredBuildings = $derived.by(() => {
-    if (!loaded || !showBuildingPins) return [];
-    return buildings.filter((building) =>
-      buildingMatchesTypeFilter(
-        building,
-        buildingTypeFilter.value,
-        classVenuesStore.buildingIdsWithClasses,
-      ),
-    );
-  });
-  const filteredDorms = $derived.by(() => {
-    if (!loaded || !showDormPins) return [];
-    return dorms.filter((dorm) =>
-      dormMatchesTypeFilter(dorm, buildingTypeFilter.value),
-    );
-  });
-  // Organizations pin at their own coordinate, else fall back to the coords of
-  // the building they sit in. Orgs without any resolvable location are dropped
-  // from the map (they still appear in the directory list).
-  function organizationPosition(org: OrgData) {
-    let lat = org.lat;
-    let lon = org.lon;
-    if ((lat === null || lon === null) && org.buildingId !== null) {
-      const host = (buildings ?? []).find((building) => building.id === org.buildingId);
-      if (host) {
-        lat = host.lat;
-        lon = host.lon;
-      }
-    }
-    return lat !== null && lon !== null ? { lat, lon } : null;
-  }
-
-  const filteredOrganizations = $derived.by(() => {
-    if (!loaded || !mapViewStore.showOrgs || orgPinFilter === "none") return [];
-    return organizations.flatMap((org) => {
-      if (orgPinFilter === "student" && !isStudentOrganization(org.category)) {
-        return [];
-      }
-      if (orgPinFilter === "office" && isStudentOrganization(org.category)) {
-        return [];
-      }
-      const position = organizationPosition(org);
-      return position ? [{ org, ...position }] : [];
-    });
-  });
-  const filteredPlaces = $derived.by(() => {
-    if (!loaded || !mapViewStore.showPlaces || placePinFilter === "none") {
-      return [];
-    }
-    return places.filter(
-      (place) =>
-        place.lat != null &&
-        place.lon != null &&
-        (placePinFilter === "all" ||
-          (placePinFilter === "landmark") === isLandmarkPlaceCategory(place.category)),
-    );
-  });
-
-  function isLandmarkPlace(place: PlaceData) {
-    return isLandmarkPlaceCategory(place.category);
-  }
-
-  function handlePlaceMarkerClick(place: PlaceData) {
-    if (
-      queryStore.category === "place" &&
-      queryStore.inputValue === place.name
-    ) {
-      sidePanelStore.expand();
-      return;
-    }
-    queryStore.updateQuery({
-      category: "place",
-      type: "result",
-      value: place.name,
-    });
-    queryStore.inputValue = place.name;
-    sidePanelStore.openPanel({
-      type: "search-result",
-      component: PlaceResult,
-    });
-  }
-
-  // Event titles are not unique, so resolve the selected event by its slug when
-  // one is available, falling back to the title only for legacy/partial state.
-  function findSelectedEvent(eventList: EventData[]): EventData | null {
-    const slug = queryStore.selectedEventSlug;
-    if (slug) return eventList.find((event) => event.slug === slug) ?? null;
-    return (
-      eventList.find((event) => event.title === queryStore.inputValue) ?? null
-    );
-  }
-  let directions: MapLibreGlDirections | undefined = $state.raw();
-  let mapStyle = $state<StyleSpecification | null>(null);
-
-  // Sponsored place pins (docs/ad-policy.md: real locations only, capped).
-  let sponsoredPlacePins = $state<Map<string, string>>(new Map());
-
-  // Impression per sponsored pin actually on the map (session-deduped in lib).
-  $effect(() => {
-    if (sponsoredPlacePins.size === 0) return;
-    for (const place of filteredPlaces) {
-      const sponsorId = sponsoredPlacePins.get(place.name);
-      if (sponsorId) trackSponsorImpression(sponsorId, "map_pin");
-    }
-  });
-
-  onMount(() => {
-    // Hydrate saved planner plans so the "My classes" highlight knows the
-    // user's class rooms without the planner screen ever being opened.
-    plannerStore.init();
-    void loadSponsors().then((data) => {
-      if (data) sponsoredPlacePins = getSponsoredPlacePins(data.sponsors);
-    });
-    void loadCampusMapStyle<StyleSpecification>()
-      .then((style) => {
-        mapStyle = style;
-      })
-      .catch((error) => {
-        console.error("Failed to load campus map style", error);
-        toastStore.show(
-          "Campus map tiles could not load. Check MapTiler configuration.",
-          "error",
-        );
-      });
-  });
-
-  const JEEPNEY_ROUTE_SOURCE_ID = "jeepney-route-line";
-  const JEEPNEY_ROUTE_LAYER_ID = "jeepney-route-line";
-  const JEEPNEY_ROUTE_LAYER_CASING_ID = "jeepney-route-line-casing";
-  const USER_LOCATION_ACCURACY_SOURCE_ID = "user-location-accuracy";
-  const USER_LOCATION_ACCURACY_FILL_ID = "user-location-accuracy-fill";
-  const USER_LOCATION_ACCURACY_LINE_ID = "user-location-accuracy-line";
-  const JEEPNEY_ROUTE_WIDTH = 5;
-  const JEEPNEY_ROUTE_CASING_WIDTH = 8;
-  const jeepneyRouteGeometryCache = new Map<string, ResolvedRouteGeometry>();
-  const EVENT_ROUTE_SOURCE_ID = "event-route-line";
-  const EVENT_ROUTE_LAYER_ID = "event-route-line";
-  const EVENT_ROUTE_LAYER_CASING_ID = "event-route-line-casing";
-  let activeRouteId = $state<string | null>(null);
-  let activeRouteStops = $state<JeepneyStop[]>([]);
-  let activeRouteColor = $state<string>("#dc2626");
-  let terrainModeWasEnabled = false;
-  let selectedEditKey = $state<string | null>(null);
-  let savingEditKey = $state<string | null>(null);
-  let savedEditKey = $state<string | null>(null);
-  let failedEditKey = $state<string | null>(null);
-  let hoveredEditKey = $state<string | null>(null);
-  let expandedEventGroupKey = $state<string | null>(null);
-  let undoingEditKey = $state<string | null>(null);
-  let undoShortcutLabel = $state("Ctrl+Z");
-  let editStatusMessage = $state<string | null>(null);
-  type EntityEditMove = VersionedMapMove & {
-    kind: "entity";
-    entityType: EditableEntityType;
-    id: number;
-  };
-  type EventLocationEditMove = VersionedMapMove & {
-    kind: "eventLocation";
-    eventId: number;
-    locationId: number;
-    previousLocations: EventLocationWriteValue[];
-    currentLocations: EventLocationWriteValue[];
-  };
-  type EditMove = EntityEditMove | EventLocationEditMove;
-  let positionOverrides = $state<Record<string, EditableVersionedPosition>>({});
-  // `events` is `$state.raw`, so in-place updates do not invalidate derived
-  // marker positions. Mirror the building/dorm `positionOverrides` pattern with
-  // a reactive override so the editable event marker reflects saves and, on a
-  // failed save, rolls back to the previous/server position.
-  let eventLocationOverrides = $state<Record<string, EditableCoords>>({});
-  let undoStack = $state<EditMove[]>([]);
-  let redoStack = $state<EditMove[]>([]);
-  const undoMove = $derived(undoStack.at(-1) ?? null);
-  const redoMove = $derived(redoStack.at(-1) ?? null);
-
-  function routeGeometry(route: JeepneyRoute) {
-    const cached = jeepneyRouteGeometryCache.get(route.id);
-    if (cached) return cached;
-    const resolved = resolveRouteGeometry(
-      route,
-      jeepneyGeometries as Record<string, StoredRouteGeometry>,
-    );
-    // Only sourced lines are cacheable: a stops-only line is derived from stops
-    // the editor can move, so it has to be recomputed each draw.
-    if (resolved.source !== "stops-only") {
-      jeepneyRouteGeometryCache.set(route.id, resolved);
-    }
-    return resolved;
-  }
-
-  function ensureJeepneyRouteLayers(
-    map: mapGl.MapLibreMap,
-    color: string,
-    source: RouteGeometrySource,
-  ) {
-    // A stops-only line is not a road path, so it must not look like one:
-    // dashed and faded reads as provisional instead of confidently wrong.
-    const provisional = source === "stops-only";
-    // `undefined` restores the style default (solid). MapLibre dash lengths are
-    // multiples of line-width, so the casing's dash is rescaled by the width
-    // ratio; otherwise the white halo fills the gaps it should leave open.
-    const dash = provisional ? [1.5, 1.5] : undefined;
-    const casingDash = dash?.map(
-      (n) => (n * JEEPNEY_ROUTE_WIDTH) / JEEPNEY_ROUTE_CASING_WIDTH,
-    );
-    const opacity = provisional ? 0.55 : 0.95;
-    if (!map.getSource(JEEPNEY_ROUTE_SOURCE_ID)) {
-      map.addSource(JEEPNEY_ROUTE_SOURCE_ID, {
-        type: "geojson",
-        data: {
-          type: "FeatureCollection",
-          features: [],
-        },
-      });
-    }
-
-    if (!map.getLayer(JEEPNEY_ROUTE_LAYER_CASING_ID)) {
-      map.addLayer({
-        id: JEEPNEY_ROUTE_LAYER_CASING_ID,
-        type: "line",
-        source: JEEPNEY_ROUTE_SOURCE_ID,
-        layout: { "line-cap": "round", "line-join": "round" },
-        paint: {
-          "line-color": "#ffffff",
-          "line-width": JEEPNEY_ROUTE_CASING_WIDTH,
-          "line-opacity": 0.95,
-        },
-      });
-    }
-
-    if (!map.getLayer(JEEPNEY_ROUTE_LAYER_ID)) {
-      map.addLayer({
-        id: JEEPNEY_ROUTE_LAYER_ID,
-        type: "line",
-        source: JEEPNEY_ROUTE_SOURCE_ID,
-        layout: { "line-cap": "round", "line-join": "round" },
-        paint: {
-          "line-color": color,
-          "line-width": JEEPNEY_ROUTE_WIDTH,
-          "line-opacity": 0.95,
-        },
-      });
-    }
-
-    // Layers outlive a single route, so provenance styling is applied on every
-    // draw, not only when the layer is first created.
-    map.setPaintProperty(JEEPNEY_ROUTE_LAYER_ID, "line-color", color);
-    map.setPaintProperty(JEEPNEY_ROUTE_LAYER_ID, "line-opacity", opacity);
-    map.setPaintProperty(JEEPNEY_ROUTE_LAYER_ID, "line-dasharray", dash);
-    map.setPaintProperty(JEEPNEY_ROUTE_LAYER_CASING_ID, "line-opacity", opacity);
-    map.setPaintProperty(
-      JEEPNEY_ROUTE_LAYER_CASING_ID,
-      "line-dasharray",
-      casingDash,
-    );
-  }
-
-  function clearJeepneyRouteLayers(map: mapGl.MapLibreMap) {
-    if (map.getLayer(JEEPNEY_ROUTE_LAYER_ID)) {
-      map.removeLayer(JEEPNEY_ROUTE_LAYER_ID);
-    }
-    if (map.getLayer(JEEPNEY_ROUTE_LAYER_CASING_ID)) {
-      map.removeLayer(JEEPNEY_ROUTE_LAYER_CASING_ID);
-    }
-    if (map.getSource(JEEPNEY_ROUTE_SOURCE_ID)) {
-      map.removeSource(JEEPNEY_ROUTE_SOURCE_ID);
-    }
-  }
-
-  const TRAVEL_TIME_SOURCE_ID = "travel-time-isochrone";
-  const TRAVEL_TIME_LAYER_ID = "travel-time-isochrone";
-
-  function ensureTravelTimeLayers(map: mapGl.MapLibreMap) {
-    if (!map.getSource(TRAVEL_TIME_SOURCE_ID)) {
-      map.addSource(TRAVEL_TIME_SOURCE_ID, {
-        type: "geojson",
-        data: { type: "FeatureCollection", features: [] },
-      });
-    }
-
-    if (!map.getLayer(TRAVEL_TIME_LAYER_ID)) {
-      // Viridis ramp over per-edge walking minutes; values past the cap keep
-      // the last stop's color (interpolate clamps).
-      const rampStep = ISOCHRONE_CAP_MINUTES / (VIRIDIS_STOPS.length - 1);
-      map.addLayer({
-        id: TRAVEL_TIME_LAYER_ID,
-        type: "line",
-        source: TRAVEL_TIME_SOURCE_ID,
-        layout: { "line-cap": "round", "line-join": "round" },
-        paint: {
-          "line-color": [
-            "interpolate",
-            ["linear"],
-            ["get", "minutes"],
-            ...VIRIDIS_STOPS.flatMap((color, i) => [i * rampStep, color]),
-          ] as unknown as mapGl.ExpressionSpecification,
-          "line-width": 3,
-          "line-opacity": 0.85,
-        },
-      });
-    }
-  }
-
-  function clearTravelTimeLayers(map: mapGl.MapLibreMap) {
-    if (map.getLayer(TRAVEL_TIME_LAYER_ID)) {
-      map.removeLayer(TRAVEL_TIME_LAYER_ID);
-    }
-    if (map.getSource(TRAVEL_TIME_SOURCE_ID)) {
-      map.removeSource(TRAVEL_TIME_SOURCE_ID);
-    }
-  }
-
-  const MEASURE_ROUTE_SOURCE_ID = "measure-route-line";
-  const MEASURE_ROUTE_LAYER_ID = "measure-route-line";
-
-  function ensureMeasureRouteLayers(map: mapGl.MapLibreMap) {
-    if (!map.getSource(MEASURE_ROUTE_SOURCE_ID)) {
-      map.addSource(MEASURE_ROUTE_SOURCE_ID, {
-        type: "geojson",
-        data: { type: "FeatureCollection", features: [] },
-      });
-    }
-
-    if (!map.getLayer(MEASURE_ROUTE_LAYER_ID)) {
-      // Dashed violet: deliberately unlike the solid casing-backed jeepney
-      // red / event maroon / trail green lines and the stock blue OSRM
-      // directions polyline — this is a measurement, not a route suggestion.
-      map.addLayer({
-        id: MEASURE_ROUTE_LAYER_ID,
-        type: "line",
-        source: MEASURE_ROUTE_SOURCE_ID,
-        layout: { "line-cap": "round", "line-join": "round" },
-        paint: {
-          "line-color": "#7c3aed",
-          "line-width": 4,
-          "line-opacity": 0.9,
-          "line-dasharray": [0.2, 1.6],
-        },
-      });
-    }
-  }
-
-  function clearMeasureRouteLayers(map: mapGl.MapLibreMap) {
-    if (map.getLayer(MEASURE_ROUTE_LAYER_ID)) {
-      map.removeLayer(MEASURE_ROUTE_LAYER_ID);
-    }
-    if (map.getSource(MEASURE_ROUTE_SOURCE_ID)) {
-      map.removeSource(MEASURE_ROUTE_SOURCE_ID);
-    }
-  }
-
-  function ensureEventRouteLayers(map: mapGl.MapLibreMap) {
-    if (!map.getSource(EVENT_ROUTE_SOURCE_ID)) {
-      map.addSource(EVENT_ROUTE_SOURCE_ID, {
-        type: "geojson",
-        data: { type: "FeatureCollection", features: [] },
-      });
-    }
-
-    if (!map.getLayer(EVENT_ROUTE_LAYER_CASING_ID)) {
-      map.addLayer({
-        id: EVENT_ROUTE_LAYER_CASING_ID,
-        type: "line",
-        source: EVENT_ROUTE_SOURCE_ID,
-        layout: { "line-cap": "round", "line-join": "round" },
-        paint: {
-          "line-color": "#ffffff",
-          "line-width": 7,
-          "line-opacity": 0.9,
-        },
-      });
-    }
-
-    if (!map.getLayer(EVENT_ROUTE_LAYER_ID)) {
-      map.addLayer({
-        id: EVENT_ROUTE_LAYER_ID,
-        type: "line",
-        source: EVENT_ROUTE_SOURCE_ID,
-        layout: { "line-cap": "round", "line-join": "round" },
-        paint: {
-          "line-color": "#7b1113",
-          "line-width": 4,
-          "line-opacity": 0.9,
-        },
-      });
-    }
-  }
-
-  function clearEventRouteLayers(map: mapGl.MapLibreMap) {
-    if (map.getLayer(EVENT_ROUTE_LAYER_ID))
-      map.removeLayer(EVENT_ROUTE_LAYER_ID);
-    if (map.getLayer(EVENT_ROUTE_LAYER_CASING_ID)) {
-      map.removeLayer(EVENT_ROUTE_LAYER_CASING_ID);
-    }
-    if (map.getSource(EVENT_ROUTE_SOURCE_ID))
-      map.removeSource(EVENT_ROUTE_SOURCE_ID);
-  }
-
-  function ensureTrailLayers(map: mapGl.MapLibreMap) {
-    // Trail line source + casing + line
-    if (!map.getSource(MAKILING_TRAIL_SOURCE_ID)) {
-      map.addSource(MAKILING_TRAIL_SOURCE_ID, {
-        type: "geojson",
-        data: {
-          type: "Feature",
-          geometry: {
-            type: "LineString",
-            coordinates: MAKILING_TRAIL_LINE,
-          },
-          properties: {},
-        },
-      });
-    }
-
-    if (!map.getLayer(MAKILING_TRAIL_LAYER_CASING_ID)) {
-      map.addLayer({
-        id: MAKILING_TRAIL_LAYER_CASING_ID,
-        type: "line",
-        source: MAKILING_TRAIL_SOURCE_ID,
-        layout: { "line-cap": "round", "line-join": "round" },
-        paint: {
-          "line-color": "#ffffff",
-          "line-width": 7,
-          "line-opacity": 0.9,
-        },
-      });
-    }
-
-    if (!map.getLayer(MAKILING_TRAIL_LAYER_ID)) {
-      map.addLayer({
-        id: MAKILING_TRAIL_LAYER_ID,
-        type: "line",
-        source: MAKILING_TRAIL_SOURCE_ID,
-        layout: { "line-cap": "round", "line-join": "round" },
-        paint: {
-          "line-color": MAKILING_TRAIL_COLOR,
-          "line-width": 4,
-          "line-opacity": 0.95,
-        },
-      });
-    }
-
-    // Station markers source + circle layer
-    if (!map.getSource(MAKILING_TRAIL_STATIONS_SOURCE_ID)) {
-      map.addSource(MAKILING_TRAIL_STATIONS_SOURCE_ID, {
-        type: "geojson",
-        data: {
-          type: "FeatureCollection",
-          features: MAKILING_TRAIL_STATIONS.map((s) => ({
-            type: "Feature" as const,
-            geometry: {
-              type: "Point" as const,
-              coordinates: [s.lon, s.lat],
-            },
-            properties: {
-              station: s.station,
-              name: s.name,
-              elevation: s.elevationMeters,
-            },
-          })),
-        },
-      });
-    }
-
-    if (!map.getLayer(MAKILING_TRAIL_STATIONS_LAYER_ID)) {
-      map.addLayer({
-        id: MAKILING_TRAIL_STATIONS_LAYER_ID,
-        type: "circle",
-        source: MAKILING_TRAIL_STATIONS_SOURCE_ID,
-        paint: {
-          "circle-radius": 6,
-          "circle-color": MAKILING_TRAIL_COLOR,
-          "circle-stroke-color": "#ffffff",
-          "circle-stroke-width": 2,
-          "circle-opacity": 0.95,
-        },
-      });
-    }
-  }
-
-  function clearTrailLayers(map: mapGl.MapLibreMap) {
-    if (map.getLayer(MAKILING_TRAIL_STATIONS_LAYER_ID))
-      map.removeLayer(MAKILING_TRAIL_STATIONS_LAYER_ID);
-    if (map.getLayer(MAKILING_TRAIL_LAYER_ID))
-      map.removeLayer(MAKILING_TRAIL_LAYER_ID);
-    if (map.getLayer(MAKILING_TRAIL_LAYER_CASING_ID))
-      map.removeLayer(MAKILING_TRAIL_LAYER_CASING_ID);
-    if (map.getSource(MAKILING_TRAIL_STATIONS_SOURCE_ID))
-      map.removeSource(MAKILING_TRAIL_STATIONS_SOURCE_ID);
-    if (map.getSource(MAKILING_TRAIL_SOURCE_ID))
-      map.removeSource(MAKILING_TRAIL_SOURCE_ID);
-  }
-
-  function buildEventRouteGeometry(
-    route: EventData["routes"][number],
-  ): LineString | null {
-    const coordinates = route.stops
-      .filter((stop) => stop.resolvedLon !== null && stop.resolvedLat !== null)
-      .map((stop) => [stop.resolvedLon as number, stop.resolvedLat as number]);
-    if (coordinates.length < 2) return null;
-    return { type: "LineString", coordinates };
-  }
-
-  function buildSelectedEventRouteFeatures(
-    event: EventData,
-  ): FeatureCollection<LineString>["features"] {
-    return event.routes.flatMap((route) => {
-      const geometry = buildEventRouteGeometry(route);
-      if (!geometry) return [];
-      return [
-        {
-          type: "Feature" as const,
-          geometry,
-          properties: { eventId: event.id, routeId: route.id },
-        },
-      ];
-    });
-  }
-
-  function fitMapToRoute(map: mapGl.MapLibreMap, route: JeepneyRoute) {
-    if (route.stops.length === 0) return;
-    let minLng = Infinity;
-    let minLat = Infinity;
-    let maxLng = -Infinity;
-    let maxLat = -Infinity;
-    for (const stop of route.stops) {
-      if (stop.lon < minLng) minLng = stop.lon;
-      if (stop.lon > maxLng) maxLng = stop.lon;
-      if (stop.lat < minLat) minLat = stop.lat;
-      if (stop.lat > maxLat) maxLat = stop.lat;
-    }
-    // rAF: camera moves fire map event handlers synchronously; keep their
-    // state writes out of the reactive flush that called us (see stop flyTo
-    // effect) or the scheduler can die with effect_update_depth_exceeded.
-    requestAnimationFrame(() => {
-      map.fitBounds(
-        [
-          [minLng, minLat],
-          [maxLng, maxLat],
-        ],
-        {
-          padding: { top: 80, bottom: 80, left: 80, right: 80 },
-          duration: 1200,
-          pitch: 30,
-        },
-      );
-    });
-  }
-
-  function getEventMapLocations(event: EventData) {
-    return event.locations.filter(
-      (location) =>
-        location.resolvedLon !== null && location.resolvedLat !== null,
-    );
-  }
-
-  function focusMapOnEvent(map: mapGl.MapLibreMap, event: EventData) {
-    const points: [number, number][] = [];
-    for (const location of getEventMapLocations(event)) {
-      points.push([
-        location.resolvedLon as number,
-        location.resolvedLat as number,
-      ]);
-    }
-    // Include route geometry so events whose route stops extend beyond their
-    // primary locations still fit fully within the viewport.
-    for (const route of event.routes) {
-      for (const stop of route.stops) {
-        if (stop.resolvedLon !== null && stop.resolvedLat !== null) {
-          points.push([stop.resolvedLon, stop.resolvedLat]);
-        }
-      }
-    }
-    if (points.length === 0) return false;
-
-    if (points.length === 1) {
-      map.flyTo({
-        center: points[0],
-        zoom: 17,
-        pitch: 50,
-        padding: calculatePadding(md.current),
-        duration: 1200,
-      });
-      return true;
-    }
-
-    const bounds = new mapGl.LngLatBounds();
-    for (const point of points) {
-      bounds.extend(point);
-    }
-    map.fitBounds(bounds, {
-      padding: { top: 80, bottom: 80, left: 80, right: 80 },
-      duration: 1000,
-      pitch: 30,
-      maxZoom: 17,
-    });
-    return true;
-  }
-
-  async function createEventAtMapPoint(coords: EditableCoords) {
-    if (!eventPlacementStore.draft || eventPlacementStore.creating) return;
-
-    const draft = eventPlacementStore.draft;
-    eventPlacementStore.beginCreate();
-    try {
-      const res = await fetch("/api/admin/events", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          ...draft,
-          recurrence: "none",
-          isActive: true,
-          includeInSeo: true,
-          locations: [
-            {
-              anchorType: "custom",
-              buildingId: null,
-              dormId: null,
-              label: "Event marker",
-              lat: coords.lat,
-              lon: coords.lon,
-              isPrimary: true,
-              sortOrder: 0,
-            },
-          ],
-          routes: [],
-        }),
-      });
-      const data = (await res.json().catch(() => ({}))) as {
-        error?: string;
-        event?: EventData;
-      };
-
-      if (!res.ok || !data.event) {
-        throw new Error(data.error ?? `Create failed (${res.status})`);
-      }
-
-      appActions.replaceEvent(data.event);
-      queryStore.updateQuery({
-        category: "event",
-        type: "result",
-        value: data.event.title,
-        eventSlug: data.event.slug,
-      });
-      queryStore.inputValue = data.event.title;
-      sidePanelStore.expand();
-      if (!mapEditStore.enabled) mapEditStore.toggle();
-      eventPlacementStore.finishCreate(data.event.id);
-      mapStore.mapInstance?.flyTo({
-        center: [coords.lon, coords.lat],
-        zoom: 17,
-        pitch: 50,
-        padding: calculatePadding(md.current),
-        duration: 800,
-      });
-      toastStore.show(
-        `${data.event.title} created. Drag its marker on the map to refine the location.`,
-        "success",
-      );
-    } catch (error) {
-      eventPlacementStore.failCreate();
-      toastStore.show(
-        error instanceof Error ? error.message : "Failed to create event.",
-        "error",
-      );
-    }
-  }
-
-  async function proposeEventAtMapPoint(coords: EditableCoords) {
-    if (!eventPlacementStore.draft || eventPlacementStore.creating) return;
-
-    const draft = eventPlacementStore.draft;
-    eventPlacementStore.beginCreate();
-    try {
-      const submitterName = resolveSubmitterName({
-        displayName: adminAuthStore.displayName,
-        username: adminAuthStore.username,
-        draftName: eventPlacementStore.submitterName,
-      });
-      if (!submitterName) {
-        throw new Error("Enter your name before proposing an event.");
-      }
-
-      const result = await submitCreateProposal({
-        entityType: "create_event",
-        patch: {
-          ...draft,
-          recurrence: "none",
-          isActive: true,
-          includeInSeo: true,
-          locations: [
-            {
-              anchorType: "custom",
-              buildingId: null,
-              dormId: null,
-              label: "Event marker",
-              lat: coords.lat,
-              lon: coords.lon,
-              isPrimary: true,
-              sortOrder: 0,
-            },
-          ],
-          routes: [],
-        },
-        submitterName,
-      });
-
-      if (!result.ok) {
-        throw new Error(result.error ?? "Failed to submit event proposal.");
-      }
-
-      eventPlacementStore.cancel();
-      toastStore.show(
-        `Event "${draft.title}" submitted for editor review.`,
-        "success",
-      );
-    } catch (error) {
-      eventPlacementStore.failCreate();
-      toastStore.show(
-        error instanceof Error ? error.message : "Failed to propose event.",
-        "error",
-      );
-    }
-  }
-
-  async function placeEventAtMapPoint(coords: EditableCoords) {
-    if (eventPlacementStore.proposing || !adminAuthStore.canPublish) {
-      await proposeEventAtMapPoint(coords);
-      return;
-    }
-    await createEventAtMapPoint(coords);
-  }
-
-  function ensureTerrainRendering(map: mapGl.MapLibreMap) {
-    if (!map.getSource(TERRAIN_SOURCE_ID)) {
-      map.addSource(TERRAIN_SOURCE_ID, {
-        type: "raster-dem",
-        url: getTerrainTileJsonUrl(),
-        bounds: TERRAIN_SOURCE_BOUNDS,
-        maxzoom: 14,
-        tileSize: 512,
-      });
-    }
-
-    if (!map.getLayer(TERRAIN_HILLSHADE_LAYER_ID)) {
-      map.addLayer(
-        {
-          id: TERRAIN_HILLSHADE_LAYER_ID,
-          type: "hillshade",
-          source: TERRAIN_SOURCE_ID,
-          layout: { visibility: "none" },
-          paint: {
-            "hillshade-accent-color": "rgba(112, 79, 40, 0.28)",
-            "hillshade-exaggeration": 0.85,
-            "hillshade-highlight-color": "rgba(255, 244, 214, 0.35)",
-            "hillshade-illumination-anchor": "viewport",
-            "hillshade-illumination-direction": 315,
-            "hillshade-shadow-color": "rgba(34, 25, 14, 0.55)",
-          },
-        },
-        map.getLayer(TERRAIN_HILLSHADE_BEFORE_LAYER_ID)
-          ? TERRAIN_HILLSHADE_BEFORE_LAYER_ID
-          : undefined,
-      );
-    }
-  }
-
-  function setTerrainHillshadeVisible(
-    map: mapGl.MapLibreMap,
-    visible: boolean,
-  ) {
-    if (!map.getLayer(TERRAIN_HILLSHADE_LAYER_ID)) return;
-    map.setLayoutProperty(
-      TERRAIN_HILLSHADE_LAYER_ID,
-      "visibility",
-      visible ? "visible" : "none",
-    );
-  }
-
-  function flyToCamera(
-    map: mapGl.MapLibreMap,
-    camera: typeof CAMPUS_DEFAULT_CAMERA,
-  ) {
-    map.easeTo({
-      center: camera.center,
-      zoom: camera.zoom,
-      pitch: camera.pitch,
-      bearing: camera.bearing,
-      duration: 1500,
-      padding: calculatePadding(untrack(() => md.current)),
-    });
-  }
-
-  function disableTerrain(map: mapGl.MapLibreMap) {
-    map.setTerrain(null);
-    setTerrainHillshadeVisible(map, false);
-    syncBuildingLayersForDimension(map, isMap2DPitch(map.getPitch()), false);
-  }
-
-  function restoreFlatMapCamera(map: mapGl.MapLibreMap) {
-    untrack(() => {
-      const category = queryStore.category;
-      const type = queryStore.type;
-      const value = queryStore.inputValue;
-
-      if (category === "building" && type === "result") {
-        if (!loaded) return;
-        const currentBuilding = buildings.find(
-          (building) => building.buildingName === value,
-        );
-
-        if (currentBuilding?.lon && currentBuilding.lat) {
-          map.flyTo({
-            center: [currentBuilding.lon, currentBuilding.lat],
-            zoom: 18,
-            pitch: 60,
-            padding: calculatePadding(md.current),
-            duration: 1500,
-          });
-        }
-      } else if (category === null) {
-        flyToCamera(map, CAMPUS_DEFAULT_CAMERA);
-        if (directions) directions.clear();
-      } else if (category === "room") {
-        currentRoom.getRoomByCode(value).then(() => {
-          if (
-            currentRoom.value?.building?.lat &&
-            currentRoom.value.building.lon &&
-            !terrainStore.enabled
-          ) {
-            map.flyTo({
-              center: [
-                currentRoom.value.building.lon,
-                currentRoom.value.building.lat,
-              ],
-              zoom: 18,
-              pitch: 60,
-              padding: calculatePadding(md.current),
-              duration: 1500,
-            });
-          }
-        });
-      } else if (category === "dorm") {
-        if (!loaded) return;
-
-        const currentDorm = dorms.find((dorm) => dorm.dormName === value);
-        if (currentDorm?.lon && currentDorm.lat) {
-          map.flyTo({
-            center: [currentDorm.lon, currentDorm.lat],
-            zoom: 18,
-            pitch: 60,
-            padding: calculatePadding(md.current),
-            duration: 1500,
-          });
-        }
-      } else if (category === "event") {
-        if (!loaded) return;
-        const currentEvent = findSelectedEvent(events);
-        if (currentEvent) focusMapOnEvent(map, currentEvent);
-      } else if (category === "organization") {
-        if (!loaded) return;
-        mapViewStore.showOrgs = true;
-        const currentOrg = organizations.find((org) => org.name === value);
-        const position = currentOrg ? organizationPosition(currentOrg) : null;
-        if (position) {
-          map.flyTo({
-            center: [position.lon, position.lat],
-            zoom: 18,
-            pitch: 60,
-            padding: calculatePadding(md.current),
-            duration: 1500,
-          });
-        }
-      } else if (category === "place") {
-        if (!loaded) return;
-        mapViewStore.showPlaces = true;
-        const currentPlace = places.find((place) => place.name === value);
-        if (currentPlace?.lon != null && currentPlace.lat != null) {
-          map.flyTo({
-            center: [currentPlace.lon, currentPlace.lat],
-            zoom: 18,
-            pitch: 60,
-            padding: calculatePadding(md.current),
-            duration: 1500,
-          });
-        }
-      }
-    });
-  }
-
-  function failTerrain(map: mapGl.MapLibreMap, message: string) {
-    disableTerrain(map);
-    terrainStore.markUnavailable(message);
-  }
-
-  function sourceErrorMatchesTerrain(event: mapGl.ErrorEvent) {
-    const sourceId = (event as mapGl.ErrorEvent & { sourceId?: string })
-      .sourceId;
-    const message = event.error?.message ?? "";
-    return (
-      sourceId === TERRAIN_SOURCE_ID || message.includes(TERRAIN_SOURCE_ID)
-    );
-  }
-
-  let zoomLevel = $state(0);
-  // Progressive disclosure, Google Maps style: low-priority POI pins (orgs,
-  // offices, landmarks, establishments) only appear once zoomed in enough.
-  // Buildings and dorms always show. Active (searched) and sponsored pins
-  // bypass the gate so deep links and paid placements never vanish.
-  const POI_MIN_ZOOM = 15.5;
-  const poiPinsVisible = $derived(zoomLevel >= POI_MIN_ZOOM);
-  $effect(() => {
-    mapViewStore.poiPinsZoomVisible = poiPinsVisible;
-  });
-  const SIDEPANEL_WIDTH = 25.75 * 16;
-  const md = new MediaQuery("max-width:48rem");
-  let editChromeEl = $state<HTMLElement | null>(null);
-  const editChromeActive = $derived(
-    eventPlacementStore.active ||
-      additionProposalStore.pinPickActive ||
-      mapProposalStore.enabled ||
-      (adminAuthStore.canPublish && mapEditStore.enabled),
-  );
-
-  $effect(() => {
-    const root = editChromeEl?.closest(".app-layout") as HTMLElement | null;
-    if (!editChromeActive) {
-      root?.style.setProperty("--edit-bar-height", "0px");
-      return;
-    }
-    const el = editChromeEl;
-    if (!el) return;
-    return observeBlockHeight(el, "--edit-bar-height", {
-      shouldSkip: () => !editChromeActive,
-      skipValue: "0px",
-    });
-  });
-
-  const calculatePadding = (md: boolean): mapGl.PaddingOptions => {
-    if (md) {
-      return {
-        bottom: window.innerWidth / 2,
-        left: 0,
-      };
-    }
-    return {
-      left: SIDEPANEL_WIDTH,
-      bottom: 0,
-    };
-  };
-
-  function handleZoom() {
-    if (!mapStore.mapInstance) return;
-    zoomLevel = mapStore.mapInstance.getZoom();
-  }
-
-  function buildingEditKey(id: number) {
-    return `building:${id}`;
-  }
-
-  function dormEditKey(id: number) {
-    return `dorm:${id}`;
-  }
-
-  function eventLocationEditKey(id: number) {
-    return `event:${id}:location`;
-  }
-
-  function getEditablePosition(
-    key: string,
-    fallback: EditableVersionedPosition,
-  ): EditableVersionedPosition {
-    return positionOverrides[key] ?? fallback;
-  }
-
-  function getLoadedVersion(version: number | undefined): number {
-    return typeof version === "number" && Number.isInteger(version) ? version : 1;
-  }
-
-  function isMapEditEnabled() {
-    return adminAuthStore.canPublish && mapEditStore.enabled;
-  }
-
-  function canDragPin(key: string) {
-    if (isMapEditEnabled()) return true;
-    return mapProposalStore.allowsKey(key);
-  }
-
-  function isMapPinSuggestMode() {
-    return mapProposalStore.enabled;
-  }
-
-  function handleEditablePinEnter(key: string) {
-    if (!canDragPin(key)) return;
-    hoveredEditKey = key;
-  }
-
-  function handleEditablePinLeave(key: string) {
-    if (!canDragPin(key)) return;
-    if (hoveredEditKey === key) hoveredEditKey = null;
-  }
-
-  function shouldShowEntityHoverPreview() {
-    return (
-      !mapEditStore.enabled &&
-      !mapProposalStore.enabled &&
-      !eventPlacementStore.active
-    );
-  }
-
-  function handlePinPointerEnter(
-    preview: EntityHoverPreview,
-    pointer: PointerEvent,
-    editKey?: string,
-  ) {
-    if (editKey !== undefined) handleEditablePinEnter(editKey);
-    if (!shouldShowEntityHoverPreview()) return;
-    if (editKey !== undefined && canDragPin(editKey)) return;
-    entityHoverPreviewStore.show(preview, {
-      x: pointer.clientX,
-      y: pointer.clientY,
-    });
-  }
-
-  function handlePinPointerLeave(editKey?: string) {
-    if (editKey !== undefined) handleEditablePinLeave(editKey);
-    if (!shouldShowEntityHoverPreview()) return;
-    if (editKey !== undefined && canDragPin(editKey)) return;
-    entityHoverPreviewStore.scheduleHide();
-  }
-
-  function handleBuildingPinPointerEnter(
-    building: BuildingData,
-    editKey: string,
-    event: PointerEvent,
-  ) {
-    handlePinPointerEnter(buildingPreviewFromRow(building), event, editKey);
-  }
-
-  function handleBuildingPinPointerLeave(editKey: string) {
-    handlePinPointerLeave(editKey);
-  }
-
-  function handleDormPinPointerEnter(
-    dorm: DormData,
-    editKey: string,
-    event: PointerEvent,
-  ) {
-    handlePinPointerEnter(dormPreviewFromRow(dorm), event, editKey);
-  }
-
-  function handleDormPinPointerLeave(editKey: string) {
-    handlePinPointerLeave(editKey);
-  }
-
-  function handleEventPinPointerEnter(event: EventData, pointer: PointerEvent) {
-    handlePinPointerEnter(eventPreviewFromRow(event), pointer);
-  }
-
-  function handleEventPinPointerLeave() {
-    handlePinPointerLeave();
-  }
-
-  function handleOrganizationPinPointerEnter(
-    organization: OrgData,
-    pointer: PointerEvent,
-  ) {
-    handlePinPointerEnter(organizationPreviewFromRow(organization), pointer);
-  }
-
-  function handlePlacePinPointerEnter(place: PlaceData, pointer: PointerEvent) {
-    handlePinPointerEnter(placePreviewFromRow(place), pointer);
-  }
-
-  function handleDetailPinPointerLeave() {
-    handlePinPointerLeave();
-  }
-
-  function beginMarkerDrag(key: string) {
-    if (!canDragPin(key)) return;
-    selectedEditKey = key;
-    failedEditKey = null;
-  }
-
-  function markSaved(key: string) {
-    savedEditKey = key;
-    setTimeout(() => {
-      if (savedEditKey === key) savedEditKey = null;
-    }, 1800);
-  }
-
-  function setEditStatus(message: string) {
-    editStatusMessage = message;
-    setTimeout(() => {
-      if (editStatusMessage === message) editStatusMessage = null;
-    }, 3500);
-  }
-
-  function setLocalPosition(
-    type: EditableEntityType,
-    id: number,
-    coords: EditableVersionedPosition,
-  ) {
-    const key = type === "building" ? buildingEditKey(id) : dormEditKey(id);
-    positionOverrides = { ...positionOverrides, [key]: coords };
-
-    if (type === "building") {
-      const building = (buildings ?? []).find((b) => b.id === id);
-      if (building) {
-        building.lat = coords.lat;
-        building.lon = coords.lon;
-        building.version = coords.version;
-      }
-      return;
-    }
-
-    const dorm = (dorms ?? []).find((d) => d.id === id);
-    if (dorm) {
-      dorm.lat = coords.lat;
-      dorm.lon = coords.lon;
-      dorm.version = coords.version;
-    }
-  }
-
-  function clearEventLocationOverride(eventId: number) {
-    const key = eventLocationEditKey(eventId);
-    if (!(key in eventLocationOverrides)) return;
-    const next = { ...eventLocationOverrides };
-    delete next[key];
-    eventLocationOverrides = next;
-  }
-
-  function setLocalEvent(updated: EventData) {
-    appActions.replaceEvent(updated);
-
-    const key = eventLocationEditKey(updated.id);
-    const editable = getEditableEventLocation(updated);
-    if (editable && isAnchoredEventLocation(editable)) {
-      clearEventLocationOverride(updated.id);
-      return;
-    }
-
-    const coords = editable ? getResolvedEventLocationCoords(editable) : null;
-    if (coords) {
-      eventLocationOverrides = { ...eventLocationOverrides, [key]: coords };
-    } else {
-      clearEventLocationOverride(updated.id);
-    }
-  }
-
-  function getResolvedEventLocationCoords(
-    location: EventData["locations"][number],
-  ): EditableCoords | null {
-    if (location.resolvedLat === null || location.resolvedLon === null) {
-      return null;
-    }
-    return {
-      lat: location.resolvedLat,
-      lon: location.resolvedLon,
-    };
-  }
-
-  function serializeEventLocation(
-    location: EventData["locations"][number],
-    overrides: Partial<EventData["locations"][number]> = {},
-  ): EventLocationWriteValue {
-    return {
-      id: location.id,
-      anchorType: overrides.anchorType ?? location.anchorType,
-      buildingId:
-        overrides.buildingId !== undefined
-          ? overrides.buildingId
-          : location.buildingId,
-      dormId:
-        overrides.dormId !== undefined ? overrides.dormId : location.dormId,
-      label: overrides.label ?? location.label,
-      lat: overrides.lat !== undefined ? overrides.lat : location.lat,
-      lon: overrides.lon !== undefined ? overrides.lon : location.lon,
-      highlightPriority:
-        overrides.highlightPriority ?? location.highlightPriority,
-      sortOrder: overrides.sortOrder ?? location.sortOrder,
-      isPrimary: overrides.isPrimary ?? location.isPrimary,
-    };
-  }
-
-  function buildEventLocationDragUpdate(
-    event: EventData,
-    targetLocation: EventData["locations"][number],
-    coords: EditableCoords,
-  ): EventLocationWriteValue[] {
-    return event.locations.map((location) =>
-      location.id === targetLocation.id
-        ? serializeEventLocation(location, {
-            anchorType: "custom",
-            buildingId: null,
-            dormId: null,
-            label: location.label || "Event marker",
-            lat: coords.lat,
-            lon: coords.lon,
-            isPrimary: true,
-          })
-        : serializeEventLocation(location, { isPrimary: false }),
-    );
-  }
-
-  function recordMove(move: EditMove) {
-    const next = recordMapMove(undoStack, move);
-    undoStack = next.undoStack;
-    redoStack = next.redoStack;
-  }
-
-  async function saveBuildingPosition(
-    id: number,
-    name: string,
-    previous: EditableVersionedPosition,
-    current: { lat: number; lon: number },
-    version: number,
-  ): Promise<void> {
-    const key = buildingEditKey(id);
-    savingEditKey = key;
-    failedEditKey = null;
-
-    try {
-      const updated = await patchPosition("building", id, current, version);
-      setLocalPosition("building", id, updated);
-      recordMove({
-        kind: "entity",
-        entityType: "building",
-        id,
-        name,
-        key,
-        previous,
-        current,
-        version: updated.version,
-      });
-      markSaved(key);
-      setEditStatus(`${name} saved. You can undo this move.`);
-    } catch (error) {
-      failedEditKey = key;
-      if (error instanceof ClientEditConflictError) {
-        if (error.latest) {
-          setLocalPosition("building", id, error.latest);
-        } else {
-          setLocalPosition("building", id, previous);
-        }
-        toastStore.show(editErrorMessage(name, error.message, error), "error");
-        return;
-      }
-      setLocalPosition("building", id, previous);
-      toastStore.show(
-        editErrorMessage(name, "Failed to save building position.", error),
-        "error",
-      );
-    } finally {
-      if (savingEditKey === key) savingEditKey = null;
-      if (selectedEditKey === key) selectedEditKey = null;
-    }
-  }
-
-  async function saveDormPosition(
-    id: number,
-    name: string,
-    previous: EditableVersionedPosition,
-    current: { lat: number; lon: number },
-    version: number,
-  ): Promise<void> {
-    const key = dormEditKey(id);
-    savingEditKey = key;
-    failedEditKey = null;
-
-    try {
-      const updated = await patchPosition("dorm", id, current, version);
-      setLocalPosition("dorm", id, updated);
-      recordMove({
-        kind: "entity",
-        entityType: "dorm",
-        id,
-        name,
-        key,
-        previous,
-        current,
-        version: updated.version,
-      });
-      markSaved(key);
-      setEditStatus(`${name} saved. You can undo this move.`);
-    } catch (error) {
-      failedEditKey = key;
-      if (error instanceof ClientEditConflictError) {
-        if (error.latest) {
-          setLocalPosition("dorm", id, error.latest);
-        } else {
-          setLocalPosition("dorm", id, previous);
-        }
-        toastStore.show(editErrorMessage(name, error.message, error), "error");
-        return;
-      }
-      setLocalPosition("dorm", id, previous);
-      toastStore.show(
-        editErrorMessage(name, "Failed to save dorm position.", error),
-        "error",
-      );
-    } finally {
-      if (savingEditKey === key) savingEditKey = null;
-      if (selectedEditKey === key) selectedEditKey = null;
-    }
-  }
-
-  async function saveEventLocationPosition(
-    event: EventData,
-    location: EventData["locations"][number],
-    current: EditableCoords,
-  ): Promise<void> {
-    const key = eventLocationEditKey(event.id);
-    const previous = getResolvedEventLocationCoords(location);
-    if (!previous) return;
-    const previousEvent = {
-      ...event,
-      locations: event.locations.map((eventLocation) => ({
-        ...eventLocation,
-      })),
-    };
-    const previousLocations = event.locations.map((eventLocation) =>
-      serializeEventLocation(eventLocation),
-    );
-    const currentLocations = buildEventLocationDragUpdate(
-      event,
-      location,
-      current,
-    );
-    savingEditKey = key;
-    failedEditKey = null;
-
-    try {
-      const updated = await patchEventLocations(event, currentLocations);
-      setLocalEvent(updated);
-      recordMove({
-        kind: "eventLocation",
-        eventId: event.id,
-        locationId: location.id,
-        name: updated.title,
-        key,
-        previous,
-        current,
-        previousLocations,
-        currentLocations,
-        version: updated.version,
-      });
-      markSaved(key);
-      setEditStatus(`${updated.title} location saved. You can undo this move.`);
-    } catch (error) {
-      failedEditKey = key;
-      if (error instanceof ClientEventConflictError) {
-        if (error.latest) setLocalEvent(error.latest);
-        else setLocalEvent(previousEvent);
-        toastStore.show(
-          editErrorMessage(event.title, error.message, error),
-          "error",
-        );
-        return;
-      }
-      setLocalEvent(previousEvent);
-      toastStore.show(
-        editErrorMessage(event.title, "Failed to save event location.", error),
-        "error",
-      );
-    } finally {
-      if (savingEditKey === key) savingEditKey = null;
-      if (selectedEditKey === key) selectedEditKey = null;
-    }
-  }
-
-  async function submitSuggestedPinMove(input: {
-    key: string;
-    pinType: "building" | "dorm" | "event";
-    entityId: number;
-    entityLabel: string;
-    baseVersion: number;
-    lat: number;
-    lon: number;
-    previous: EditableVersionedPosition | EditableCoords;
-    rollback: () => void;
-    eventLocations?: unknown[];
-  }) {
-    savingEditKey = input.key;
-    failedEditKey = null;
-    try {
-      const result = await submitPinPositionProposal({
-        pinType: input.pinType,
-        entityId: input.entityId,
-        baseVersion: input.baseVersion,
-        lat: input.lat,
-        lon: input.lon,
-        entityLabel: input.entityLabel,
-        submitterName: resolveSubmitterName({
-          displayName: adminAuthStore.displayName,
-          username: adminAuthStore.username,
-          draftName: mapProposalStore.submitterName,
-        }),
-        proposalId: mapProposalStore.proposalId,
-        eventLocations: input.eventLocations,
-      });
-      if (!result.ok) {
-        failedEditKey = input.key;
-        input.rollback();
-        toastStore.show(
-          result.error ??
-            `${input.entityLabel} pin suggestion could not be submitted.`,
-          "error",
-        );
-        return;
-      }
-      markSaved(input.key);
-      mapProposalStore.disable();
-      toastStore.show(
-        `Pin move for ${input.entityLabel} submitted for review.`,
-        "success",
-      );
-    } finally {
-      if (savingEditKey === input.key) savingEditKey = null;
-      if (selectedEditKey === input.key) selectedEditKey = null;
-    }
-  }
-
-  async function handleBuildingDragEnd(
-    e: { marker: mapGl.Marker },
-    id: number,
-    name: string,
-    previous: EditableVersionedPosition,
-  ) {
-    const lngLat = e.marker.getLngLat();
-    const coords = { lat: lngLat.lat, lon: lngLat.lng };
-    const key = buildingEditKey(id);
-    if (mapProposalStore.allowsKey(key)) {
-      await submitSuggestedPinMove({
-        key,
-        pinType: "building",
-        entityId: id,
-        entityLabel: name,
-        baseVersion: previous.version,
-        lat: coords.lat,
-        lon: coords.lon,
-        previous,
-        rollback: () => setLocalPosition("building", id, previous),
-      });
-      return;
-    }
-    if (!isMapEditEnabled()) return;
-    await saveBuildingPosition(id, name, previous, coords, previous.version);
-  }
-
-  async function handleDormDragEnd(
-    e: { marker: mapGl.Marker },
-    id: number,
-    name: string,
-    previous: EditableVersionedPosition,
-  ) {
-    const lngLat = e.marker.getLngLat();
-    const coords = { lat: lngLat.lat, lon: lngLat.lng };
-    const key = dormEditKey(id);
-    if (mapProposalStore.allowsKey(key)) {
-      await submitSuggestedPinMove({
-        key,
-        pinType: "dorm",
-        entityId: id,
-        entityLabel: name,
-        baseVersion: previous.version,
-        lat: coords.lat,
-        lon: coords.lon,
-        previous,
-        rollback: () => setLocalPosition("dorm", id, previous),
-      });
-      return;
-    }
-    if (!isMapEditEnabled()) return;
-    await saveDormPosition(id, name, previous, coords, previous.version);
-  }
-
-  async function handleEventLocationDragEnd(
-    e: { marker: mapGl.Marker },
-    event: EventData,
-    location: EventData["locations"][number],
-  ) {
-    const lngLat = e.marker.getLngLat();
-    const coords = { lat: lngLat.lat, lon: lngLat.lng };
-    const key = eventLocationEditKey(event.id);
-    if (mapProposalStore.allowsKey(key)) {
-      const previous = getResolvedEventLocationCoords(location);
-      await submitSuggestedPinMove({
-        key,
-        pinType: "event",
-        entityId: event.id,
-        entityLabel: event.title,
-        baseVersion: event.version,
-        lat: coords.lat,
-        lon: coords.lon,
-        previous: previous ?? coords,
-        rollback: () => {
-          if (previous) {
-            eventLocationOverrides = {
-              ...eventLocationOverrides,
-              [key]: previous,
-            };
-          } else {
-            clearEventLocationOverride(event.id);
-          }
-        },
-        eventLocations: buildEventLocationDragUpdate(event, location, coords),
-      });
-      return;
-    }
-    if (!isMapEditEnabled()) return;
-    await saveEventLocationPosition(event, location, coords);
-  }
-
-  async function applyRecordedMove(
-    move: EditMove,
-    direction: "undo" | "redo",
-  ): Promise<number> {
-    if (move.kind === "entity") {
-      const updated = await patchPosition(
-        move.entityType,
-        move.id,
-        direction === "undo" ? move.previous : move.current,
-        move.version,
-      );
-      setLocalPosition(move.entityType, move.id, updated);
-      return updated.version;
-    }
-
-    const event = (events ?? []).find((event) => event.id === move.eventId);
-    if (!event) throw new Error(`${move.name} is no longer loaded.`);
-
-    const updated = await patchEventLocations(
-      event,
-      direction === "undo" ? move.previousLocations : move.currentLocations,
-      move.version,
-    );
-    setLocalEvent(updated);
-    return updated.version;
-  }
-
-  function handleRecordedMoveError(
-    move: EditMove,
-    error: unknown,
-    fallback: string,
-  ) {
-    failedEditKey = move.key;
-    if (move.kind === "entity" && error instanceof ClientEditConflictError) {
-      if (error.latest) {
-        setLocalPosition(move.entityType, move.id, error.latest);
-      }
-      toastStore.show(error.message, "error");
-      return;
-    }
-
-    if (
-      move.kind === "eventLocation" &&
-      error instanceof ClientEventConflictError
-    ) {
-      if (error.latest) setLocalEvent(error.latest);
-      toastStore.show(error.message, "error");
-      return;
-    }
-
-    toastStore.show(error instanceof Error ? error.message : fallback, "error");
-  }
-
-  async function undoLastMove() {
-    if (!undoMove || !isMapEditEnabled()) return;
-
-    const move = undoMove;
-    undoingEditKey = move.key;
-    savingEditKey = move.key;
-    failedEditKey = null;
-
-    try {
-      const version = await applyRecordedMove(move, "undo");
-      markSaved(move.key);
-      setEditStatus(`Undid move for ${move.name}.`);
-      const next = completeMapMoveUndo(undoStack, redoStack, move, version);
-      undoStack = next.undoStack;
-      redoStack = next.redoStack;
-    } catch (error) {
-      handleRecordedMoveError(move, error, "Failed to undo last move.");
-    } finally {
-      if (savingEditKey === move.key) savingEditKey = null;
-      if (undoingEditKey === move.key) undoingEditKey = null;
-    }
-  }
-
-  async function redoMoveBranch() {
-    if (!redoMove || !isMapEditEnabled()) return;
-
-    const move = redoMove;
-    undoingEditKey = move.key;
-    savingEditKey = move.key;
-    failedEditKey = null;
-
-    try {
-      const version = await applyRecordedMove(move, "redo");
-      markSaved(move.key);
-      setEditStatus(`Redid move for ${move.name}.`);
-      const next = completeMapMoveRedo(undoStack, redoStack, move, version);
-      undoStack = next.undoStack;
-      redoStack = next.redoStack;
-    } catch (error) {
-      handleRecordedMoveError(move, error, "Failed to redo move.");
-    } finally {
-      if (savingEditKey === move.key) savingEditKey = null;
-      if (undoingEditKey === move.key) undoingEditKey = null;
-    }
-  }
-
-  function handleMapEditKeydown(e: KeyboardEvent) {
-    if (!isMapEditEnabled()) return;
-    const action = getMapEditShortcutAction(e);
-    if (!action) return;
-
-    e.preventDefault();
-    if (action === "undo") undoLastMove();
-    else redoMoveBranch();
-  }
-
-  $effect(() => {
-    if (typeof navigator === "undefined") return;
-    undoShortcutLabel = /Mac|iPhone|iPad|iPod/.test(navigator.platform)
-      ? "Cmd+Z"
-      : "Ctrl+Z";
-  });
-
-  $effect(() => {
-    const map = mapStore.mapInstance;
-    if (!map) return;
-
-    let cancelled = false;
-    const applyPalette = () => {
-      if (!cancelled) applyBasemapPalette(map);
-    };
-    if (map.isStyleLoaded()) {
-      applyPalette();
-    } else {
-      map.once("load", applyPalette);
-    }
-    return () => {
-      cancelled = true;
-    };
-  });
-
-  $effect(() => {
-    if (mapStore.mapInstance) {
-      const map = mapStore.mapInstance;
-      const handleMapError = (event: mapGl.ErrorEvent) => {
-        if (!terrainStore.enabled || !sourceErrorMatchesTerrain(event)) return;
-        failTerrain(map, TERRAIN_TILE_FAILURE_MESSAGE);
-      };
-      // Sync once on bind — zoomLevel starts at 0, and pin/label zoom gates
-      // must reflect the real camera before the first zoom event fires.
-      handleZoom();
-      map.on("zoom", handleZoom);
-      map.on("error", handleMapError);
-      return () => {
-        map.off("zoom", handleZoom);
-        map.off("error", handleMapError);
-      };
-    }
-  });
-
-  $effect(() => {
-    const map = mapStore.mapInstance;
-    const enabled = terrainStore.enabled;
-    const exaggeration = terrainStore.exaggeration;
-    if (!map) return;
-
-    let cancelled = false;
-    const apply = () => {
-      if (cancelled) return;
-
-      if (!enabled) {
-        const shouldRestoreFlatCamera = terrainModeWasEnabled;
-        disableTerrain(map);
-        terrainModeWasEnabled = false;
-        if (shouldRestoreFlatCamera) restoreFlatMapCamera(map);
-        return;
-      }
-
-      if (typeof navigator !== "undefined" && !navigator.onLine) {
-        failTerrain(map, TERRAIN_UNAVAILABLE_OFFLINE_MESSAGE);
-        return;
-      }
-
-      try {
-        terrainStore.markLoading();
-        ensureTerrainRendering(map);
-        map.setTerrain({ source: TERRAIN_SOURCE_ID, exaggeration });
-        setTerrainHillshadeVisible(map, true);
-        syncBuildingLayersForDimension(map, isMap2DPitch(map.getPitch()), true);
-        if (!terrainModeWasEnabled) {
-          flyToCamera(map, TERRAIN_CAMERA);
-        }
-        terrainModeWasEnabled = true;
-        terrainStore.markActive();
-      } catch (error) {
-        console.warn("Terrain setup failed", error);
-        failTerrain(map, TERRAIN_TILE_FAILURE_MESSAGE);
-      }
-    };
-
-    if (map.isStyleLoaded()) {
-      apply();
-    } else {
-      map.once("load", apply);
-    }
-
-    return () => {
-      cancelled = true;
-    };
-  });
-
-  $effect(() => {
-    const map = mapStore.mapInstance;
-    const terrainEnabled = terrainStore.enabled;
-    if (!map) return;
-
-    let cancelled = false;
-    const applyDimensionLayers = () => {
-      if (cancelled) return;
-      syncBuildingLayersForDimension(
-        map,
-        isMap2DPitch(map.getPitch()),
-        terrainEnabled,
-      );
-    };
-
-    if (map.isStyleLoaded()) {
-      applyDimensionLayers();
-    } else {
-      map.once("load", applyDimensionLayers);
-    }
-
-    map.on("pitch", applyDimensionLayers);
-    map.on("moveend", applyDimensionLayers);
-
-    return () => {
-      cancelled = true;
-      map.off("pitch", applyDimensionLayers);
-      map.off("moveend", applyDimensionLayers);
-    };
-  });
-
-  // svelte-maplibre only passes maxBounds at map construction; keep the live
-  // instance in sync when bounds constants change (HMR) or terrain toggles.
-  $effect(() => {
-    const map = mapStore.mapInstance;
-    const terrainEnabled = terrainStore.enabled;
-    if (!map) return;
-
-    const bounds = terrainEnabled
-      ? TERRAIN_MAX_BOUNDS
-      : CAMPUS_MAX_BOUNDS;
-
-    const applyBounds = () => {
-      map.setMaxBounds(bounds);
-    };
-
-    if (map.isStyleLoaded()) {
-      applyBounds();
-    } else {
-      map.once("load", applyBounds);
-    }
-  });
-
-  $effect(() => {
-    const map = mapStore.mapInstance;
-    const resetNonce = terrainStore.resetNonce;
-    if (!map || !terrainStore.enabled || resetNonce === 0) return;
-
-    flyToCamera(map, TERRAIN_CAMERA);
-  });
-
-  $effect(() => {
-    if (mapStore.mapInstance && !directions) {
-      const initDirections = () => {
-        if (!directions && mapStore.mapInstance) {
-          directions = new MapLibreGlDirections(mapStore.mapInstance, {
-            api: "https://routing.openstreetmap.de/routed-foot/route/v1",
-            profile: "foot",
-          });
-          // Walking totals for the routed day (#839): the OSRM response the
-          // map already fetched carries per-leg distance/duration.
-          directions.on("fetchroutesend", (event) => {
-            const legs = event.data?.directions?.routes?.[0]?.legs;
-            scheduleRouteStore.setRouteTotals(
-              legs
-                ? sumRouteLegs(legs as { distance?: unknown; duration?: unknown }[])
-                : null,
-            );
-          });
-        }
-      };
-
-      if (mapStore.mapInstance.isStyleLoaded()) {
-        initDirections();
-      } else {
-        mapStore.mapInstance.once("load", initDirections);
-      }
-    }
-  });
-
-  $effect(() => {
-    if (!directions) return;
-
-    const waypoints = locationStore.routeWaypoints;
-    if (waypoints && waypoints.length >= 2) {
-      directions.setWaypoints(waypoints);
-      const map = mapStore.mapInstance;
-      if (map) {
-        const bounds = new mapGl.LngLatBounds();
-        for (const point of waypoints) {
-          bounds.extend(point);
-        }
-        map.fitBounds(bounds, {
-          padding: { top: 80, bottom: 80, left: 80, right: 80 },
-          duration: 1200,
-          maxZoom: 18,
-        });
-      }
-    } else if (locationStore.routeOrigin && locationStore.destination) {
-      directions.setWaypoints([
-        locationStore.routeOrigin,
-        locationStore.destination,
-      ]);
-      const map = mapStore.mapInstance;
-      if (map) {
-        const bounds = new mapGl.LngLatBounds();
-        bounds.extend(locationStore.routeOrigin);
-        bounds.extend(locationStore.destination);
-        map.fitBounds(bounds, {
-          padding: { top: 80, bottom: 120, left: 80, right: 80 },
-          duration: 1000,
-          maxZoom: 18,
-        });
-      }
-    } else {
-      directions.clear();
-    }
-  });
-
-  $effect(() => {
-    const map = mapStore.mapInstance;
-    const index = scheduleRouteStore.focusedStopIndex;
-    const stop =
-      index === null ? null : (scheduleRouteStore.dayStops[index] ?? null);
-    if (!map || !stop?.coords) return;
-
-    map.easeTo({
-      center: stop.coords,
-      zoom: Math.max(map.getZoom(), 17),
-      duration: 650,
-    });
-  });
-
-  $effect(() => {
-    if (!adminAuthStore.canPublish && mapEditStore.enabled) {
-      mapEditStore.close();
-    }
-    if (!mapEditStore.enabled) {
-      hoveredEditKey = null;
-      selectedEditKey = null;
-    }
-  });
-
-  $effect(() => {
-    const map = mapStore.mapInstance;
-    if (!map || !additionProposalStore.pinPickActive) return;
-
-    const canvas = map.getCanvas();
-    const previousCursor = canvas.style.cursor;
-    canvas.style.cursor = "crosshair";
-    const handlePinPick = (event: mapGl.MapMouseEvent) => {
-      additionProposalStore.deliverMapPin(event.lngLat.lat, event.lngLat.lng);
-    };
-
-    map.on("click", handlePinPick);
-    return () => {
-      map.off("click", handlePinPick);
-      if (canvas.style.cursor === "crosshair") {
-        canvas.style.cursor = previousCursor;
-      }
-    };
-  });
-
-  $effect(() => {
-    const map = mapStore.mapInstance;
-    const pin = additionProposalStore.draftPin;
-    if (!map || !pin) return;
-
-    // Defer the camera move out of the reactive flush: easeTo fires zoom/move
-    // handlers synchronously, and their state writes inside this flush can
-    // chain into effect_update_depth_exceeded, which kills the whole Svelte
-    // scheduler (app looks frozen, hover still works). Same guard as the
-    // jeepney stop-focus flyTo effect below.
-    const padding = calculatePadding(untrack(() => md.current));
-    const frame = requestAnimationFrame(() => {
-      map.easeTo({
-        center: [pin.lon, pin.lat],
-        zoom: Math.max(map.getZoom(), 17),
-        duration: 650,
-        padding,
-      });
-    });
-    return () => cancelAnimationFrame(frame);
-  });
-
-  $effect(() => {
-    const map = mapStore.mapInstance;
-    if (!map || !eventPlacementStore.active) return;
-
-    const canvas = map.getCanvas();
-    const previousCursor = canvas.style.cursor;
-    canvas.style.cursor = "crosshair";
-    const handlePlacementClick = (event: mapGl.MapMouseEvent) => {
-      void placeEventAtMapPoint({
-        lat: event.lngLat.lat,
-        lon: event.lngLat.lng,
-      });
-    };
-
-    map.on("click", handlePlacementClick);
-    return () => {
-      map.off("click", handlePlacementClick);
-      if (canvas.style.cursor === "crosshair") {
-        canvas.style.cursor = previousCursor;
-      }
-    };
-  });
-
-  // #847: travel-time isochrone — while active, taps pick the origin point.
-  $effect(() => {
-    const map = mapStore.mapInstance;
-    if (!map || !travelTimeStore.active) return;
-
-    const canvas = map.getCanvas();
-    const previousCursor = canvas.style.cursor;
-    canvas.style.cursor = "crosshair";
-    const handleTravelTimeClick = (event: mapGl.MapMouseEvent) => {
-      travelTimeStore.setOrigin(event.lngLat.lat, event.lngLat.lng);
-    };
-
-    map.on("click", handleTravelTimeClick);
-    return () => {
-      map.off("click", handleTravelTimeClick);
-      if (canvas.style.cursor === "crosshair") {
-        canvas.style.cursor = previousCursor;
-      }
-    };
-  });
-
-  // #847: snap the tapped origin to the walk graph, run single-source
-  // Dijkstra, and paint every edge by walking minutes. The graph JSON is a
-  // lazy chunk loaded on first use.
-  $effect(() => {
-    const map = mapStore.mapInstance;
-    const origin = travelTimeStore.active ? travelTimeStore.origin : null;
-    if (!map) return;
-
-    if (!origin) {
-      // Clear immediately — never queue clears on "load"/"styledata" (see the
-      // jeepney route effect below for the prod-only bug this avoids).
-      try {
-        clearTravelTimeLayers(map);
-      } catch {
-        // Style not ready yet, so nothing was drawn.
-      }
-      return;
-    }
-
-    let cancelled = false;
-    travelTimeStore.status = "loading";
-    loadTravelGraph()
-      .then((graph) => {
-        if (cancelled) return;
-        const sourceNode = nearestNodeIndex(graph, origin.lat, origin.lng);
-        const { seconds } = dijkstra(graph, sourceNode, "walk");
-        const data = isochroneFeatures(graph, seconds);
-        const tryDraw = () => {
-          try {
-            ensureTravelTimeLayers(map);
-            const source = map.getSource(TRAVEL_TIME_SOURCE_ID) as
-              | mapGl.GeoJSONSource
-              | undefined;
-            source?.setData(data);
-            return true;
-          } catch {
-            return false;
-          }
-        };
-        if (!tryDraw()) {
-          const onStyleData = () => {
-            if (cancelled || tryDraw()) map.off("styledata", onStyleData);
-          };
-          map.on("styledata", onStyleData);
-        }
-        travelTimeStore.status = "ready";
-      })
-      .catch((error) => {
-        console.warn("travel-time graph load failed", error);
-        if (!cancelled) travelTimeStore.status = "error";
-      });
-    return () => {
-      cancelled = true;
-    };
-  });
-
-  // #848: measure route — while active, taps drop waypoints.
-  $effect(() => {
-    const map = mapStore.mapInstance;
-    if (!map || !measureRouteStore.active) return;
-
-    const canvas = map.getCanvas();
-    const previousCursor = canvas.style.cursor;
-    canvas.style.cursor = "crosshair";
-    const handleMeasureClick = (event: mapGl.MapMouseEvent) => {
-      measureRouteStore.addWaypoint(event.lngLat.lat, event.lngLat.lng);
-    };
-
-    map.on("click", handleMeasureClick);
-    return () => {
-      map.off("click", handleMeasureClick);
-      if (canvas.style.cursor === "crosshair") {
-        canvas.style.cursor = previousCursor;
-      }
-    };
-  });
-
-  // #848: snap waypoints to the walk graph, compute per-leg shortest paths
-  // for every mode (pill minutes), and draw the selected mode's geometry.
-  $effect(() => {
-    const map = mapStore.mapInstance;
-    const active = measureRouteStore.active;
-    const waypoints = measureRouteStore.waypoints;
-    const mode = measureRouteStore.mode;
-    if (!map) return;
-
-    if (!active || waypoints.length < 2) {
-      // Clear immediately — never queue clears (see the jeepney note below).
-      try {
-        clearMeasureRouteLayers(map);
-      } catch {
-        // Style not ready yet, so nothing was drawn.
-      }
-      return;
-    }
-
-    let cancelled = false;
-    loadTravelGraph()
-      .then((graph) => {
-        if (cancelled) return;
-        const nodes = waypoints.map((w) => nearestNodeIndex(graph, w.lat, w.lng));
-        const modes: TravelMode[] = ["walk", "cycle", "drive"];
-        const summaries = {
-          walk: [] as ({ seconds: number; meters: number } | null)[],
-          cycle: [] as ({ seconds: number; meters: number } | null)[],
-          drive: [] as ({ seconds: number; meters: number } | null)[],
-        };
-        const legFeatures: FeatureCollection = {
-          type: "FeatureCollection",
-          features: [],
-        };
-        for (let i = 0; i + 1 < nodes.length; i++) {
-          for (const legMode of modes) {
-            const route = shortestPath(graph, nodes[i], nodes[i + 1], legMode);
-            summaries[legMode].push(
-              route ? { seconds: route.seconds, meters: route.meters } : null,
-            );
-            if (legMode === mode && route && route.coordinates.length > 1) {
-              legFeatures.features.push({
-                type: "Feature",
-                geometry: { type: "LineString", coordinates: route.coordinates },
-                properties: { leg: i },
-              });
-            }
-          }
-        }
-        measureRouteStore.setResults(
-          nodes.map((n) => ({ lat: graph.lat[n], lng: graph.lng[n] })),
-          summaries,
-        );
-        const tryDraw = () => {
-          try {
-            ensureMeasureRouteLayers(map);
-            const source = map.getSource(MEASURE_ROUTE_SOURCE_ID) as
-              | mapGl.GeoJSONSource
-              | undefined;
-            source?.setData(legFeatures);
-            return true;
-          } catch {
-            return false;
-          }
-        };
-        if (!tryDraw()) {
-          const onStyleData = () => {
-            if (cancelled || tryDraw()) map.off("styledata", onStyleData);
-          };
-          map.on("styledata", onStyleData);
-        }
-      })
-      .catch((error) => {
-        console.warn("measure-route graph load failed", error);
-        if (!cancelled) measureRouteStore.loadFailed = true;
-      });
-    return () => {
-      cancelled = true;
-    };
-  });
-
-  $effect(() => {
-    const map = mapStore.mapInstance;
-    const coords = locationStore.coords;
-    const accuracyMeters = locationStore.accuracyMeters;
-    if (!map) return;
-
-    const clearAccuracy = () => {
-      try {
-        if (map.getLayer(USER_LOCATION_ACCURACY_FILL_ID)) {
-          map.removeLayer(USER_LOCATION_ACCURACY_FILL_ID);
-        }
-        if (map.getLayer(USER_LOCATION_ACCURACY_LINE_ID)) {
-          map.removeLayer(USER_LOCATION_ACCURACY_LINE_ID);
-        }
-        if (map.getSource(USER_LOCATION_ACCURACY_SOURCE_ID)) {
-          map.removeSource(USER_LOCATION_ACCURACY_SOURCE_ID);
-        }
-      } catch {
-        // Style may not be ready.
-      }
-    };
-
-    if (!coords || accuracyMeters == null || accuracyMeters <= 0) {
-      clearAccuracy();
-      return;
-    }
-
-    const featureCollection = {
-      type: "FeatureCollection" as const,
-      features: [
-        {
-          type: "Feature" as const,
-          properties: {},
-          geometry: metersToLngLatCircle(coords, accuracyMeters),
-        },
-      ],
-    };
-
-    const draw = () => {
-      if (!map.getSource(USER_LOCATION_ACCURACY_SOURCE_ID)) {
-        map.addSource(USER_LOCATION_ACCURACY_SOURCE_ID, {
-          type: "geojson",
-          data: featureCollection,
-        });
-      } else {
-        const source = map.getSource(USER_LOCATION_ACCURACY_SOURCE_ID) as
-          | mapGl.GeoJSONSource
-          | undefined;
-        source?.setData(featureCollection);
-      }
-
-      if (!map.getLayer(USER_LOCATION_ACCURACY_FILL_ID)) {
-        map.addLayer({
-          id: USER_LOCATION_ACCURACY_FILL_ID,
-          type: "fill",
-          source: USER_LOCATION_ACCURACY_SOURCE_ID,
-          paint: {
-            "fill-color": "#4285f4",
-            "fill-opacity": 0.12,
-          },
-        });
-      }
-      if (!map.getLayer(USER_LOCATION_ACCURACY_LINE_ID)) {
-        map.addLayer({
-          id: USER_LOCATION_ACCURACY_LINE_ID,
-          type: "line",
-          source: USER_LOCATION_ACCURACY_SOURCE_ID,
-          paint: {
-            "line-color": "#4285f4",
-            "line-width": 1.5,
-            "line-opacity": 0.45,
-          },
-        });
-      }
-    };
-
-    try {
-      draw();
-      return;
-    } catch {
-      const onStyleData = () => {
-        try {
-          draw();
-          map.off("styledata", onStyleData);
-        } catch {
-          // keep retrying until style accepts the layer
-        }
-      };
-      map.on("styledata", onStyleData);
-      return () => {
-        map.off("styledata", onStyleData);
-        clearAccuracy();
-      };
-    }
-  });
-
-  $effect(() => {
-    const selectedId = jeepneyStore.selectedRouteId;
-    const map = mapStore.mapInstance;
-    if (!map) return;
-
-    const route = selectedId
-      ? transitStore.getRoute(selectedId)
-      : null;
-
-    if (!route) {
-      activeRouteId = null;
-      activeRouteStops = [];
-      // Clear immediately — NEVER queue this on "load"/"styledata". A queued
-      // clear registered at mount (style still streaming) fires AFTER a later
-      // route draw and silently wipes its layers; that was the prod-only
-      // missing-polyline bug (dev styles settle before anyone clicks).
-      try {
-        clearJeepneyRouteLayers(map);
-      } catch {
-        // Style not ready yet, so nothing was drawn and there is nothing to clear.
-      }
-      return;
-    }
-
-    activeRouteId = route.id;
-    activeRouteStops = route.stops;
-    activeRouteColor = route.color;
-
-    // Geometry is resolved synchronously (static import + stop fallback).
-    // Readiness gating is deliberately attempt-based: isStyleLoaded() is false
-    // during ANY repaint and "load" fires only once per map lifetime, so
-    // gating on either deadlocks and the polyline never draws. addSource /
-    // addLayer only throw before the initial style load; try now and retry on
-    // "styledata" until one attempt succeeds.
-    const { line, source: geometrySource } = routeGeometry(route);
-    const draw = () => {
-      ensureJeepneyRouteLayers(map, route.color, geometrySource);
-      const source = map.getSource(JEEPNEY_ROUTE_SOURCE_ID) as
-        | mapGl.GeoJSONSource
-        | undefined;
-      source?.setData({
-        type: "FeatureCollection",
-        features: line
-          ? [
-              {
-                type: "Feature",
-                geometry: line,
-                properties: { routeId: route.id, geometrySource },
-              },
-            ]
-          : [],
-      });
-      fitMapToRoute(map, route);
-    };
-
-    const tryDraw = () => {
-      try {
-        draw();
-        return true;
-      } catch (error) {
-        console.warn("jeepney route draw failed; retrying on styledata", error);
-        return false;
-      }
-    };
-
-    if (tryDraw()) return;
-    const onStyleData = () => {
-      if (tryDraw()) map.off("styledata", onStyleData);
-    };
-    map.on("styledata", onStyleData);
-    return () => {
-      map.off("styledata", onStyleData);
-    };
-  });
-
-  $effect(() => {
-    const map = mapStore.mapInstance;
-    const routeId = jeepneyStore.selectedRouteId;
-    const stopIndex = jeepneyStore.selectedStopIndex;
-    if (!map || routeId === null || stopIndex === null) return;
-
-    const route = transitStore.getRoute(routeId);
-    const stop = route?.stops[stopIndex];
-    if (!stop) return;
-
-    // Defer the camera move out of the reactive flush: flyTo fires zoom/move
-    // handlers synchronously (reduced-motion jumps instantly), and their state
-    // writes inside this flush can chain into effect_update_depth_exceeded,
-    // which kills the whole Svelte scheduler (app looks frozen, hover still
-    // works). Same guard as fitMapToRoute below.
-    const frame = requestAnimationFrame(() => {
-      map.flyTo({
-        center: [stop.lon, stop.lat],
-        zoom: Math.max(map.getZoom(), 16),
-        duration: 700,
-        essential: true,
-      });
-    });
-    return () => cancelAnimationFrame(frame);
-  });
-
-  // #716: Makiling trail overlay — toggle trail line + station markers
-  $effect(() => {
-    const map = mapStore.mapInstance;
-    const enabled = trailStore.enabled;
-    if (!map) return;
-
-    if (enabled) {
-      ensureTrailLayers(map);
-    } else {
-      clearTrailLayers(map);
-    }
-  });
-
-  $effect(() => {
-    const map = mapStore.mapInstance;
-    const selectedEvent =
-      loaded && queryStore.category === "event" && queryStore.type === "result"
-        ? findSelectedEvent(events)
-        : null;
-    if (!map) return;
-
-    const routeFeatures = selectedEvent
-      ? buildSelectedEventRouteFeatures(selectedEvent)
-      : [];
-    if (routeFeatures.length === 0) {
-      clearEventRouteLayers(map);
-      return;
-    }
-
-    const draw = () => {
-      ensureEventRouteLayers(map);
-      const source = map.getSource(EVENT_ROUTE_SOURCE_ID) as
-        mapGl.GeoJSONSource | undefined;
-      const featureCollection: FeatureCollection<LineString> = {
-        type: "FeatureCollection",
-        features: routeFeatures,
-      };
-      source?.setData(featureCollection);
-    };
-
-    if (map.isStyleLoaded()) {
-      draw();
-      return;
-    }
-
-    // Style isn't ready yet: defer the draw until load, but remove the handler
-    // on re-run/teardown so rapid selection changes don't stack listeners and
-    // draw a stale route once the style finally loads.
-    map.once("load", draw);
-    return () => {
-      map.off("load", draw);
-    };
-  });
-
-  $effect(() => {
-    const category = queryStore.category;
-    const type = queryStore.type;
-    const value = queryStore.inputValue;
-    const map = mapStore.mapInstance;
-
-    if (!map) return;
-
-    untrack(() => {
-      const isTerrainEnabled = terrainStore.enabled;
-      if (category === "building" && type === "result") {
-        if (!loaded) return;
-        const currentBuilding = buildings.find(
-          (building) => building.buildingName === value,
-        );
-
-        if (currentBuilding?.lon && currentBuilding.lat) {
-          map.flyTo({
-            center: [currentBuilding.lon, currentBuilding.lat],
-            zoom: 18,
-            pitch: 60,
-            padding: calculatePadding(md.current),
-            duration: 1500,
-          });
-        }
-      } else if (category === null) {
-        flyToCamera(
-          map,
-          isTerrainEnabled ? TERRAIN_CAMERA : CAMPUS_DEFAULT_CAMERA,
-        );
-        if (directions) directions.clear();
-      } else if (category === "room") {
-        currentRoom.getRoomByCode(value).then(() => {
-          if (
-            currentRoom.value?.building?.lat &&
-            currentRoom.value.building.lon
-          ) {
-            map.flyTo({
-              center: [
-                currentRoom.value.building.lon,
-                currentRoom.value.building.lat,
-              ],
-              zoom: 18,
-              pitch: 60,
-              padding: calculatePadding(md.current),
-              duration: 1500,
-            });
-          }
-        });
-      } else if (category === "dorm") {
-        if (!loaded) return;
-
-        const currentDorm = dorms.find((dorm) => dorm.dormName === value);
-        if (currentDorm?.lon && currentDorm.lat) {
-          map.flyTo({
-            center: [currentDorm.lon, currentDorm.lat],
-            zoom: 18,
-            pitch: 60,
-            padding: calculatePadding(md.current),
-            duration: 1500,
-          });
-        }
-      } else if (category === "event") {
-        if (!loaded) return;
-        const currentEvent = findSelectedEvent(events);
-        if (currentEvent) focusMapOnEvent(map, currentEvent);
-      } else if (category === "organization") {
-        if (!loaded) return;
-        mapViewStore.showOrgs = true;
-        const currentOrg = organizations.find((org) => org.name === value);
-        const position = currentOrg ? organizationPosition(currentOrg) : null;
-        if (position) {
-          map.flyTo({
-            center: [position.lon, position.lat],
-            zoom: 18,
-            pitch: 60,
-            padding: calculatePadding(md.current),
-            duration: 1500,
-          });
-        }
-      } else if (category === "place") {
-        if (!loaded) return;
-        mapViewStore.showPlaces = true;
-        const currentPlace = places.find((place) => place.name === value);
-        if (currentPlace?.lon != null && currentPlace.lat != null) {
-          map.flyTo({
-            center: [currentPlace.lon, currentPlace.lat],
-            zoom: 18,
-            pitch: 60,
-            padding: calculatePadding(md.current),
-            duration: 1500,
-          });
-        }
-      }
-    });
-  });
-
-  function handleBuildingMarkerClick(buildingName: string) {
-    if (eventPlacementStore.active) return;
-    if (isMapEditEnabled() && selectedEditKey !== null) return;
-    if (buildingName === queryStore.inputValue) return;
-    queryStore.updateQuery({
-      category: "building",
-      type: "result",
-      value: buildingName,
-    });
-    queryStore.inputValue = buildingName;
-    sidePanelStore.openPanel({
-      type: "search-result",
-      component: BuildingResult,
-    });
-  }
-
-  function handleDormMarkerClick(dormName: string) {
-    if (eventPlacementStore.active) return;
-    if (isMapEditEnabled() && selectedEditKey !== null) return;
-    if (dormName === queryStore.inputValue) return;
-    queryStore.updateQuery({
-      category: "dorm",
-      type: "result",
-      value: dormName,
-    });
-    queryStore.inputValue = dormName;
-    sidePanelStore.openPanel({
-      type: "search-result",
-      component: DormResult,
-    });
-  }
-
-  function handleOrgMarkerClick(name: string) {
-    if (eventPlacementStore.active) return;
-    if (isMapEditEnabled() && selectedEditKey !== null) return;
-    if (
-      queryStore.category === "organization" &&
-      name === queryStore.inputValue
-    ) {
-      sidePanelStore.expand();
-      return;
-    }
-    queryStore.updateQuery({
-      category: "organization",
-      type: "result",
-      value: name,
-    });
-    queryStore.inputValue = name;
-    sidePanelStore.openPanel({
-      type: "search-result",
-      component: OrgResult,
-    });
-  }
-
-  function handleEventMarkerClick(event: EventData) {
-    if (eventPlacementStore.active) return;
-    if (isMapEditEnabled() && selectedEditKey !== null) return;
-    if (queryStore.selectedEventSlug === event.slug) return;
-    queryStore.updateQuery({
-      category: "event",
-      type: "result",
-      value: event.title,
-      eventSlug: event.slug,
-    });
-    queryStore.inputValue = event.title;
-    sidePanelStore.openPanel({
-      type: "search-result",
-      component: EventResult,
-    });
-  }
-
-  function toggleEventMarkerGroup(groupKey: string) {
-    if (eventPlacementStore.active) return;
-    expandedEventGroupKey =
-      expandedEventGroupKey === groupKey ? null : groupKey;
-  }
-
-  function collapseEventMarkerGroup() {
-    if (eventPlacementStore.active) return;
-    expandedEventGroupKey = null;
-  }
-
-  function isSelectedEvent(event: EventData) {
-    if (queryStore.category !== "event") return false;
-    if (queryStore.selectedEventSlug) {
-      return queryStore.selectedEventSlug === event.slug;
-    }
-    return queryStore.inputValue === event.title;
-  }
-
-  function formatEventMarkerDate(value: string) {
-    return formatCampusDateShort(value);
-  }
-
-  function formatEventMarkerTime(value: string) {
-    return formatCampusTime(value);
-  }
-
-  function formatEventMarkerDateTime(value: string) {
-    return `${formatCampusDateShort(value)}, ${formatCampusTime(value)}`;
-  }
-
-  function getEventStatusLabel(event: EventData) {
-    if (event.status === "active") return "Active now";
-    if (event.status === "past") return "Past";
-    return "Upcoming";
-  }
-
-  $effect(() => {
-    if (!loaded || !isMapEditEnabled()) return;
-    const event = findSelectedEvent(events);
-    if (!event) return;
-    const location = getEditableEventLocation(event);
-    if (!location || !isAnchoredEventLocation(location)) return;
-    untrack(() => clearEventLocationOverride(event.id));
-  });
-
-  type EventMarkerEntry = {
-    event: EventData;
-    location: EventData["locations"][number];
-  };
-
-  function isAnchoredEventLocation(
-    location: EventData["locations"][number],
-  ): boolean {
-    return location.anchorType === "building" || location.anchorType === "dorm";
-  }
-
-  function getEventMarkerLngLat(editable: {
-    event: EventData;
-    location: EventData["locations"][number];
-  }): [number, number] {
-    if (!isAnchoredEventLocation(editable.location)) {
-      const override =
-        eventLocationOverrides[eventLocationEditKey(editable.event.id)];
-      if (override) return [override.lon, override.lat];
-    }
-    return [
-      Number(editable.location.resolvedLon),
-      Number(editable.location.resolvedLat),
-    ];
-  }
-
-  function getEditableEventLocation(event: EventData) {
-    return (
-      event.locations.find(
-        (location) =>
-          location.isPrimary &&
-          location.resolvedLon !== null &&
-          location.resolvedLat !== null,
-      ) ??
-      event.locations.find(
-        (location) =>
-          location.resolvedLon !== null && location.resolvedLat !== null,
-      ) ??
-      null
-    );
-  }
-
-  function isSelectedEditableEventLocation(
-    event: EventData,
-    location: EventData["locations"][number],
-  ) {
-    if (
-      !isMapEditEnabled() ||
-      queryStore.category !== "event" ||
-      queryStore.type !== "result"
-    ) {
-      return false;
-    }
-
-    const slug = queryStore.selectedEventSlug;
-    if (slug) {
-      if (slug !== event.slug) return false;
-    } else if (queryStore.inputValue !== event.title) {
-      return false;
-    }
-
-    return getEditableEventLocation(event)?.id === location.id;
-  }
-
-  function getEventLocationKey(location: EventMarkerEntry["location"]) {
-    if (location.resolvedLon === null || location.resolvedLat === null) {
-      return null;
-    }
-    return `${location.resolvedLon.toFixed(6)}:${location.resolvedLat.toFixed(6)}`;
-  }
-
-  let eventMarkerGroups = $derived.by(() => {
-    if (!loaded) return [];
-    const groups = new Map<
-      string,
-      {
-        key: string;
-        lngLat: [number, number];
-        label: string;
-        anchored: boolean;
-        entries: EventMarkerEntry[];
-      }
-    >();
-
-    for (const event of events) {
-      // Past events are dropped from the map (#17); only active/upcoming pin.
-      if (event.status !== "active" && event.status !== "upcoming") {
-        continue;
-      }
-      for (const location of event.locations) {
-        if (isSelectedEditableEventLocation(event, location)) continue;
-        const key = getEventLocationKey(location);
-        if (
-          key === null ||
-          location.resolvedLon === null ||
-          location.resolvedLat === null
-        ) {
-          continue;
-        }
-
-        const group = groups.get(key);
-        const entry = { event, location };
-        if (group) {
-          group.anchored =
-            group.anchored ||
-            location.anchorType === "building" ||
-            location.anchorType === "dorm";
-          group.entries.push(entry);
-          continue;
-        }
-
-        groups.set(key, {
-          key,
-          lngLat: [location.resolvedLon, location.resolvedLat],
-          label: location.resolvedLabel,
-          anchored:
-            location.anchorType === "building" ||
-            location.anchorType === "dorm",
-          entries: [entry],
-        });
-      }
-    }
-
-    return Array.from(groups.values()).map((group) => ({
-      ...group,
-      entries: group.entries.sort((a, b) => {
-        const statusDelta =
-          Number(b.event.status === "active") -
-          Number(a.event.status === "active");
-        if (statusDelta !== 0) return statusDelta;
-        return a.event.occurrenceStartsAt.localeCompare(
-          b.event.occurrenceStartsAt,
-        );
-      }),
-    }));
-  });
-
-  let editableEventLocation = $derived.by(() => {
-    if (
-      !loaded ||
-      !isMapEditEnabled() ||
-      queryStore.category !== "event" ||
-      queryStore.type !== "result"
-    ) {
-      return null;
-    }
-
-    const event = findSelectedEvent(events);
-    if (!event) return null;
-
-    const location = getEditableEventLocation(event);
-    if (
-      !location ||
-      location.resolvedLon === null ||
-      location.resolvedLat === null
-    ) {
-      return null;
-    }
-
-    return { event, location };
-  });
-
-  $effect(() => {
-    if (
-      !loaded ||
-      queryStore.category !== "event" ||
-      queryStore.type !== "result"
-    )
-      return;
-    const group = eventMarkerGroups.find((group) =>
-      group.entries.some((entry) => isSelectedEvent(entry.event)),
-    );
-    if (!group) return;
-    untrack(() => {
-      expandedEventGroupKey = group.key;
-    });
-  });
-
-  let activeBuildingName = $derived.by(() => {
-    if (!queryStore.category || queryStore.type !== "result") return null;
-    switch (queryStore.category) {
-      case "building":
-        return queryStore.inputValue;
-      case "room": {
-        return null;
-        // const currentRoom = rooms.find(
-        //   (room) => room.code === queryStore.inputValue,
-        // );
-        // return currentRoom && currentRoom.building
-        //   ? currentRoom.building.name
-        //   : null;
-      }
-      default:
-        return null;
-    }
-  });
-
-  let selectedEventFocus = $derived.by(() => {
-    if (
-      !loaded ||
-      isMapEditEnabled() ||
-      queryStore.category !== "event" ||
-      queryStore.type !== "result"
-    ) {
-      return null;
-    }
-    return findSelectedEvent(events);
-  });
-
-  let selectedEventBuildingIds = $derived.by(() => {
-    const event = selectedEventFocus;
-    if (!event) return null;
-    return new Set(
-      event.locations
-        .filter(
-          (location) =>
-            location.anchorType === "building" && location.buildingId !== null,
-        )
-        .map((location) => location.buildingId as number),
-    );
-  });
-
-  let selectedEventDormIds = $derived.by(() => {
-    const event = selectedEventFocus;
-    if (!event) return null;
-    return new Set(
-      event.locations
-        .filter(
-          (location) =>
-            location.anchorType === "dorm" && location.dormId !== null,
-        )
-        .map((location) => location.dormId as number),
-    );
-  });
-
-  const eventPlaceFocusActive = $derived(selectedEventFocus !== null);
-
-  function isBuildingDimmedForEventFocus(buildingId: number): boolean {
-    if (!eventPlaceFocusActive || selectedEventBuildingIds === null)
-      return false;
-    if (selectedEventBuildingIds.size === 0) return true;
-    return !selectedEventBuildingIds.has(buildingId);
-  }
-
-  function isDormDimmedForEventFocus(dormId: number): boolean {
-    if (!eventPlaceFocusActive || selectedEventDormIds === null) return false;
-    if (selectedEventDormIds.size === 0) return true;
-    return !selectedEventDormIds.has(dormId);
-  }
-
-  function isBuildingEventLinked(buildingId: number): boolean {
-    if (selectedEventBuildingIds !== null) {
-      return selectedEventBuildingIds.has(buildingId);
-    }
-    return linkedActiveEventBuildingIds.has(buildingId);
-  }
-
-  function isDormEventLinked(dormId: number): boolean {
-    if (selectedEventDormIds !== null) {
-      return selectedEventDormIds.has(dormId);
-    }
-    return linkedActiveEventDormIds.has(dormId);
-  }
-
-  // "My classes" highlight (#see MapViewStore.highlightMyBuildings): emphasize
-  // buildings hosting the active planner plan's classes, dim every other pin.
-  // Same shape as the event-focus dimming above.
-  const activePlannerRoomCodes = $derived(
-    plannerRoomCodes(plannerStore.activePlan?.sections ?? []),
-  );
-  const classHighlightActive = $derived(
-    mapViewStore.highlightMyBuildings && activePlannerRoomCodes.length > 0,
-  );
-
-  $effect(() => {
-    if (!mapViewStore.highlightMyBuildings) return;
-    void plannerBuildingsStore.load(activePlannerRoomCodes);
-  });
-
-  function isMyClassBuilding(buildingId: number): boolean {
-    return classHighlightActive && plannerBuildingsStore.buildingIds.has(buildingId);
-  }
-
-  function isBuildingDimmedForClassHighlight(buildingId: number): boolean {
-    return classHighlightActive && !plannerBuildingsStore.buildingIds.has(buildingId);
-  }
-
-  let linkedActiveEventBuildingIds = $derived.by(() => {
-    if (!loaded) return new Set<number>();
-    return new Set(
-      events
-        .filter((event) => event.status === "active")
-        .flatMap((event) => event.locations)
-        .filter(
-          (location) =>
-            location.anchorType === "building" && location.buildingId !== null,
-        )
-        .map((location) => location.buildingId as number),
-    );
-  });
-
-  let activeDormName = $derived.by(() => {
-    if (queryStore.category === "dorm" && queryStore.type === "result") {
-      return queryStore.inputValue;
-    }
-    return null;
-  });
-
-  let activeOrgName = $derived.by(() => {
-    if (queryStore.category === "organization" && queryStore.type === "result") {
-      return queryStore.inputValue;
-    }
-    return null;
-  });
-
-  let linkedActiveEventDormIds = $derived.by(() => {
-    if (!loaded) return new Set<number>();
-    return new Set(
-      events
-        .filter((event) => event.status === "active")
-        .flatMap((event) => event.locations)
-        .filter(
-          (location) =>
-            location.anchorType === "dorm" && location.dormId !== null,
-        )
-        .map((location) => location.dormId as number),
-    );
-  });
-
-  let selectedEventRouteStops = $derived.by(() => {
-    if (!loaded || queryStore.category !== "event") return [];
-    const selectedEvent = findSelectedEvent(events);
-    if (!selectedEvent) return [];
-    return selectedEvent.routes.flatMap((route) =>
-      route.stops.filter(
-        (stop) => stop.resolvedLon !== null && stop.resolvedLat !== null,
-      ),
-    );
-  });
+// In production Vite inlines maplibre into the app chunk and boots its
+// worker by importScripts-ing that same chunk; vector tiles survive but the
+// GeoJSON source path dies inside the worker ("f is not defined"), so no
+// geojson line layer (jeepney/event routes) ever rendered on prod. Point
+// maplibre at its self-contained CSP worker bundle instead.
+maplibregl.setWorkerUrl(maplibreWorkerUrl);
+
+import CalendarDays from "@lucide/svelte/icons/calendar-days";
+import Move from "@lucide/svelte/icons/move";
+import Redo2 from "@lucide/svelte/icons/redo-2";
+import Undo2 from "@lucide/svelte/icons/undo-2";
+import X from "@lucide/svelte/icons/x";
+import MapLibreGlDirections from "@maplibre/maplibre-gl-directions";
+import type { FeatureCollection, LineString } from "geojson";
+import type { StyleSpecification } from "maplibre-gl";
+import * as mapGl from "maplibre-gl";
+import { onMount, untrack } from "svelte";
+import { MediaQuery } from "svelte/reactivity";
+import { fade } from "svelte/transition";
+import { goto } from "$app/navigation";
+import { resolve } from "$app/paths";
+import { sumRouteLegs } from "$lib/campus-route";
+import {
+	buildingMatchesTypeFilter,
+	dormMatchesTypeFilter,
+} from "$lib/constants/building-types";
+import jeepneyGeometries from "$lib/constants/jeepney-geometries.json";
+import {
+	type JeepneyRoute,
+	type JeepneyStop,
+	type ResolvedRouteGeometry,
+	type RouteGeometrySource,
+	resolveRouteGeometry,
+	type StoredRouteGeometry,
+} from "$lib/constants/jeepney-routes";
+import {
+	MAKILING_TRAIL_COLOR,
+	MAKILING_TRAIL_LAYER_CASING_ID,
+	MAKILING_TRAIL_LAYER_ID,
+	MAKILING_TRAIL_LINE,
+	MAKILING_TRAIL_SOURCE_ID,
+	MAKILING_TRAIL_STATIONS,
+	MAKILING_TRAIL_STATIONS_LAYER_ID,
+	MAKILING_TRAIL_STATIONS_SOURCE_ID,
+} from "$lib/constants/makiling-trail";
+import { isMap2DPitch } from "$lib/constants/map-dimension";
+import {
+	CAMPUS_DEFAULT_CAMERA,
+	CAMPUS_MAX_BOUNDS,
+	getTerrainTileJsonUrl,
+	TERRAIN_CAMERA,
+	TERRAIN_HILLSHADE_BEFORE_LAYER_ID,
+	TERRAIN_HILLSHADE_LAYER_ID,
+	TERRAIN_MAX_BOUNDS,
+	TERRAIN_SOURCE_BOUNDS,
+	TERRAIN_SOURCE_ID,
+	TERRAIN_TILE_FAILURE_MESSAGE,
+	TERRAIN_UNAVAILABLE_OFFLINE_MESSAGE,
+} from "$lib/constants/map-terrain";
+import { isStudentOrganization } from "$lib/constants/org-categories";
+import { isLandmarkPlaceCategory } from "$lib/constants/place-categories";
+import {
+	ISOCHRONE_CAP_MINUTES,
+	VIRIDIS_STOPS,
+} from "$lib/constants/travel-modes";
+import { getAppActions, getAppData } from "$lib/context";
+import {
+	buildingPreviewFromRow,
+	dormPreviewFromRow,
+	type EntityHoverPreview,
+	entityHoverPreviewStore,
+	eventPreviewFromRow,
+	isBuildingHoverPreview,
+	isDormHoverPreview,
+	isEventHoverPreview,
+	isOrganizationHoverPreview,
+	isPlaceHoverPreview,
+	organizationPreviewFromRow,
+	placePreviewFromRow,
+} from "$lib/entity-hover-preview.svelte";
+import { getEventImage } from "$lib/event-images";
+import { formatCampusDateShort, formatCampusTime } from "$lib/event-time";
+import { metersToLngLatCircle } from "$lib/geolocation";
+import { observeBlockHeight } from "$lib/layout-css-vars";
+import { applyBasemapPalette } from "$lib/map-basemap-palette";
+import { syncBuildingLayersForDimension } from "$lib/map-dimension-layers";
+import {
+	ClientEditConflictError,
+	ClientEventConflictError,
+	editErrorMessage,
+} from "$lib/map-edit/errors";
+import { patchEventLocations, patchPosition } from "$lib/map-edit/patch-api";
+import type {
+	EditableCoords,
+	EditableEntityType,
+	EditableVersionedPosition,
+	EventLocationWriteValue,
+} from "$lib/map-edit/types";
+import {
+	completeMapMoveRedo,
+	completeMapMoveUndo,
+	getMapEditShortcutAction,
+	type MapMoveCoordinates,
+	recordMapMove,
+	type VersionedMapMove,
+} from "$lib/map-move-history";
+import { loadCampusMapStyle } from "$lib/maptiler-key";
+import {
+	resolveSubmitterName,
+	submitCreateProposal,
+	submitPinPositionProposal,
+} from "$lib/proposals/client";
+import { formatMinutes } from "$lib/schedule-import/day-stops";
+import { slugifySegment } from "$lib/site";
+import {
+	trackSponsorClick,
+	trackSponsorImpression,
+} from "$lib/sponsor-tracking";
+import { getSponsoredPlacePins, loadSponsors } from "$lib/sponsors";
+import {
+	additionProposalStore,
+	adminAuthStore,
+	buildingTypeFilter,
+	classVenuesStore,
+	currentRoom,
+	eventPlacementStore,
+	jeepneyStore,
+	locationStore,
+	mapEditStore,
+	mapProposalStore,
+	mapStore,
+	mapViewStore,
+	measureRouteStore,
+	plannerBuildingsStore,
+	plannerRoomCodes,
+	plannerStore,
+	queryStore,
+	scheduleRouteStore,
+	sidePanelStore,
+	syncToastStore,
+	termStore,
+	terrainStore,
+	toastStore,
+	trailStore,
+	transitStore,
+	travelTimeStore,
+} from "$lib/store.svelte";
+import {
+	dijkstra,
+	isochroneFeatures,
+	nearestNodeIndex,
+	shortestPath,
+	type TravelMode,
+} from "$lib/travel-graph/engine";
+import { loadTravelGraph } from "$lib/travel-graph/load";
+import type {
+	BuildingData,
+	DormData,
+	EventData,
+	OrgData,
+	PlaceData,
+} from "$lib/types";
+import BuildingResult from "./controls/BuildingResult.svelte";
+import DormResult from "./controls/DormResult.svelte";
+import EventResult from "./controls/EventResult.svelte";
+import OrgResult from "./controls/OrgResult.svelte";
+import PlaceResult from "./controls/PlaceResult.svelte";
+import ContributorDraftPinMarker from "./map/ContributorDraftPinMarker.svelte";
+import EventMapPin from "./map/EventMapPin.svelte";
+import MapEntityPin from "./map/MapEntityPin.svelte";
+import PinGlyph from "./map/PinGlyph.svelte";
+import EventPlacementImageField from "./map-chrome/EventPlacementImageField.svelte";
+
+const data = getAppData();
+const appActions = getAppActions();
+const { buildings, dorms, events, organizations, places, loaded } = $derived(
+	data(),
+);
+// Refresh the set of buildings that host classes whenever the term changes
+// or an offline sync lands, so dual-role buildings (admin + class venue)
+// filter correctly.
+$effect(() => {
+	// Re-run after a sync lands (allSynced isn't read by load's argument).
+	void syncToastStore.allSynced;
+	void classVenuesStore.load(termStore.activeTermId);
+});
+
+// Browsing a sidebar directory declutters the map to just that category's
+// pins; null means no browse filter (all pin kinds show).
+const browseTab = $derived(
+	queryStore.category === "browse" ? queryStore.queryValue : null,
+);
+const showBuildingPins = $derived(
+	browseTab === null ||
+		browseTab === "buildings" ||
+		browseTab === "colleges" ||
+		browseTab === "divisions",
+);
+const showDormPins = $derived(browseTab === null || browseTab === "dorms");
+const orgPinFilter = $derived.by((): "all" | "student" | "office" | "none" => {
+	if (browseTab === null) return "all";
+	if (browseTab === "organizations") return "student";
+	if (browseTab === "offices") return "office";
+	return "none";
+});
+const placePinFilter = $derived.by(
+	(): "all" | "landmark" | "establishment" | "none" => {
+		if (browseTab === null) return "all";
+		if (browseTab === "landmarks") return "landmark";
+		if (browseTab === "services") return "establishment";
+		return "none";
+	},
+);
+
+const filteredBuildings = $derived.by(() => {
+	if (!loaded || !showBuildingPins) return [];
+	return buildings.filter((building) =>
+		buildingMatchesTypeFilter(
+			building,
+			buildingTypeFilter.value,
+			classVenuesStore.buildingIdsWithClasses,
+		),
+	);
+});
+const filteredDorms = $derived.by(() => {
+	if (!loaded || !showDormPins) return [];
+	return dorms.filter((dorm) =>
+		dormMatchesTypeFilter(dorm, buildingTypeFilter.value),
+	);
+});
+// Organizations pin at their own coordinate, else fall back to the coords of
+// the building they sit in. Orgs without any resolvable location are dropped
+// from the map (they still appear in the directory list).
+function organizationPosition(org: OrgData) {
+	let lat = org.lat;
+	let lon = org.lon;
+	if ((lat === null || lon === null) && org.buildingId !== null) {
+		const host = (buildings ?? []).find(
+			(building) => building.id === org.buildingId,
+		);
+		if (host) {
+			lat = host.lat;
+			lon = host.lon;
+		}
+	}
+	return lat !== null && lon !== null ? { lat, lon } : null;
+}
+
+const filteredOrganizations = $derived.by(() => {
+	if (!loaded || !mapViewStore.showOrgs || orgPinFilter === "none") return [];
+	return organizations.flatMap((org) => {
+		if (orgPinFilter === "student" && !isStudentOrganization(org.category)) {
+			return [];
+		}
+		if (orgPinFilter === "office" && isStudentOrganization(org.category)) {
+			return [];
+		}
+		const position = organizationPosition(org);
+		return position ? [{ org, ...position }] : [];
+	});
+});
+const filteredPlaces = $derived.by(() => {
+	if (!loaded || !mapViewStore.showPlaces || placePinFilter === "none") {
+		return [];
+	}
+	return places.filter(
+		(place) =>
+			place.lat != null &&
+			place.lon != null &&
+			(placePinFilter === "all" ||
+				(placePinFilter === "landmark") ===
+					isLandmarkPlaceCategory(place.category)),
+	);
+});
+
+function isLandmarkPlace(place: PlaceData) {
+	return isLandmarkPlaceCategory(place.category);
+}
+
+function handlePlaceMarkerClick(place: PlaceData) {
+	if (queryStore.category === "place" && queryStore.inputValue === place.name) {
+		sidePanelStore.expand();
+		return;
+	}
+	queryStore.updateQuery({
+		category: "place",
+		type: "result",
+		value: place.name,
+	});
+	queryStore.inputValue = place.name;
+	let subroute:"landmarks" | "establishments";
+	if (isLandmarkPlace(place)) {
+		subroute = "landmarks";
+	} else {
+		subroute = "establishments";
+	}
+    goto(resolve(`/map/${subroute}/${slugifySegment(place.name)}-${place.id}`));
+	sidePanelStore.openPanel({
+		type: "search-result",
+		component: PlaceResult,
+	});
+}
+
+// Event titles are not unique, so resolve the selected event by its slug when
+// one is available, falling back to the title only for legacy/partial state.
+function findSelectedEvent(eventList: EventData[]): EventData | null {
+	const slug = queryStore.selectedEventSlug;
+	if (slug) return eventList.find((event) => event.slug === slug) ?? null;
+	return (
+		eventList.find((event) => event.title === queryStore.inputValue) ?? null
+	);
+}
+let directions: MapLibreGlDirections | undefined = $state.raw();
+let mapStyle = $state<StyleSpecification | null>(null);
+
+// Sponsored place pins (docs/ad-policy.md: real locations only, capped).
+let sponsoredPlacePins = $state<Map<string, string>>(new Map());
+
+// Impression per sponsored pin actually on the map (session-deduped in lib).
+$effect(() => {
+	if (sponsoredPlacePins.size === 0) return;
+	for (const place of filteredPlaces) {
+		const sponsorId = sponsoredPlacePins.get(place.name);
+		if (sponsorId) trackSponsorImpression(sponsorId, "map_pin");
+	}
+});
+
+onMount(() => {
+	// Hydrate saved planner plans so the "My classes" highlight knows the
+	// user's class rooms without the planner screen ever being opened.
+	plannerStore.init();
+	void loadSponsors().then((data) => {
+		if (data) sponsoredPlacePins = getSponsoredPlacePins(data.sponsors);
+	});
+	void loadCampusMapStyle<StyleSpecification>()
+		.then((style) => {
+			mapStyle = style;
+		})
+		.catch((error) => {
+			console.error("Failed to load campus map style", error);
+			toastStore.show(
+				"Campus map tiles could not load. Check MapTiler configuration.",
+				"error",
+			);
+		});
+});
+
+const JEEPNEY_ROUTE_SOURCE_ID = "jeepney-route-line";
+const JEEPNEY_ROUTE_LAYER_ID = "jeepney-route-line";
+const JEEPNEY_ROUTE_LAYER_CASING_ID = "jeepney-route-line-casing";
+const USER_LOCATION_ACCURACY_SOURCE_ID = "user-location-accuracy";
+const USER_LOCATION_ACCURACY_FILL_ID = "user-location-accuracy-fill";
+const USER_LOCATION_ACCURACY_LINE_ID = "user-location-accuracy-line";
+const JEEPNEY_ROUTE_WIDTH = 5;
+const JEEPNEY_ROUTE_CASING_WIDTH = 8;
+const jeepneyRouteGeometryCache = new Map<string, ResolvedRouteGeometry>();
+const EVENT_ROUTE_SOURCE_ID = "event-route-line";
+const EVENT_ROUTE_LAYER_ID = "event-route-line";
+const EVENT_ROUTE_LAYER_CASING_ID = "event-route-line-casing";
+let activeRouteId = $state<string | null>(null);
+let activeRouteStops = $state<JeepneyStop[]>([]);
+let activeRouteColor = $state<string>("#dc2626");
+let terrainModeWasEnabled = false;
+let selectedEditKey = $state<string | null>(null);
+let savingEditKey = $state<string | null>(null);
+let savedEditKey = $state<string | null>(null);
+let failedEditKey = $state<string | null>(null);
+let hoveredEditKey = $state<string | null>(null);
+let expandedEventGroupKey = $state<string | null>(null);
+let undoingEditKey = $state<string | null>(null);
+let undoShortcutLabel = $state("Ctrl+Z");
+let editStatusMessage = $state<string | null>(null);
+type EntityEditMove = VersionedMapMove & {
+	kind: "entity";
+	entityType: EditableEntityType;
+	id: number;
+};
+type EventLocationEditMove = VersionedMapMove & {
+	kind: "eventLocation";
+	eventId: number;
+	locationId: number;
+	previousLocations: EventLocationWriteValue[];
+	currentLocations: EventLocationWriteValue[];
+};
+type EditMove = EntityEditMove | EventLocationEditMove;
+let positionOverrides = $state<Record<string, EditableVersionedPosition>>({});
+// `events` is `$state.raw`, so in-place updates do not invalidate derived
+// marker positions. Mirror the building/dorm `positionOverrides` pattern with
+// a reactive override so the editable event marker reflects saves and, on a
+// failed save, rolls back to the previous/server position.
+let eventLocationOverrides = $state<Record<string, EditableCoords>>({});
+let undoStack = $state<EditMove[]>([]);
+let redoStack = $state<EditMove[]>([]);
+const undoMove = $derived(undoStack.at(-1) ?? null);
+const redoMove = $derived(redoStack.at(-1) ?? null);
+
+function routeGeometry(route: JeepneyRoute) {
+	const cached = jeepneyRouteGeometryCache.get(route.id);
+	if (cached) return cached;
+	const resolved = resolveRouteGeometry(
+		route,
+		jeepneyGeometries as Record<string, StoredRouteGeometry>,
+	);
+	// Only sourced lines are cacheable: a stops-only line is derived from stops
+	// the editor can move, so it has to be recomputed each draw.
+	if (resolved.source !== "stops-only") {
+		jeepneyRouteGeometryCache.set(route.id, resolved);
+	}
+	return resolved;
+}
+
+function ensureJeepneyRouteLayers(
+	map: mapGl.MapLibreMap,
+	color: string,
+	source: RouteGeometrySource,
+) {
+	// A stops-only line is not a road path, so it must not look like one:
+	// dashed and faded reads as provisional instead of confidently wrong.
+	const provisional = source === "stops-only";
+	// `undefined` restores the style default (solid). MapLibre dash lengths are
+	// multiples of line-width, so the casing's dash is rescaled by the width
+	// ratio; otherwise the white halo fills the gaps it should leave open.
+	const dash = provisional ? [1.5, 1.5] : undefined;
+	const casingDash = dash?.map(
+		(n) => (n * JEEPNEY_ROUTE_WIDTH) / JEEPNEY_ROUTE_CASING_WIDTH,
+	);
+	const opacity = provisional ? 0.55 : 0.95;
+	if (!map.getSource(JEEPNEY_ROUTE_SOURCE_ID)) {
+		map.addSource(JEEPNEY_ROUTE_SOURCE_ID, {
+			type: "geojson",
+			data: {
+				type: "FeatureCollection",
+				features: [],
+			},
+		});
+	}
+
+	if (!map.getLayer(JEEPNEY_ROUTE_LAYER_CASING_ID)) {
+		map.addLayer({
+			id: JEEPNEY_ROUTE_LAYER_CASING_ID,
+			type: "line",
+			source: JEEPNEY_ROUTE_SOURCE_ID,
+			layout: { "line-cap": "round", "line-join": "round" },
+			paint: {
+				"line-color": "#ffffff",
+				"line-width": JEEPNEY_ROUTE_CASING_WIDTH,
+				"line-opacity": 0.95,
+			},
+		});
+	}
+
+	if (!map.getLayer(JEEPNEY_ROUTE_LAYER_ID)) {
+		map.addLayer({
+			id: JEEPNEY_ROUTE_LAYER_ID,
+			type: "line",
+			source: JEEPNEY_ROUTE_SOURCE_ID,
+			layout: { "line-cap": "round", "line-join": "round" },
+			paint: {
+				"line-color": color,
+				"line-width": JEEPNEY_ROUTE_WIDTH,
+				"line-opacity": 0.95,
+			},
+		});
+	}
+
+	// Layers outlive a single route, so provenance styling is applied on every
+	// draw, not only when the layer is first created.
+	map.setPaintProperty(JEEPNEY_ROUTE_LAYER_ID, "line-color", color);
+	map.setPaintProperty(JEEPNEY_ROUTE_LAYER_ID, "line-opacity", opacity);
+	map.setPaintProperty(JEEPNEY_ROUTE_LAYER_ID, "line-dasharray", dash);
+	map.setPaintProperty(JEEPNEY_ROUTE_LAYER_CASING_ID, "line-opacity", opacity);
+	map.setPaintProperty(
+		JEEPNEY_ROUTE_LAYER_CASING_ID,
+		"line-dasharray",
+		casingDash,
+	);
+}
+
+function clearJeepneyRouteLayers(map: mapGl.MapLibreMap) {
+	if (map.getLayer(JEEPNEY_ROUTE_LAYER_ID)) {
+		map.removeLayer(JEEPNEY_ROUTE_LAYER_ID);
+	}
+	if (map.getLayer(JEEPNEY_ROUTE_LAYER_CASING_ID)) {
+		map.removeLayer(JEEPNEY_ROUTE_LAYER_CASING_ID);
+	}
+	if (map.getSource(JEEPNEY_ROUTE_SOURCE_ID)) {
+		map.removeSource(JEEPNEY_ROUTE_SOURCE_ID);
+	}
+}
+
+const TRAVEL_TIME_SOURCE_ID = "travel-time-isochrone";
+const TRAVEL_TIME_LAYER_ID = "travel-time-isochrone";
+
+function ensureTravelTimeLayers(map: mapGl.MapLibreMap) {
+	if (!map.getSource(TRAVEL_TIME_SOURCE_ID)) {
+		map.addSource(TRAVEL_TIME_SOURCE_ID, {
+			type: "geojson",
+			data: { type: "FeatureCollection", features: [] },
+		});
+	}
+
+	if (!map.getLayer(TRAVEL_TIME_LAYER_ID)) {
+		// Viridis ramp over per-edge walking minutes; values past the cap keep
+		// the last stop's color (interpolate clamps).
+		const rampStep = ISOCHRONE_CAP_MINUTES / (VIRIDIS_STOPS.length - 1);
+		map.addLayer({
+			id: TRAVEL_TIME_LAYER_ID,
+			type: "line",
+			source: TRAVEL_TIME_SOURCE_ID,
+			layout: { "line-cap": "round", "line-join": "round" },
+			paint: {
+				"line-color": [
+					"interpolate",
+					["linear"],
+					["get", "minutes"],
+					...VIRIDIS_STOPS.flatMap((color, i) => [i * rampStep, color]),
+				] as unknown as mapGl.ExpressionSpecification,
+				"line-width": 3,
+				"line-opacity": 0.85,
+			},
+		});
+	}
+}
+
+function clearTravelTimeLayers(map: mapGl.MapLibreMap) {
+	if (map.getLayer(TRAVEL_TIME_LAYER_ID)) {
+		map.removeLayer(TRAVEL_TIME_LAYER_ID);
+	}
+	if (map.getSource(TRAVEL_TIME_SOURCE_ID)) {
+		map.removeSource(TRAVEL_TIME_SOURCE_ID);
+	}
+}
+
+const MEASURE_ROUTE_SOURCE_ID = "measure-route-line";
+const MEASURE_ROUTE_LAYER_ID = "measure-route-line";
+
+function ensureMeasureRouteLayers(map: mapGl.MapLibreMap) {
+	if (!map.getSource(MEASURE_ROUTE_SOURCE_ID)) {
+		map.addSource(MEASURE_ROUTE_SOURCE_ID, {
+			type: "geojson",
+			data: { type: "FeatureCollection", features: [] },
+		});
+	}
+
+	if (!map.getLayer(MEASURE_ROUTE_LAYER_ID)) {
+		// Dashed violet: deliberately unlike the solid casing-backed jeepney
+		// red / event maroon / trail green lines and the stock blue OSRM
+		// directions polyline — this is a measurement, not a route suggestion.
+		map.addLayer({
+			id: MEASURE_ROUTE_LAYER_ID,
+			type: "line",
+			source: MEASURE_ROUTE_SOURCE_ID,
+			layout: { "line-cap": "round", "line-join": "round" },
+			paint: {
+				"line-color": "#7c3aed",
+				"line-width": 4,
+				"line-opacity": 0.9,
+				"line-dasharray": [0.2, 1.6],
+			},
+		});
+	}
+}
+
+function clearMeasureRouteLayers(map: mapGl.MapLibreMap) {
+	if (map.getLayer(MEASURE_ROUTE_LAYER_ID)) {
+		map.removeLayer(MEASURE_ROUTE_LAYER_ID);
+	}
+	if (map.getSource(MEASURE_ROUTE_SOURCE_ID)) {
+		map.removeSource(MEASURE_ROUTE_SOURCE_ID);
+	}
+}
+
+function ensureEventRouteLayers(map: mapGl.MapLibreMap) {
+	if (!map.getSource(EVENT_ROUTE_SOURCE_ID)) {
+		map.addSource(EVENT_ROUTE_SOURCE_ID, {
+			type: "geojson",
+			data: { type: "FeatureCollection", features: [] },
+		});
+	}
+
+	if (!map.getLayer(EVENT_ROUTE_LAYER_CASING_ID)) {
+		map.addLayer({
+			id: EVENT_ROUTE_LAYER_CASING_ID,
+			type: "line",
+			source: EVENT_ROUTE_SOURCE_ID,
+			layout: { "line-cap": "round", "line-join": "round" },
+			paint: {
+				"line-color": "#ffffff",
+				"line-width": 7,
+				"line-opacity": 0.9,
+			},
+		});
+	}
+
+	if (!map.getLayer(EVENT_ROUTE_LAYER_ID)) {
+		map.addLayer({
+			id: EVENT_ROUTE_LAYER_ID,
+			type: "line",
+			source: EVENT_ROUTE_SOURCE_ID,
+			layout: { "line-cap": "round", "line-join": "round" },
+			paint: {
+				"line-color": "#7b1113",
+				"line-width": 4,
+				"line-opacity": 0.9,
+			},
+		});
+	}
+}
+
+function clearEventRouteLayers(map: mapGl.MapLibreMap) {
+	if (map.getLayer(EVENT_ROUTE_LAYER_ID)) map.removeLayer(EVENT_ROUTE_LAYER_ID);
+	if (map.getLayer(EVENT_ROUTE_LAYER_CASING_ID)) {
+		map.removeLayer(EVENT_ROUTE_LAYER_CASING_ID);
+	}
+	if (map.getSource(EVENT_ROUTE_SOURCE_ID))
+		map.removeSource(EVENT_ROUTE_SOURCE_ID);
+}
+
+function ensureTrailLayers(map: mapGl.MapLibreMap) {
+	// Trail line source + casing + line
+	if (!map.getSource(MAKILING_TRAIL_SOURCE_ID)) {
+		map.addSource(MAKILING_TRAIL_SOURCE_ID, {
+			type: "geojson",
+			data: {
+				type: "Feature",
+				geometry: {
+					type: "LineString",
+					coordinates: MAKILING_TRAIL_LINE,
+				},
+				properties: {},
+			},
+		});
+	}
+
+	if (!map.getLayer(MAKILING_TRAIL_LAYER_CASING_ID)) {
+		map.addLayer({
+			id: MAKILING_TRAIL_LAYER_CASING_ID,
+			type: "line",
+			source: MAKILING_TRAIL_SOURCE_ID,
+			layout: { "line-cap": "round", "line-join": "round" },
+			paint: {
+				"line-color": "#ffffff",
+				"line-width": 7,
+				"line-opacity": 0.9,
+			},
+		});
+	}
+
+	if (!map.getLayer(MAKILING_TRAIL_LAYER_ID)) {
+		map.addLayer({
+			id: MAKILING_TRAIL_LAYER_ID,
+			type: "line",
+			source: MAKILING_TRAIL_SOURCE_ID,
+			layout: { "line-cap": "round", "line-join": "round" },
+			paint: {
+				"line-color": MAKILING_TRAIL_COLOR,
+				"line-width": 4,
+				"line-opacity": 0.95,
+			},
+		});
+	}
+
+	// Station markers source + circle layer
+	if (!map.getSource(MAKILING_TRAIL_STATIONS_SOURCE_ID)) {
+		map.addSource(MAKILING_TRAIL_STATIONS_SOURCE_ID, {
+			type: "geojson",
+			data: {
+				type: "FeatureCollection",
+				features: MAKILING_TRAIL_STATIONS.map((s) => ({
+					type: "Feature" as const,
+					geometry: {
+						type: "Point" as const,
+						coordinates: [s.lon, s.lat],
+					},
+					properties: {
+						station: s.station,
+						name: s.name,
+						elevation: s.elevationMeters,
+					},
+				})),
+			},
+		});
+	}
+
+	if (!map.getLayer(MAKILING_TRAIL_STATIONS_LAYER_ID)) {
+		map.addLayer({
+			id: MAKILING_TRAIL_STATIONS_LAYER_ID,
+			type: "circle",
+			source: MAKILING_TRAIL_STATIONS_SOURCE_ID,
+			paint: {
+				"circle-radius": 6,
+				"circle-color": MAKILING_TRAIL_COLOR,
+				"circle-stroke-color": "#ffffff",
+				"circle-stroke-width": 2,
+				"circle-opacity": 0.95,
+			},
+		});
+	}
+}
+
+function clearTrailLayers(map: mapGl.MapLibreMap) {
+	if (map.getLayer(MAKILING_TRAIL_STATIONS_LAYER_ID))
+		map.removeLayer(MAKILING_TRAIL_STATIONS_LAYER_ID);
+	if (map.getLayer(MAKILING_TRAIL_LAYER_ID))
+		map.removeLayer(MAKILING_TRAIL_LAYER_ID);
+	if (map.getLayer(MAKILING_TRAIL_LAYER_CASING_ID))
+		map.removeLayer(MAKILING_TRAIL_LAYER_CASING_ID);
+	if (map.getSource(MAKILING_TRAIL_STATIONS_SOURCE_ID))
+		map.removeSource(MAKILING_TRAIL_STATIONS_SOURCE_ID);
+	if (map.getSource(MAKILING_TRAIL_SOURCE_ID))
+		map.removeSource(MAKILING_TRAIL_SOURCE_ID);
+}
+
+function buildEventRouteGeometry(
+	route: EventData["routes"][number],
+): LineString | null {
+	const coordinates = route.stops
+		.filter((stop) => stop.resolvedLon !== null && stop.resolvedLat !== null)
+		.map((stop) => [stop.resolvedLon as number, stop.resolvedLat as number]);
+	if (coordinates.length < 2) return null;
+	return { type: "LineString", coordinates };
+}
+
+function buildSelectedEventRouteFeatures(
+	event: EventData,
+): FeatureCollection<LineString>["features"] {
+	return event.routes.flatMap((route) => {
+		const geometry = buildEventRouteGeometry(route);
+		if (!geometry) return [];
+		return [
+			{
+				type: "Feature" as const,
+				geometry,
+				properties: { eventId: event.id, routeId: route.id },
+			},
+		];
+	});
+}
+
+function fitMapToRoute(map: mapGl.MapLibreMap, route: JeepneyRoute) {
+	if (route.stops.length === 0) return;
+	let minLng = Infinity;
+	let minLat = Infinity;
+	let maxLng = -Infinity;
+	let maxLat = -Infinity;
+	for (const stop of route.stops) {
+		if (stop.lon < minLng) minLng = stop.lon;
+		if (stop.lon > maxLng) maxLng = stop.lon;
+		if (stop.lat < minLat) minLat = stop.lat;
+		if (stop.lat > maxLat) maxLat = stop.lat;
+	}
+	// rAF: camera moves fire map event handlers synchronously; keep their
+	// state writes out of the reactive flush that called us (see stop flyTo
+	// effect) or the scheduler can die with effect_update_depth_exceeded.
+	requestAnimationFrame(() => {
+		map.fitBounds(
+			[
+				[minLng, minLat],
+				[maxLng, maxLat],
+			],
+			{
+				padding: { top: 80, bottom: 80, left: 80, right: 80 },
+				duration: 1200,
+				pitch: 30,
+			},
+		);
+	});
+}
+
+function getEventMapLocations(event: EventData) {
+	return event.locations.filter(
+		(location) =>
+			location.resolvedLon !== null && location.resolvedLat !== null,
+	);
+}
+
+function focusMapOnEvent(map: mapGl.MapLibreMap, event: EventData) {
+	const points: [number, number][] = [];
+	for (const location of getEventMapLocations(event)) {
+		points.push([
+			location.resolvedLon as number,
+			location.resolvedLat as number,
+		]);
+	}
+	// Include route geometry so events whose route stops extend beyond their
+	// primary locations still fit fully within the viewport.
+	for (const route of event.routes) {
+		for (const stop of route.stops) {
+			if (stop.resolvedLon !== null && stop.resolvedLat !== null) {
+				points.push([stop.resolvedLon, stop.resolvedLat]);
+			}
+		}
+	}
+	if (points.length === 0) return false;
+
+	if (points.length === 1) {
+		map.flyTo({
+			center: points[0],
+			zoom: 17,
+			pitch: 50,
+			padding: calculatePadding(md.current),
+			duration: 1200,
+		});
+		return true;
+	}
+
+	const bounds = new mapGl.LngLatBounds();
+	for (const point of points) {
+		bounds.extend(point);
+	}
+	map.fitBounds(bounds, {
+		padding: { top: 80, bottom: 80, left: 80, right: 80 },
+		duration: 1000,
+		pitch: 30,
+		maxZoom: 17,
+	});
+	return true;
+}
+
+async function createEventAtMapPoint(coords: EditableCoords) {
+	if (!eventPlacementStore.draft || eventPlacementStore.creating) return;
+
+	const draft = eventPlacementStore.draft;
+	eventPlacementStore.beginCreate();
+	try {
+		const res = await fetch("/api/admin/events", {
+			method: "POST",
+			credentials: "same-origin",
+			headers: { "content-type": "application/json" },
+			body: JSON.stringify({
+				...draft,
+				recurrence: "none",
+				isActive: true,
+				includeInSeo: true,
+				locations: [
+					{
+						anchorType: "custom",
+						buildingId: null,
+						dormId: null,
+						label: "Event marker",
+						lat: coords.lat,
+						lon: coords.lon,
+						isPrimary: true,
+						sortOrder: 0,
+					},
+				],
+				routes: [],
+			}),
+		});
+		const data = (await res.json().catch(() => ({}))) as {
+			error?: string;
+			event?: EventData;
+		};
+
+		if (!res.ok || !data.event) {
+			throw new Error(data.error ?? `Create failed (${res.status})`);
+		}
+
+		appActions.replaceEvent(data.event);
+		queryStore.updateQuery({
+			category: "event",
+			type: "result",
+			value: data.event.title,
+			eventSlug: data.event.slug,
+		});
+		queryStore.inputValue = data.event.title;
+		sidePanelStore.expand();
+		if (!mapEditStore.enabled) mapEditStore.toggle();
+		eventPlacementStore.finishCreate(data.event.id);
+		mapStore.mapInstance?.flyTo({
+			center: [coords.lon, coords.lat],
+			zoom: 17,
+			pitch: 50,
+			padding: calculatePadding(md.current),
+			duration: 800,
+		});
+		toastStore.show(
+			`${data.event.title} created. Drag its marker on the map to refine the location.`,
+			"success",
+		);
+	} catch (error) {
+		eventPlacementStore.failCreate();
+		toastStore.show(
+			error instanceof Error ? error.message : "Failed to create event.",
+			"error",
+		);
+	}
+}
+
+async function proposeEventAtMapPoint(coords: EditableCoords) {
+	if (!eventPlacementStore.draft || eventPlacementStore.creating) return;
+
+	const draft = eventPlacementStore.draft;
+	eventPlacementStore.beginCreate();
+	try {
+		const submitterName = resolveSubmitterName({
+			displayName: adminAuthStore.displayName,
+			username: adminAuthStore.username,
+			draftName: eventPlacementStore.submitterName,
+		});
+		if (!submitterName) {
+			throw new Error("Enter your name before proposing an event.");
+		}
+
+		const result = await submitCreateProposal({
+			entityType: "create_event",
+			patch: {
+				...draft,
+				recurrence: "none",
+				isActive: true,
+				includeInSeo: true,
+				locations: [
+					{
+						anchorType: "custom",
+						buildingId: null,
+						dormId: null,
+						label: "Event marker",
+						lat: coords.lat,
+						lon: coords.lon,
+						isPrimary: true,
+						sortOrder: 0,
+					},
+				],
+				routes: [],
+			},
+			submitterName,
+		});
+
+		if (!result.ok) {
+			throw new Error(result.error ?? "Failed to submit event proposal.");
+		}
+
+		eventPlacementStore.cancel();
+		toastStore.show(
+			`Event "${draft.title}" submitted for editor review.`,
+			"success",
+		);
+	} catch (error) {
+		eventPlacementStore.failCreate();
+		toastStore.show(
+			error instanceof Error ? error.message : "Failed to propose event.",
+			"error",
+		);
+	}
+}
+
+async function placeEventAtMapPoint(coords: EditableCoords) {
+	if (eventPlacementStore.proposing || !adminAuthStore.canPublish) {
+		await proposeEventAtMapPoint(coords);
+		return;
+	}
+	await createEventAtMapPoint(coords);
+}
+
+function ensureTerrainRendering(map: mapGl.MapLibreMap) {
+	if (!map.getSource(TERRAIN_SOURCE_ID)) {
+		map.addSource(TERRAIN_SOURCE_ID, {
+			type: "raster-dem",
+			url: getTerrainTileJsonUrl(),
+			bounds: TERRAIN_SOURCE_BOUNDS,
+			maxzoom: 14,
+			tileSize: 512,
+		});
+	}
+
+	if (!map.getLayer(TERRAIN_HILLSHADE_LAYER_ID)) {
+		map.addLayer(
+			{
+				id: TERRAIN_HILLSHADE_LAYER_ID,
+				type: "hillshade",
+				source: TERRAIN_SOURCE_ID,
+				layout: { visibility: "none" },
+				paint: {
+					"hillshade-accent-color": "rgba(112, 79, 40, 0.28)",
+					"hillshade-exaggeration": 0.85,
+					"hillshade-highlight-color": "rgba(255, 244, 214, 0.35)",
+					"hillshade-illumination-anchor": "viewport",
+					"hillshade-illumination-direction": 315,
+					"hillshade-shadow-color": "rgba(34, 25, 14, 0.55)",
+				},
+			},
+			map.getLayer(TERRAIN_HILLSHADE_BEFORE_LAYER_ID)
+				? TERRAIN_HILLSHADE_BEFORE_LAYER_ID
+				: undefined,
+		);
+	}
+}
+
+function setTerrainHillshadeVisible(map: mapGl.MapLibreMap, visible: boolean) {
+	if (!map.getLayer(TERRAIN_HILLSHADE_LAYER_ID)) return;
+	map.setLayoutProperty(
+		TERRAIN_HILLSHADE_LAYER_ID,
+		"visibility",
+		visible ? "visible" : "none",
+	);
+}
+
+function flyToCamera(
+	map: mapGl.MapLibreMap,
+	camera: typeof CAMPUS_DEFAULT_CAMERA,
+) {
+	map.easeTo({
+		center: camera.center,
+		zoom: camera.zoom,
+		pitch: camera.pitch,
+		bearing: camera.bearing,
+		duration: 1500,
+		padding: calculatePadding(untrack(() => md.current)),
+	});
+}
+
+function disableTerrain(map: mapGl.MapLibreMap) {
+	map.setTerrain(null);
+	setTerrainHillshadeVisible(map, false);
+	syncBuildingLayersForDimension(map, isMap2DPitch(map.getPitch()), false);
+}
+
+function restoreFlatMapCamera(map: mapGl.MapLibreMap) {
+	untrack(() => {
+		const category = queryStore.category;
+		const type = queryStore.type;
+		const value = queryStore.inputValue;
+
+		if (category === "building" && type === "result") {
+			if (!loaded) return;
+			const currentBuilding = buildings.find(
+				(building) => building.buildingName === value,
+			);
+
+			if (currentBuilding?.lon && currentBuilding.lat) {
+				map.flyTo({
+					center: [currentBuilding.lon, currentBuilding.lat],
+					zoom: 18,
+					pitch: 60,
+					padding: calculatePadding(md.current),
+					duration: 1500,
+				});
+			}
+		} else if (category === null) {
+			flyToCamera(map, CAMPUS_DEFAULT_CAMERA);
+			if (directions) directions.clear();
+		} else if (category === "room") {
+			currentRoom.getRoomByCode(value).then(() => {
+				if (
+					currentRoom.value?.building?.lat &&
+					currentRoom.value.building.lon &&
+					!terrainStore.enabled
+				) {
+					map.flyTo({
+						center: [
+							currentRoom.value.building.lon,
+							currentRoom.value.building.lat,
+						],
+						zoom: 18,
+						pitch: 60,
+						padding: calculatePadding(md.current),
+						duration: 1500,
+					});
+				}
+			});
+		} else if (category === "dorm") {
+			if (!loaded) return;
+
+			const currentDorm = dorms.find((dorm) => dorm.dormName === value);
+			if (currentDorm?.lon && currentDorm.lat) {
+				map.flyTo({
+					center: [currentDorm.lon, currentDorm.lat],
+					zoom: 18,
+					pitch: 60,
+					padding: calculatePadding(md.current),
+					duration: 1500,
+				});
+			}
+		} else if (category === "event") {
+			if (!loaded) return;
+			const currentEvent = findSelectedEvent(events);
+			if (currentEvent) focusMapOnEvent(map, currentEvent);
+		} else if (category === "organization") {
+			if (!loaded) return;
+			mapViewStore.showOrgs = true;
+			const currentOrg = organizations.find((org) => org.name === value);
+			const position = currentOrg ? organizationPosition(currentOrg) : null;
+			if (position) {
+				map.flyTo({
+					center: [position.lon, position.lat],
+					zoom: 18,
+					pitch: 60,
+					padding: calculatePadding(md.current),
+					duration: 1500,
+				});
+			}
+		} else if (category === "place") {
+			if (!loaded) return;
+			mapViewStore.showPlaces = true;
+			const currentPlace = places.find((place) => place.name === value);
+			if (currentPlace?.lon != null && currentPlace.lat != null) {
+				map.flyTo({
+					center: [currentPlace.lon, currentPlace.lat],
+					zoom: 18,
+					pitch: 60,
+					padding: calculatePadding(md.current),
+					duration: 1500,
+				});
+			}
+		}
+	});
+}
+
+function failTerrain(map: mapGl.MapLibreMap, message: string) {
+	disableTerrain(map);
+	terrainStore.markUnavailable(message);
+}
+
+function sourceErrorMatchesTerrain(event: mapGl.ErrorEvent) {
+	const sourceId = (event as mapGl.ErrorEvent & { sourceId?: string }).sourceId;
+	const message = event.error?.message ?? "";
+	return sourceId === TERRAIN_SOURCE_ID || message.includes(TERRAIN_SOURCE_ID);
+}
+
+let zoomLevel = $state(0);
+// Progressive disclosure, Google Maps style: low-priority POI pins (orgs,
+// offices, landmarks, establishments) only appear once zoomed in enough.
+// Buildings and dorms always show. Active (searched) and sponsored pins
+// bypass the gate so deep links and paid placements never vanish.
+const POI_MIN_ZOOM = 15.5;
+const poiPinsVisible = $derived(zoomLevel >= POI_MIN_ZOOM);
+$effect(() => {
+	mapViewStore.poiPinsZoomVisible = poiPinsVisible;
+});
+const SIDEPANEL_WIDTH = 25.75 * 16;
+const md = new MediaQuery("max-width:48rem");
+let editChromeEl = $state<HTMLElement | null>(null);
+const editChromeActive = $derived(
+	eventPlacementStore.active ||
+		additionProposalStore.pinPickActive ||
+		mapProposalStore.enabled ||
+		(adminAuthStore.canPublish && mapEditStore.enabled),
+);
+
+$effect(() => {
+	const root = editChromeEl?.closest(".app-layout") as HTMLElement | null;
+	if (!editChromeActive) {
+		root?.style.setProperty("--edit-bar-height", "0px");
+		return;
+	}
+	const el = editChromeEl;
+	if (!el) return;
+	return observeBlockHeight(el, "--edit-bar-height", {
+		shouldSkip: () => !editChromeActive,
+		skipValue: "0px",
+	});
+});
+
+const calculatePadding = (md: boolean): mapGl.PaddingOptions => {
+	if (md) {
+		return {
+			bottom: window.innerWidth / 2,
+			left: 0,
+		};
+	}
+	return {
+		left: SIDEPANEL_WIDTH,
+		bottom: 0,
+	};
+};
+
+function handleZoom() {
+	if (!mapStore.mapInstance) return;
+	zoomLevel = mapStore.mapInstance.getZoom();
+}
+
+function buildingEditKey(id: number) {
+	return `building:${id}`;
+}
+
+function dormEditKey(id: number) {
+	return `dorm:${id}`;
+}
+
+function eventLocationEditKey(id: number) {
+	return `event:${id}:location`;
+}
+
+function getEditablePosition(
+	key: string,
+	fallback: EditableVersionedPosition,
+): EditableVersionedPosition {
+	return positionOverrides[key] ?? fallback;
+}
+
+function getLoadedVersion(version: number | undefined): number {
+	return typeof version === "number" && Number.isInteger(version) ? version : 1;
+}
+
+function isMapEditEnabled() {
+	return adminAuthStore.canPublish && mapEditStore.enabled;
+}
+
+function canDragPin(key: string) {
+	if (isMapEditEnabled()) return true;
+	return mapProposalStore.allowsKey(key);
+}
+
+function isMapPinSuggestMode() {
+	return mapProposalStore.enabled;
+}
+
+function handleEditablePinEnter(key: string) {
+	if (!canDragPin(key)) return;
+	hoveredEditKey = key;
+}
+
+function handleEditablePinLeave(key: string) {
+	if (!canDragPin(key)) return;
+	if (hoveredEditKey === key) hoveredEditKey = null;
+}
+
+function shouldShowEntityHoverPreview() {
+	return (
+		!mapEditStore.enabled &&
+		!mapProposalStore.enabled &&
+		!eventPlacementStore.active
+	);
+}
+
+function handlePinPointerEnter(
+	preview: EntityHoverPreview,
+	pointer: PointerEvent,
+	editKey?: string,
+) {
+	if (editKey !== undefined) handleEditablePinEnter(editKey);
+	if (!shouldShowEntityHoverPreview()) return;
+	if (editKey !== undefined && canDragPin(editKey)) return;
+	entityHoverPreviewStore.show(preview, {
+		x: pointer.clientX,
+		y: pointer.clientY,
+	});
+}
+
+function handlePinPointerLeave(editKey?: string) {
+	if (editKey !== undefined) handleEditablePinLeave(editKey);
+	if (!shouldShowEntityHoverPreview()) return;
+	if (editKey !== undefined && canDragPin(editKey)) return;
+	entityHoverPreviewStore.scheduleHide();
+}
+
+function handleBuildingPinPointerEnter(
+	building: BuildingData,
+	editKey: string,
+	event: PointerEvent,
+) {
+	handlePinPointerEnter(buildingPreviewFromRow(building), event, editKey);
+}
+
+function handleBuildingPinPointerLeave(editKey: string) {
+	handlePinPointerLeave(editKey);
+}
+
+function handleDormPinPointerEnter(
+	dorm: DormData,
+	editKey: string,
+	event: PointerEvent,
+) {
+	handlePinPointerEnter(dormPreviewFromRow(dorm), event, editKey);
+}
+
+function handleDormPinPointerLeave(editKey: string) {
+	handlePinPointerLeave(editKey);
+}
+
+function handleEventPinPointerEnter(event: EventData, pointer: PointerEvent) {
+	handlePinPointerEnter(eventPreviewFromRow(event), pointer);
+}
+
+function handleEventPinPointerLeave() {
+	handlePinPointerLeave();
+}
+
+function handleOrganizationPinPointerEnter(
+	organization: OrgData,
+	pointer: PointerEvent,
+) {
+	handlePinPointerEnter(organizationPreviewFromRow(organization), pointer);
+}
+
+function handlePlacePinPointerEnter(place: PlaceData, pointer: PointerEvent) {
+	handlePinPointerEnter(placePreviewFromRow(place), pointer);
+}
+
+function handleDetailPinPointerLeave() {
+	handlePinPointerLeave();
+}
+
+function beginMarkerDrag(key: string) {
+	if (!canDragPin(key)) return;
+	selectedEditKey = key;
+	failedEditKey = null;
+}
+
+function markSaved(key: string) {
+	savedEditKey = key;
+	setTimeout(() => {
+		if (savedEditKey === key) savedEditKey = null;
+	}, 1800);
+}
+
+function setEditStatus(message: string) {
+	editStatusMessage = message;
+	setTimeout(() => {
+		if (editStatusMessage === message) editStatusMessage = null;
+	}, 3500);
+}
+
+function setLocalPosition(
+	type: EditableEntityType,
+	id: number,
+	coords: EditableVersionedPosition,
+) {
+	const key = type === "building" ? buildingEditKey(id) : dormEditKey(id);
+	positionOverrides = { ...positionOverrides, [key]: coords };
+
+	if (type === "building") {
+		const building = (buildings ?? []).find((b) => b.id === id);
+		if (building) {
+			building.lat = coords.lat;
+			building.lon = coords.lon;
+			building.version = coords.version;
+		}
+		return;
+	}
+
+	const dorm = (dorms ?? []).find((d) => d.id === id);
+	if (dorm) {
+		dorm.lat = coords.lat;
+		dorm.lon = coords.lon;
+		dorm.version = coords.version;
+	}
+}
+
+function clearEventLocationOverride(eventId: number) {
+	const key = eventLocationEditKey(eventId);
+	if (!(key in eventLocationOverrides)) return;
+	const next = { ...eventLocationOverrides };
+	delete next[key];
+	eventLocationOverrides = next;
+}
+
+function setLocalEvent(updated: EventData) {
+	appActions.replaceEvent(updated);
+
+	const key = eventLocationEditKey(updated.id);
+	const editable = getEditableEventLocation(updated);
+	if (editable && isAnchoredEventLocation(editable)) {
+		clearEventLocationOverride(updated.id);
+		return;
+	}
+
+	const coords = editable ? getResolvedEventLocationCoords(editable) : null;
+	if (coords) {
+		eventLocationOverrides = { ...eventLocationOverrides, [key]: coords };
+	} else {
+		clearEventLocationOverride(updated.id);
+	}
+}
+
+function getResolvedEventLocationCoords(
+	location: EventData["locations"][number],
+): EditableCoords | null {
+	if (location.resolvedLat === null || location.resolvedLon === null) {
+		return null;
+	}
+	return {
+		lat: location.resolvedLat,
+		lon: location.resolvedLon,
+	};
+}
+
+function serializeEventLocation(
+	location: EventData["locations"][number],
+	overrides: Partial<EventData["locations"][number]> = {},
+): EventLocationWriteValue {
+	return {
+		id: location.id,
+		anchorType: overrides.anchorType ?? location.anchorType,
+		buildingId:
+			overrides.buildingId !== undefined
+				? overrides.buildingId
+				: location.buildingId,
+		dormId: overrides.dormId !== undefined ? overrides.dormId : location.dormId,
+		label: overrides.label ?? location.label,
+		lat: overrides.lat !== undefined ? overrides.lat : location.lat,
+		lon: overrides.lon !== undefined ? overrides.lon : location.lon,
+		highlightPriority:
+			overrides.highlightPriority ?? location.highlightPriority,
+		sortOrder: overrides.sortOrder ?? location.sortOrder,
+		isPrimary: overrides.isPrimary ?? location.isPrimary,
+	};
+}
+
+function buildEventLocationDragUpdate(
+	event: EventData,
+	targetLocation: EventData["locations"][number],
+	coords: EditableCoords,
+): EventLocationWriteValue[] {
+	return event.locations.map((location) =>
+		location.id === targetLocation.id
+			? serializeEventLocation(location, {
+					anchorType: "custom",
+					buildingId: null,
+					dormId: null,
+					label: location.label || "Event marker",
+					lat: coords.lat,
+					lon: coords.lon,
+					isPrimary: true,
+				})
+			: serializeEventLocation(location, { isPrimary: false }),
+	);
+}
+
+function recordMove(move: EditMove) {
+	const next = recordMapMove(undoStack, move);
+	undoStack = next.undoStack;
+	redoStack = next.redoStack;
+}
+
+async function saveBuildingPosition(
+	id: number,
+	name: string,
+	previous: EditableVersionedPosition,
+	current: { lat: number; lon: number },
+	version: number,
+): Promise<void> {
+	const key = buildingEditKey(id);
+	savingEditKey = key;
+	failedEditKey = null;
+
+	try {
+		const updated = await patchPosition("building", id, current, version);
+		setLocalPosition("building", id, updated);
+		recordMove({
+			kind: "entity",
+			entityType: "building",
+			id,
+			name,
+			key,
+			previous,
+			current,
+			version: updated.version,
+		});
+		markSaved(key);
+		setEditStatus(`${name} saved. You can undo this move.`);
+	} catch (error) {
+		failedEditKey = key;
+		if (error instanceof ClientEditConflictError) {
+			if (error.latest) {
+				setLocalPosition("building", id, error.latest);
+			} else {
+				setLocalPosition("building", id, previous);
+			}
+			toastStore.show(editErrorMessage(name, error.message, error), "error");
+			return;
+		}
+		setLocalPosition("building", id, previous);
+		toastStore.show(
+			editErrorMessage(name, "Failed to save building position.", error),
+			"error",
+		);
+	} finally {
+		if (savingEditKey === key) savingEditKey = null;
+		if (selectedEditKey === key) selectedEditKey = null;
+	}
+}
+
+async function saveDormPosition(
+	id: number,
+	name: string,
+	previous: EditableVersionedPosition,
+	current: { lat: number; lon: number },
+	version: number,
+): Promise<void> {
+	const key = dormEditKey(id);
+	savingEditKey = key;
+	failedEditKey = null;
+
+	try {
+		const updated = await patchPosition("dorm", id, current, version);
+		setLocalPosition("dorm", id, updated);
+		recordMove({
+			kind: "entity",
+			entityType: "dorm",
+			id,
+			name,
+			key,
+			previous,
+			current,
+			version: updated.version,
+		});
+		markSaved(key);
+		setEditStatus(`${name} saved. You can undo this move.`);
+	} catch (error) {
+		failedEditKey = key;
+		if (error instanceof ClientEditConflictError) {
+			if (error.latest) {
+				setLocalPosition("dorm", id, error.latest);
+			} else {
+				setLocalPosition("dorm", id, previous);
+			}
+			toastStore.show(editErrorMessage(name, error.message, error), "error");
+			return;
+		}
+		setLocalPosition("dorm", id, previous);
+		toastStore.show(
+			editErrorMessage(name, "Failed to save dorm position.", error),
+			"error",
+		);
+	} finally {
+		if (savingEditKey === key) savingEditKey = null;
+		if (selectedEditKey === key) selectedEditKey = null;
+	}
+}
+
+async function saveEventLocationPosition(
+	event: EventData,
+	location: EventData["locations"][number],
+	current: EditableCoords,
+): Promise<void> {
+	const key = eventLocationEditKey(event.id);
+	const previous = getResolvedEventLocationCoords(location);
+	if (!previous) return;
+	const previousEvent = {
+		...event,
+		locations: event.locations.map((eventLocation) => ({
+			...eventLocation,
+		})),
+	};
+	const previousLocations = event.locations.map((eventLocation) =>
+		serializeEventLocation(eventLocation),
+	);
+	const currentLocations = buildEventLocationDragUpdate(
+		event,
+		location,
+		current,
+	);
+	savingEditKey = key;
+	failedEditKey = null;
+
+	try {
+		const updated = await patchEventLocations(event, currentLocations);
+		setLocalEvent(updated);
+		recordMove({
+			kind: "eventLocation",
+			eventId: event.id,
+			locationId: location.id,
+			name: updated.title,
+			key,
+			previous,
+			current,
+			previousLocations,
+			currentLocations,
+			version: updated.version,
+		});
+		markSaved(key);
+		setEditStatus(`${updated.title} location saved. You can undo this move.`);
+	} catch (error) {
+		failedEditKey = key;
+		if (error instanceof ClientEventConflictError) {
+			if (error.latest) setLocalEvent(error.latest);
+			else setLocalEvent(previousEvent);
+			toastStore.show(
+				editErrorMessage(event.title, error.message, error),
+				"error",
+			);
+			return;
+		}
+		setLocalEvent(previousEvent);
+		toastStore.show(
+			editErrorMessage(event.title, "Failed to save event location.", error),
+			"error",
+		);
+	} finally {
+		if (savingEditKey === key) savingEditKey = null;
+		if (selectedEditKey === key) selectedEditKey = null;
+	}
+}
+
+async function submitSuggestedPinMove(input: {
+	key: string;
+	pinType: "building" | "dorm" | "event";
+	entityId: number;
+	entityLabel: string;
+	baseVersion: number;
+	lat: number;
+	lon: number;
+	previous: EditableVersionedPosition | EditableCoords;
+	rollback: () => void;
+	eventLocations?: unknown[];
+}) {
+	savingEditKey = input.key;
+	failedEditKey = null;
+	try {
+		const result = await submitPinPositionProposal({
+			pinType: input.pinType,
+			entityId: input.entityId,
+			baseVersion: input.baseVersion,
+			lat: input.lat,
+			lon: input.lon,
+			entityLabel: input.entityLabel,
+			submitterName: resolveSubmitterName({
+				displayName: adminAuthStore.displayName,
+				username: adminAuthStore.username,
+				draftName: mapProposalStore.submitterName,
+			}),
+			proposalId: mapProposalStore.proposalId,
+			eventLocations: input.eventLocations,
+		});
+		if (!result.ok) {
+			failedEditKey = input.key;
+			input.rollback();
+			toastStore.show(
+				result.error ??
+					`${input.entityLabel} pin suggestion could not be submitted.`,
+				"error",
+			);
+			return;
+		}
+		markSaved(input.key);
+		mapProposalStore.disable();
+		toastStore.show(
+			`Pin move for ${input.entityLabel} submitted for review.`,
+			"success",
+		);
+	} finally {
+		if (savingEditKey === input.key) savingEditKey = null;
+		if (selectedEditKey === input.key) selectedEditKey = null;
+	}
+}
+
+async function handleBuildingDragEnd(
+	e: { marker: mapGl.Marker },
+	id: number,
+	name: string,
+	previous: EditableVersionedPosition,
+) {
+	const lngLat = e.marker.getLngLat();
+	const coords = { lat: lngLat.lat, lon: lngLat.lng };
+	const key = buildingEditKey(id);
+	if (mapProposalStore.allowsKey(key)) {
+		await submitSuggestedPinMove({
+			key,
+			pinType: "building",
+			entityId: id,
+			entityLabel: name,
+			baseVersion: previous.version,
+			lat: coords.lat,
+			lon: coords.lon,
+			previous,
+			rollback: () => setLocalPosition("building", id, previous),
+		});
+		return;
+	}
+	if (!isMapEditEnabled()) return;
+	await saveBuildingPosition(id, name, previous, coords, previous.version);
+}
+
+async function handleDormDragEnd(
+	e: { marker: mapGl.Marker },
+	id: number,
+	name: string,
+	previous: EditableVersionedPosition,
+) {
+	const lngLat = e.marker.getLngLat();
+	const coords = { lat: lngLat.lat, lon: lngLat.lng };
+	const key = dormEditKey(id);
+	if (mapProposalStore.allowsKey(key)) {
+		await submitSuggestedPinMove({
+			key,
+			pinType: "dorm",
+			entityId: id,
+			entityLabel: name,
+			baseVersion: previous.version,
+			lat: coords.lat,
+			lon: coords.lon,
+			previous,
+			rollback: () => setLocalPosition("dorm", id, previous),
+		});
+		return;
+	}
+	if (!isMapEditEnabled()) return;
+	await saveDormPosition(id, name, previous, coords, previous.version);
+}
+
+async function handleEventLocationDragEnd(
+	e: { marker: mapGl.Marker },
+	event: EventData,
+	location: EventData["locations"][number],
+) {
+	const lngLat = e.marker.getLngLat();
+	const coords = { lat: lngLat.lat, lon: lngLat.lng };
+	const key = eventLocationEditKey(event.id);
+	if (mapProposalStore.allowsKey(key)) {
+		const previous = getResolvedEventLocationCoords(location);
+		await submitSuggestedPinMove({
+			key,
+			pinType: "event",
+			entityId: event.id,
+			entityLabel: event.title,
+			baseVersion: event.version,
+			lat: coords.lat,
+			lon: coords.lon,
+			previous: previous ?? coords,
+			rollback: () => {
+				if (previous) {
+					eventLocationOverrides = {
+						...eventLocationOverrides,
+						[key]: previous,
+					};
+				} else {
+					clearEventLocationOverride(event.id);
+				}
+			},
+			eventLocations: buildEventLocationDragUpdate(event, location, coords),
+		});
+		return;
+	}
+	if (!isMapEditEnabled()) return;
+	await saveEventLocationPosition(event, location, coords);
+}
+
+async function applyRecordedMove(
+	move: EditMove,
+	direction: "undo" | "redo",
+): Promise<number> {
+	if (move.kind === "entity") {
+		const updated = await patchPosition(
+			move.entityType,
+			move.id,
+			direction === "undo" ? move.previous : move.current,
+			move.version,
+		);
+		setLocalPosition(move.entityType, move.id, updated);
+		return updated.version;
+	}
+
+	const event = (events ?? []).find((event) => event.id === move.eventId);
+	if (!event) throw new Error(`${move.name} is no longer loaded.`);
+
+	const updated = await patchEventLocations(
+		event,
+		direction === "undo" ? move.previousLocations : move.currentLocations,
+		move.version,
+	);
+	setLocalEvent(updated);
+	return updated.version;
+}
+
+function handleRecordedMoveError(
+	move: EditMove,
+	error: unknown,
+	fallback: string,
+) {
+	failedEditKey = move.key;
+	if (move.kind === "entity" && error instanceof ClientEditConflictError) {
+		if (error.latest) {
+			setLocalPosition(move.entityType, move.id, error.latest);
+		}
+		toastStore.show(error.message, "error");
+		return;
+	}
+
+	if (
+		move.kind === "eventLocation" &&
+		error instanceof ClientEventConflictError
+	) {
+		if (error.latest) setLocalEvent(error.latest);
+		toastStore.show(error.message, "error");
+		return;
+	}
+
+	toastStore.show(error instanceof Error ? error.message : fallback, "error");
+}
+
+async function undoLastMove() {
+	if (!undoMove || !isMapEditEnabled()) return;
+
+	const move = undoMove;
+	undoingEditKey = move.key;
+	savingEditKey = move.key;
+	failedEditKey = null;
+
+	try {
+		const version = await applyRecordedMove(move, "undo");
+		markSaved(move.key);
+		setEditStatus(`Undid move for ${move.name}.`);
+		const next = completeMapMoveUndo(undoStack, redoStack, move, version);
+		undoStack = next.undoStack;
+		redoStack = next.redoStack;
+	} catch (error) {
+		handleRecordedMoveError(move, error, "Failed to undo last move.");
+	} finally {
+		if (savingEditKey === move.key) savingEditKey = null;
+		if (undoingEditKey === move.key) undoingEditKey = null;
+	}
+}
+
+async function redoMoveBranch() {
+	if (!redoMove || !isMapEditEnabled()) return;
+
+	const move = redoMove;
+	undoingEditKey = move.key;
+	savingEditKey = move.key;
+	failedEditKey = null;
+
+	try {
+		const version = await applyRecordedMove(move, "redo");
+		markSaved(move.key);
+		setEditStatus(`Redid move for ${move.name}.`);
+		const next = completeMapMoveRedo(undoStack, redoStack, move, version);
+		undoStack = next.undoStack;
+		redoStack = next.redoStack;
+	} catch (error) {
+		handleRecordedMoveError(move, error, "Failed to redo move.");
+	} finally {
+		if (savingEditKey === move.key) savingEditKey = null;
+		if (undoingEditKey === move.key) undoingEditKey = null;
+	}
+}
+
+function handleMapEditKeydown(e: KeyboardEvent) {
+	if (!isMapEditEnabled()) return;
+	const action = getMapEditShortcutAction(e);
+	if (!action) return;
+
+	e.preventDefault();
+	if (action === "undo") undoLastMove();
+	else redoMoveBranch();
+}
+
+$effect(() => {
+	if (typeof navigator === "undefined") return;
+	undoShortcutLabel = /Mac|iPhone|iPad|iPod/.test(navigator.platform)
+		? "Cmd+Z"
+		: "Ctrl+Z";
+});
+
+$effect(() => {
+	const map = mapStore.mapInstance;
+	if (!map) return;
+
+	let cancelled = false;
+	const applyPalette = () => {
+		if (!cancelled) applyBasemapPalette(map);
+	};
+	if (map.isStyleLoaded()) {
+		applyPalette();
+	} else {
+		map.once("load", applyPalette);
+	}
+	return () => {
+		cancelled = true;
+	};
+});
+
+$effect(() => {
+	if (mapStore.mapInstance) {
+		const map = mapStore.mapInstance;
+		const handleMapError = (event: mapGl.ErrorEvent) => {
+			if (!terrainStore.enabled || !sourceErrorMatchesTerrain(event)) return;
+			failTerrain(map, TERRAIN_TILE_FAILURE_MESSAGE);
+		};
+		// Sync once on bind — zoomLevel starts at 0, and pin/label zoom gates
+		// must reflect the real camera before the first zoom event fires.
+		handleZoom();
+		map.on("zoom", handleZoom);
+		map.on("error", handleMapError);
+		return () => {
+			map.off("zoom", handleZoom);
+			map.off("error", handleMapError);
+		};
+	}
+});
+
+$effect(() => {
+	const map = mapStore.mapInstance;
+	const enabled = terrainStore.enabled;
+	const exaggeration = terrainStore.exaggeration;
+	if (!map) return;
+
+	let cancelled = false;
+	const apply = () => {
+		if (cancelled) return;
+
+		if (!enabled) {
+			const shouldRestoreFlatCamera = terrainModeWasEnabled;
+			disableTerrain(map);
+			terrainModeWasEnabled = false;
+			if (shouldRestoreFlatCamera) restoreFlatMapCamera(map);
+			return;
+		}
+
+		if (typeof navigator !== "undefined" && !navigator.onLine) {
+			failTerrain(map, TERRAIN_UNAVAILABLE_OFFLINE_MESSAGE);
+			return;
+		}
+
+		try {
+			terrainStore.markLoading();
+			ensureTerrainRendering(map);
+			map.setTerrain({ source: TERRAIN_SOURCE_ID, exaggeration });
+			setTerrainHillshadeVisible(map, true);
+			syncBuildingLayersForDimension(map, isMap2DPitch(map.getPitch()), true);
+			if (!terrainModeWasEnabled) {
+				flyToCamera(map, TERRAIN_CAMERA);
+			}
+			terrainModeWasEnabled = true;
+			terrainStore.markActive();
+		} catch (error) {
+			console.warn("Terrain setup failed", error);
+			failTerrain(map, TERRAIN_TILE_FAILURE_MESSAGE);
+		}
+	};
+
+	if (map.isStyleLoaded()) {
+		apply();
+	} else {
+		map.once("load", apply);
+	}
+
+	return () => {
+		cancelled = true;
+	};
+});
+
+$effect(() => {
+	const map = mapStore.mapInstance;
+	const terrainEnabled = terrainStore.enabled;
+	if (!map) return;
+
+	let cancelled = false;
+	const applyDimensionLayers = () => {
+		if (cancelled) return;
+		syncBuildingLayersForDimension(
+			map,
+			isMap2DPitch(map.getPitch()),
+			terrainEnabled,
+		);
+	};
+
+	if (map.isStyleLoaded()) {
+		applyDimensionLayers();
+	} else {
+		map.once("load", applyDimensionLayers);
+	}
+
+	map.on("pitch", applyDimensionLayers);
+	map.on("moveend", applyDimensionLayers);
+
+	return () => {
+		cancelled = true;
+		map.off("pitch", applyDimensionLayers);
+		map.off("moveend", applyDimensionLayers);
+	};
+});
+
+// svelte-maplibre only passes maxBounds at map construction; keep the live
+// instance in sync when bounds constants change (HMR) or terrain toggles.
+$effect(() => {
+	const map = mapStore.mapInstance;
+	const terrainEnabled = terrainStore.enabled;
+	if (!map) return;
+
+	const bounds = terrainEnabled ? TERRAIN_MAX_BOUNDS : CAMPUS_MAX_BOUNDS;
+
+	const applyBounds = () => {
+		map.setMaxBounds(bounds);
+	};
+
+	if (map.isStyleLoaded()) {
+		applyBounds();
+	} else {
+		map.once("load", applyBounds);
+	}
+});
+
+$effect(() => {
+	const map = mapStore.mapInstance;
+	const resetNonce = terrainStore.resetNonce;
+	if (!map || !terrainStore.enabled || resetNonce === 0) return;
+
+	flyToCamera(map, TERRAIN_CAMERA);
+});
+
+$effect(() => {
+	if (mapStore.mapInstance && !directions) {
+		const initDirections = () => {
+			if (!directions && mapStore.mapInstance) {
+				directions = new MapLibreGlDirections(mapStore.mapInstance, {
+					api: "https://routing.openstreetmap.de/routed-foot/route/v1",
+					profile: "foot",
+				});
+				// Walking totals for the routed day (#839): the OSRM response the
+				// map already fetched carries per-leg distance/duration.
+				directions.on("fetchroutesend", (event) => {
+					const legs = event.data?.directions?.routes?.[0]?.legs;
+					scheduleRouteStore.setRouteTotals(
+						legs
+							? sumRouteLegs(
+									legs as { distance?: unknown; duration?: unknown }[],
+								)
+							: null,
+					);
+				});
+			}
+		};
+
+		if (mapStore.mapInstance.isStyleLoaded()) {
+			initDirections();
+		} else {
+			mapStore.mapInstance.once("load", initDirections);
+		}
+	}
+});
+
+$effect(() => {
+	if (!directions) return;
+
+	const waypoints = locationStore.routeWaypoints;
+	if (waypoints && waypoints.length >= 2) {
+		directions.setWaypoints(waypoints);
+		const map = mapStore.mapInstance;
+		if (map) {
+			const bounds = new mapGl.LngLatBounds();
+			for (const point of waypoints) {
+				bounds.extend(point);
+			}
+			map.fitBounds(bounds, {
+				padding: { top: 80, bottom: 80, left: 80, right: 80 },
+				duration: 1200,
+				maxZoom: 18,
+			});
+		}
+	} else if (locationStore.routeOrigin && locationStore.destination) {
+		directions.setWaypoints([
+			locationStore.routeOrigin,
+			locationStore.destination,
+		]);
+		const map = mapStore.mapInstance;
+		if (map) {
+			const bounds = new mapGl.LngLatBounds();
+			bounds.extend(locationStore.routeOrigin);
+			bounds.extend(locationStore.destination);
+			map.fitBounds(bounds, {
+				padding: { top: 80, bottom: 120, left: 80, right: 80 },
+				duration: 1000,
+				maxZoom: 18,
+			});
+		}
+	} else {
+		directions.clear();
+	}
+});
+
+$effect(() => {
+	const map = mapStore.mapInstance;
+	const index = scheduleRouteStore.focusedStopIndex;
+	const stop =
+		index === null ? null : (scheduleRouteStore.dayStops[index] ?? null);
+	if (!map || !stop?.coords) return;
+
+	map.easeTo({
+		center: stop.coords,
+		zoom: Math.max(map.getZoom(), 17),
+		duration: 650,
+	});
+});
+
+$effect(() => {
+	if (!adminAuthStore.canPublish && mapEditStore.enabled) {
+		mapEditStore.close();
+	}
+	if (!mapEditStore.enabled) {
+		hoveredEditKey = null;
+		selectedEditKey = null;
+	}
+});
+
+$effect(() => {
+	const map = mapStore.mapInstance;
+	if (!map || !additionProposalStore.pinPickActive) return;
+
+	const canvas = map.getCanvas();
+	const previousCursor = canvas.style.cursor;
+	canvas.style.cursor = "crosshair";
+	const handlePinPick = (event: mapGl.MapMouseEvent) => {
+		additionProposalStore.deliverMapPin(event.lngLat.lat, event.lngLat.lng);
+	};
+
+	map.on("click", handlePinPick);
+	return () => {
+		map.off("click", handlePinPick);
+		if (canvas.style.cursor === "crosshair") {
+			canvas.style.cursor = previousCursor;
+		}
+	};
+});
+
+$effect(() => {
+	const map = mapStore.mapInstance;
+	const pin = additionProposalStore.draftPin;
+	if (!map || !pin) return;
+
+	// Defer the camera move out of the reactive flush: easeTo fires zoom/move
+	// handlers synchronously, and their state writes inside this flush can
+	// chain into effect_update_depth_exceeded, which kills the whole Svelte
+	// scheduler (app looks frozen, hover still works). Same guard as the
+	// jeepney stop-focus flyTo effect below.
+	const padding = calculatePadding(untrack(() => md.current));
+	const frame = requestAnimationFrame(() => {
+		map.easeTo({
+			center: [pin.lon, pin.lat],
+			zoom: Math.max(map.getZoom(), 17),
+			duration: 650,
+			padding,
+		});
+	});
+	return () => cancelAnimationFrame(frame);
+});
+
+$effect(() => {
+	const map = mapStore.mapInstance;
+	if (!map || !eventPlacementStore.active) return;
+
+	const canvas = map.getCanvas();
+	const previousCursor = canvas.style.cursor;
+	canvas.style.cursor = "crosshair";
+	const handlePlacementClick = (event: mapGl.MapMouseEvent) => {
+		void placeEventAtMapPoint({
+			lat: event.lngLat.lat,
+			lon: event.lngLat.lng,
+		});
+	};
+
+	map.on("click", handlePlacementClick);
+	return () => {
+		map.off("click", handlePlacementClick);
+		if (canvas.style.cursor === "crosshair") {
+			canvas.style.cursor = previousCursor;
+		}
+	};
+});
+
+// #847: travel-time isochrone — while active, taps pick the origin point.
+$effect(() => {
+	const map = mapStore.mapInstance;
+	if (!map || !travelTimeStore.active) return;
+
+	const canvas = map.getCanvas();
+	const previousCursor = canvas.style.cursor;
+	canvas.style.cursor = "crosshair";
+	const handleTravelTimeClick = (event: mapGl.MapMouseEvent) => {
+		travelTimeStore.setOrigin(event.lngLat.lat, event.lngLat.lng);
+	};
+
+	map.on("click", handleTravelTimeClick);
+	return () => {
+		map.off("click", handleTravelTimeClick);
+		if (canvas.style.cursor === "crosshair") {
+			canvas.style.cursor = previousCursor;
+		}
+	};
+});
+
+// #847: snap the tapped origin to the walk graph, run single-source
+// Dijkstra, and paint every edge by walking minutes. The graph JSON is a
+// lazy chunk loaded on first use.
+$effect(() => {
+	const map = mapStore.mapInstance;
+	const origin = travelTimeStore.active ? travelTimeStore.origin : null;
+	if (!map) return;
+
+	if (!origin) {
+		// Clear immediately — never queue clears on "load"/"styledata" (see the
+		// jeepney route effect below for the prod-only bug this avoids).
+		try {
+			clearTravelTimeLayers(map);
+		} catch {
+			// Style not ready yet, so nothing was drawn.
+		}
+		return;
+	}
+
+	let cancelled = false;
+	travelTimeStore.status = "loading";
+	loadTravelGraph()
+		.then((graph) => {
+			if (cancelled) return;
+			const sourceNode = nearestNodeIndex(graph, origin.lat, origin.lng);
+			const { seconds } = dijkstra(graph, sourceNode, "walk");
+			const data = isochroneFeatures(graph, seconds);
+			const tryDraw = () => {
+				try {
+					ensureTravelTimeLayers(map);
+					const source = map.getSource(TRAVEL_TIME_SOURCE_ID) as
+						| mapGl.GeoJSONSource
+						| undefined;
+					source?.setData(data);
+					return true;
+				} catch {
+					return false;
+				}
+			};
+			if (!tryDraw()) {
+				const onStyleData = () => {
+					if (cancelled || tryDraw()) map.off("styledata", onStyleData);
+				};
+				map.on("styledata", onStyleData);
+			}
+			travelTimeStore.status = "ready";
+		})
+		.catch((error) => {
+			console.warn("travel-time graph load failed", error);
+			if (!cancelled) travelTimeStore.status = "error";
+		});
+	return () => {
+		cancelled = true;
+	};
+});
+
+// #848: measure route — while active, taps drop waypoints.
+$effect(() => {
+	const map = mapStore.mapInstance;
+	if (!map || !measureRouteStore.active) return;
+
+	const canvas = map.getCanvas();
+	const previousCursor = canvas.style.cursor;
+	canvas.style.cursor = "crosshair";
+	const handleMeasureClick = (event: mapGl.MapMouseEvent) => {
+		measureRouteStore.addWaypoint(event.lngLat.lat, event.lngLat.lng);
+	};
+
+	map.on("click", handleMeasureClick);
+	return () => {
+		map.off("click", handleMeasureClick);
+		if (canvas.style.cursor === "crosshair") {
+			canvas.style.cursor = previousCursor;
+		}
+	};
+});
+
+// #848: snap waypoints to the walk graph, compute per-leg shortest paths
+// for every mode (pill minutes), and draw the selected mode's geometry.
+$effect(() => {
+	const map = mapStore.mapInstance;
+	const active = measureRouteStore.active;
+	const waypoints = measureRouteStore.waypoints;
+	const mode = measureRouteStore.mode;
+	if (!map) return;
+
+	if (!active || waypoints.length < 2) {
+		// Clear immediately — never queue clears (see the jeepney note below).
+		try {
+			clearMeasureRouteLayers(map);
+		} catch {
+			// Style not ready yet, so nothing was drawn.
+		}
+		return;
+	}
+
+	let cancelled = false;
+	loadTravelGraph()
+		.then((graph) => {
+			if (cancelled) return;
+			const nodes = waypoints.map((w) => nearestNodeIndex(graph, w.lat, w.lng));
+			const modes: TravelMode[] = ["walk", "cycle", "drive"];
+			const summaries = {
+				walk: [] as ({ seconds: number; meters: number } | null)[],
+				cycle: [] as ({ seconds: number; meters: number } | null)[],
+				drive: [] as ({ seconds: number; meters: number } | null)[],
+			};
+			const legFeatures: FeatureCollection = {
+				type: "FeatureCollection",
+				features: [],
+			};
+			for (let i = 0; i + 1 < nodes.length; i++) {
+				for (const legMode of modes) {
+					const route = shortestPath(graph, nodes[i], nodes[i + 1], legMode);
+					summaries[legMode].push(
+						route ? { seconds: route.seconds, meters: route.meters } : null,
+					);
+					if (legMode === mode && route && route.coordinates.length > 1) {
+						legFeatures.features.push({
+							type: "Feature",
+							geometry: { type: "LineString", coordinates: route.coordinates },
+							properties: { leg: i },
+						});
+					}
+				}
+			}
+			measureRouteStore.setResults(
+				nodes.map((n) => ({ lat: graph.lat[n], lng: graph.lng[n] })),
+				summaries,
+			);
+			const tryDraw = () => {
+				try {
+					ensureMeasureRouteLayers(map);
+					const source = map.getSource(MEASURE_ROUTE_SOURCE_ID) as
+						| mapGl.GeoJSONSource
+						| undefined;
+					source?.setData(legFeatures);
+					return true;
+				} catch {
+					return false;
+				}
+			};
+			if (!tryDraw()) {
+				const onStyleData = () => {
+					if (cancelled || tryDraw()) map.off("styledata", onStyleData);
+				};
+				map.on("styledata", onStyleData);
+			}
+		})
+		.catch((error) => {
+			console.warn("measure-route graph load failed", error);
+			if (!cancelled) measureRouteStore.loadFailed = true;
+		});
+	return () => {
+		cancelled = true;
+	};
+});
+
+$effect(() => {
+	const map = mapStore.mapInstance;
+	const coords = locationStore.coords;
+	const accuracyMeters = locationStore.accuracyMeters;
+	if (!map) return;
+
+	const clearAccuracy = () => {
+		try {
+			if (map.getLayer(USER_LOCATION_ACCURACY_FILL_ID)) {
+				map.removeLayer(USER_LOCATION_ACCURACY_FILL_ID);
+			}
+			if (map.getLayer(USER_LOCATION_ACCURACY_LINE_ID)) {
+				map.removeLayer(USER_LOCATION_ACCURACY_LINE_ID);
+			}
+			if (map.getSource(USER_LOCATION_ACCURACY_SOURCE_ID)) {
+				map.removeSource(USER_LOCATION_ACCURACY_SOURCE_ID);
+			}
+		} catch {
+			// Style may not be ready.
+		}
+	};
+
+	if (!coords || accuracyMeters == null || accuracyMeters <= 0) {
+		clearAccuracy();
+		return;
+	}
+
+	const featureCollection = {
+		type: "FeatureCollection" as const,
+		features: [
+			{
+				type: "Feature" as const,
+				properties: {},
+				geometry: metersToLngLatCircle(coords, accuracyMeters),
+			},
+		],
+	};
+
+	const draw = () => {
+		if (!map.getSource(USER_LOCATION_ACCURACY_SOURCE_ID)) {
+			map.addSource(USER_LOCATION_ACCURACY_SOURCE_ID, {
+				type: "geojson",
+				data: featureCollection,
+			});
+		} else {
+			const source = map.getSource(USER_LOCATION_ACCURACY_SOURCE_ID) as
+				| mapGl.GeoJSONSource
+				| undefined;
+			source?.setData(featureCollection);
+		}
+
+		if (!map.getLayer(USER_LOCATION_ACCURACY_FILL_ID)) {
+			map.addLayer({
+				id: USER_LOCATION_ACCURACY_FILL_ID,
+				type: "fill",
+				source: USER_LOCATION_ACCURACY_SOURCE_ID,
+				paint: {
+					"fill-color": "#4285f4",
+					"fill-opacity": 0.12,
+				},
+			});
+		}
+		if (!map.getLayer(USER_LOCATION_ACCURACY_LINE_ID)) {
+			map.addLayer({
+				id: USER_LOCATION_ACCURACY_LINE_ID,
+				type: "line",
+				source: USER_LOCATION_ACCURACY_SOURCE_ID,
+				paint: {
+					"line-color": "#4285f4",
+					"line-width": 1.5,
+					"line-opacity": 0.45,
+				},
+			});
+		}
+	};
+
+	try {
+		draw();
+		return;
+	} catch {
+		const onStyleData = () => {
+			try {
+				draw();
+				map.off("styledata", onStyleData);
+			} catch {
+				// keep retrying until style accepts the layer
+			}
+		};
+		map.on("styledata", onStyleData);
+		return () => {
+			map.off("styledata", onStyleData);
+			clearAccuracy();
+		};
+	}
+});
+
+$effect(() => {
+	const selectedId = jeepneyStore.selectedRouteId;
+	const map = mapStore.mapInstance;
+	if (!map) return;
+
+	const route = selectedId ? transitStore.getRoute(selectedId) : null;
+
+	if (!route) {
+		activeRouteId = null;
+		activeRouteStops = [];
+		// Clear immediately — NEVER queue this on "load"/"styledata". A queued
+		// clear registered at mount (style still streaming) fires AFTER a later
+		// route draw and silently wipes its layers; that was the prod-only
+		// missing-polyline bug (dev styles settle before anyone clicks).
+		try {
+			clearJeepneyRouteLayers(map);
+		} catch {
+			// Style not ready yet, so nothing was drawn and there is nothing to clear.
+		}
+		return;
+	}
+
+	activeRouteId = route.id;
+	activeRouteStops = route.stops;
+	activeRouteColor = route.color;
+
+	// Geometry is resolved synchronously (static import + stop fallback).
+	// Readiness gating is deliberately attempt-based: isStyleLoaded() is false
+	// during ANY repaint and "load" fires only once per map lifetime, so
+	// gating on either deadlocks and the polyline never draws. addSource /
+	// addLayer only throw before the initial style load; try now and retry on
+	// "styledata" until one attempt succeeds.
+	const { line, source: geometrySource } = routeGeometry(route);
+	const draw = () => {
+		ensureJeepneyRouteLayers(map, route.color, geometrySource);
+		const source = map.getSource(JEEPNEY_ROUTE_SOURCE_ID) as
+			| mapGl.GeoJSONSource
+			| undefined;
+		source?.setData({
+			type: "FeatureCollection",
+			features: line
+				? [
+						{
+							type: "Feature",
+							geometry: line,
+							properties: { routeId: route.id, geometrySource },
+						},
+					]
+				: [],
+		});
+		fitMapToRoute(map, route);
+	};
+
+	const tryDraw = () => {
+		try {
+			draw();
+			return true;
+		} catch (error) {
+			console.warn("jeepney route draw failed; retrying on styledata", error);
+			return false;
+		}
+	};
+
+	if (tryDraw()) return;
+	const onStyleData = () => {
+		if (tryDraw()) map.off("styledata", onStyleData);
+	};
+	map.on("styledata", onStyleData);
+	return () => {
+		map.off("styledata", onStyleData);
+	};
+});
+
+$effect(() => {
+	const map = mapStore.mapInstance;
+	const routeId = jeepneyStore.selectedRouteId;
+	const stopIndex = jeepneyStore.selectedStopIndex;
+	if (!map || routeId === null || stopIndex === null) return;
+
+	const route = transitStore.getRoute(routeId);
+	const stop = route?.stops[stopIndex];
+	if (!stop) return;
+
+	// Defer the camera move out of the reactive flush: flyTo fires zoom/move
+	// handlers synchronously (reduced-motion jumps instantly), and their state
+	// writes inside this flush can chain into effect_update_depth_exceeded,
+	// which kills the whole Svelte scheduler (app looks frozen, hover still
+	// works). Same guard as fitMapToRoute below.
+	const frame = requestAnimationFrame(() => {
+		map.flyTo({
+			center: [stop.lon, stop.lat],
+			zoom: Math.max(map.getZoom(), 16),
+			duration: 700,
+			essential: true,
+		});
+	});
+	return () => cancelAnimationFrame(frame);
+});
+
+// #716: Makiling trail overlay — toggle trail line + station markers
+$effect(() => {
+	const map = mapStore.mapInstance;
+	const enabled = trailStore.enabled;
+	if (!map) return;
+
+	if (enabled) {
+		ensureTrailLayers(map);
+	} else {
+		clearTrailLayers(map);
+	}
+});
+
+$effect(() => {
+	const map = mapStore.mapInstance;
+	const selectedEvent =
+		loaded && queryStore.category === "event" && queryStore.type === "result"
+			? findSelectedEvent(events)
+			: null;
+	if (!map) return;
+
+	const routeFeatures = selectedEvent
+		? buildSelectedEventRouteFeatures(selectedEvent)
+		: [];
+	if (routeFeatures.length === 0) {
+		clearEventRouteLayers(map);
+		return;
+	}
+
+	const draw = () => {
+		ensureEventRouteLayers(map);
+		const source = map.getSource(EVENT_ROUTE_SOURCE_ID) as
+			| mapGl.GeoJSONSource
+			| undefined;
+		const featureCollection: FeatureCollection<LineString> = {
+			type: "FeatureCollection",
+			features: routeFeatures,
+		};
+		source?.setData(featureCollection);
+	};
+
+	if (map.isStyleLoaded()) {
+		draw();
+		return;
+	}
+
+	// Style isn't ready yet: defer the draw until load, but remove the handler
+	// on re-run/teardown so rapid selection changes don't stack listeners and
+	// draw a stale route once the style finally loads.
+	map.once("load", draw);
+	return () => {
+		map.off("load", draw);
+	};
+});
+
+$effect(() => {
+	const category = queryStore.category;
+	const type = queryStore.type;
+	const value = queryStore.inputValue;
+	const map = mapStore.mapInstance;
+
+	if (!map) return;
+
+	untrack(() => {
+		const isTerrainEnabled = terrainStore.enabled;
+		if (category === "building" && type === "result") {
+			if (!loaded) return;
+			const currentBuilding = buildings.find(
+				(building) => building.buildingName === value,
+			);
+
+			if (currentBuilding?.lon && currentBuilding.lat) {
+				map.flyTo({
+					center: [currentBuilding.lon, currentBuilding.lat],
+					zoom: 18,
+					pitch: 60,
+					padding: calculatePadding(md.current),
+					duration: 1500,
+				});
+			}
+		} else if (category === null) {
+			flyToCamera(
+				map,
+				isTerrainEnabled ? TERRAIN_CAMERA : CAMPUS_DEFAULT_CAMERA,
+			);
+			if (directions) directions.clear();
+		} else if (category === "room") {
+			currentRoom.getRoomByCode(value).then(() => {
+				if (
+					currentRoom.value?.building?.lat &&
+					currentRoom.value.building.lon
+				) {
+					map.flyTo({
+						center: [
+							currentRoom.value.building.lon,
+							currentRoom.value.building.lat,
+						],
+						zoom: 18,
+						pitch: 60,
+						padding: calculatePadding(md.current),
+						duration: 1500,
+					});
+				}
+			});
+		} else if (category === "dorm") {
+			if (!loaded) return;
+
+			const currentDorm = dorms.find((dorm) => dorm.dormName === value);
+			if (currentDorm?.lon && currentDorm.lat) {
+				map.flyTo({
+					center: [currentDorm.lon, currentDorm.lat],
+					zoom: 18,
+					pitch: 60,
+					padding: calculatePadding(md.current),
+					duration: 1500,
+				});
+			}
+		} else if (category === "event") {
+			if (!loaded) return;
+			const currentEvent = findSelectedEvent(events);
+			if (currentEvent) focusMapOnEvent(map, currentEvent);
+		} else if (category === "organization") {
+			if (!loaded) return;
+			mapViewStore.showOrgs = true;
+			const currentOrg = organizations.find((org) => org.name === value);
+			const position = currentOrg ? organizationPosition(currentOrg) : null;
+			if (position) {
+				map.flyTo({
+					center: [position.lon, position.lat],
+					zoom: 18,
+					pitch: 60,
+					padding: calculatePadding(md.current),
+					duration: 1500,
+				});
+			}
+		} else if (category === "place") {
+			if (!loaded) return;
+			mapViewStore.showPlaces = true;
+			const currentPlace = places.find((place) => place.name === value);
+			if (currentPlace?.lon != null && currentPlace.lat != null) {
+				map.flyTo({
+					center: [currentPlace.lon, currentPlace.lat],
+					zoom: 18,
+					pitch: 60,
+					padding: calculatePadding(md.current),
+					duration: 1500,
+				});
+			}
+		}
+	});
+});
+
+function handleBuildingMarkerClick(buildingName: string) {
+	if (eventPlacementStore.active) return;
+	if (isMapEditEnabled() && selectedEditKey !== null) return;
+	if (buildingName === queryStore.inputValue) return;
+	queryStore.updateQuery({
+		category: "building",
+		type: "result",
+		value: buildingName,
+	});
+	queryStore.inputValue = buildingName;
+	goto(resolve(`/map/buildings/${slugifySegment(buildingName)}`));
+	sidePanelStore.openPanel({
+		type: "search-result",
+		component: BuildingResult,
+	});
+}
+
+function handleDormMarkerClick(dormName: string, id:number) {
+	if (eventPlacementStore.active) return;
+	if (isMapEditEnabled() && selectedEditKey !== null) return;
+	if (dormName === queryStore.inputValue) return;
+	queryStore.updateQuery({
+		category: "dorm",
+		type: "result",
+		value: dormName,
+	});
+	queryStore.inputValue = dormName;
+	goto(resolve(`/map/dorms/${slugifySegment(dormName)}-${id}`));
+	sidePanelStore.openPanel({
+		type: "search-result",
+		component: DormResult,
+	});
+}
+
+function handleOrgMarkerClick(name: string, id: number) {
+	if (eventPlacementStore.active) return;
+	if (isMapEditEnabled() && selectedEditKey !== null) return;
+	if (
+		queryStore.category === "organization" &&
+		name === queryStore.inputValue
+	) {
+		sidePanelStore.expand();
+		return;
+	}
+	queryStore.updateQuery({
+		category: "organization",
+		type: "result",
+		value: name,
+	});
+	queryStore.inputValue = name;
+	goto(resolve(`/map/organizations/${slugifySegment(name)}-${id}`));
+	sidePanelStore.openPanel({
+		type: "search-result",
+		component: OrgResult,
+	});
+}
+
+function handleEventMarkerClick(event: EventData) {
+	if (eventPlacementStore.active) return;
+	if (isMapEditEnabled() && selectedEditKey !== null) return;
+	if (queryStore.selectedEventSlug === event.slug) return;
+	queryStore.updateQuery({
+		category: "event",
+		type: "result",
+		value: event.title,
+		eventSlug: event.slug,
+	});
+	queryStore.inputValue = event.title;
+	goto(resolve(`/map/events/${event.id}`));
+	sidePanelStore.openPanel({
+		type: "search-result",
+		component: EventResult,
+	});
+}
+
+function toggleEventMarkerGroup(groupKey: string) {
+	if (eventPlacementStore.active) return;
+	expandedEventGroupKey = expandedEventGroupKey === groupKey ? null : groupKey;
+}
+
+function collapseEventMarkerGroup() {
+	if (eventPlacementStore.active) return;
+	expandedEventGroupKey = null;
+}
+
+function isSelectedEvent(event: EventData) {
+	if (queryStore.category !== "event") return false;
+	if (queryStore.selectedEventSlug) {
+		return queryStore.selectedEventSlug === event.slug;
+	}
+	return queryStore.inputValue === event.title;
+}
+
+function formatEventMarkerDate(value: string) {
+	return formatCampusDateShort(value);
+}
+
+function formatEventMarkerTime(value: string) {
+	return formatCampusTime(value);
+}
+
+function formatEventMarkerDateTime(value: string) {
+	return `${formatCampusDateShort(value)}, ${formatCampusTime(value)}`;
+}
+
+function getEventStatusLabel(event: EventData) {
+	if (event.status === "active") return "Active now";
+	if (event.status === "past") return "Past";
+	return "Upcoming";
+}
+
+$effect(() => {
+	if (!loaded || !isMapEditEnabled()) return;
+	const event = findSelectedEvent(events);
+	if (!event) return;
+	const location = getEditableEventLocation(event);
+	if (!location || !isAnchoredEventLocation(location)) return;
+	untrack(() => clearEventLocationOverride(event.id));
+});
+
+type EventMarkerEntry = {
+	event: EventData;
+	location: EventData["locations"][number];
+};
+
+function isAnchoredEventLocation(
+	location: EventData["locations"][number],
+): boolean {
+	return location.anchorType === "building" || location.anchorType === "dorm";
+}
+
+function getEventMarkerLngLat(editable: {
+	event: EventData;
+	location: EventData["locations"][number];
+}): [number, number] {
+	if (!isAnchoredEventLocation(editable.location)) {
+		const override =
+			eventLocationOverrides[eventLocationEditKey(editable.event.id)];
+		if (override) return [override.lon, override.lat];
+	}
+	return [
+		Number(editable.location.resolvedLon),
+		Number(editable.location.resolvedLat),
+	];
+}
+
+function getEditableEventLocation(event: EventData) {
+	return (
+		event.locations.find(
+			(location) =>
+				location.isPrimary &&
+				location.resolvedLon !== null &&
+				location.resolvedLat !== null,
+		) ??
+		event.locations.find(
+			(location) =>
+				location.resolvedLon !== null && location.resolvedLat !== null,
+		) ??
+		null
+	);
+}
+
+function isSelectedEditableEventLocation(
+	event: EventData,
+	location: EventData["locations"][number],
+) {
+	if (
+		!isMapEditEnabled() ||
+		queryStore.category !== "event" ||
+		queryStore.type !== "result"
+	) {
+		return false;
+	}
+
+	const slug = queryStore.selectedEventSlug;
+	if (slug) {
+		if (slug !== event.slug) return false;
+	} else if (queryStore.inputValue !== event.title) {
+		return false;
+	}
+
+	return getEditableEventLocation(event)?.id === location.id;
+}
+
+function getEventLocationKey(location: EventMarkerEntry["location"]) {
+	if (location.resolvedLon === null || location.resolvedLat === null) {
+		return null;
+	}
+	return `${location.resolvedLon.toFixed(6)}:${location.resolvedLat.toFixed(6)}`;
+}
+
+let eventMarkerGroups = $derived.by(() => {
+	if (!loaded) return [];
+	const groups = new Map<
+		string,
+		{
+			key: string;
+			lngLat: [number, number];
+			label: string;
+			anchored: boolean;
+			entries: EventMarkerEntry[];
+		}
+	>();
+
+	for (const event of events) {
+		// Past events are dropped from the map (#17); only active/upcoming pin.
+		if (event.status !== "active" && event.status !== "upcoming") {
+			continue;
+		}
+		for (const location of event.locations) {
+			if (isSelectedEditableEventLocation(event, location)) continue;
+			const key = getEventLocationKey(location);
+			if (
+				key === null ||
+				location.resolvedLon === null ||
+				location.resolvedLat === null
+			) {
+				continue;
+			}
+
+			const group = groups.get(key);
+			const entry = { event, location };
+			if (group) {
+				group.anchored =
+					group.anchored ||
+					location.anchorType === "building" ||
+					location.anchorType === "dorm";
+				group.entries.push(entry);
+				continue;
+			}
+
+			groups.set(key, {
+				key,
+				lngLat: [location.resolvedLon, location.resolvedLat],
+				label: location.resolvedLabel,
+				anchored:
+					location.anchorType === "building" || location.anchorType === "dorm",
+				entries: [entry],
+			});
+		}
+	}
+
+	return Array.from(groups.values()).map((group) => ({
+		...group,
+		entries: group.entries.sort((a, b) => {
+			const statusDelta =
+				Number(b.event.status === "active") -
+				Number(a.event.status === "active");
+			if (statusDelta !== 0) return statusDelta;
+			return a.event.occurrenceStartsAt.localeCompare(
+				b.event.occurrenceStartsAt,
+			);
+		}),
+	}));
+});
+
+let editableEventLocation = $derived.by(() => {
+	if (
+		!loaded ||
+		!isMapEditEnabled() ||
+		queryStore.category !== "event" ||
+		queryStore.type !== "result"
+	) {
+		return null;
+	}
+
+	const event = findSelectedEvent(events);
+	if (!event) return null;
+
+	const location = getEditableEventLocation(event);
+	if (
+		!location ||
+		location.resolvedLon === null ||
+		location.resolvedLat === null
+	) {
+		return null;
+	}
+
+	return { event, location };
+});
+
+$effect(() => {
+	if (
+		!loaded ||
+		queryStore.category !== "event" ||
+		queryStore.type !== "result"
+	)
+		return;
+	const group = eventMarkerGroups.find((group) =>
+		group.entries.some((entry) => isSelectedEvent(entry.event)),
+	);
+	if (!group) return;
+	untrack(() => {
+		expandedEventGroupKey = group.key;
+	});
+});
+
+let activeBuildingName = $derived.by(() => {
+	if (!queryStore.category || queryStore.type !== "result") return null;
+	switch (queryStore.category) {
+		case "building":
+			return queryStore.inputValue;
+		case "room": {
+			return null;
+			// const currentRoom = rooms.find(
+			//   (room) => room.code === queryStore.inputValue,
+			// );
+			// return currentRoom && currentRoom.building
+			//   ? currentRoom.building.name
+			//   : null;
+		}
+		default:
+			return null;
+	}
+});
+
+let selectedEventFocus = $derived.by(() => {
+	if (
+		!loaded ||
+		isMapEditEnabled() ||
+		queryStore.category !== "event" ||
+		queryStore.type !== "result"
+	) {
+		return null;
+	}
+	return findSelectedEvent(events);
+});
+
+let selectedEventBuildingIds = $derived.by(() => {
+	const event = selectedEventFocus;
+	if (!event) return null;
+	return new Set(
+		event.locations
+			.filter(
+				(location) =>
+					location.anchorType === "building" && location.buildingId !== null,
+			)
+			.map((location) => location.buildingId as number),
+	);
+});
+
+let selectedEventDormIds = $derived.by(() => {
+	const event = selectedEventFocus;
+	if (!event) return null;
+	return new Set(
+		event.locations
+			.filter(
+				(location) =>
+					location.anchorType === "dorm" && location.dormId !== null,
+			)
+			.map((location) => location.dormId as number),
+	);
+});
+
+const eventPlaceFocusActive = $derived(selectedEventFocus !== null);
+
+function isBuildingDimmedForEventFocus(buildingId: number): boolean {
+	if (!eventPlaceFocusActive || selectedEventBuildingIds === null) return false;
+	if (selectedEventBuildingIds.size === 0) return true;
+	return !selectedEventBuildingIds.has(buildingId);
+}
+
+function isDormDimmedForEventFocus(dormId: number): boolean {
+	if (!eventPlaceFocusActive || selectedEventDormIds === null) return false;
+	if (selectedEventDormIds.size === 0) return true;
+	return !selectedEventDormIds.has(dormId);
+}
+
+function isBuildingEventLinked(buildingId: number): boolean {
+	if (selectedEventBuildingIds !== null) {
+		return selectedEventBuildingIds.has(buildingId);
+	}
+	return linkedActiveEventBuildingIds.has(buildingId);
+}
+
+function isDormEventLinked(dormId: number): boolean {
+	if (selectedEventDormIds !== null) {
+		return selectedEventDormIds.has(dormId);
+	}
+	return linkedActiveEventDormIds.has(dormId);
+}
+
+// "My classes" highlight (#see MapViewStore.highlightMyBuildings): emphasize
+// buildings hosting the active planner plan's classes, dim every other pin.
+// Same shape as the event-focus dimming above.
+const activePlannerRoomCodes = $derived(
+	plannerRoomCodes(plannerStore.activePlan?.sections ?? []),
+);
+const classHighlightActive = $derived(
+	mapViewStore.highlightMyBuildings && activePlannerRoomCodes.length > 0,
+);
+
+$effect(() => {
+	if (!mapViewStore.highlightMyBuildings) return;
+	void plannerBuildingsStore.load(activePlannerRoomCodes);
+});
+
+function isMyClassBuilding(buildingId: number): boolean {
+	return (
+		classHighlightActive && plannerBuildingsStore.buildingIds.has(buildingId)
+	);
+}
+
+function isBuildingDimmedForClassHighlight(buildingId: number): boolean {
+	return (
+		classHighlightActive && !plannerBuildingsStore.buildingIds.has(buildingId)
+	);
+}
+
+let linkedActiveEventBuildingIds = $derived.by(() => {
+	if (!loaded) return new Set<number>();
+	return new Set(
+		events
+			.filter((event) => event.status === "active")
+			.flatMap((event) => event.locations)
+			.filter(
+				(location) =>
+					location.anchorType === "building" && location.buildingId !== null,
+			)
+			.map((location) => location.buildingId as number),
+	);
+});
+
+let activeDormName = $derived.by(() => {
+	if (queryStore.category === "dorm" && queryStore.type === "result") {
+		return queryStore.inputValue;
+	}
+	return null;
+});
+
+let activeOrgName = $derived.by(() => {
+	if (queryStore.category === "organization" && queryStore.type === "result") {
+		return queryStore.inputValue;
+	}
+	return null;
+});
+
+let linkedActiveEventDormIds = $derived.by(() => {
+	if (!loaded) return new Set<number>();
+	return new Set(
+		events
+			.filter((event) => event.status === "active")
+			.flatMap((event) => event.locations)
+			.filter(
+				(location) =>
+					location.anchorType === "dorm" && location.dormId !== null,
+			)
+			.map((location) => location.dormId as number),
+	);
+});
+
+let selectedEventRouteStops = $derived.by(() => {
+	if (!loaded || queryStore.category !== "event") return [];
+	const selectedEvent = findSelectedEvent(events);
+	if (!selectedEvent) return [];
+	return selectedEvent.routes.flatMap((route) =>
+		route.stops.filter(
+			(stop) => stop.resolvedLon !== null && stop.resolvedLat !== null,
+		),
+	);
+});
 </script>
 
 <svelte:window onkeydown={handleMapEditKeydown} />
@@ -3437,33 +3443,33 @@ import { MapLibre, Marker } from "svelte-maplibre";
 									ondragend={(e) =>
 										handleBuildingDragEnd(e, building.id, building.buildingName, position)}
 								>
-									<MapEntityPin
-										label={building.buildingName}
-										active={activeBuildingName === building.buildingName}
-										editable={canDragPin(editKey)}
-										editing={selectedEditKey === editKey}
-										dimmed={isBuildingDimmedForEventFocus(building.id) ||
-											isBuildingDimmedForClassHighlight(building.id)}
-										eventLinked={isBuildingEventLinked(building.id)}
-										hovered={hoveredEditKey === editKey}
-										saveState={savingEditKey === editKey
-											? 'saving'
-											: savedEditKey === editKey
+   									<MapEntityPin
+  										label={building.buildingName}
+  										active={activeBuildingName === building.buildingName}
+  										editable={canDragPin(editKey)}
+  										editing={selectedEditKey === editKey}
+  										dimmed={isBuildingDimmedForEventFocus(building.id) ||
+ 											isBuildingDimmedForClassHighlight(building.id)}
+  										eventLinked={isBuildingEventLinked(building.id)}
+  										hovered={hoveredEditKey === editKey}
+  										saveState={savingEditKey === editKey
+ 											? 'saving'
+ 											: savedEditKey === editKey
 												? 'saved'
 												: failedEditKey === editKey
-													? 'failed'
-													: 'idle'}
-										labelVisible={zoomLevel >= 17 ||
-											activeBuildingName === building.buildingName ||
-											isMyClassBuilding(building.id)}
-										useCentralHoverPreview={centralHoverPreview}
-										{previewSuppressed}
-										onpointerenter={(event) =>
-											handleBuildingPinPointerEnter(building, editKey, event)}
-										onpointerleave={() => handleBuildingPinPointerLeave(editKey)}
-									>
-										<PinGlyph name="building" size={20} />
-									</MapEntityPin>
+   													? 'failed'
+   													: 'idle'}
+  										labelVisible={zoomLevel >= 17 ||
+ 											activeBuildingName === building.buildingName ||
+ 											isMyClassBuilding(building.id)}
+  										useCentralHoverPreview={centralHoverPreview}
+  										{previewSuppressed}
+  										onpointerenter={(event) =>
+ 											handleBuildingPinPointerEnter(building, editKey, event)}
+  										onpointerleave={() => handleBuildingPinPointerLeave(editKey)}
+   									>
+  										<PinGlyph name="building" size={20} />
+   									</MapEntityPin>
 								</Marker>
 							{/key}
 						{/if}
@@ -3514,7 +3520,7 @@ import { MapLibre, Marker } from "svelte-maplibre";
 								<Marker
 									lngLat={[position.lon, position.lat]}
 									draggable={canDragPin(editKey)}
-									onclick={() => handleDormMarkerClick(dorm.dormName)}
+									onclick={() => handleDormMarkerClick(dorm.dormName, dorm.id)}
 									ondragstart={() => beginMarkerDrag(editKey)}
 									ondragend={(e) => handleDormDragEnd(e, dorm.id, dorm.dormName, position)}
 								>
@@ -3599,7 +3605,7 @@ import { MapLibre, Marker } from "svelte-maplibre";
 									labelVisible={zoomLevel >= 17 || activeOrgName === org.name}
 									useCentralHoverPreview={centralHoverPreview}
 									{previewSuppressed}
-									onclick={() => handleOrgMarkerClick(org.name)}
+									onclick={() => handleOrgMarkerClick(org.name, org.id)}
 									onpointerenter={(event) => handleOrganizationPinPointerEnter(org, event)}
 									onpointerleave={handleDetailPinPointerLeave}
 								>

@@ -121,25 +121,21 @@
 
 		if (urlParams.get('editor') === 'login') {
 			adminAuthStore.openLogin();
-			// window.history.replaceState({}, '', window.location.pathname);
 		}
 
 		const authError = urlParams.get('auth_error');
 		if (authError) {
 			adminAuthStore.oauthError = authError;
 			adminAuthStore.openLogin();
-			// window.history.replaceState({}, '', window.location.pathname);
 		}
 
 		const accountEvent = urlParams.get('account');
 		if (accountEvent === 'email-changed') {
 			toastStore.show('Email address updated.', 'success');
 			adminAuthStore.openAccountSettings();
-			// window.history.replaceState({}, '', window.location.pathname);
 		} else if (accountEvent === 'google-linked') {
 			toastStore.show('Google account connected.', 'success');
 			adminAuthStore.openAccountSettings();
-			// window.history.replaceState({}, '', window.location.pathname);
 		}
 
 		const accountError = urlParams.get('account_error');

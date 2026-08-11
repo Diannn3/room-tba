@@ -2,14 +2,19 @@ import type { APIRoute } from "astro";
 import { R2_PUBLIC_URL } from "astro:env/server";
 import { editorSessionOrUnauthorized } from "@lib/admin/require-editor";
 import { parseRequiredEditorVersion } from "@lib/admin/expected-version";
-import { parseImageUrl } from "@lib/r2-upload-core";
+import {
+  parseEntityPhotoUrls,
+  reconcileEntityPhotos,
+} from "@lib/entity-photos";
 import {
   EditConflictError,
   DuplicateNameError,
+  getRoomById,
   ManualPositionError,
   updateRoom,
   updateRoomPosition,
 } from "@lib/services/admin-service";
+import { resolvePhotoAttribution } from "@lib/services/entity-photo-service";
 
 export const prerender = false;
 
@@ -19,7 +24,7 @@ type RoomPatchBody = {
   buildingId?: number | null;
   collegeId?: number | null;
   divisionId?: number | null;
-  imageUrl?: string | null;
+  photoUrls?: unknown;
   version?: number;
   position?: {
     floor: number;
@@ -93,13 +98,9 @@ export const PATCH: APIRoute = async ({ cookies, params, request }) => {
     );
   }
 
-  const parsedImageUrl = parseImageUrl(
-    body.imageUrl,
-    R2_PUBLIC_URL,
-    "Room image",
-  );
-  if (!parsedImageUrl.ok) {
-    return json({ error: parsedImageUrl.error }, 400);
+  const parsedPhotoUrls = parseEntityPhotoUrls(body.photoUrls, R2_PUBLIC_URL);
+  if (!parsedPhotoUrls.ok) {
+    return json({ error: parsedPhotoUrls.error }, 400);
   }
 
   const parsedVersion = parseRequiredEditorVersion(body.version);
@@ -115,8 +116,18 @@ export const PATCH: APIRoute = async ({ cookies, params, request }) => {
     if (body.buildingId !== undefined) updates.buildingId = body.buildingId;
     if (body.collegeId !== undefined) updates.collegeId = body.collegeId;
     if (body.divisionId !== undefined) updates.divisionId = body.divisionId;
-    if (parsedImageUrl.provided) updates.imageUrl = parsedImageUrl.imageUrl;
-    const hasRoomFieldUpdates = Object.keys(updates).length > 0;
+    if (parsedPhotoUrls.provided) {
+      const current = await getRoomById(id);
+      const attribution = await resolvePhotoAttribution(
+        auth.session.id,
+        auth.session.displayName,
+      );
+      updates.photos = reconcileEntityPhotos(
+        current?.photos ?? [],
+        parsedPhotoUrls.photoUrls,
+        attribution,
+      );
+    }
 
     if (body.position && hasRoomFieldUpdates) {
       return json(

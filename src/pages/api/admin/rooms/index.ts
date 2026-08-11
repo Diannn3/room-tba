@@ -1,10 +1,16 @@
 import type { APIRoute } from "astro";
+import { R2_PUBLIC_URL } from "astro:env/server";
 import { editorSessionOrUnauthorized } from "@lib/admin/require-editor";
+import {
+  parseEntityPhotoUrls,
+  reconcileEntityPhotos,
+} from "@lib/entity-photos";
 import {
   createRoom,
   DuplicateNameError,
   findRoomMergeCandidate,
 } from "@lib/services/admin-service";
+import { resolvePhotoAttribution } from "@lib/services/entity-photo-service";
 
 export const prerender = false;
 
@@ -61,14 +67,28 @@ export const POST: APIRoute = async ({ cookies, request }) => {
   const directions =
     typeof body.directions === "string" ? body.directions.trim() || null : null;
 
+  const parsedPhotoUrls = parseEntityPhotoUrls(body.photoUrls, R2_PUBLIC_URL);
+  if (!parsedPhotoUrls.ok) {
+    return json({ error: parsedPhotoUrls.error }, 400);
+  }
+
   try {
     const duplicate = await findRoomMergeCandidate(roomCode, 0);
     if (duplicate) {
       throw new DuplicateNameError("room", duplicate, roomCode);
     }
 
+    const attribution = await resolvePhotoAttribution(
+      auth.session.id,
+      auth.session.displayName,
+    );
+    const photos = reconcileEntityPhotos(
+      [],
+      parsedPhotoUrls.photoUrls,
+      attribution,
+    );
     const room = await createRoom(
-      { roomCode, directions, buildingId, collegeId, divisionId },
+      { roomCode, directions, buildingId, collegeId, divisionId, photos },
       auth.editedBy,
     );
     if (!room) {

@@ -16,18 +16,19 @@ vi.mock('./pgliteDB', () => ({
 import { getBuildings } from './utils';
 
 const REMOTE: BuildingData[] = [
-	{
-		id: 1,
-		buildingName: 'Physical Sciences',
-		lon: 121,
-		lat: 14,
-		directions: '',
-		buildingType: 'non-admin',
-		imageUrl: null,
-		crFacilities: null,
-		version: 1,
-		updatedAt: '2026-08-04T00:00:00.000Z'
-	}
+  {
+    id: 1,
+    buildingName: "Physical Sciences",
+    lon: 121,
+    lat: 14,
+    directions: null,
+    buildingType: "academic",
+    imageUrl: null,
+    photos: [],
+    crFacilities: null,
+    version: 1,
+    updatedAt: "2026-08-04T00:00:00.000Z",
+  } as BuildingData,
 ];
 
 const realFetch = globalThis.fetch;

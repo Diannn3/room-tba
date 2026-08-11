@@ -6,22 +6,33 @@ import { escapeLikePattern } from '$lib/like-escape';
 import { normalizeAlias } from '$lib/site';
 import { normalizeDormListFields } from '$lib/string-lists';
 import type {
-	AnnouncementData,
-	BuildingData,
-	ClassMapValue,
-	CollegeData,
-	DivisionData,
-	DormData,
-	EntityLoadResult,
-	EventData,
-	OrgData,
-	PlaceData,
-	RoomData,
-	TableSyncInfo
-} from '$lib/types';
-import { ENTITY_FETCH_OPTIONS, fetchJsonWithRetry } from './fetch-json';
-import { getDB, isLocalCacheReady } from './pgliteDB';
-import { getLocalBuildingRooms, getLocalCollegeRooms, getLocalDivisionRooms } from './sync';
+  AnnouncementData,
+  BuildingData,
+  ClassMapValue,
+  CollegeData,
+  DivisionData,
+  DormData,
+  EntityLoadResult,
+  EventData,
+  OrgData,
+  PlaceData,
+  RoomData,
+  TableSyncInfo,
+} from "@lib/types";
+import { normalizeEntityPhotos } from "@lib/entity-photos";
+import { getDB, isLocalCacheReady } from "./pgliteDB";
+import { ENTITY_FETCH_OPTIONS, fetchJsonWithRetry } from "./fetch-json";
+import { escapeLikePattern } from "@lib/like-escape";
+import {
+  getLocalBuildingRooms,
+  getLocalCollegeRooms,
+  getLocalDivisionRooms,
+} from "./sync";
+import { refreshStoredEventTiming, sortStoredEvents } from "@lib/event-time";
+import { normalizeAlias } from "@lib/site";
+import { normalizeDormListFields } from "@lib/string-lists";
+import type { Results } from "@electric-sql/pglite";
+import type { JeepneyRoute, JeepneyStop } from "@constants/jeepney-routes";
 
 export async function getLocalJeepneyRoutes(): Promise<JeepneyRoute[] | undefined> {
 	try {
@@ -69,17 +80,20 @@ export async function getLocalJeepneyRoutes(): Promise<JeepneyRoute[] | undefine
 }
 
 export async function getLocalBuildings(): Promise<BuildingData[] | undefined> {
-	try {
-		const localDB = await getDB();
-		await localDB.waitReady;
-		const data = (await localDB.query(`
-        SELECT building_name AS "buildingName", lon, lat, id, directions, type AS "buildingType", image_url AS "imageUrl", cr_facilities AS "crFacilities", version, updated_at AS "updatedAt" FROM buildings
+  try {
+    const localDB = await getDB();
+    await localDB.waitReady;
+    const data = (await localDB.query(`
+         SELECT building_name AS "buildingName", lon, lat, id, directions, type AS "buildingType", image_url AS "imageUrl", photos, cr_facilities AS "crFacilities", version, updated_at AS "updatedAt" FROM buildings
       `)) as Results<BuildingData>;
-		return data.rows;
-	} catch (e) {
-		console.error('Error: ', e);
-		return undefined;
-	}
+    return data.rows.map((row) => ({
+      ...row,
+      photos: normalizeEntityPhotos(row.photos),
+    }));
+  } catch (e) {
+    console.error("Error: ", e);
+    return undefined;
+  }
 }
 
 export async function getLocalColleges(): Promise<CollegeData[] | undefined> {
@@ -132,16 +146,20 @@ export async function getLocalDorms(): Promise<DormData[] | undefined> {
         price_range AS "priceRange",
         contact_phone AS "contactPhone",
         facebook_link AS "facebookLink",
-        image_url AS "imageUrl",
+         image_url AS "imageUrl",
+         photos,
         version,
         updated_at AS "updatedAt"
       FROM dorms;
       `)) as Results<DormData>;
-		return data.rows.map((row) => normalizeDormListFields(row));
-	} catch (e) {
-		console.error('Error: ', e);
-		return undefined;
-	}
+    return data.rows.map((row) => ({
+      ...normalizeDormListFields(row),
+      photos: normalizeEntityPhotos(row.photos),
+    }));
+  } catch (e) {
+    console.error("Error: ", e);
+    return undefined;
+  }
 }
 
 export async function getLocalOrganizations(): Promise<OrgData[] | undefined> {
@@ -330,78 +348,86 @@ export async function getLocalEvents(): Promise<EventData[] | undefined> {
 }
 
 export async function getLocalRoomByCode(code: string) {
-	try {
-		const normalizedCode = code.toUpperCase();
-		const localDB = await getDB();
-		await localDB.waitReady;
-		const data = (await localDB.query(
-			`
-            SELECT
-            r.id,
-            r.room_code AS code,
-            r.full_name AS "fullName",
-            r.directions AS directions,
-            json_build_object('name',b.building_name, 'lat', b.lat, 'lon', b.lon, 'directions', b.directions ) as building,
-            c.college_name as "collegeName",
-            d.division_name as "divisionName",
-            r.building_id as "buildingId",
-            r.college_id as "collegeId",
-            r.division_id as "divisionId",
-            r.image_url as "imageUrl",
-            r.category as category,
-            r.version,
-            r.updated_at as "updatedAt"
-            FROM rooms AS r
-            LEFT JOIN buildings AS b ON b.id = r.building_id
-            LEFT JOIN colleges as c ON c.id = r.college_id
-            LEFT JOIN divisions AS d ON d.id = r.division_id
-            WHERE upper(r.room_code) = $1
-        `,
-			[normalizedCode]
-		)) as Results<RoomData>;
-		if (data.rows.length === 0 && typeof data.rows[0] === 'undefined') return null;
-		return data.rows[0] as RoomData;
-	} catch (e) {
-		console.error(e);
-		return null;
-	}
+  try {
+    const normalizedCode = code.toUpperCase();
+    const localDB = await getDB();
+    await localDB.waitReady;
+    const data = (await localDB.query(
+      `
+             SELECT
+             r.id,
+             r.room_code AS code,
+             r.full_name AS "fullName",
+             r.directions AS directions,
+             json_build_object('name',b.building_name, 'lat', b.lat, 'lon', b.lon, 'directions', b.directions ) as building,
+             c.college_name as "collegeName",
+             d.division_name as "divisionName",
+             r.building_id as "buildingId",
+             r.college_id as "collegeId",
+             r.division_id as "divisionId",
+             r.image_url as "imageUrl",
+             r.photos as photos,
+             r.category as category,
+             r.version,
+             r.updated_at as "updatedAt"
+             FROM rooms AS r
+             LEFT JOIN buildings AS b ON b.id = r.building_id
+             LEFT JOIN colleges as c ON c.id = r.college_id
+             LEFT JOIN divisions AS d ON d.id = r.division_id
+             WHERE upper(r.room_code) = $1
+         `,
+      [normalizedCode],
+    )) as Results<RoomData>;
+    if (data.rows.length === 0) return null;
+    return {
+      ...data.rows[0],
+      photos: normalizeEntityPhotos(data.rows[0].photos),
+    };
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
 }
 
 export async function getLocalRoomById(id: number) {
-	try {
-		const localDB = await getDB();
-		await localDB.waitReady;
-		const data = (await localDB.query(
-			`
-            SELECT
-            r.id,
-            r.room_code AS code,
-            r.full_name AS "fullName",
-            r.directions AS directions,
-            json_build_object('name',b.building_name, 'lat', b.lat, 'lon', b.lon, 'directions', b.directions ) as building,
-            c.college_name as "collegeName",
-            d.division_name as "divisionName",
-            r.building_id as "buildingId",
-            r.college_id as "collegeId",
-            r.division_id as "divisionId",
-            r.image_url as "imageUrl",
-            r.category as category,
-            r.version,
-            r.updated_at as "updatedAt"
-            FROM rooms AS r
-            LEFT JOIN buildings AS b ON b.id = r.building_id
-            LEFT JOIN colleges as c ON c.id = r.college_id
-            LEFT JOIN divisions AS d ON d.id = r.division_id
-            WHERE r.id = $1
-        `,
-			[id]
-		)) as Results<RoomData>;
-		if (data.rows.length === 0) return null;
-		return data.rows[0] as RoomData;
-	} catch (e) {
-		console.error(e);
-		return null;
-	}
+  try {
+    const localDB = await getDB();
+    await localDB.waitReady;
+    const data = (await localDB.query(
+      `
+             SELECT
+             r.id,
+             r.room_code AS code,
+             r.full_name AS "fullName",
+             r.directions AS directions,
+             json_build_object('name',b.building_name, 'lat', b.lat, 'lon', b.lon, 'directions', b.directions ) as building,
+             c.college_name as "collegeName",
+             d.division_name as "divisionName",
+             r.building_id as "buildingId",
+             r.college_id as "collegeId",
+             r.division_id as "divisionId",
+             r.image_url as "imageUrl",
+             r.photos as photos,
+             r.category as category,
+             r.version,
+             r.updated_at as "updatedAt"
+             FROM rooms AS r
+             LEFT JOIN buildings AS b ON b.id = r.building_id
+             LEFT JOIN colleges as c ON c.id = r.college_id
+             LEFT JOIN divisions AS d ON d.id = r.division_id
+             WHERE r.id = $1
+         `,
+      [id],
+    )) as Results<RoomData>;
+    if (data.rows.length === 0) return null;
+    return {
+      ...data.rows[0],
+      photos: normalizeEntityPhotos(data.rows[0].photos),
+    };
+  } catch (e) {
+    console.error(e);
+    return null;
+  }
 }
 
 // export async function getLocalRooms(): Promise<RoomData[] | undefined> {

@@ -1,24 +1,24 @@
 import { sql } from 'drizzle-orm';
-import type { EntityPhoto } from '$lib/entity-photos';
 import {
-	pgTable,
 	bigserial,
-	integer,
-	text,
-	varchar,
-	doublePrecision,
 	boolean,
-	foreignKey,
-	numeric,
-	timestamp,
-	uuid,
-	pgEnum,
-	jsonb,
-	index,
-	uniqueIndex,
 	date,
-	time
+	doublePrecision,
+	foreignKey,
+	index,
+	integer,
+	jsonb,
+	numeric,
+	pgEnum,
+	pgTable,
+	text,
+	time,
+	timestamp,
+	uniqueIndex,
+	uuid,
+	varchar
 } from 'drizzle-orm/pg-core';
+import type { EntityPhoto } from '$lib/entity-photos';
 
 export const buildingEnum = pgEnum('building_type', ['admin', 'non-admin']);
 export const eventCategoryEnum = pgEnum('event_category', [
@@ -298,26 +298,40 @@ export const classesTable = pgTable(
 	]
 );
 
-export const buildingsTable = pgTable('buildings', {
-	id: integer().primaryKey().generatedByDefaultAsIdentity({
-		name: 'buildings_id_seq',
-		startWith: 1,
-		increment: 1,
-		minValue: 1,
-		maxValue: 2147483647,
-		cache: 1
-	}),
-	buildingName: varchar('building_name', { length: 100 }).notNull(),
-	lon: doublePrecision().notNull(),
-	buildingType: buildingEnum('type').default('non-admin').notNull(),
-	lat: doublePrecision().notNull(),
-	directions: text().notNull(),
-	imageUrl: text('image_url'),
-	photos: jsonb('photos').$type<EntityPhoto[]>().notNull().default([]),
-	crFacilities: text('cr_facilities').array(),
-	version: integer().default(1).notNull(),
-	updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull()
-});
+export const buildingsTable = pgTable(
+	'buildings',
+	{
+		id: integer().primaryKey().generatedByDefaultAsIdentity({
+			name: 'buildings_id_seq',
+			startWith: 1,
+			increment: 1,
+			minValue: 1,
+			maxValue: 2147483647,
+			cache: 1
+		}),
+		buildingName: varchar('building_name', { length: 100 }).notNull(),
+		lon: doublePrecision().notNull(),
+		buildingType: buildingEnum('type').default('non-admin').notNull(),
+		lat: doublePrecision().notNull(),
+		directions: text().notNull(),
+		imageUrl: text('image_url'),
+		photos: jsonb('photos').$type<EntityPhoto[]>().notNull().default([]),
+		// Cached Street View metadata, never imagery. These columns predate the
+		// SvelteKit port and must remain represented in the live schema.
+		streetViewPanoId: varchar('street_view_pano_id', { length: 128 }),
+		streetViewCaptured: varchar('street_view_captured', { length: 16 }),
+		streetViewDistanceM: integer('street_view_distance_m'),
+		streetViewCheckedAt: timestamp('street_view_checked_at', { mode: 'string' }),
+		crFacilities: text('cr_facilities').array(),
+		version: integer().default(1).notNull(),
+		updatedAt: timestamp('updated_at', { mode: 'string' }).defaultNow().notNull()
+	},
+	(table) => [
+		index('buildings_street_view_pano_idx')
+			.on(table.id)
+			.where(sql`${table.streetViewPanoId} IS NOT NULL`)
+	]
+);
 
 export const roomPositionsTable = pgTable(
 	'room_positions',
@@ -729,17 +743,24 @@ export const aliasesTable = pgTable(
 
 // First-party sponsor impression/click log (docs/ad-policy.md). Server-only —
 // not in the PGlite SYNCED_TABLES set. Written by /api/sponsor-event.
-export const sponsorImpressionsTable = pgTable('sponsor_impressions', {
-	id: bigserial({ mode: 'number' }).primaryKey(),
-	sponsorId: text('sponsor_id').notNull(),
-	zone: text().notNull(),
-	eventType: text('event_type').notNull().default('impression'),
-	recordedAt: timestamp('recorded_at', { withTimezone: true, mode: 'string' })
-		.defaultNow()
-		.notNull(),
-	userAgent: text('user_agent'),
-	pagePath: text('page_path')
-});
+export const sponsorImpressionsTable = pgTable(
+	'sponsor_impressions',
+	{
+		id: bigserial({ mode: 'number' }).primaryKey(),
+		sponsorId: text('sponsor_id').notNull(),
+		zone: text().notNull(),
+		eventType: text().notNull().default('impression'),
+		recordedAt: timestamp('recorded_at', { withTimezone: true, mode: 'string' })
+			.defaultNow()
+			.notNull(),
+		userAgent: text('user_agent'),
+		pagePath: text('page_path')
+	},
+	(table) => [
+		index('idx_sponsor_imp_sponsor_date').on(table.sponsorId, table.recordedAt),
+		index('idx_sponsor_imp_zone_date').on(table.zone, table.recordedAt)
+	]
+);
 
 // Anonymous presence heartbeats behind the "N online" counter. A sid is a
 // random client-generated UUID held in sessionStorage — never an account, a

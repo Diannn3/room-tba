@@ -72,9 +72,16 @@ type RoomData = {
 	floor?: number | null;
 };
 
-type BuildingData = Omit<typeof buildingsTable.$inferSelect, 'photos' | 'directions'> & {
+type BuildingData = Omit<
+	typeof buildingsTable.$inferSelect,
+	'photos' | 'directions' | 'streetViewPanoId' | 'streetViewCaptured' | 'streetViewDistanceM' | 'streetViewCheckedAt'
+> & {
 	directions: string | null;
 	photos?: EntityPhoto[];
+	streetViewPanoId?: string | null;
+	streetViewCaptured?: string | null;
+	streetViewDistanceM?: number | null;
+	streetViewCheckedAt?: string | null;
 };
 
 type BuildingType = BuildingData['buildingType'];

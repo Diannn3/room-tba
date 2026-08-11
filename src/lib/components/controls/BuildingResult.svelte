@@ -860,6 +860,8 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
 				name={building.buildingName}
 				lat={building.lat}
 				lon={building.lon}
+				panoId={building.streetViewPanoId}
+				captured={building.streetViewCaptured}
 			/>
 			<section class="entity-directions" aria-label="Directions">
 				<div class="entity-directions__segment">

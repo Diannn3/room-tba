@@ -16,8 +16,8 @@ import {
 
 export const prerender = false;
 
-// Authenticated image upload to Cloudflare R2. Events persist the returned URL
-// via events.image_url; rooms/buildings/dorms have no image columns yet.
+// Authenticated image upload to Cloudflare R2. Entity and event editors persist
+// returned URLs through their existing publish flows.
 
 /** Per editor session (or IP fallback): 30 uploads / 10 minutes. */
 const UPLOAD_LIMIT = { max: 30, windowMs: 10 * 60 * 1000 };

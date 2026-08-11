@@ -2,13 +2,18 @@ import type { APIRoute } from "astro";
 import { R2_PUBLIC_URL } from "astro:env/server";
 import { editorSessionOrUnauthorized } from "@lib/admin/require-editor";
 import { parseRequiredEditorVersion } from "@lib/admin/expected-version";
-import { parseImageUrl } from "@lib/r2-upload-core";
+import {
+  parseEntityPhotoUrls,
+  reconcileEntityPhotos,
+} from "@lib/entity-photos";
 import { json, errorResponse } from "@lib/api/json";
 import {
   EditConflictError,
+  getBuildingById,
   updateBuilding,
   DuplicateNameError,
 } from "@lib/services/admin-service";
+import { resolvePhotoAttribution } from "@lib/services/entity-photo-service";
 
 export const prerender = false;
 
@@ -18,7 +23,7 @@ type BuildingPatchBody = {
   lon?: number;
   buildingType?: "admin" | "non-admin";
   directions?: string;
-  imageUrl?: string | null;
+  photoUrls?: unknown;
   crFacilities?: string[] | null;
   version?: number;
 };
@@ -55,13 +60,9 @@ export const PATCH: APIRoute = async ({ cookies, params, request }) => {
     return errorResponse("Invalid building type", 400);
   }
 
-  const parsedImageUrl = parseImageUrl(
-    body.imageUrl,
-    R2_PUBLIC_URL,
-    "Building image",
-  );
-  if (!parsedImageUrl.ok) {
-    return errorResponse(parsedImageUrl.error, 400);
+  const parsedPhotoUrls = parseEntityPhotoUrls(body.photoUrls, R2_PUBLIC_URL);
+  if (!parsedPhotoUrls.ok) {
+    return errorResponse(parsedPhotoUrls.error, 400);
   }
 
   const parsedVersion = parseRequiredEditorVersion(body.version);
@@ -77,7 +78,18 @@ export const PATCH: APIRoute = async ({ cookies, params, request }) => {
     if (body.buildingType !== undefined)
       updates.buildingType = body.buildingType;
     if (body.directions !== undefined) updates.directions = body.directions;
-    if (parsedImageUrl.provided) updates.imageUrl = parsedImageUrl.imageUrl;
+    if (parsedPhotoUrls.provided) {
+      const current = await getBuildingById(id);
+      const attribution = await resolvePhotoAttribution(
+        auth.session.id,
+        auth.session.displayName,
+      );
+      updates.photos = reconcileEntityPhotos(
+        current?.photos ?? [],
+        parsedPhotoUrls.photoUrls,
+        attribution,
+      );
+    }
     if (body.crFacilities !== undefined)
       updates.crFacilities = body.crFacilities;
 

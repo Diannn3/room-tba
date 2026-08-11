@@ -1,5 +1,11 @@
 import type { APIRoute } from "astro";
+import { R2_PUBLIC_URL } from "astro:env/server";
 import { editorSessionOrUnauthorized } from "@lib/admin/require-editor";
+import {
+  parseEntityPhotoUrls,
+  reconcileEntityPhotos,
+} from "@lib/entity-photos";
+import { resolvePhotoAttribution } from "@lib/services/entity-photo-service";
 import { createBuilding } from "@lib/services/admin-service";
 
 export const prerender = false;
@@ -43,9 +49,23 @@ export const POST: APIRoute = async ({ cookies, request }) => {
   const directions =
     typeof body.directions === "string" ? body.directions.trim() : "";
 
+  const parsedPhotoUrls = parseEntityPhotoUrls(body.photoUrls, R2_PUBLIC_URL);
+  if (!parsedPhotoUrls.ok) {
+    return json({ error: parsedPhotoUrls.error }, 400);
+  }
+
   try {
+    const attribution = await resolvePhotoAttribution(
+      auth.session.id,
+      auth.session.displayName,
+    );
+    const photos = reconcileEntityPhotos(
+      [],
+      parsedPhotoUrls.photoUrls,
+      attribution,
+    );
     const building = await createBuilding(
-      { buildingName, lat, lon, buildingType, directions },
+      { buildingName, lat, lon, buildingType, directions, photos },
       auth.editedBy,
     );
     if (!building) {

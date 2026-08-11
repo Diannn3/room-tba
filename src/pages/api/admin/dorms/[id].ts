@@ -2,18 +2,23 @@ import type { APIRoute } from "astro";
 import { R2_PUBLIC_URL } from "astro:env/server";
 import { editorSessionOrUnauthorized } from "@lib/admin/require-editor";
 import { parseRequiredEditorVersion } from "@lib/admin/expected-version";
-import { parseImageUrl } from "@lib/r2-upload-core";
+import {
+  parseEntityPhotoUrls,
+  reconcileEntityPhotos,
+} from "@lib/entity-photos";
 import { json, errorResponse } from "@lib/api/json";
 import {
   EditConflictError,
+  getDormById,
   updateDorm,
   DuplicateNameError,
 } from "@lib/services/admin-service";
+import { resolvePhotoAttribution } from "@lib/services/entity-photo-service";
 
 export const prerender = false;
 
 type DormPatchBody = {
-  imageUrl?: string | null;
+  photoUrls?: unknown;
   dormName?: string;
   shortName?: string;
   lat?: number | null;
@@ -54,13 +59,9 @@ export const PATCH: APIRoute = async ({ cookies, params, request }) => {
     return errorResponse("Dorm name is required", 400);
   }
 
-  const parsedImageUrl = parseImageUrl(
-    body.imageUrl,
-    R2_PUBLIC_URL,
-    "Dorm image",
-  );
-  if (!parsedImageUrl.ok) {
-    return errorResponse(parsedImageUrl.error, 400);
+  const parsedPhotoUrls = parseEntityPhotoUrls(body.photoUrls, R2_PUBLIC_URL);
+  if (!parsedPhotoUrls.ok) {
+    return errorResponse(parsedPhotoUrls.error, 400);
   }
 
   const parsedVersion = parseRequiredEditorVersion(body.version);
@@ -69,8 +70,18 @@ export const PATCH: APIRoute = async ({ cookies, params, request }) => {
 
   try {
     const updates: Parameters<typeof updateDorm>[1] = {};
-    if (parsedImageUrl.provided) updates.imageUrl = parsedImageUrl.imageUrl;
-    if (body.dormName !== undefined) updates.dormName = body.dormName.trim();
+    if (parsedPhotoUrls.provided) {
+      const current = await getDormById(id);
+      const attribution = await resolvePhotoAttribution(
+        auth.session.id,
+        auth.session.displayName,
+      );
+      updates.photos = reconcileEntityPhotos(
+        current?.photos ?? [],
+        parsedPhotoUrls.photoUrls,
+        attribution,
+      );
+    }
     if (body.shortName !== undefined)
       updates.shortName = body.shortName || null;
     if (body.lat !== undefined)

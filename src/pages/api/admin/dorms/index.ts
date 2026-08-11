@@ -1,6 +1,12 @@
 import type { APIRoute } from "astro";
+import { R2_PUBLIC_URL } from "astro:env/server";
 import { editorSessionOrUnauthorized } from "@lib/admin/require-editor";
+import {
+  parseEntityPhotoUrls,
+  reconcileEntityPhotos,
+} from "@lib/entity-photos";
 import { createDorm } from "@lib/services/admin-service";
+import { resolvePhotoAttribution } from "@lib/services/entity-photo-service";
 
 export const prerender = false;
 
@@ -47,13 +53,28 @@ export const POST: APIRoute = async ({ cookies, request }) => {
     return json({ error: "Invalid dorm map pin" }, 400);
   }
 
+  const parsedPhotoUrls = parseEntityPhotoUrls(body.photoUrls, R2_PUBLIC_URL);
+  if (!parsedPhotoUrls.ok) {
+    return json({ error: parsedPhotoUrls.error }, 400);
+  }
+
   try {
+    const attribution = await resolvePhotoAttribution(
+      auth.session.id,
+      auth.session.displayName,
+    );
+    const photos = reconcileEntityPhotos(
+      [],
+      parsedPhotoUrls.photoUrls,
+      attribution,
+    );
     const dorm = await createDorm(
       {
         dormName,
         gender,
         lat,
         lon,
+        photos,
         shortName:
           typeof body.shortName === "string" ? body.shortName.trim() : null,
         description:

@@ -1,3 +1,10 @@
+## [2.18.2](https://github.com/uplbtools/room-tba/compare/v2.18.1...v2.18.2) (2026-08-11)
+
+
+### Bug Fixes
+
+* **map:** add external campus markers ([#1008](https://github.com/uplbtools/room-tba/issues/1008)) ([d22c6b9](https://github.com/uplbtools/room-tba/commit/d22c6b99dcffd7594d4158fcb33b4530bea385ef))
+
 ## [2.18.1](https://github.com/uplbtools/room-tba/compare/v2.18.0...v2.18.1) (2026-08-11)
 
 

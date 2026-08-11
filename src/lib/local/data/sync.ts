@@ -732,9 +732,10 @@ export async function getLocalBuildingRooms(id: number) {
     r.building_id as "buildingId",
     r.college_id as "collegeId",
     r.division_id as "divisionId",
-    r.category as category,
-    r.version,
-    r.updated_at as "updatedAt",
+     r.photos as photos,
+     r.category as category,
+     r.version,
+     r.updated_at as "updatedAt",
     rp.floor
     FROM rooms AS r
     LEFT JOIN buildings AS b ON b.id = r.building_id
@@ -743,12 +744,15 @@ export async function getLocalBuildingRooms(id: number) {
     LEFT JOIN room_positions AS rp ON rp.room_id = r.id
     WHERE r.building_id = $1;
     `,
-			[id]
-		)) as Results<RoomData>;
-		return data.rows;
-	} catch (e) {
-		console.error(e);
-	}
+      [id],
+    )) as Results<RoomData>;
+    return data.rows.map((row) => ({
+      ...row,
+      photos: normalizeEntityPhotos(row.photos),
+    }));
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 /** True when the stored rooms sync key matches the live one (online + fresh). */
@@ -781,50 +785,59 @@ export async function checkLocalBuildingRoom(id: number) {
 	}
 }
 
-export async function syncBuildingRooms(validSync: boolean, id: number, rooms: RoomData[]) {
-	if (validSync) return;
-	// Offline/failed fetch returns no rooms — keep the existing cache and the
-	// rooms_fetched flag untouched instead of marking an empty fetch as done.
-	if (!rooms || rooms.length === 0) return;
-	const localDB = await getDB();
-	for (const room of rooms) {
-		try {
-			await localDB.query(
-				`
-            INSERT INTO rooms (id, room_code, directions, building_id, college_id, division_id, image_url, version, updated_at, category, full_name)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-            ON CONFLICT (id) DO UPDATE SET
-            id = EXCLUDED.id,
-            room_code = EXCLUDED.room_code,
-            directions = EXCLUDED.directions,
-            building_id = EXCLUDED.building_id,
-            college_id = EXCLUDED.college_id,
-            division_id = EXCLUDED.division_id,
-            image_url = EXCLUDED.image_url,
-            version = EXCLUDED.version,
-            updated_at = EXCLUDED.updated_at,
-            category = EXCLUDED.category,
-            full_name = EXCLUDED.full_name;
+export async function syncBuildingRooms(
+  validSync: boolean,
+  id: number,
+  rooms: RoomData[],
+) {
+  if (validSync) return;
+  // Offline/failed fetch returns no rooms — keep the existing cache and the
+  // rooms_fetched flag untouched instead of marking an empty fetch as done.
+  if (!rooms || rooms.length === 0) return;
+  const localDB = await getDB();
+  for (const room of rooms) {
+    try {
+      await localDB.query(
+        `
+             INSERT INTO rooms (id, room_code, directions, building_id, college_id, division_id, image_url, photos, version, updated_at, category, full_name)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+             ON CONFLICT (id) DO UPDATE SET
+             id = EXCLUDED.id,
+             room_code = EXCLUDED.room_code,
+             directions = EXCLUDED.directions,
+             building_id = EXCLUDED.building_id,
+             college_id = EXCLUDED.college_id,
+             division_id = EXCLUDED.division_id,
+             image_url = EXCLUDED.image_url,
+             photos = EXCLUDED.photos,
+             version = EXCLUDED.version,
+             updated_at = EXCLUDED.updated_at,
+             category = EXCLUDED.category,
+             full_name = EXCLUDED.full_name;
             `,
-				[
-					room.id,
-					room.code,
-					room.directions,
-					room.buildingId,
-					room.collegeId,
-					room.divisionId,
-					room.imageUrl ?? null,
-					room.version,
-					room.updatedAt,
-					room.category ?? null,
-					room.fullName ?? null
-				]
-			);
-		} catch (e) {
-			console.error(e);
-		}
-	}
-	await localDB.query('UPDATE buildings SET rooms_fetched = true WHERE id = $1', [id]);
+        [
+          room.id,
+          room.code,
+          room.directions,
+          room.buildingId,
+          room.collegeId,
+          room.divisionId,
+          room.imageUrl ?? null,
+          JSON.stringify(room.photos ?? []),
+          room.version,
+          room.updatedAt,
+          room.category ?? null,
+          room.fullName ?? null,
+        ],
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  await localDB.query(
+    "UPDATE buildings SET rooms_fetched = true WHERE id = $1",
+    [id],
+  );
 }
 
 export async function resetCollegesSyncStatus() {
@@ -871,21 +884,24 @@ export async function getLocalCollegeRooms(id: number) {
     d.division_name as "divisionName",
     r.building_id as "buildingId",
     r.college_id as "collegeId",
-    r.division_id as "divisionId",
-    r.version,
-    r.updated_at as "updatedAt"
+     r.photos as photos,
+     r.version,
+     r.updated_at as "updatedAt"
     FROM rooms AS r
     LEFT JOIN buildings AS b ON b.id = r.building_id
     LEFT JOIN colleges as c ON c.id = r.college_id
     LEFT JOIN divisions AS d ON d.id = r.division_id
     WHERE r.college_id = $1;
     `,
-			[id]
-		)) as Results<RoomData>;
-		return data.rows;
-	} catch (e) {
-		console.error(e);
-	}
+      [id],
+    )) as Results<RoomData>;
+    return data.rows.map((row) => ({
+      ...row,
+      photos: normalizeEntityPhotos(row.photos),
+    }));
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 export async function checkLocalCollegeRoom(id: number) {
@@ -909,48 +925,57 @@ export async function checkLocalCollegeRoom(id: number) {
 	}
 }
 
-export async function syncCollegeRooms(validSync: boolean, id: number, rooms: RoomData[]) {
-	if (validSync) return;
-	if (!rooms || rooms.length === 0) return;
-	const localDB = await getDB();
-	for (const room of rooms) {
-		try {
-			await localDB.query(
-				`
-            INSERT INTO rooms (id, room_code, directions, building_id, college_id, division_id, image_url, version, updated_at, category, full_name)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-            ON CONFLICT (id) DO UPDATE SET
-            id = EXCLUDED.id,
-            room_code = EXCLUDED.room_code,
-            directions = EXCLUDED.directions,
-            building_id = EXCLUDED.building_id,
-            college_id = EXCLUDED.college_id,
-            division_id = EXCLUDED.division_id,
-            image_url = EXCLUDED.image_url,
-            version = EXCLUDED.version,
-            updated_at = EXCLUDED.updated_at,
-            category = EXCLUDED.category,
-            full_name = EXCLUDED.full_name;
+export async function syncCollegeRooms(
+  validSync: boolean,
+  id: number,
+  rooms: RoomData[],
+) {
+  if (validSync) return;
+  if (!rooms || rooms.length === 0) return;
+  const localDB = await getDB();
+  for (const room of rooms) {
+    try {
+      await localDB.query(
+        `
+             INSERT INTO rooms (id, room_code, directions, building_id, college_id, division_id, image_url, photos, version, updated_at, category, full_name)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+             ON CONFLICT (id) DO UPDATE SET
+             id = EXCLUDED.id,
+             room_code = EXCLUDED.room_code,
+             directions = EXCLUDED.directions,
+             building_id = EXCLUDED.building_id,
+             college_id = EXCLUDED.college_id,
+             division_id = EXCLUDED.division_id,
+             image_url = EXCLUDED.image_url,
+             photos = EXCLUDED.photos,
+             version = EXCLUDED.version,
+             updated_at = EXCLUDED.updated_at,
+             category = EXCLUDED.category,
+             full_name = EXCLUDED.full_name;
             `,
-				[
-					room.id,
-					room.code,
-					room.directions,
-					room.buildingId,
-					room.collegeId,
-					room.divisionId,
-					room.imageUrl ?? null,
-					room.version,
-					room.updatedAt,
-					room.category ?? null,
-					room.fullName ?? null
-				]
-			);
-		} catch (e) {
-			console.error(e);
-		}
-	}
-	await localDB.query('UPDATE colleges SET rooms_fetched = true WHERE id = $1', [id]);
+        [
+          room.id,
+          room.code,
+          room.directions,
+          room.buildingId,
+          room.collegeId,
+          room.divisionId,
+          room.imageUrl ?? null,
+          JSON.stringify(room.photos ?? []),
+          room.version,
+          room.updatedAt,
+          room.category ?? null,
+          room.fullName ?? null,
+        ],
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  await localDB.query(
+    "UPDATE colleges SET rooms_fetched = true WHERE id = $1",
+    [id],
+  );
 }
 
 export async function resetDivisionsSyncStatus() {
@@ -997,21 +1022,24 @@ export async function getLocalDivisionRooms(id: number) {
     d.division_name as "divisionName",
     r.building_id as "buildingId",
     r.college_id as "collegeId",
-    r.division_id as "divisionId",
-    r.version,
-    r.updated_at as "updatedAt"
+     r.photos as photos,
+     r.version,
+     r.updated_at as "updatedAt"
     FROM rooms AS r
     LEFT JOIN buildings AS b ON b.id = r.building_id
     LEFT JOIN colleges as c ON c.id = r.college_id
     LEFT JOIN divisions AS d ON d.id = r.division_id
     WHERE r.division_id = $1;
     `,
-			[id]
-		)) as Results<RoomData>;
-		return data.rows;
-	} catch (e) {
-		console.error(e);
-	}
+      [id],
+    )) as Results<RoomData>;
+    return data.rows.map((row) => ({
+      ...row,
+      photos: normalizeEntityPhotos(row.photos),
+    }));
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 export async function checkLocalDivisionRoom(id: number) {
@@ -1035,48 +1063,57 @@ export async function checkLocalDivisionRoom(id: number) {
 	}
 }
 
-export async function syncDivisionRooms(validSync: boolean, id: number, rooms: RoomData[]) {
-	if (validSync) return;
-	if (!rooms || rooms.length === 0) return;
-	const localDB = await getDB();
-	for (const room of rooms) {
-		try {
-			await localDB.query(
-				`
-            INSERT INTO rooms (id, room_code, directions, building_id, college_id, division_id, image_url, version, updated_at, category, full_name)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-            ON CONFLICT (id) DO UPDATE SET
-            id = EXCLUDED.id,
-            room_code = EXCLUDED.room_code,
-            directions = EXCLUDED.directions,
-            building_id = EXCLUDED.building_id,
-            college_id = EXCLUDED.college_id,
-            division_id = EXCLUDED.division_id,
-            image_url = EXCLUDED.image_url,
-            version = EXCLUDED.version,
-            updated_at = EXCLUDED.updated_at,
-            category = EXCLUDED.category,
-            full_name = EXCLUDED.full_name;
+export async function syncDivisionRooms(
+  validSync: boolean,
+  id: number,
+  rooms: RoomData[],
+) {
+  if (validSync) return;
+  if (!rooms || rooms.length === 0) return;
+  const localDB = await getDB();
+  for (const room of rooms) {
+    try {
+      await localDB.query(
+        `
+             INSERT INTO rooms (id, room_code, directions, building_id, college_id, division_id, image_url, photos, version, updated_at, category, full_name)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+             ON CONFLICT (id) DO UPDATE SET
+             id = EXCLUDED.id,
+             room_code = EXCLUDED.room_code,
+             directions = EXCLUDED.directions,
+             building_id = EXCLUDED.building_id,
+             college_id = EXCLUDED.college_id,
+             division_id = EXCLUDED.division_id,
+             image_url = EXCLUDED.image_url,
+             photos = EXCLUDED.photos,
+             version = EXCLUDED.version,
+             updated_at = EXCLUDED.updated_at,
+             category = EXCLUDED.category,
+             full_name = EXCLUDED.full_name;
             `,
-				[
-					room.id,
-					room.code,
-					room.directions,
-					room.buildingId,
-					room.collegeId,
-					room.divisionId,
-					room.imageUrl ?? null,
-					room.version,
-					room.updatedAt,
-					room.category ?? null,
-					room.fullName ?? null
-				]
-			);
-		} catch (e) {
-			console.error(e);
-		}
-	}
-	await localDB.query('UPDATE divisions SET rooms_fetched = true WHERE id = $1', [id]);
+        [
+          room.id,
+          room.code,
+          room.directions,
+          room.buildingId,
+          room.collegeId,
+          room.divisionId,
+          room.imageUrl ?? null,
+          JSON.stringify(room.photos ?? []),
+          room.version,
+          room.updatedAt,
+          room.category ?? null,
+          room.fullName ?? null,
+        ],
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  await localDB.query(
+    "UPDATE divisions SET rooms_fetched = true WHERE id = $1",
+    [id],
+  );
 }
 
 /** Refresh the local alias cache from the server when online (#155 follow-up). */

@@ -1,3 +1,13 @@
+## [2.18.1](https://github.com/uplbtools/room-tba/compare/v2.18.0...v2.18.1) (2026-08-11)
+
+
+### Bug Fixes
+
+* **dorms:** show full photos ([#988](https://github.com/uplbtools/room-tba/issues/988)) ([0cdb251](https://github.com/uplbtools/room-tba/commit/0cdb251f7a1c3736438d22fd9f39f495ce3077c8))
+* **map:** rebase satellite controls ([#1000](https://github.com/uplbtools/room-tba/issues/1000)) ([34d5d9a](https://github.com/uplbtools/room-tba/commit/34d5d9a17ac1cdba19ccaf8e92b94c33709e96ce))
+* **maps:** prefer named place links ([#990](https://github.com/uplbtools/room-tba/issues/990)) ([11afc49](https://github.com/uplbtools/room-tba/commit/11afc498dcd78dadc5f5c7cb2b9627a5189ec81b))
+* **rooms:** consolidate approved room aliases ([#986](https://github.com/uplbtools/room-tba/issues/986)) ([fe14c1a](https://github.com/uplbtools/room-tba/commit/fe14c1a0e559f61ba58595a7637affa2712e543b))
+
 # [2.18.0](https://github.com/uplbtools/room-tba/compare/v2.17.0...v2.18.0) (2026-08-11)
 
 

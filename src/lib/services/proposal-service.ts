@@ -25,6 +25,7 @@ import { parseImageUrl } from "@lib/r2-upload";
 import {
   parseEntityPhotoUrls,
   reconcileEntityPhotos,
+  entityPhotoUrls,
   type ParsedEntityPhotoUrls,
 } from "@lib/entity-photos";
 import { R2_PUBLIC_URL } from "astro:env/server";
@@ -553,11 +554,20 @@ export async function listPendingProposalsForReview(): Promise<
         return { ...row, currentValues: null, currentVersion: null };
       }
       const patch = row.proposedPatch as Record<string, unknown>;
-      const currentValues = Object.fromEntries(
-        Object.keys(patch)
-          .filter((key) => key in current)
-          .map((key) => [key, current[key]]),
-      );
+      const currentValues: Record<string, unknown> = {};
+      for (const key of Object.keys(patch)) {
+        if (key === "photoUrls" && "photos" in current) {
+          currentValues.photoUrls = entityPhotoUrls(current.photos);
+        } else if (
+          key === "photoUrls" &&
+          typeof current.imageUrl === "string" &&
+          current.imageUrl.trim()
+        ) {
+          currentValues.photoUrls = [current.imageUrl];
+        } else if (key in current) {
+          currentValues[key] = current[key];
+        }
+      }
       const version = current.version;
       return {
         ...row,
@@ -718,7 +728,9 @@ export async function submitProposal(
         ...(existing.proposedPatch as Record<string, unknown>),
         ...input.patch,
       }
-    : input.patch;
+    : { ...input.patch };
+
+  normalizeProposalPhotoPatch(input.entityType, mergedPatch);
 
   if (isCreate) {
     validateCreateProposalPatch(input.entityType, mergedPatch);
@@ -827,6 +839,46 @@ const IMAGE_PATCH_ENTITY_LABELS: Readonly<Record<string, string>> = {
   create_room: "Room photos",
   create_dorm: "Dorm photos",
 };
+
+function normalizeProposalPhotoPatch(
+  entityType: ProposalEntityType,
+  patch: Record<string, unknown>,
+): void {
+  const label = IMAGE_PATCH_ENTITY_LABELS[entityType];
+  if (label) {
+    if (EVENT_IMAGE_ENTITY_TYPES[entityType] && "imageUrl" in patch) {
+      const parsed = parseImageUrl(patch.imageUrl, R2_PUBLIC_URL, label);
+      if (!parsed.ok) throw new ProposalValidationError(parsed.error);
+      if (parsed.provided) patch.imageUrl = parsed.imageUrl;
+    } else if (!EVENT_IMAGE_ENTITY_TYPES[entityType]) {
+      const parsed = parseEntityPhotoUrls(patch.photoUrls, R2_PUBLIC_URL);
+      if (!parsed.ok) {
+        throw new ProposalValidationError(`${label}: ${parsed.error}`);
+      }
+      if (parsed.provided) patch.photoUrls = parsed.photoUrls;
+    }
+  }
+
+  if (entityType !== "create_building" || !Array.isArray(patch.rooms)) {
+    return;
+  }
+  patch.rooms = patch.rooms.map((entry) => {
+    if (!entry || typeof entry !== "object" || !("photoUrls" in entry)) {
+      return entry;
+    }
+    const roomCode =
+      "roomCode" in entry && typeof entry.roomCode === "string"
+        ? entry.roomCode
+        : "room";
+    const parsed = parseEntityPhotoUrls(entry.photoUrls, R2_PUBLIC_URL);
+    if (!parsed.ok) {
+      throw new ProposalValidationError(
+        `${label ?? "Bundled room photos"} (${roomCode}): ${parsed.error}`,
+      );
+    }
+    return parsed.provided ? { ...entry, photoUrls: parsed.photoUrls } : entry;
+  });
+}
 
 const EVENT_IMAGE_ENTITY_TYPES: Readonly<Record<string, true>> = {
   event: true,

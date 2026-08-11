@@ -55,6 +55,7 @@ const REVERTABLE_FIELDS: Record<string, string[]> = {
     "buildingType",
     "directions",
     "imageUrl",
+    "photos",
   ],
   room: [
     "roomCode",
@@ -63,6 +64,7 @@ const REVERTABLE_FIELDS: Record<string, string[]> = {
     "collegeId",
     "divisionId",
     "imageUrl",
+    "photos",
   ],
   college: ["collegeName"],
   division: ["divisionName", "collegeId"],
@@ -83,6 +85,7 @@ const REVERTABLE_FIELDS: Record<string, string[]> = {
     "contactPhone",
     "facebookLink",
     "imageUrl",
+    "photos",
   ],
   // Scalar fields only; locations/routes restore is out of scope for v1.
   event: [

@@ -23,7 +23,7 @@ import { sanitizeCrFacilities } from "@constants/cr-facilities";
 import { normalizePlaceCategory } from "@constants/place-categories";
 import { normalizeRoomCategory } from "@constants/room-categories";
 import { db } from "@lib/db";
-import type { EntityPhoto } from "@lib/entity-photos";
+import { normalizeEntityPhotos, type EntityPhoto } from "@lib/entity-photos";
 import {
   buildingIsrPath,
   collegeIsrPath,
@@ -38,6 +38,10 @@ import type { EventData, PlaceData, RoomData } from "@lib/types";
 import { EditConflictError } from "./edit-conflict-error";
 
 export { EditConflictError } from "./edit-conflict-error";
+
+function normalizePhotoInput(photos?: EntityPhoto[]): EntityPhoto[] {
+  return normalizeEntityPhotos(photos ?? []);
+}
 
 // ── Sync key refresh ──
 
@@ -418,8 +422,9 @@ export async function updateRoom(
   if (input.divisionId !== undefined)
     updates.divisionId = input.divisionId ?? null;
   if (input.photos !== undefined) {
-    updates.photos = input.photos;
-    updates.imageUrl = input.photos[0]?.url ?? null;
+    const photos = normalizePhotoInput(input.photos);
+    updates.photos = photos;
+    updates.imageUrl = photos[0]?.url ?? null;
   }
   if (input.category !== undefined)
     updates.category = normalizeRoomCategory(input.category);
@@ -491,6 +496,7 @@ export async function createRoom(
   input: RoomCreateInput,
   editedBy = "admin",
 ): Promise<RoomData | null> {
+  const photos = normalizePhotoInput(input.photos);
   const [inserted] = await db
     .insert(roomsTable)
     .values({
@@ -499,8 +505,8 @@ export async function createRoom(
       buildingId: input.buildingId ?? null,
       collegeId: input.collegeId ?? null,
       divisionId: input.divisionId ?? null,
-      photos: input.photos ?? [],
-      imageUrl: input.photos?.[0]?.url ?? null,
+      photos,
+      imageUrl: photos[0]?.url ?? null,
     })
     .returning({ id: roomsTable.id });
 
@@ -725,8 +731,9 @@ export async function updateBuilding(
     updates.buildingType = input.buildingType;
   if (input.directions !== undefined) updates.directions = input.directions;
   if (input.photos !== undefined) {
-    updates.photos = input.photos;
-    updates.imageUrl = input.photos[0]?.url ?? null;
+    const photos = normalizePhotoInput(input.photos);
+    updates.photos = photos;
+    updates.imageUrl = photos[0]?.url ?? null;
   }
   if (input.crFacilities !== undefined)
     updates.crFacilities = sanitizeCrFacilities(input.crFacilities);
@@ -803,6 +810,7 @@ export async function createBuilding(
   input: BuildingCreateInput,
   editedBy = "admin",
 ): Promise<BuildingAdmin | null> {
+  const photos = normalizePhotoInput(input.photos);
   const [inserted] = await db
     .insert(buildingsTable)
     .values({
@@ -811,8 +819,8 @@ export async function createBuilding(
       lon: input.lon,
       buildingType: input.buildingType ?? "non-admin",
       directions: input.directions?.trim() ?? "",
-      photos: input.photos ?? [],
-      imageUrl: input.photos?.[0]?.url ?? null,
+      photos,
+      imageUrl: photos[0]?.url ?? null,
     })
     .returning();
 
@@ -1079,8 +1087,9 @@ export async function updateDorm(
     }
   }
   if (input.photos !== undefined) {
-    updates.photos = input.photos;
-    updates.imageUrl = input.photos[0]?.url ?? null;
+    const photos = normalizePhotoInput(input.photos);
+    updates.photos = photos;
+    updates.imageUrl = photos[0]?.url ?? null;
   }
   // Clearing the policy in the editor sends "", which would store an empty
   // string that reads as "recorded, and it is nothing". Null is the honest
@@ -1225,6 +1234,7 @@ export async function createDorm(
   input: DormCreateInput,
   editedBy = "admin",
 ): Promise<DormAdmin | null> {
+  const photos = normalizePhotoInput(input.photos);
   const [inserted] = await db
     .insert(dormsTable)
     .values({
@@ -1243,8 +1253,8 @@ export async function createDorm(
       priceRange: input.priceRange ?? null,
       contactPhone: input.contactPhone ?? null,
       facebookLink: input.facebookLink ?? null,
-      photos: input.photos ?? [],
-      imageUrl: input.photos?.[0]?.url ?? null,
+      photos,
+      imageUrl: photos[0]?.url ?? null,
     })
     .returning();
 

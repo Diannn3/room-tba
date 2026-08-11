@@ -107,6 +107,14 @@ export const PATCH: APIRoute = async ({ cookies, params, request }) => {
   if (!parsedVersion.ok) return parsedVersion.response;
   const expectedVersion = parsedVersion.version;
 
+  const hasRoomFieldUpdates =
+    body.roomCode !== undefined ||
+    body.directions !== undefined ||
+    body.buildingId !== undefined ||
+    body.collegeId !== undefined ||
+    body.divisionId !== undefined ||
+    parsedPhotoUrls.provided;
+
   try {
     const updates: Parameters<typeof updateRoom>[1] = {};
     if (body.roomCode !== undefined) updates.roomCode = body.roomCode.trim();

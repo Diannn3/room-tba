@@ -766,6 +766,46 @@ const IMAGE_PATCH_ENTITY_LABELS: Readonly<Record<string, string>> = {
 	create_dorm: 'Dorm image'
 };
 
+function normalizeProposalPhotoPatch(
+  entityType: ProposalEntityType,
+  patch: Record<string, unknown>,
+): void {
+  const label = IMAGE_PATCH_ENTITY_LABELS[entityType];
+  if (label) {
+    if (EVENT_IMAGE_ENTITY_TYPES[entityType] && "imageUrl" in patch) {
+      const parsed = parseImageUrl(patch.imageUrl, R2_PUBLIC_URL, label);
+      if (!parsed.ok) throw new ProposalValidationError(parsed.error);
+      if (parsed.provided) patch.imageUrl = parsed.imageUrl;
+    } else if (!EVENT_IMAGE_ENTITY_TYPES[entityType]) {
+      const parsed = parseEntityPhotoUrls(patch.photoUrls, R2_PUBLIC_URL);
+      if (!parsed.ok) {
+        throw new ProposalValidationError(`${label}: ${parsed.error}`);
+      }
+      if (parsed.provided) patch.photoUrls = parsed.photoUrls;
+    }
+  }
+
+  if (entityType !== "create_building" || !Array.isArray(patch.rooms)) {
+    return;
+  }
+  patch.rooms = patch.rooms.map((entry) => {
+    if (!entry || typeof entry !== "object" || !("photoUrls" in entry)) {
+      return entry;
+    }
+    const roomCode =
+      "roomCode" in entry && typeof entry.roomCode === "string"
+        ? entry.roomCode
+        : "room";
+    const parsed = parseEntityPhotoUrls(entry.photoUrls, R2_PUBLIC_URL);
+    if (!parsed.ok) {
+      throw new ProposalValidationError(
+        `${label ?? "Bundled room photos"} (${roomCode}): ${parsed.error}`,
+      );
+    }
+    return parsed.provided ? { ...entry, photoUrls: parsed.photoUrls } : entry;
+  });
+}
+
 const EVENT_IMAGE_ENTITY_TYPES: Readonly<Record<string, true>> = {
   event: true,
   create_event: true,

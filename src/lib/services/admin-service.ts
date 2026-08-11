@@ -41,6 +41,10 @@ import { getEventById } from './event-service';
 
 export { EditConflictError } from './edit-conflict-error';
 
+function normalizePhotoInput(photos?: EntityPhoto[]): EntityPhoto[] {
+  return normalizeEntityPhotos(photos ?? []);
+}
+
 // ── Sync key refresh ──
 
 export class DuplicateSlugError extends Error {

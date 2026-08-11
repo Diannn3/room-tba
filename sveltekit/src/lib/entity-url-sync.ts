@@ -1,23 +1,23 @@
-import type { JeepneyRoute } from "$lib/constants/jeepney-routes";
-import type { AppContextData } from "./context";
+import type { JeepneyRoute } from '$lib/constants/jeepney-routes';
+import type { AppContextData } from './context';
 import {
 	getEntityCanonicalPath,
 	normalizePathname,
 	parseEntityPathname,
 	parseRouteSlug,
 	type RoutableQueryState,
-	resolveQueryFromEntityPath,
-} from "./entity-urls";
-import { getLocalRoomById } from "./local/data/utils";
-import { currentRoom, termStore } from "./store.svelte";
-import { parseTermIdFromSearch, withTermQuery } from "./term-url";
+	resolveQueryFromEntityPath
+} from './entity-urls';
+import { getLocalRoomById } from './local/data/utils';
+import { currentRoom, termStore } from './store.svelte';
+import { parseTermIdFromSearch, withTermQuery } from './term-url';
 import {
 	getTransitRoutePath,
 	getTransitStopPath,
 	parseTransitPathname,
 	TRANSIT_INDEX_PATH,
-	type TransitPath,
-} from "./transit-urls";
+	type TransitPath
+} from './transit-urls';
 
 type EntityHistoryState = {
 	rtbaEntity?: true;
@@ -46,15 +46,15 @@ export type EntityUrlSyncSnapshot = RoutableQueryState & {
 	transitRoute: JeepneyRoute | null;
 };
 
-const HOME_PATH = "/";
+const HOME_PATH = '/';
 // Full-screen overlays that own the URL while open (see the planner deep-link
 // notes: bare island props, trailing slash, and the SW denylist in
 // astro.config.mjs must cover each path here).
 const SCREEN_PATHS = {
-	today: "/today",
-	planner: "/planner",
-	finals: "/final-exams",
-	calendar: "/calendar",
+	today: '/today',
+	planner: '/planner',
+	finals: '/final-exams',
+	calendar: '/calendar'
 } as const;
 export type ScreenId = keyof typeof SCREEN_PATHS;
 
@@ -67,17 +67,16 @@ export function isScreenId(value: string): value is ScreenId {
  * Only schedule-bearing surfaces carry ?term=. Establishments, offices/units,
  * landmarks, orgs, dorms, etc. are term-less; their URLs stay clean (#term-urls).
  */
-function isTermAwareCategory(
-	category: RoutableQueryState["category"] | null,
-): boolean {
-	return category === "room" || category === "class";
+function isTermAwareCategory(category: RoutableQueryState['category'] | null): boolean {
+	return category === 'room' || category === 'class';
 }
 // currentPathname() runs through normalizePathname (adds a trailing slash), so
 // compare against the normalized form, not the raw "/planner".
 const SCREEN_BY_NORMALIZED_PATH = new Map(
-	(Object.entries(SCREEN_PATHS) as [ScreenId, string][]).map(
-		([screen, path]) => [normalizePathname(path), screen],
-	),
+	(Object.entries(SCREEN_PATHS) as [ScreenId, string][]).map(([screen, path]) => [
+		normalizePathname(path),
+		screen
+	])
 );
 
 export function createEntityUrlSync(context: EntityUrlSyncContext) {
@@ -90,27 +89,23 @@ export function createEntityUrlSync(context: EntityUrlSyncContext) {
 
 	function buildHistoryState(
 		query: RoutableQueryState | null,
-		browsePath = HOME_PATH,
+		browsePath = HOME_PATH
 	): EntityHistoryState {
-		return query
-			? { rtbaEntity: true, query, browsePath }
-			: { rtbaEntity: true, browsePath };
+		return query ? { rtbaEntity: true, query, browsePath } : { rtbaEntity: true, browsePath };
 	}
 
 	function resolvePathForQuery(query: RoutableQueryState) {
 		const appData = context.getAppData();
 		const dorm =
-			query.category === "dorm"
-				? (appData.dorms?.find((entry) => entry.dormName === query.value) ??
-					null)
+			query.category === 'dorm'
+				? (appData.dorms?.find((entry) => entry.dormName === query.value) ?? null)
 				: null;
 		const organization =
-			query.category === "organization"
-				? (appData.organizations?.find((entry) => entry.name === query.value) ??
-					null)
+			query.category === 'organization'
+				? (appData.organizations?.find((entry) => entry.name === query.value) ?? null)
 				: null;
 		const place =
-			query.category === "place"
+			query.category === 'place'
 				? (appData.places?.find((entry) => entry.name === query.value) ?? null)
 				: null;
 
@@ -118,12 +113,12 @@ export function createEntityUrlSync(context: EntityUrlSyncContext) {
 			room: currentRoom.value,
 			dorm,
 			organization,
-			place,
+			place
 		});
 	}
 
 	async function hydrateRoomSelection(query: RoutableQueryState) {
-		if (query.category !== "room") return;
+		if (query.category !== 'room') return;
 		if (currentRoom.value?.code.toUpperCase() === query.value.toUpperCase()) {
 			return;
 		}
@@ -137,15 +132,15 @@ export function createEntityUrlSync(context: EntityUrlSyncContext) {
 			return;
 		}
 
-		if (parsed.category === "room") {
+		if (parsed.category === 'room') {
 			const { id } = parseRouteSlug(parsed.slug);
 			if (id === null) return;
 			const localRoom = await getLocalRoomById(id);
 			if (!localRoom) return;
 			const query: RoutableQueryState = {
-				type: "result",
-				category: "room",
-				value: localRoom.code,
+				type: 'result',
+				category: 'room',
+				value: localRoom.code
 			};
 			context.hydrateQuery(query);
 			currentRoom.setRoom(localRoom);
@@ -159,18 +154,18 @@ export function createEntityUrlSync(context: EntityUrlSyncContext) {
 			divisions: appData.divisions,
 			dorms: appData.dorms,
 			organizations: appData.organizations,
-			places: appData.places,
+			places: appData.places
 		});
 
 		if (!resolved) return;
 
-		if (parsed.category === "event") {
+		if (parsed.category === 'event') {
 			const event = appData.events?.find((entry) => entry.slug === parsed.slug);
 			context.hydrateQuery({
-				type: "result",
-				category: "event",
+				type: 'result',
+				category: 'event',
 				value: event?.title ?? parsed.slug,
-				eventSlug: parsed.slug,
+				eventSlug: parsed.slug
 			});
 			return;
 		}
@@ -184,9 +179,7 @@ export function createEntityUrlSync(context: EntityUrlSyncContext) {
 		try {
 			termStore.applyFromUrl();
 			// Back/forward into or out of /today, /planner, /final-exams toggles it.
-			context.setScreen(
-				SCREEN_BY_NORMALIZED_PATH.get(currentPathname()) ?? null,
-			);
+			context.setScreen(SCREEN_BY_NORMALIZED_PATH.get(currentPathname()) ?? null);
 			const transit = parseTransitPathname(currentPathname());
 			if (transit) {
 				context.setTransit(transit);
@@ -212,7 +205,7 @@ export function createEntityUrlSync(context: EntityUrlSyncContext) {
 	}
 
 	function init() {
-		if (initialized || typeof window === "undefined") return;
+		if (initialized || typeof window === 'undefined') return;
 		initialized = true;
 
 		const pathname = currentPathname();
@@ -220,34 +213,29 @@ export function createEntityUrlSync(context: EntityUrlSyncContext) {
 		if (transit) context.setTransit(transit);
 		const query = context.getQuerySnapshot();
 		const initialState = buildHistoryState(
-			transit
-				? null
-				: query.type === "result" && query.category !== null
-					? query
-					: null,
-			HOME_PATH,
+			transit ? null : query.type === 'result' && query.category !== null ? query : null,
+			HOME_PATH
 		);
 
 		const initialTermAware =
 			pathname === HOME_PATH ||
 			SCREEN_BY_NORMALIZED_PATH.has(pathname) ||
-			pathname.startsWith("/room/");
+			pathname.startsWith('/room/');
 		const initialPath = initialTermAware
 			? withTermQuery(
 					pathname,
-					parseTermIdFromSearch(window.location.search) ??
-						termStore.activeTermId,
-					termStore.defaultTermId,
+					parseTermIdFromSearch(window.location.search) ?? termStore.activeTermId,
+					termStore.defaultTermId
 				)
 			: pathname;
 
 		// window.history.replaceState(initialState, "", initialPath);
-		window.addEventListener("popstate", handlePopState);
+		window.addEventListener('popstate', handlePopState);
 	}
 
 	function destroy() {
-		if (!initialized || typeof window === "undefined") return;
-		window.removeEventListener("popstate", handlePopState);
+		if (!initialized || typeof window === 'undefined') return;
+		window.removeEventListener('popstate', handlePopState);
 		initialized = false;
 	}
 
@@ -261,23 +249,22 @@ export function createEntityUrlSync(context: EntityUrlSyncContext) {
 			const screenPath = withTermQuery(
 				SCREEN_PATHS[snapshot.screen],
 				snapshot.termId,
-				snapshot.defaultTermId,
+				snapshot.defaultTermId
 			);
-			const screenSearch = screenPath.includes("?")
-				? screenPath.slice(screenPath.indexOf("?"))
-				: "";
+			const screenSearch = screenPath.includes('?')
+				? screenPath.slice(screenPath.indexOf('?'))
+				: '';
 			if (
-				currentPathname() !==
-					normalizePathname(SCREEN_PATHS[snapshot.screen]) ||
+				currentPathname() !== normalizePathname(SCREEN_PATHS[snapshot.screen]) ||
 				window.location.search !== screenSearch
 			) {
 				const carried =
-					snapshot.type === "result" && snapshot.category !== null
+					snapshot.type === 'result' && snapshot.category !== null
 						? {
-								type: "result" as const,
+								type: 'result' as const,
 								category: snapshot.category,
 								value: snapshot.value,
-								eventSlug: snapshot.eventSlug,
+								eventSlug: snapshot.eventSlug
 							}
 						: null;
 				// window.history.pushState(
@@ -290,20 +277,18 @@ export function createEntityUrlSync(context: EntityUrlSyncContext) {
 		}
 
 		const transitBrowse =
-			snapshot.type === "result" &&
-			snapshot.category === "browse" &&
-			snapshot.value === "jeepney";
+			snapshot.type === 'result' && snapshot.category === 'browse' && snapshot.value === 'jeepney';
 		if (transitBrowse) {
 			const transitPath = snapshot.transitRouteId
 				? snapshot.transitStopIndex !== null
 					? getTransitStopPath(
 							snapshot.transitRouteId,
 							snapshot.transitStopIndex,
-							snapshot.transitRoute ?? undefined,
+							snapshot.transitRoute ?? undefined
 						)
 					: getTransitRoutePath(snapshot.transitRouteId)
 				: TRANSIT_INDEX_PATH;
-			if (currentPathname() !== transitPath || window.location.search !== "") {
+			if (currentPathname() !== transitPath || window.location.search !== '') {
 				// window.history.pushState(
 				// 	buildHistoryState(null, transitPath),
 				// 	"",
@@ -313,17 +298,11 @@ export function createEntityUrlSync(context: EntityUrlSyncContext) {
 			return;
 		}
 
-		if (snapshot.type !== "result" || snapshot.category === null) {
+		if (snapshot.type !== 'result' || snapshot.category === null) {
 			const pathname = currentPathname();
-			const homePath = withTermQuery(
-				HOME_PATH,
-				snapshot.termId,
-				snapshot.defaultTermId,
-			);
-			const homePathname = homePath.split("?")[0] ?? HOME_PATH;
-			const homeSearch = homePath.includes("?")
-				? homePath.slice(homePath.indexOf("?"))
-				: "";
+			const homePath = withTermQuery(HOME_PATH, snapshot.termId, snapshot.defaultTermId);
+			const homePathname = homePath.split('?')[0] ?? HOME_PATH;
+			const homeSearch = homePath.includes('?') ? homePath.slice(homePath.indexOf('?')) : '';
 			if (pathname !== homePathname || window.location.search !== homeSearch) {
 				// window.history.pushState(
 				// 	buildHistoryState(null, HOME_PATH),
@@ -343,12 +322,10 @@ export function createEntityUrlSync(context: EntityUrlSyncContext) {
 		const pathname = currentPathname();
 		const currentSearch = window.location.search;
 		const targetPath = pathWithTerm;
-		const targetSearch = targetPath.includes("?")
-			? targetPath.slice(targetPath.indexOf("?"))
-			: "";
+		const targetSearch = targetPath.includes('?') ? targetPath.slice(targetPath.indexOf('?')) : '';
 		const targetPathname = targetPath.slice(
 			0,
-			targetPath.indexOf("?") >= 0 ? targetPath.indexOf("?") : undefined,
+			targetPath.indexOf('?') >= 0 ? targetPath.indexOf('?') : undefined
 		);
 
 		if (pathname === targetPathname && currentSearch === targetSearch) {
@@ -356,10 +333,10 @@ export function createEntityUrlSync(context: EntityUrlSyncContext) {
 		}
 
 		const historyQuery: RoutableQueryState = {
-			type: "result",
+			type: 'result',
 			category: snapshot.category,
 			value: snapshot.value,
-			eventSlug: snapshot.eventSlug,
+			eventSlug: snapshot.eventSlug
 		};
 
 		// window.history.pushState(
@@ -372,6 +349,6 @@ export function createEntityUrlSync(context: EntityUrlSyncContext) {
 	return {
 		init,
 		destroy,
-		syncFromQuery,
+		syncFromQuery
 	};
 }

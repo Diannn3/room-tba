@@ -43,6 +43,7 @@ export type RecentSearch = {
 	category: Exclude<QueryStoreState['category'], null>;
 	value: string;
 	eventSlug?: string;
+	id?: number;
 };
 
 export type FloatingControlPanel = 'legend' | 'building-type' | 'terrain' | 'admin';

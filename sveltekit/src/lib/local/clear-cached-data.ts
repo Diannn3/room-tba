@@ -13,15 +13,15 @@
  * so it cannot import this file. Keep the two in step by hand.
  */
 
-import { clearMapCaches } from "$lib/local/offline-maps";
-import { closeLocalDB } from "$lib/local/data/pgliteDB";
-import { invalidateLocalSyncKeys } from "$lib/local/data/invalidate-sync-key";
-import { getSyncKeysFromLs } from "$lib/local/data/sync-keys";
-import { PLANNER_LS_KEY } from "$lib/stores/store-types";
-import { FOLLOW_PROMPT_KEY } from "$lib/social-follow";
+import { clearMapCaches } from '$lib/local/offline-maps';
+import { closeLocalDB } from '$lib/local/data/pgliteDB';
+import { invalidateLocalSyncKeys } from '$lib/local/data/invalidate-sync-key';
+import { getSyncKeysFromLs } from '$lib/local/data/sync-keys';
+import { PLANNER_LS_KEY } from '$lib/stores/store-types';
+import { FOLLOW_PROMPT_KEY } from '$lib/social-follow';
 
 /** IndexedDB database behind PGlite's `idb://site-data` (emscripten IDBFS mounts at `/pglite/<dataDir>`). */
-export const PGLITE_IDB_NAME = "/pglite/site-data";
+export const PGLITE_IDB_NAME = '/pglite/site-data';
 
 /**
  * localStorage keys a clear must leave alone. The planner key is the user's
@@ -30,36 +30,36 @@ export const PGLITE_IDB_NAME = "/pglite/site-data";
  * and re-asking someone who already said no is the one outcome worth avoiding.
  */
 export const PRESERVED_LOCAL_KEYS = [
-  PLANNER_LS_KEY,
-  "hideLandingModal",
-  "recent-search",
-  "sidebar-expanded",
-  FOLLOW_PROMPT_KEY,
+	PLANNER_LS_KEY,
+	'hideLandingModal',
+	'recent-search',
+	'sidebar-expanded',
+	FOLLOW_PROMPT_KEY
 ] as const;
 
 /** A failed step must not abort the rest of the clear. */
 async function step(label: string, run: () => Promise<void> | void) {
-  try {
-    await run();
-  } catch (error) {
-    console.error(`Clear cached data: ${label} failed`, error);
-  }
+	try {
+		await run();
+	} catch (error) {
+		console.error(`Clear cached data: ${label} failed`, error);
+	}
 }
 
 async function unregisterServiceWorkers(): Promise<void> {
-  if (!navigator.serviceWorker) return;
-  const registrations = await navigator.serviceWorker.getRegistrations();
-  await Promise.all(registrations.map((reg) => reg.unregister()));
+	if (!navigator.serviceWorker) return;
+	const registrations = await navigator.serviceWorker.getRegistrations();
+	await Promise.all(registrations.map((reg) => reg.unregister()));
 }
 
 /** App shell, workbox precache, `map-tiles`, `map-assets` — everything on this origin. */
 async function deleteCacheStorage(): Promise<void> {
-  if (!("caches" in window)) return;
-  // Named drop of the downloaded offline maps first, so the intent survives
-  // even if the sweep below is ever narrowed to a prefix.
-  await clearMapCaches();
-  const keys = await caches.keys();
-  await Promise.all(keys.map((key) => caches.delete(key)));
+	if (!('caches' in window)) return;
+	// Named drop of the downloaded offline maps first, so the intent survives
+	// even if the sweep below is ever narrowed to a prefix.
+	await clearMapCaches();
+	const keys = await caches.keys();
+	await Promise.all(keys.map((key) => caches.delete(key)));
 }
 
 /**
@@ -70,21 +70,21 @@ async function deleteCacheStorage(): Promise<void> {
  * does anyway; hanging here would strand the user on a spinner.
  */
 async function deletePgliteDatabase(): Promise<void> {
-  if (typeof indexedDB === "undefined") return;
-  await closeLocalDB();
-  await new Promise<void>((resolve) => {
-    const request = indexedDB.deleteDatabase(PGLITE_IDB_NAME);
-    request.onsuccess = () => resolve();
-    request.onerror = () => resolve();
-    request.onblocked = () => resolve();
-  });
+	if (typeof indexedDB === 'undefined') return;
+	await closeLocalDB();
+	await new Promise<void>((resolve) => {
+		const request = indexedDB.deleteDatabase(PGLITE_IDB_NAME);
+		request.onsuccess = () => resolve();
+		request.onerror = () => resolve();
+		request.onblocked = () => resolve();
+	});
 }
 
 /** Forget every cached sync key so the next fetch pulls fresh server rows. */
 function clearSyncKeys(): void {
-  if (typeof localStorage === "undefined") return;
-  const syncKeys = getSyncKeysFromLs();
-  if (syncKeys) invalidateLocalSyncKeys(Object.keys(syncKeys));
+	if (typeof localStorage === 'undefined') return;
+	const syncKeys = getSyncKeysFromLs();
+	if (syncKeys) invalidateLocalSyncKeys(Object.keys(syncKeys));
 }
 
 /**
@@ -95,8 +95,8 @@ function clearSyncKeys(): void {
  * Does **not** reload; the caller owns that.
  */
 export async function clearCachedData(): Promise<void> {
-  await step("service worker unregister", unregisterServiceWorkers);
-  await step("cache storage", deleteCacheStorage);
-  await step("campus database", deletePgliteDatabase);
-  await step("sync keys", clearSyncKeys);
+	await step('service worker unregister', unregisterServiceWorkers);
+	await step('cache storage', deleteCacheStorage);
+	await step('campus database', deletePgliteDatabase);
+	await step('sync keys', clearSyncKeys);
 }

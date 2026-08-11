@@ -1,158 +1,159 @@
 <script lang="ts">
-  import LoadingIndicator from "$lib/components/LoadingIndicator.svelte";
-  import { getAppData } from "$lib/context";
-  import {
-    getJSONFetch,
-    searchLocalAliases,
-    searchLocalRooms,
-  } from "$lib/local/data/utils";
-  import { buildEntitySuggestions } from "$lib/search-suggestions";
-  import {
-    queryStore,
-    buildingTypeFilter,
-    classVenuesStore,
-  } from "$lib/store.svelte";
-  import {
-    buildingMatchesTypeFilter,
-    dormMatchesTypeFilter,
-  } from "$lib/constants/building-types";
-  import SearchQuerySuggestion from "./SearchQuerySuggestion.svelte";
-  import FinalExamSuggestion from "./FinalExamSuggestion.svelte";
-  import Suggestion from "./Suggestion.svelte";
+import LoadingIndicator from "$lib/components/LoadingIndicator.svelte";
+import {
+	buildingMatchesTypeFilter,
+	dormMatchesTypeFilter,
+} from "$lib/constants/building-types";
+import { getAppData } from "$lib/context";
+import {
+	getJSONFetch,
+	searchLocalAliases,
+	searchLocalRooms,
+} from "$lib/local/data/utils";
+import { buildEntitySuggestions } from "$lib/search-suggestions";
+import {
+	buildingTypeFilter,
+	classVenuesStore,
+	queryStore,
+} from "$lib/store.svelte";
+import FinalExamSuggestion from "./FinalExamSuggestion.svelte";
+import SearchQuerySuggestion from "./SearchQuerySuggestion.svelte";
+import Suggestion from "./Suggestion.svelte";
 
-  const appData = getAppData();
-  const {
-    buildings,
-    colleges,
-    divisions,
-    dorms,
-    events,
-    organizations,
-    places,
-    loaded,
-  } = $derived(appData());
+const appData = getAppData();
+const {
+	buildings,
+	colleges,
+	divisions,
+	dorms,
+	events,
+	organizations,
+	places,
+	loaded,
+} = $derived(appData());
 
-  const filteredDorms = $derived.by(() => {
-    if (!loaded) return [];
-    return dorms.filter((dorm) =>
-      dormMatchesTypeFilter(dorm, buildingTypeFilter.value),
-    );
-  });
-  const filteredBuildings = $derived.by(() => {
-    if (!loaded) return [];
-    return buildings.filter((building) =>
-      buildingMatchesTypeFilter(
-        building,
-        buildingTypeFilter.value,
-        classVenuesStore.buildingIdsWithClasses,
-      ),
-    );
-  });
+const filteredDorms = $derived.by(() => {
+	if (!loaded) return [];
+	return dorms.filter((dorm) =>
+		dormMatchesTypeFilter(dorm, buildingTypeFilter.value),
+	);
+});
+const filteredBuildings = $derived.by(() => {
+	if (!loaded) return [];
+	return buildings.filter((building) =>
+		buildingMatchesTypeFilter(
+			building,
+			buildingTypeFilter.value,
+			classVenuesStore.buildingIdsWithClasses,
+		),
+	);
+});
 
-  const suggestedResult = $derived.by(() =>
-    buildEntitySuggestions(queryStore.inputValue, {
-      loaded,
-      filteredBuildings,
-      filteredDorms,
-      colleges: colleges ?? [],
-      divisions: divisions ?? [],
-      events: events ?? [],
-      organizations: organizations ?? [],
-      places: places ?? [],
-    }),
-  );
+const suggestedResult = $derived.by(() =>
+	buildEntitySuggestions(queryStore.inputValue, {
+		loaded,
+		filteredBuildings,
+		filteredDorms,
+		colleges: colleges ?? [],
+		divisions: divisions ?? [],
+		events: events ?? [],
+		organizations: organizations ?? [],
+		places: places ?? [],
+	}),
+);
 
-  type AliasHit = { alias: string; value: string };
-  type RoomHit = {
-    value: string;
-    category: "room";
-    fullName?: string | null;
-  };
+type AliasHit = { alias: string; value: string };
+type RoomHit = {
+	value: string;
+	category: "room";
+	fullName?: string | null;
+};
 
-  let aliasResults = $state<AliasHit[]>([]);
-  let roomResults = $state<RoomHit[]>([]);
-  let roomLoading = $state(false);
+let aliasResults = $state<AliasHit[]>([]);
+let roomResults = $state<RoomHit[]>([]);
+let roomLoading = $state(false);
 
-  $effect(() => {
-    const trimmed = queryStore.inputValue.trim();
-    if (trimmed === "") {
-      aliasResults = [];
-      return;
-    }
+$effect(() => {
+	const trimmed = queryStore.inputValue.trim();
+	if (trimmed === "") {
+		aliasResults = [];
+		return;
+	}
 
-    let cancelled = false;
-    void (async () => {
-      try {
-        const res = await getJSONFetch<{
-          data: { alias: string; value: string | null }[];
-        }>(`/api/aliases?q=${encodeURIComponent(trimmed)}`);
-        if (cancelled) return;
-        aliasResults = (res.data ?? [])
-          .filter((entry): entry is { alias: string; value: string } =>
-            Boolean(entry.value),
-          )
-          .map((entry) => ({ alias: entry.alias, value: entry.value }));
-      } catch {
-        if (cancelled) return;
-        aliasResults = await searchLocalAliases(trimmed);
-      }
-    })();
+	let cancelled = false;
+	void (async () => {
+		try {
+			const res = await getJSONFetch<{
+				data: { alias: string; value: string | null }[];
+			}>(`/api/aliases?q=${encodeURIComponent(trimmed)}`);
+			if (cancelled) return;
+			aliasResults = (res.data ?? [])
+				.filter((entry): entry is { alias: string; value: string } =>
+					Boolean(entry.value),
+				)
+				.map((entry) => ({ alias: entry.alias, value: entry.value }));
+		} catch {
+			if (cancelled) return;
+			aliasResults = await searchLocalAliases(trimmed);
+		}
+	})();
 
-    return () => {
-      cancelled = true;
-    };
-  });
+	return () => {
+		cancelled = true;
+	};
+});
 
-  $effect(() => {
-    const trimmed = queryStore.inputValue.trim();
-    if (trimmed === "") {
-      roomResults = [];
-      roomLoading = false;
-      return;
-    }
+$effect(() => {
+	const trimmed = queryStore.inputValue.trim();
+	if (trimmed === "") {
+		roomResults = [];
+		roomLoading = false;
+		return;
+	}
 
-    let cancelled = false;
-    roomLoading = true;
-    void (async () => {
-      const upper = trimmed.toUpperCase();
-      const url = `/api/rooms?search_code=${encodeURI(upper)}`;
-      try {
-        const response = await fetch(url);
-        const roomsFetch = (await response.json()) as {
-          data?: { value: string; fullName?: string | null }[] | null;
-        };
-        if (cancelled) return;
-        if (response.ok && Array.isArray(roomsFetch?.data)) {
-          roomResults = roomsFetch.data.map((val) => ({
-            ...val,
-            category: "room" as const,
-          }));
-          roomLoading = false;
-          return;
-        }
-        if (response.status === 404) {
-          roomResults = [];
-          roomLoading = false;
-          return;
-        }
-      } catch {
-        // Network unavailable — fall back to the local PGlite room cache (#169).
-      }
+	let cancelled = false;
+	roomLoading = true;
+	void (async () => {
+		const upper = trimmed.toUpperCase();
+		const url = `/api/rooms?search_code=${encodeURI(upper)}`;
+		try {
+			const response = await fetch(url);
+			const roomsFetch = (await response.json()) as {
+				data?: { value: string; fullName?: string | null }[] | null;
+			};
+			if (cancelled) return;
+			if (response.ok && Array.isArray(roomsFetch?.data)) {
+				roomResults = roomsFetch.data.map((val) => ({
+					...val,
+					category: "room" as const,
+				}));
+				roomLoading = false;
+				return;
+			}
+			if (response.status === 404) {
+				roomResults = [];
+				roomLoading = false;
+				return;
+			}
+		} catch {
+			// Network unavailable — fall back to the local PGlite room cache (#169).
+		}
 
-      if (cancelled) return;
-      const local = await searchLocalRooms(upper);
-      roomResults = local
-        ? local.map((val) => ({ ...val, category: "room" as const }))
-        : [];
-      roomLoading = false;
-    })();
+		if (cancelled) return;
+		const local = await searchLocalRooms(upper);
+		roomResults = local
+			? local.map((val) => ({ ...val, category: "room" as const }))
+			: [];
+		roomLoading = false;
+	})();
 
-    return () => {
-      cancelled = true;
-    };
-  });
+	return () => {
+		cancelled = true;
+	};
+});
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	class="suggestions-container search-suggestions"
 	onmousedown={(event) => event.preventDefault()}
@@ -160,8 +161,8 @@
 	{#if queryStore.inputValue === ''}
 		{#if queryStore.recentSearches.length !== 0}
 			<h2 class="suggestions-header">Recent searches</h2>
-			{#each queryStore.recentSearches as { category, value, eventSlug }, id (id)}
-				<Suggestion {value} {category} {id} {eventSlug} />
+			{#each queryStore.recentSearches as { category, value, eventSlug, id }, index (index)}
+				<Suggestion {value} {category} {eventSlug} entityId={id} recent={true} {index}/>
 			{/each}
 		{/if}
 	{:else if suggestedResult.length !== 0}

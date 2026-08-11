@@ -291,6 +291,7 @@ function handlePlaceMarkerClick(place: PlaceData) {
 		category: "place",
 		type: "result",
 		value: place.name,
+		id: place.id
 	});
 	queryStore.inputValue = place.name;
 	let subroute:"landmarks" | "establishments";
@@ -2704,6 +2705,7 @@ function handleDormMarkerClick(dormName: string, id:number) {
 		category: "dorm",
 		type: "result",
 		value: dormName,
+		id
 	});
 	queryStore.inputValue = dormName;
 	goto(resolve(`/map/dorms/${slugifySegment(dormName)}-${id}`));
@@ -2727,6 +2729,7 @@ function handleOrgMarkerClick(name: string, id: number) {
 		category: "organization",
 		type: "result",
 		value: name,
+		id
 	});
 	queryStore.inputValue = name;
 	goto(resolve(`/map/organizations/${slugifySegment(name)}-${id}`));

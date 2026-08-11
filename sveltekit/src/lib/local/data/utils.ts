@@ -1,10 +1,10 @@
-import type { Results } from "@electric-sql/pglite";
-import type { JeepneyRoute, JeepneyStop } from "$lib/constants/jeepney-routes";
-import type { DBData } from "$lib/context";
-import { refreshStoredEventTiming, sortStoredEvents } from "$lib/event-time";
-import { escapeLikePattern } from "$lib/like-escape";
-import { normalizeAlias } from "$lib/site";
-import { normalizeDormListFields } from "$lib/string-lists";
+import type { Results } from '@electric-sql/pglite';
+import type { JeepneyRoute, JeepneyStop } from '$lib/constants/jeepney-routes';
+import type { DBData } from '$lib/context';
+import { refreshStoredEventTiming, sortStoredEvents } from '$lib/event-time';
+import { escapeLikePattern } from '$lib/like-escape';
+import { normalizeAlias } from '$lib/site';
+import { normalizeDormListFields } from '$lib/string-lists';
 import type {
 	AnnouncementData,
 	BuildingData,
@@ -17,19 +17,13 @@ import type {
 	OrgData,
 	PlaceData,
 	RoomData,
-	TableSyncInfo,
-} from "$lib/types";
-import { ENTITY_FETCH_OPTIONS, fetchJsonWithRetry } from "./fetch-json";
-import { getDB, isLocalCacheReady } from "./pgliteDB";
-import {
-	getLocalBuildingRooms,
-	getLocalCollegeRooms,
-	getLocalDivisionRooms,
-} from "./sync";
+	TableSyncInfo
+} from '$lib/types';
+import { ENTITY_FETCH_OPTIONS, fetchJsonWithRetry } from './fetch-json';
+import { getDB, isLocalCacheReady } from './pgliteDB';
+import { getLocalBuildingRooms, getLocalCollegeRooms, getLocalDivisionRooms } from './sync';
 
-export async function getLocalJeepneyRoutes(): Promise<
-	JeepneyRoute[] | undefined
-> {
+export async function getLocalJeepneyRoutes(): Promise<JeepneyRoute[] | undefined> {
 	try {
 		const localDB = await getDB();
 		await localDB.waitReady;
@@ -53,7 +47,7 @@ export async function getLocalJeepneyRoutes(): Promise<
         SELECT id, route_id AS "routeId", name, description, lat, lon,
           sort_order AS "sortOrder", version, updated_at AS "updatedAt"
         FROM jeepney_stops ORDER BY route_id, sort_order;
-      `) as Promise<Results<JeepneyStop & { routeId: string }>>,
+      `) as Promise<Results<JeepneyStop & { routeId: string }>>
 		]);
 		return routes.rows.map((route) => ({
 			id: route.id,
@@ -63,11 +57,11 @@ export async function getLocalJeepneyRoutes(): Promise<
 			color: route.color,
 			fare: {
 				regular: route.fareRegular,
-				discounted: route.fareDiscounted,
+				discounted: route.fareDiscounted
 			},
 			stops: stops.rows
 				.filter((stop) => stop.routeId === route.id)
-				.map(({ routeId: _, ...stop }) => stop),
+				.map(({ routeId: _, ...stop }) => stop)
 		}));
 	} catch {
 		return undefined;
@@ -83,7 +77,7 @@ export async function getLocalBuildings(): Promise<BuildingData[] | undefined> {
       `)) as Results<BuildingData>;
 		return data.rows;
 	} catch (e) {
-		console.error("Error: ", e);
+		console.error('Error: ', e);
 		return undefined;
 	}
 }
@@ -97,7 +91,7 @@ export async function getLocalColleges(): Promise<CollegeData[] | undefined> {
       `)) as Results<CollegeData>;
 		return data.rows;
 	} catch (e) {
-		console.error("Error: ", e);
+		console.error('Error: ', e);
 		return undefined;
 	}
 }
@@ -111,7 +105,7 @@ export async function getLocalDivisions(): Promise<DivisionData[] | undefined> {
       `)) as Results<DivisionData>;
 		return data.rows;
 	} catch (e) {
-		console.error("Error: ", e);
+		console.error('Error: ', e);
 		return undefined;
 	}
 }
@@ -145,7 +139,7 @@ export async function getLocalDorms(): Promise<DormData[] | undefined> {
       `)) as Results<DormData>;
 		return data.rows.map((row) => normalizeDormListFields(row));
 	} catch (e) {
-		console.error("Error: ", e);
+		console.error('Error: ', e);
 		return undefined;
 	}
 }
@@ -178,7 +172,7 @@ export async function getLocalOrganizations(): Promise<OrgData[] | undefined> {
       `)) as Results<OrgData>;
 		return data.rows;
 	} catch (e) {
-		console.error("Error: ", e);
+		console.error('Error: ', e);
 		return undefined;
 	}
 }
@@ -205,14 +199,12 @@ export async function getLocalPlaces(): Promise<PlaceData[] | undefined> {
       `)) as Results<PlaceData>;
 		return data.rows;
 	} catch (e) {
-		console.error("Error: ", e);
+		console.error('Error: ', e);
 		return undefined;
 	}
 }
 
-export async function getLocalAnnouncements(): Promise<
-	AnnouncementData[] | undefined
-> {
+export async function getLocalAnnouncements(): Promise<AnnouncementData[] | undefined> {
 	try {
 		const localDB = await getDB();
 		await localDB.waitReady;
@@ -233,7 +225,7 @@ export async function getLocalAnnouncements(): Promise<
       `)) as Results<AnnouncementData>;
 		return data.rows;
 	} catch (e) {
-		console.error("Error: ", e);
+		console.error('Error: ', e);
 		return undefined;
 	}
 }
@@ -265,7 +257,7 @@ export async function getLocalEvents(): Promise<EventData[] | undefined> {
           occurrence_starts_at AS "occurrenceStartsAt",
           occurrence_ends_at AS "occurrenceEndsAt"
         FROM events;
-      `) as Promise<Results<Omit<EventData, "locations" | "routes">>>,
+      `) as Promise<Results<Omit<EventData, 'locations' | 'routes'>>>,
 			localDB.query(`
         SELECT
           id,
@@ -287,7 +279,7 @@ export async function getLocalEvents(): Promise<EventData[] | undefined> {
           dorm_name AS "dormName"
         FROM event_locations
         ORDER BY sort_order, id;
-      `) as Promise<Results<EventData["locations"][number]>>,
+      `) as Promise<Results<EventData['locations'][number]>>,
 			localDB.query(`
         SELECT
           id,
@@ -298,7 +290,7 @@ export async function getLocalEvents(): Promise<EventData[] | undefined> {
           updated_at AS "updatedAt"
         FROM event_routes
         ORDER BY sort_order, id;
-      `) as Promise<Results<Omit<EventData["routes"][number], "stops">>>,
+      `) as Promise<Results<Omit<EventData['routes'][number], 'stops'>>>,
 			localDB.query(`
         SELECT
           id,
@@ -314,27 +306,25 @@ export async function getLocalEvents(): Promise<EventData[] | undefined> {
           resolved_label AS "resolvedLabel"
         FROM event_route_stops
         ORDER BY sort_order, id;
-      `) as Promise<Results<EventData["routes"][number]["stops"][number]>>,
+      `) as Promise<Results<EventData['routes'][number]['stops'][number]>>
 		]);
 
 		return sortStoredEvents(
 			events.rows.map((event) =>
 				refreshStoredEventTiming({
 					...event,
-					locations: locations.rows.filter(
-						(location) => location.eventId === event.id,
-					),
+					locations: locations.rows.filter((location) => location.eventId === event.id),
 					routes: routes.rows
 						.filter((route) => route.eventId === event.id)
 						.map((route) => ({
 							...route,
-							stops: stops.rows.filter((stop) => stop.routeId === route.id),
-						})),
-				}),
-			),
+							stops: stops.rows.filter((stop) => stop.routeId === route.id)
+						}))
+				})
+			)
 		);
 	} catch (e) {
-		console.error("Error: ", e);
+		console.error('Error: ', e);
 		return undefined;
 	}
 }
@@ -367,10 +357,9 @@ export async function getLocalRoomByCode(code: string) {
             LEFT JOIN divisions AS d ON d.id = r.division_id
             WHERE upper(r.room_code) = $1
         `,
-			[normalizedCode],
+			[normalizedCode]
 		)) as Results<RoomData>;
-		if (data.rows.length === 0 && typeof data.rows[0] === "undefined")
-			return null;
+		if (data.rows.length === 0 && typeof data.rows[0] === 'undefined') return null;
 		return data.rows[0] as RoomData;
 	} catch (e) {
 		console.error(e);
@@ -405,7 +394,7 @@ export async function getLocalRoomById(id: number) {
             LEFT JOIN divisions AS d ON d.id = r.division_id
             WHERE r.id = $1
         `,
-			[id],
+			[id]
 		)) as Results<RoomData>;
 		if (data.rows.length === 0) return null;
 		return data.rows[0] as RoomData;
@@ -463,7 +452,7 @@ export async function getLocalClasses(): Promise<ClassMapValue[] | undefined> {
     `)) as Results<ClassMapValue>;
 		return data.rows;
 	} catch (e) {
-		console.error("Error: ", e);
+		console.error('Error: ', e);
 		return undefined;
 	}
 }
@@ -474,9 +463,7 @@ export async function getLocalClasses(): Promise<ClassMapValue[] | undefined> {
  * used to surface dual-role buildings (admin AND class venue) in the class
  * filter. Returns an empty set on any error so callers degrade gracefully.
  */
-export async function getBuildingIdsWithClasses(
-	termId?: number | null,
-): Promise<Set<number>> {
+export async function getBuildingIdsWithClasses(termId?: number | null): Promise<Set<number>> {
 	try {
 		const localDB = await getDB();
 		await localDB.waitReady;
@@ -487,41 +474,31 @@ export async function getBuildingIdsWithClasses(
       FROM classes AS c
       JOIN rooms AS r ON r.id = c.room_id
       WHERE r.building_id IS NOT NULL
-      ${scoped ? "AND c.term_id = $1" : ""};
+      ${scoped ? 'AND c.term_id = $1' : ''};
     `,
-			scoped ? [termId] : [],
+			scoped ? [termId] : []
 		)) as Results<{ buildingId: number | null }>;
 		return new Set(
-			data.rows
-				.map((row) => row.buildingId)
-				.filter((id): id is number => id !== null),
+			data.rows.map((row) => row.buildingId).filter((id): id is number => id !== null)
 		);
 	} catch (e) {
-		console.error("Error: ", e);
+		console.error('Error: ', e);
 		return new Set<number>();
 	}
 }
 
 export async function loadCachedAppData(): Promise<DBData> {
-	const [
-		buildings,
-		colleges,
-		divisions,
-		dorms,
-		events,
-		organizations,
-		places,
-		roomsMeta,
-	] = await Promise.all([
-		getLocalBuildings().then((rows) => rows ?? []),
-		getLocalColleges().then((rows) => rows ?? []),
-		getLocalDivisions().then((rows) => rows ?? []),
-		getLocalDorms().then((rows) => rows ?? []),
-		getLocalEvents().then((rows) => rows ?? []),
-		getLocalOrganizations().then((rows) => rows ?? []),
-		getLocalPlaces().then((rows) => rows ?? []),
-		getLocalRoomsCounts(),
-	]);
+	const [buildings, colleges, divisions, dorms, events, organizations, places, roomsMeta] =
+		await Promise.all([
+			getLocalBuildings().then((rows) => rows ?? []),
+			getLocalColleges().then((rows) => rows ?? []),
+			getLocalDivisions().then((rows) => rows ?? []),
+			getLocalDorms().then((rows) => rows ?? []),
+			getLocalEvents().then((rows) => rows ?? []),
+			getLocalOrganizations().then((rows) => rows ?? []),
+			getLocalPlaces().then((rows) => rows ?? []),
+			getLocalRoomsCounts()
+		]);
 
 	return {
 		buildings,
@@ -532,7 +509,7 @@ export async function loadCachedAppData(): Promise<DBData> {
 		organizations,
 		places,
 		directionCount: roomsMeta.directionCount,
-		totalRooms: roomsMeta.totalRooms,
+		totalRooms: roomsMeta.totalRooms
 	};
 }
 
@@ -543,7 +520,7 @@ export async function getJSONFetch<T>(url: string, timeoutMs = 30_000) {
 
 export function getEntity<T>(
 	tableName: string,
-	getLocalEntity: () => Promise<T[] | undefined>,
+	getLocalEntity: () => Promise<T[] | undefined>
 ): (checker: TableSyncInfo) => Promise<EntityLoadResult<T>> {
 	return async (checker: TableSyncInfo) => {
 		// local() never throws: a broken PGlite must not take down the whole
@@ -566,74 +543,59 @@ export function getEntity<T>(
 		// we actually got a newKey back (confirmed sync mismatch) (#169).
 		if (checker.newKey === null) {
 			const cached = await local();
-			return { rows: cached, source: "cache" };
+			return { rows: cached, source: 'cache' };
 		}
 		if (checker.valid) {
 			const cached = await local();
 			// localStorage sync key can outlive PGlite (IDB eviction, cleared site data).
 			// Treat an empty cache as stale so we refetch instead of showing no events.
 			if (cached.length > 0) {
-				return { rows: cached, source: "cache" };
+				return { rows: cached, source: 'cache' };
 			}
 		}
 		try {
-			const fetchedData = await fetchJsonWithRetry<T[]>(
-				`/api/${tableName}`,
-				ENTITY_FETCH_OPTIONS,
-			);
+			const fetchedData = await fetchJsonWithRetry<T[]>(`/api/${tableName}`, ENTITY_FETCH_OPTIONS);
 			if (Array.isArray(fetchedData)) {
-				return { rows: fetchedData, source: "remote" };
+				return { rows: fetchedData, source: 'remote' };
 			}
 			const cached = await local();
-			return { rows: cached, source: "cache" };
+			return { rows: cached, source: 'cache' };
 		} catch {
 			const cached = await local();
 			// if cache is gone, return the snapshot taken before the fetch
 			return {
 				rows: cached.length > 0 ? cached : initialSnapshot,
-				source: "cache",
+				source: 'cache'
 			};
 		}
 	};
 }
 
 export async function fetchRemoteEvents(): Promise<EventData[]> {
-	return fetchJsonWithRetry<EventData[]>("/api/events", ENTITY_FETCH_OPTIONS);
+	return fetchJsonWithRetry<EventData[]>('/api/events', ENTITY_FETCH_OPTIONS);
 }
 
-export const getBuildings = getEntity<BuildingData>(
-	"buildings",
-	getLocalBuildings,
-);
+export const getBuildings = getEntity<BuildingData>('buildings', getLocalBuildings);
 
-export const getColleges = getEntity<CollegeData>("colleges", getLocalColleges);
+export const getColleges = getEntity<CollegeData>('colleges', getLocalColleges);
 
-export const getDivisions = getEntity<DivisionData>(
-	"divisions",
-	getLocalDivisions,
-);
+export const getDivisions = getEntity<DivisionData>('divisions', getLocalDivisions);
 
-export const getDorms = getEntity<DormData>("dorms", getLocalDorms);
+export const getDorms = getEntity<DormData>('dorms', getLocalDorms);
 
-export const getOrganizations = getEntity<OrgData>(
-	"organizations",
-	getLocalOrganizations,
-);
-export const getPlaces = getEntity<PlaceData>("places", getLocalPlaces);
+export const getOrganizations = getEntity<OrgData>('organizations', getLocalOrganizations);
+export const getPlaces = getEntity<PlaceData>('places', getLocalPlaces);
 
-export const getEvents = getEntity<EventData>("events", getLocalEvents);
+export const getEvents = getEntity<EventData>('events', getLocalEvents);
 
-export const getAnnouncements = getEntity<AnnouncementData>(
-	"announcements",
-	getLocalAnnouncements,
-);
+export const getAnnouncements = getEntity<AnnouncementData>('announcements', getLocalAnnouncements);
 
-export const getClasses = getEntity<ClassMapValue>("classes", getLocalClasses);
+export const getClasses = getEntity<ClassMapValue>('classes', getLocalClasses);
 
 /** Room list from the API; used when PGlite has no rows or for background refresh. */
 export async function fetchEntityRoomsRemote(
-	entityName: "building" | "college" | "division",
-	id: number,
+	entityName: 'building' | 'college' | 'division',
+	id: number
 ): Promise<RoomData[]> {
 	const url = `/api/rooms?${entityName}_id=${id}`;
 	try {
@@ -653,7 +615,7 @@ export async function fetchEntityRoomsRemote(
 
 export function getEntityRooms(
 	entityName: string,
-	getLocalTableRoom: (id: number) => Promise<RoomData[] | undefined>,
+	getLocalTableRoom: (id: number) => Promise<RoomData[] | undefined>
 ) {
 	return async (validSync: boolean, id: number) => {
 		const loadLocal = async () => (await getLocalTableRoom(id)) ?? [];
@@ -662,8 +624,8 @@ export function getEntityRooms(
 		if (cached.length > 0) return cached;
 		if (validSync) return cached;
 		const remote = await fetchEntityRoomsRemote(
-			entityName as "building" | "college" | "division",
-			id,
+			entityName as 'building' | 'college' | 'division',
+			id
 		);
 		return remote.length > 0 ? remote : cached;
 	};
@@ -684,14 +646,14 @@ const CLASS_ROW_SELECT = `
 /** Classes for one room from PGlite; null when the classes table is empty (#415). */
 export async function getLocalClassesForRoom(
 	roomCode: string,
-	termId: number | null,
+	termId: number | null
 ): Promise<ClassMapValue[] | null> {
 	try {
 		const localDB = await getDB();
 		await localDB.waitReady;
-		const hasAny = (await localDB.query(
-			"SELECT 1 FROM classes LIMIT 1",
-		)) as Results<Record<string, unknown>>;
+		const hasAny = (await localDB.query('SELECT 1 FROM classes LIMIT 1')) as Results<
+			Record<string, unknown>
+		>;
 		if (hasAny.rows.length === 0) return null;
 
 		const scoped = termId != null;
@@ -701,36 +663,35 @@ export async function getLocalClassesForRoom(
       FROM classes AS c
       JOIN rooms AS r ON r.id = c.room_id
       WHERE upper(r.room_code) = upper($1)
-      ${scoped ? "AND c.term_id = $2" : ""}
+      ${scoped ? 'AND c.term_id = $2' : ''}
       `,
-			scoped ? [roomCode, termId] : [roomCode],
+			scoped ? [roomCode, termId] : [roomCode]
 		)) as Results<ClassMapValue>;
 		return data.rows;
 	} catch (e) {
-		console.error("Error: ", e);
+		console.error('Error: ', e);
 		return null;
 	}
 }
 
-const ENTITY_ROOM_FILTER: Record<"building" | "college" | "division", string> =
-	{
-		building: "r.building_id = $1",
-		college: "r.college_id = $1",
-		division: "r.division_id = $1",
-	};
+const ENTITY_ROOM_FILTER: Record<'building' | 'college' | 'division', string> = {
+	building: 'r.building_id = $1',
+	college: 'r.college_id = $1',
+	division: 'r.division_id = $1'
+};
 
 /** Per-room class counts from PGlite; null when classes were never synced (#415). */
 export async function getLocalRoomClassCounts(
-	entityName: "building" | "college" | "division",
+	entityName: 'building' | 'college' | 'division',
 	id: number,
-	termId?: number,
+	termId?: number
 ): Promise<Map<number, number> | null> {
 	try {
 		const localDB = await getDB();
 		await localDB.waitReady;
-		const hasAny = (await localDB.query(
-			"SELECT 1 FROM classes LIMIT 1",
-		)) as Results<Record<string, unknown>>;
+		const hasAny = (await localDB.query('SELECT 1 FROM classes LIMIT 1')) as Results<
+			Record<string, unknown>
+		>;
 		if (hasAny.rows.length === 0) return null;
 
 		const scoped = termId != null;
@@ -740,48 +701,40 @@ export async function getLocalRoomClassCounts(
       FROM classes AS c
       JOIN rooms AS r ON r.id = c.room_id
       WHERE ${ENTITY_ROOM_FILTER[entityName]}
-      ${scoped ? "AND c.term_id = $2" : ""}
+      ${scoped ? 'AND c.term_id = $2' : ''}
       GROUP BY c.room_id
       `,
-			scoped ? [id, termId] : [id],
+			scoped ? [id, termId] : [id]
 		)) as Results<{ roomId: number; count: number }>;
 		return new Map(data.rows.map((row) => [row.roomId, row.count]));
 	} catch (e) {
-		console.error("Error: ", e);
+		console.error('Error: ', e);
 		return null;
 	}
 }
 
-export const getBuildingRooms = getEntityRooms(
-	"building",
-	getLocalBuildingRooms,
-);
+export const getBuildingRooms = getEntityRooms('building', getLocalBuildingRooms);
 
-export const getCollegeRooms = getEntityRooms("college", getLocalCollegeRooms);
+export const getCollegeRooms = getEntityRooms('college', getLocalCollegeRooms);
 
-export const getDivisionRooms = getEntityRooms(
-	"division",
-	getLocalDivisionRooms,
-);
+export const getDivisionRooms = getEntityRooms('division', getLocalDivisionRooms);
 
 /** Per-room class counts for an entity's room list, scoped to the active term.
  * One batched /api/rooms/class-counts request replaces N+1 /api/classes calls
  * per visible row (#342). Returns null on offline/server error so the UI can
  * distinguish "not loaded yet" from a real "0 classes". */
 export async function fetchRoomClassCounts(
-	entityName: "building" | "college" | "division",
+	entityName: 'building' | 'college' | 'division',
 	id: number,
-	termId?: number,
+	termId?: number
 ): Promise<Map<number, number> | null> {
 	const local = await getLocalRoomClassCounts(entityName, id, termId);
 	if (local !== null) return local;
 
 	const params = new URLSearchParams({ [`${entityName}_id`]: String(id) });
-	if (termId != null) params.set("term_id", String(termId));
+	if (termId != null) params.set('term_id', String(termId));
 	try {
-		const response = await fetch(
-			`/api/rooms/class-counts?${params.toString()}`,
-		);
+		const response = await fetch(`/api/rooms/class-counts?${params.toString()}`);
 		if (!response.ok) return null;
 		const payload = (await response.json()) as {
 			data?: { roomId: number; count: number }[];
@@ -793,18 +746,11 @@ export async function fetchRoomClassCounts(
 	}
 }
 
-export async function getRoomsData(): Promise<
-	Pick<DBData, "directionCount" | "totalRooms">
-> {
+export async function getRoomsData(): Promise<Pick<DBData, 'directionCount' | 'totalRooms'>> {
 	try {
 		const fetchedRoomsData =
-			await getJSONFetch<Pick<DBData, "directionCount" | "totalRooms">>(
-				"/api/rooms-update",
-			);
-		if (
-			typeof fetchedRoomsData?.totalRooms === "number" &&
-			fetchedRoomsData.totalRooms > 0
-		) {
+			await getJSONFetch<Pick<DBData, 'directionCount' | 'totalRooms'>>('/api/rooms-update');
+		if (typeof fetchedRoomsData?.totalRooms === 'number' && fetchedRoomsData.totalRooms > 0) {
 			return fetchedRoomsData;
 		}
 		// Offline / empty response: derive counts from cached PGlite rows.
@@ -817,20 +763,20 @@ export async function getRoomsData(): Promise<
 
 /** Room counts derived from the local PGlite cache (offline fallback). */
 export async function getLocalRoomsCounts(): Promise<
-	Pick<DBData, "directionCount" | "totalRooms">
+	Pick<DBData, 'directionCount' | 'totalRooms'>
 > {
 	try {
 		const localDB = await getDB();
 		await localDB.waitReady;
-		const total = (await localDB.query(
-			"SELECT COUNT(*)::int AS count FROM rooms",
-		)) as Results<{ count: number }>;
+		const total = (await localDB.query('SELECT COUNT(*)::int AS count FROM rooms')) as Results<{
+			count: number;
+		}>;
 		const directed = (await localDB.query(
-			"SELECT COUNT(*)::int AS count FROM rooms WHERE directions IS NOT NULL",
+			'SELECT COUNT(*)::int AS count FROM rooms WHERE directions IS NOT NULL'
 		)) as Results<{ count: number }>;
 		return {
 			totalRooms: total.rows[0]?.count ?? 0,
-			directionCount: directed.rows[0]?.count ?? 0,
+			directionCount: directed.rows[0]?.count ?? 0
 		};
 	} catch (e) {
 		console.error(e);
@@ -842,7 +788,7 @@ export async function getLocalRoomsCounts(): Promise<
  * an offline fallback for search suggestions. Returns up to 6 matches, or null
  * when there are none (matching the server contract). */
 export async function searchLocalRooms(
-	searchString: string,
+	searchString: string
 ): Promise<{ value: string; fullName: string | null }[] | null> {
 	try {
 		const escaped = escapeLikePattern(searchString);
@@ -854,7 +800,7 @@ export async function searchLocalRooms(
           OR upper(full_name) LIKE upper($1) ESCAPE '\\'
        ORDER BY length(room_code), room_code
        LIMIT 6`,
-			[`%${escaped}%`],
+			[`%${escaped}%`]
 		)) as Results<{ value: string; fullName: string | null }>;
 		return data.rows.length ? data.rows : null;
 	} catch (e) {
@@ -865,7 +811,7 @@ export async function searchLocalRooms(
 
 /** Offline alias lookup against the PGlite cache (#155 follow-up). */
 export async function searchLocalAliases(
-	searchString: string,
+	searchString: string
 ): Promise<{ alias: string; value: string }[]> {
 	const normalized = normalizeAlias(searchString);
 	if (!normalized) return [];
@@ -886,7 +832,7 @@ export async function searchLocalAliases(
       ORDER BY CASE WHEN a.normalized_alias = $1 THEN 0 ELSE 1 END, a.alias
       LIMIT 12
       `,
-			[normalized, `${normalized}%`],
+			[normalized, `${normalized}%`]
 		)) as Results<{ alias: string; value: string; normalizedAlias: string }>;
 
 		const seen = new Set<string>();

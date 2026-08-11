@@ -2,7 +2,6 @@ import { db } from '$lib/server/db';
 import { updateTable } from '$lib/server/db/schema';
 import type { RequestHandler } from './$types';
 
-
 /**
  * Every table's sync key in one response (#866). Boot needs eight of them, and
  * as separate `/api/check/<name>` probes that was eight round trips at ~500 ms

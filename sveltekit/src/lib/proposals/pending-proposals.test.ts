@@ -1,17 +1,14 @@
-import { describe, expect, test } from "vitest";
-import {
-  isOpenProposalStatus,
-  formatProposalStatusLabel,
-} from "./pending-proposals";
+import { describe, expect, test } from 'vitest';
+import { isOpenProposalStatus, formatProposalStatusLabel } from './pending-proposals';
 
-describe("pending-proposals helpers", () => {
-  test("isOpenProposalStatus", () => {
-    expect(isOpenProposalStatus("pending")).toBe(true);
-    expect(isOpenProposalStatus("needs_changes")).toBe(true);
-    expect(isOpenProposalStatus("withdrawn")).toBe(false);
-  });
+describe('pending-proposals helpers', () => {
+	test('isOpenProposalStatus', () => {
+		expect(isOpenProposalStatus('pending')).toBe(true);
+		expect(isOpenProposalStatus('needs_changes')).toBe(true);
+		expect(isOpenProposalStatus('withdrawn')).toBe(false);
+	});
 
-  test("formatProposalStatusLabel", () => {
-    expect(formatProposalStatusLabel("needs_changes")).toBe("needs changes");
-  });
+	test('formatProposalStatusLabel', () => {
+		expect(formatProposalStatusLabel('needs_changes')).toBe('needs changes');
+	});
 });

@@ -12,23 +12,23 @@
  * clearing a broken bundle's cache must not resurrect it.
  */
 
-export const FOLLOW_PROMPT_KEY = "social-follow-prompt";
+export const FOLLOW_PROMPT_KEY = 'social-follow-prompt';
 
 /** Views without an answer before the prompt retires itself. */
 export const FOLLOW_PROMPT_MAX_VIEWS = 3;
 
-const VIEW_COUNT_KEY = "social-follow-prompt-views";
+const VIEW_COUNT_KEY = 'social-follow-prompt-views';
 
-export type FollowPromptOutcome = "dismissed" | "followed" | "ignored";
+export type FollowPromptOutcome = 'dismissed' | 'followed' | 'ignored';
 
 /** True once the reader has dismissed or acted on the prompt, on any visit. */
 export function isFollowPromptRetired(): boolean {
-  try {
-    return localStorage.getItem(FOLLOW_PROMPT_KEY) !== null;
-  } catch {
-    // SSR, or storage blocked. Never treat "cannot read" as "already asked".
-    return false;
-  }
+	try {
+		return localStorage.getItem(FOLLOW_PROMPT_KEY) !== null;
+	} catch {
+		// SSR, or storage blocked. Never treat "cannot read" as "already asked".
+		return false;
+	}
 }
 
 /**
@@ -43,26 +43,26 @@ export function isFollowPromptRetired(): boolean {
  * Returns true when this render should still show the prompt.
  */
 export function countFollowPromptView(): boolean {
-  if (isFollowPromptRetired()) return false;
-  try {
-    const seen = Number(localStorage.getItem(VIEW_COUNT_KEY) ?? "0") + 1;
-    localStorage.setItem(VIEW_COUNT_KEY, String(seen));
-    if (seen > FOLLOW_PROMPT_MAX_VIEWS) {
-      retireFollowPrompt("ignored");
-      return false;
-    }
-  } catch {
-    // Storage blocked: show it rather than treating the failure as an answer.
-  }
-  return true;
+	if (isFollowPromptRetired()) return false;
+	try {
+		const seen = Number(localStorage.getItem(VIEW_COUNT_KEY) ?? '0') + 1;
+		localStorage.setItem(VIEW_COUNT_KEY, String(seen));
+		if (seen > FOLLOW_PROMPT_MAX_VIEWS) {
+			retireFollowPrompt('ignored');
+			return false;
+		}
+	} catch {
+		// Storage blocked: show it rather than treating the failure as an answer.
+	}
+	return true;
 }
 
 /** Retire the prompt permanently. Idempotent. */
 export function retireFollowPrompt(outcome: FollowPromptOutcome): void {
-  try {
-    localStorage.setItem(FOLLOW_PROMPT_KEY, outcome);
-  } catch {
-    // Private mode / storage full: the dismissal cannot be remembered. Nothing
-    // to fall back to, and a silent failure beats blocking the click.
-  }
+	try {
+		localStorage.setItem(FOLLOW_PROMPT_KEY, outcome);
+	} catch {
+		// Private mode / storage full: the dismissal cannot be remembered. Nothing
+		// to fall back to, and a silent failure beats blocking the click.
+	}
 }

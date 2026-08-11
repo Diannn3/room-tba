@@ -1,68 +1,68 @@
 <script lang="ts">
-  import { onMount } from "svelte";
   import type { InitialSearchState } from "@lib/app-data";
   import { getAppData } from "@lib/context";
+  import { resolveSharedPlan } from "@lib/planner/import-shared";
+  import { decodeSharePlan } from "@lib/planner/share-codec";
   import { findCampusPointBySlug } from "@lib/route-links";
-  import { campusTransit } from "$lib/campus.config";
   import {
-    modalStore,
-    queryStore,
-    sidePanelStore,
-    locationStore,
-    toastStore,
-    building3DStore,
     adminAuthStore,
-    mapEditStore,
-    mapToolsStore,
-    travelTimeStore,
-    measureRouteStore,
+    announcementsStore,
+    appBootstrapStore,
+    building3DStore,
     editorChromeStore,
     jeepneyStore,
-    appBootstrapStore,
+    locationStore,
+    mapEditStore,
+    mapToolsStore,
+    measureRouteStore,
+    modalStore,
     plannerStore,
+    queryStore,
     scheduleRouteStore,
-    termStore,
     sidebarStore,
-    announcementsStore,
+    sidePanelStore,
+    termStore,
+    toastStore,
+    travelTimeStore,
   } from "@lib/store.svelte";
-  import { decodeSharePlan } from "@lib/planner/share-codec";
-  import { resolveSharedPlan } from "@lib/planner/import-shared";
-  import Modal from "@ui/modal/Modal.svelte";
+  import AccountSettingsModal from "@ui/AccountSettingsModal.svelte";
+  import AdminLoginModal from "@ui/AdminLoginModal.svelte";
+  import Building3DViewer from "@ui/Building3DViewer.svelte";
+  import AcademicCalendarScreen from "@ui/calendar/AcademicCalendarScreen.svelte";
   import MainControls from "@ui/controls/MainControls.svelte";
+  import EditorAdditionModal from "@ui/EditorAdditionModal.svelte";
+  import EntityUrlSync from "@ui/EntityUrlSync.svelte";
+  import FinalExamsScreen from "@ui/final-exams/FinalExamsScreen.svelte";
   import Map from "@ui/Map.svelte";
   import MapAttribution from "@ui/MapAttribution.svelte";
   import MeasureRoutePanel from "@ui/MeasureRoutePanel.svelte";
-  import TravelTimeLegend from "@ui/TravelTimeLegend.svelte";
-  import Toast from "@ui/Toast.svelte";
-  import Building3DViewer from "@ui/Building3DViewer.svelte";
-  import AdminLoginModal from "@ui/AdminLoginModal.svelte";
-  import AccountSettingsModal from "@ui/AccountSettingsModal.svelte";
-  import ManageUsersModal from "@ui/modal/ManageUsersModal.svelte";
-  import EditorAdditionModal from "@ui/EditorAdditionModal.svelte";
-  import PlannerScreen from "@ui/planner/PlannerScreen.svelte";
-  import FinalExamsScreen from "@ui/final-exams/FinalExamsScreen.svelte";
-  import AcademicCalendarScreen from "@ui/calendar/AcademicCalendarScreen.svelte";
-  import TodayScreen from "@ui/today/TodayScreen.svelte";
-  import EntityUrlSync from "@ui/EntityUrlSync.svelte";
   import EntityHoverPreview from "@ui/map/EntityHoverPreview.svelte";
+  import ManageUsersModal from "@ui/modal/ManageUsersModal.svelte";
+  import Modal from "@ui/modal/Modal.svelte";
+  import PlannerScreen from "@ui/planner/PlannerScreen.svelte";
+  import Toast from "@ui/Toast.svelte";
+  import TravelTimeLegend from "@ui/TravelTimeLegend.svelte";
+  import TodayScreen from "@ui/today/TodayScreen.svelte";
+  import { onMount } from "svelte";
+  import { campusTransit } from "$lib/campus.config";
   import "./map-chrome/map-chrome.css";
-  import { observeBlockHeight } from "@lib/layout-css-vars";
+  import { openCampusBrowse } from "@lib/browse-campus";
   import {
     dispatchGlobalShortcut,
     getGlobalShortcutAction,
   } from "@lib/keyboard-shortcuts";
-  import { dismissEphemeralOverlays } from "@lib/overlay-stack";
-  import { openCampusBrowse } from "@lib/browse-campus";
-  import { getTransitRoutePath, getTransitStopPath } from "@lib/transit-urls";
   import { shouldAutoOpenLandingModal } from "@lib/landing-modal-auto-open";
-  import StagingBanner from "./StagingBanner.svelte";
+  import { observeBlockHeight } from "@lib/layout-css-vars";
+  import { dismissEphemeralOverlays } from "@lib/overlay-stack";
+  import { getTransitRoutePath, getTransitStopPath } from "@lib/transit-urls";
+  import type { RecentSearch } from "@lib/types";
+  import { MediaQuery } from "svelte/reactivity";
   import AnnouncementBar from "./AnnouncementBar.svelte";
-  import KeyboardShortcutsPopup from "./map-chrome/KeyboardShortcutsPopup.svelte";
   import DesktopTopBar from "./map-chrome/DesktopTopBar.svelte";
+  import KeyboardShortcutsPopup from "./map-chrome/KeyboardShortcutsPopup.svelte";
   import MapControlsStack from "./map-chrome/MapControlsStack.svelte";
   import MobileBottomNav from "./map-chrome/MobileBottomNav.svelte";
-  import { MediaQuery } from "svelte/reactivity";
-  import type { RecentSearch } from "@lib/types";
+  import StagingBanner from "./StagingBanner.svelte";
 
   type Props = {
     initialSearch?: InitialSearchState;
@@ -84,6 +84,7 @@
   }: Props = $props();
 
   const updateData = (queryHistory: RecentSearch[]) => {
+    console.log(queryHistory);
     localStorage.setItem("recent-search", JSON.stringify(queryHistory));
   };
 
@@ -860,13 +861,15 @@
     --map-chrome-panel-bg: #fff;
     --map-chrome-border: #e8e4e5;
     --map-chrome-panel-accent-border: transparent;
-    --map-chrome-panel-shadow: var(--shadow-results, 0 2px 6px rgb(36 37 46 / 0.2));
+    --map-chrome-panel-shadow: var(
+      --shadow-results,
+      0 2px 6px rgb(36 37 46 / 0.2)
+    );
     --map-chrome-radius: 0.75rem;
   }
 
   /* Compact panel chrome: Close + action chips like filter chips. */
-  .app-layout.redesign-desktop
-    :global(.drawer-card .entity-panel-close) {
+  .app-layout.redesign-desktop :global(.drawer-card .entity-panel-close) {
     min-height: var(--map-chip-height, 1.875rem);
     min-width: 0;
     height: var(--map-chip-height, 1.875rem);
@@ -880,8 +883,7 @@
     box-shadow: var(--shadow-search, 0 1px 3.5px rgb(58 58 71 / 0.2));
   }
 
-  .app-layout.redesign-desktop
-    :global(.drawer-card .entity-panel-close:hover),
+  .app-layout.redesign-desktop :global(.drawer-card .entity-panel-close:hover),
   .app-layout.redesign-desktop
     :global(.drawer-card .entity-panel-close:focus-visible) {
     background: #fff;
@@ -913,12 +915,10 @@
     padding: 0.35rem 0;
   }
 
-  .app-layout.redesign-desktop
-    :global(.drawer-card .map-chrome-action-chip),
+  .app-layout.redesign-desktop :global(.drawer-card .map-chrome-action-chip),
   .app-layout.redesign-desktop
     :global(.drawer-card .map-chrome-action-chip--toolbar),
-  .app-layout.redesign-desktop
-    :global(.drawer-card .editor-toggle--toolbar) {
+  .app-layout.redesign-desktop :global(.drawer-card .editor-toggle--toolbar) {
     min-height: var(--map-chip-height, 1.875rem);
     padding: 0.25rem 0.5rem;
     border: none;
@@ -1061,7 +1061,6 @@
   .app-layout.redesign-desktop .bottom-band::before {
     display: none;
   }
-
 
   .top-right-map-stack {
     position: absolute;

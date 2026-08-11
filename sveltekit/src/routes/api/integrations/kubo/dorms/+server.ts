@@ -2,7 +2,6 @@ import { json } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 import type { RequestHandler } from './$types';
 
-
 const CACHE_CONTROL = 'public, max-age=60, s-maxage=300, stale-while-revalidate=3600';
 
 // Inlined from astro/src/lib/server/kubo-dorm-directory.ts

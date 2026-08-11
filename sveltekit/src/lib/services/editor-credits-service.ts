@@ -1,16 +1,16 @@
-import { db } from "$lib/db";
-import { sql } from "drizzle-orm";
+import { db } from '$lib/db';
+import { sql } from 'drizzle-orm';
 
 export type EditorCredit = {
-  name: string;
-  avatarUrl: string | null;
-  profileUrl: string | null;
+	name: string;
+	avatarUrl: string | null;
+	profileUrl: string | null;
 };
 
 /** Public, intentionally minimal credit roster. Requires migration 0033. */
 export async function getEditorCredits(): Promise<EditorCredit[]> {
-  try {
-    const result = await db.execute(sql`
+	try {
+		const result = await db.execute(sql`
       WITH editor_activity AS (
         SELECT u.id AS user_id, max(h.created_at) AS last_activity
         FROM admin_users u
@@ -38,14 +38,14 @@ export async function getEditorCredits(): Promise<EditorCredit[]> {
         )
       ORDER BY last_activity DESC NULLS LAST, name ASC
     `);
-    return result.rows.map((row) => ({
-      name: String(row.name),
-      avatarUrl: typeof row.avatarUrl === "string" ? row.avatarUrl : null,
-      profileUrl: typeof row.profileUrl === "string" ? row.profileUrl : null,
-    }));
-  } catch (error) {
-    // Rolling deploys can serve this before the additive migration lands.
-    console.error("Could not load editor credits:", error);
-    return [];
-  }
+		return result.rows.map((row) => ({
+			name: String(row.name),
+			avatarUrl: typeof row.avatarUrl === 'string' ? row.avatarUrl : null,
+			profileUrl: typeof row.profileUrl === 'string' ? row.profileUrl : null
+		}));
+	} catch (error) {
+		// Rolling deploys can serve this before the additive migration lands.
+		console.error('Could not load editor credits:', error);
+		return [];
+	}
 }

@@ -1,25 +1,25 @@
 // Pin/dorm filter state. Lives outside index.svelte.ts so ui-stores can
 // import it without a module cycle (index imports ui-stores).
-import type { BuildingTypeFilter } from "$lib/constants/building-types";
+import type { BuildingTypeFilter } from '$lib/constants/building-types';
 
-export type DormFilterType = "all" | "up" | "private";
+export type DormFilterType = 'all' | 'up' | 'private';
 
-let _dormFilter = $state<DormFilterType>("all");
+let _dormFilter = $state<DormFilterType>('all');
 export const dormFilter = {
-  get value() {
-    return _dormFilter;
-  },
-  set(v: DormFilterType) {
-    _dormFilter = v;
-  },
+	get value() {
+		return _dormFilter;
+	},
+	set(v: DormFilterType) {
+		_dormFilter = v;
+	}
 };
 
-let _buildingTypeFilter = $state<BuildingTypeFilter>("all");
+let _buildingTypeFilter = $state<BuildingTypeFilter>('all');
 export const buildingTypeFilter = {
-  get value() {
-    return _buildingTypeFilter;
-  },
-  set(v: BuildingTypeFilter) {
-    _buildingTypeFilter = v;
-  },
+	get value() {
+		return _buildingTypeFilter;
+	},
+	set(v: BuildingTypeFilter) {
+		_buildingTypeFilter = v;
+	}
 };

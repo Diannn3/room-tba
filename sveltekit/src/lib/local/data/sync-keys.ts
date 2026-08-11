@@ -1,9 +1,9 @@
-import { fetchJsonWithRetry, SYNC_CHECK_FETCH_OPTIONS } from "./fetch-json";
+import { fetchJsonWithRetry, SYNC_CHECK_FETCH_OPTIONS } from './fetch-json';
 
 type SyncKeyResponse = {
-  success: boolean;
-  error: string | null;
-  data: Record<string, string | null> | null;
+	success: boolean;
+	error: string | null;
+	data: Record<string, string | null> | null;
 };
 
 /**
@@ -16,22 +16,19 @@ let syncKeysInFlight: Promise<Record<string, string | null>> | null = null;
 
 /** Remote sync key for one table; null when the registry is unreachable. */
 export async function getSyncKey(table: string): Promise<string | null> {
-  try {
-    if (!syncKeysInFlight) {
-      syncKeysInFlight = fetchJsonWithRetry<SyncKeyResponse>(
-        "/api/check",
-        SYNC_CHECK_FETCH_OPTIONS,
-      )
-        .then((response) => response.data ?? {})
-        .finally(() => {
-          syncKeysInFlight = null;
-        });
-    }
-    return (await syncKeysInFlight)[table] ?? null;
-  } catch (e) {
-    console.error(e);
-    return null;
-  }
+	try {
+		if (!syncKeysInFlight) {
+			syncKeysInFlight = fetchJsonWithRetry<SyncKeyResponse>('/api/check', SYNC_CHECK_FETCH_OPTIONS)
+				.then((response) => response.data ?? {})
+				.finally(() => {
+					syncKeysInFlight = null;
+				});
+		}
+		return (await syncKeysInFlight)[table] ?? null;
+	} catch (e) {
+		console.error(e);
+		return null;
+	}
 }
 
 /** LocalStorage sync-key helpers (no PGlite imports). */
@@ -43,47 +40,45 @@ export async function getSyncKey(table: string): Promise<string | null> {
  * silently rots when a table is added.
  */
 export const SYNC_TABLE_NAMES = [
-  "buildings",
-  "colleges",
-  "divisions",
-  "rooms",
-  "dorms",
-  "classes",
-  "final_exams",
-  "events",
-  "organizations",
-  "places",
-  "announcements",
+	'buildings',
+	'colleges',
+	'divisions',
+	'rooms',
+	'dorms',
+	'classes',
+	'final_exams',
+	'events',
+	'organizations',
+	'places',
+	'announcements'
 ] as const;
 
 function emptySyncKeys(): string {
-  return JSON.stringify(
-    Object.fromEntries(SYNC_TABLE_NAMES.map((table) => [table, ""])),
-  );
+	return JSON.stringify(Object.fromEntries(SYNC_TABLE_NAMES.map((table) => [table, ''])));
 }
 
 export function getSyncKeysFromLs(): {
-  [key: string]: string;
+	[key: string]: string;
 } | null {
-  const lsStore = localStorage.getItem("sync-key");
+	const lsStore = localStorage.getItem('sync-key');
 
-  if (lsStore === null) {
-    localStorage.setItem("sync-key", emptySyncKeys());
-    return null;
-  }
+	if (lsStore === null) {
+		localStorage.setItem('sync-key', emptySyncKeys());
+		return null;
+	}
 
-  try {
-    const keys = JSON.parse(lsStore);
-    if (typeof keys === "object" && "buildings" in keys) {
-      return keys as {
-        [key: string]: string;
-      };
-    } else {
-      return null;
-    }
-  } catch {
-    console.error("Error: the sync keys in the localStorage was corrupted");
-    localStorage.setItem("sync-key", emptySyncKeys());
-    return null;
-  }
+	try {
+		const keys = JSON.parse(lsStore);
+		if (typeof keys === 'object' && 'buildings' in keys) {
+			return keys as {
+				[key: string]: string;
+			};
+		} else {
+			return null;
+		}
+	} catch {
+		console.error('Error: the sync keys in the localStorage was corrupted');
+		localStorage.setItem('sync-key', emptySyncKeys());
+		return null;
+	}
 }

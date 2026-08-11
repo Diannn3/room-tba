@@ -1,5 +1,5 @@
-import type { PGlite } from "@electric-sql/pglite";
-import { PGLITE_INIT_SQL } from "./pglite-schema.generated";
+import type { PGlite } from '@electric-sql/pglite';
+import { PGLITE_INIT_SQL } from './pglite-schema.generated';
 
 let dbPromise: Promise<PGlite> | null = null;
 let ready = false;
@@ -16,19 +16,19 @@ let ready = false;
  * database and nothing has to sequence init before its own queries.
  */
 export function getDB(): Promise<PGlite> {
-  dbPromise ??= (async () => {
-    const { PGlite } = await import("@electric-sql/pglite");
-    const db = new PGlite("idb://site-data");
-    await db.waitReady;
-    try {
-      await db.exec(PGLITE_INIT_SQL);
-    } catch (e) {
-      console.error("An error occurred", e);
-    }
-    ready = true;
-    return db;
-  })();
-  return dbPromise;
+	dbPromise ??= (async () => {
+		const { PGlite } = await import('@electric-sql/pglite');
+		const db = new PGlite('idb://site-data');
+		await db.waitReady;
+		try {
+			await db.exec(PGLITE_INIT_SQL);
+		} catch (e) {
+			console.error('An error occurred', e);
+		}
+		ready = true;
+		return db;
+	})();
+	return dbPromise;
 }
 
 /**
@@ -37,7 +37,7 @@ export function getDB(): Promise<PGlite> {
  * not make them wait out the wasm download (#866).
  */
 export function isLocalCacheReady(): boolean {
-  return ready;
+	return ready;
 }
 
 /**
@@ -46,14 +46,14 @@ export function isLocalCacheReady(): boolean {
  * would boot the WASM engine just to shut it down again.
  */
 export async function closeLocalDB(): Promise<void> {
-  if (!dbPromise) return;
-  const pending = dbPromise;
-  dbPromise = null;
-  ready = false;
-  try {
-    const db = await pending;
-    await db.close();
-  } catch {
-    // Never opened successfully, so there is nothing to close.
-  }
+	if (!dbPromise) return;
+	const pending = dbPromise;
+	dbPromise = null;
+	ready = false;
+	try {
+		const db = await pending;
+		await db.close();
+	} catch {
+		// Never opened successfully, so there is nothing to close.
+	}
 }

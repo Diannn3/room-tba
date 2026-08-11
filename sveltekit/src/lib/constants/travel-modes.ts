@@ -13,26 +13,26 @@ export const DRIVE_CAP_KPH = 30;
 
 /** OSM highway classes cars / e-bikes may use; everything else is footpath. */
 export const DRIVE_HIGHWAY_CLASSES: ReadonlySet<string> = new Set([
-  "service",
-  "tertiary",
-  "residential",
-  "unclassified",
+	'service',
+	'tertiary',
+	'residential',
+	'unclassified'
 ]);
 
 /** Cycling skips stairs. */
-export const CYCLE_EXCLUDED_CLASS = "steps";
+export const CYCLE_EXCLUDED_CLASS = 'steps';
 
 /** Isochrone color ramp caps here; farther edges keep the last color. */
 export const ISOCHRONE_CAP_MINUTES = 30;
 
 /** Standard viridis ramp (8 stops, matplotlib): near = dark purple, far = yellow. */
 export const VIRIDIS_STOPS = [
-  "#440154",
-  "#46327e",
-  "#365c8d",
-  "#277f8e",
-  "#1fa187",
-  "#4ac16d",
-  "#a0da39",
-  "#fde725",
+	'#440154',
+	'#46327e',
+	'#365c8d',
+	'#277f8e',
+	'#1fa187',
+	'#4ac16d',
+	'#a0da39',
+	'#fde725'
 ] as const;

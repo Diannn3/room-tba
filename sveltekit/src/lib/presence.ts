@@ -23,5 +23,5 @@ export const PRUNE_SAMPLE_RATE = 0.1;
 const SID_PATTERN = /^[a-zA-Z0-9-]{8,64}$/;
 
 export function isValidSid(sid: unknown): sid is string {
-  return typeof sid === "string" && SID_PATTERN.test(sid);
+	return typeof sid === 'string' && SID_PATTERN.test(sid);
 }

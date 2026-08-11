@@ -13,25 +13,23 @@
  * defined" and takes every one of those tests down with it. Svelte consumers
  * subscribe instead.
  */
-export type BasemapProvider = "maptiler" | "openfreemap" | "osm-raster";
+export type BasemapProvider = 'maptiler' | 'openfreemap' | 'osm-raster';
 
-let current: BasemapProvider = "maptiler";
+let current: BasemapProvider = 'maptiler';
 const listeners = new Set<(provider: BasemapProvider) => void>();
 
 export function setBasemapProvider(provider: BasemapProvider): void {
-  if (provider === current) return;
-  current = provider;
-  for (const listener of listeners) listener(provider);
+	if (provider === current) return;
+	current = provider;
+	for (const listener of listeners) listener(provider);
 }
 
 export function getBasemapProvider(): BasemapProvider {
-  return current;
+	return current;
 }
 
 /** Subscribe to provider changes. Returns an unsubscribe function. */
-export function onBasemapProviderChange(
-  listener: (provider: BasemapProvider) => void,
-): () => void {
-  listeners.add(listener);
-  return () => listeners.delete(listener);
+export function onBasemapProviderChange(listener: (provider: BasemapProvider) => void): () => void {
+	listeners.add(listener);
+	return () => listeners.delete(listener);
 }

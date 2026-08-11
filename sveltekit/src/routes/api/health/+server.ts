@@ -1,6 +1,5 @@
 import type { RequestHandler } from './$types';
 
-
 export const GET: RequestHandler = async () => {
 	// TODO: latency stats need @lib/latency-tracker (astro/src/lib/latency-tracker.ts);
 	// until that is ported this reports the same shape with an empty window.

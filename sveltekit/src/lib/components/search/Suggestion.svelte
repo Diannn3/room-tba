@@ -1,104 +1,136 @@
 <script lang="ts">
-  import type { BuildingData, EventData } from "$lib/types";
-  import { queryStore, type QueryStoreState } from "$lib/store.svelte";
-  import {
-    entityHoverPreviewStore,
-    buildingPreviewFromRow,
-    eventPreviewFromRow,
-  } from "$lib/entity-hover-preview.svelte";
-  import ArrowUpRight from "@lucide/svelte/icons/arrow-up-right";
-  import BookText from "@lucide/svelte/icons/book-text";
-  import CalendarDays from "@lucide/svelte/icons/calendar-days";
-  import DoorClosed from "@lucide/svelte/icons/door-closed";
-  import GraduationCap from "@lucide/svelte/icons/graduation-cap";
-  import Home from "@lucide/svelte/icons/home";
-  import MapPin from "@lucide/svelte/icons/map-pin";
-  import School from "@lucide/svelte/icons/school";
-  import University from "@lucide/svelte/icons/university";
-  import Users from "@lucide/svelte/icons/users";
-  import X from "@lucide/svelte/icons/x";
+import ArrowUpRight from "@lucide/svelte/icons/arrow-up-right";
+import BookText from "@lucide/svelte/icons/book-text";
+import CalendarDays from "@lucide/svelte/icons/calendar-days";
+import DoorClosed from "@lucide/svelte/icons/door-closed";
+import GraduationCap from "@lucide/svelte/icons/graduation-cap";
+import Home from "@lucide/svelte/icons/home";
+import MapPin from "@lucide/svelte/icons/map-pin";
+import School from "@lucide/svelte/icons/school";
+import University from "@lucide/svelte/icons/university";
+import Users from "@lucide/svelte/icons/users";
+import X from "@lucide/svelte/icons/x";
+import { goto } from "$app/navigation";
+import { resolve } from "$app/paths";
+import { isLandmarkPlaceCategory } from "$lib/constants/place-categories";
+import { getAppData } from "$lib/context";
+import {
+	buildingPreviewFromRow,
+	entityHoverPreviewStore,
+	eventPreviewFromRow,
+} from "$lib/entity-hover-preview.svelte";
+import { slugifySegment } from "$lib/site";
+import { type QueryStoreState, queryStore } from "$lib/store.svelte";
+import type { BuildingData, EventData } from "$lib/types";
 
-  let {
-    value,
-    category,
-    id,
-    eventSlug,
-    building,
-    event: eventData,
-    secondary,
-  }: {
-    value: string;
-    category: Exclude<QueryStoreState["category"], null>;
-    id?: number;
-    eventSlug?: string;
-    building?: BuildingData;
-    event?: EventData;
-    /** Supporting line under the value, e.g. a room's unabbreviated name (#875). */
-    secondary?: string | null;
-  } = $props();
+let {
+	value,
+	category,
+	entityId: id,
+  index,
+	eventSlug,
+	building,
+	event: eventData,
+	secondary,
+  recent
+}: {
+	value: string;
+	category: Exclude<QueryStoreState["category"], null>;
+	entityId?: number;
+	eventSlug?: string;
+	building?: BuildingData;
+	event?: EventData;
+  recent?: boolean;
+  index?: number
+	/** Supporting line under the value, e.g. a room's unabbreviated name (#875). */
+	secondary?: string | null;
+} = $props();
 
-  function handleSuggestionClick() {
-    entityHoverPreviewStore.hideNow();
-    queryStore.updateQuery({
-      type: "result",
-      category,
-      value,
-      eventSlug,
-    });
-    queryStore.inputValue = value;
-  }
+const appData = getAppData();
+const { places } = $derived(appData());
 
-  function handleRemoveRecent(event: MouseEvent) {
-    event.preventDefault();
-    event.stopPropagation();
-    if (typeof id === "undefined") return;
-    queryStore.removeRecentSearch(id);
-  }
+function handleSuggestionClick() {
+	entityHoverPreviewStore.hideNow();
+	queryStore.updateQuery({
+		type: "result",
+		category,
+		value,
+		eventSlug,
+		id,
+	});
+	queryStore.inputValue = value;
+	if (category !== "place") {
+		goto(
+			resolve(
+				`/map/${category}s/${slugifySegment(value)}${id ? `-${id}` : ""}`,
+			),
+		);
+		return;
+	}
+	if (!places || typeof id === "undefined") return;
+	const place = places.find((place) => (place.id = id));
+	if (place && isLandmarkPlaceCategory(place.category)) {
+		goto(
+			resolve(`/map/landmarks/${slugifySegment(value)}-${id}`),
+		);
+	} else {
+		goto(
+			resolve(
+				`/map/establishments/${slugifySegment(value)}-${id}`,
+			),
+		);
+	}
+}
 
-  // Hover preview for buildings and events (#288)
-  function handleMouseEnter(event: MouseEvent) {
-    if (category === "building" && building) {
-      const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-      entityHoverPreviewStore.show(buildingPreviewFromRow(building), {
-        x: rect.right,
-        y: rect.top + rect.height / 2,
-      });
-    } else if (category === "event" && eventData) {
-      const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-      entityHoverPreviewStore.show(eventPreviewFromRow(eventData), {
-        x: rect.right,
-        y: rect.top + rect.height / 2,
-      });
-    }
-  }
+function handleRemoveRecent(event: MouseEvent) {
+	if (typeof index === "undefined") return;
+	queryStore.removeRecentSearch(index);
+}
 
-  function handleMouseLeave() {
-    entityHoverPreviewStore.scheduleHide();
-  }
+// Hover preview for buildings and events (#288)
+function handleMouseEnter(event: MouseEvent) {
+	if (category === "building" && building) {
+		const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+		entityHoverPreviewStore.show(buildingPreviewFromRow(building), {
+			x: rect.right,
+			y: rect.top + rect.height / 2,
+		});
+	} else if (category === "event" && eventData) {
+		const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+		entityHoverPreviewStore.show(eventPreviewFromRow(eventData), {
+			x: rect.right,
+			y: rect.top + rect.height / 2,
+		});
+	}
+}
 
-  function handleFocus(event: FocusEvent) {
-    // Show preview on keyboard focus too
-    handleMouseEnter(event as unknown as MouseEvent);
-  }
+function handleMouseLeave() {
+	entityHoverPreviewStore.scheduleHide();
+}
 
-  /** Match query in label; expand to word end so "Institute o" → "Institute of". */
-  const labelParts = $derived.by(() => {
-    const q = queryStore.inputValue.trim();
-    if (!q) return [{ text: value, matched: false }];
-    const idx = value.toLowerCase().indexOf(q.toLowerCase());
-    if (idx < 0) return [{ text: value, matched: false }];
-    let end = idx + q.length;
-    while (end < value.length && value[end] !== " ") end += 1;
-    const parts: { text: string; matched: boolean }[] = [];
-    if (idx > 0) parts.push({ text: value.slice(0, idx), matched: false });
-    parts.push({ text: value.slice(idx, end), matched: true });
-    if (end < value.length) {
-      parts.push({ text: value.slice(end), matched: false });
-    }
-    return parts;
-  });
+function handleFocus(event: FocusEvent) {
+	// Show preview on keyboard focus too
+	handleMouseEnter(event as unknown as MouseEvent);
+}
 
-  const hasMatchHighlight = $derived(labelParts.some((p) => p.matched));
+/** Match query in label; expand to word end so "Institute o" → "Institute of". */
+const labelParts = $derived.by(() => {
+	const q = queryStore.inputValue.trim();
+	if (!q) return [{ text: value, matched: false }];
+	const idx = value.toLowerCase().indexOf(q.toLowerCase());
+	if (idx < 0) return [{ text: value, matched: false }];
+	let end = idx + q.length;
+	while (end < value.length && value[end] !== " ") end += 1;
+	const parts: { text: string; matched: boolean }[] = [];
+	if (idx > 0) parts.push({ text: value.slice(0, idx), matched: false });
+	parts.push({ text: value.slice(idx, end), matched: true });
+	if (end < value.length) {
+		parts.push({ text: value.slice(end), matched: false });
+	}
+	return parts;
+});
+
+const hasMatchHighlight = $derived(labelParts.some((p) => p.matched));
 </script>
 
 {#snippet icon(type: typeof category)}
@@ -148,11 +180,11 @@
         <span class="text-secondary">{secondary}</span>
       {/if}
     </div>
-    {#if typeof id === "undefined"}
+    {#if typeof recent === "undefined"}
       <ArrowUpRight size={18} class="icon trailing" />
     {/if}
   </button>
-  {#if typeof id !== "undefined"}
+  {#if typeof recent !== "undefined"}
     <button
       type="button"
       class="suggestion-remove"

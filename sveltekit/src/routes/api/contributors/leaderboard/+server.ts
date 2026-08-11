@@ -4,7 +4,6 @@ import { db } from '$lib/server/db';
 import { adminUsersTable, contributionsTable } from '$lib/server/db/schema';
 import type { RequestHandler } from './$types';
 
-
 // Inlined from astro/src/lib/services/contribution-service.ts
 type ContributionSource = 'proposal_approved' | 'editor_published';
 

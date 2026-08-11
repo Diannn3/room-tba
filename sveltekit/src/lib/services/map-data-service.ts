@@ -1,376 +1,372 @@
-import { and, asc, eq, ilike, isNotNull, like, or, sql } from "drizzle-orm";
+import { and, asc, eq, ilike, isNotNull, like, or, sql } from 'drizzle-orm';
 import {
-  aliasesTable,
-  buildingsTable,
-  classesTable,
-  collegesTable,
-  divisionsTable,
-  dormsTable,
-  floraSpeciesTable,
-  floraSpecimensTable,
-  organizationsTable,
-  placesTable,
-  finalExamsTable,
-  roomsTable,
-} from "$lib/server/db/schema";
-import { encodeClassCursor, type ClassCursor } from "$lib/api/class-cursor";
-import { clampLimitValue } from "$lib/api/pagination";
-import { escapeLikePattern } from "$lib/like-escape";
-import { db } from "$lib/db";
-import { normalizeCourseCode } from "$lib/final-exams/normalize";
-import { normalizeAlias } from "$lib/site";
-import { normalizeDormListFields } from "$lib/string-lists";
-import { attachProbableLocations } from "./probable-location";
-import { getBuildCache } from "./ssg-cache";
+	aliasesTable,
+	buildingsTable,
+	classesTable,
+	collegesTable,
+	divisionsTable,
+	dormsTable,
+	floraSpeciesTable,
+	floraSpecimensTable,
+	organizationsTable,
+	placesTable,
+	finalExamsTable,
+	roomsTable
+} from '$lib/server/db/schema';
+import { encodeClassCursor, type ClassCursor } from '$lib/api/class-cursor';
+import { clampLimitValue } from '$lib/api/pagination';
+import { escapeLikePattern } from '$lib/like-escape';
+import { db } from '$lib/db';
+import { normalizeCourseCode } from '$lib/final-exams/normalize';
+import { normalizeAlias } from '$lib/site';
+import { normalizeDormListFields } from '$lib/string-lists';
+import { attachProbableLocations } from './probable-location';
+import { getBuildCache } from './ssg-cache';
 import type {
-  BuildingData,
-  ClassMapValue,
-  CollegeData,
-  DivisionData,
-  DormData,
-  OrgData,
-  PlaceData,
-  FinalExamRow,
-  RoomData,
-} from "$lib/types";
+	BuildingData,
+	ClassMapValue,
+	CollegeData,
+	DivisionData,
+	DormData,
+	OrgData,
+	PlaceData,
+	FinalExamRow,
+	RoomData
+} from '$lib/types';
 
 // Cached getters for SSG (#331)
 export async function getAllBuildingsCached(): Promise<BuildingData[]> {
-  const cache = getBuildCache();
-  if (cache.buildings) return cache.buildings;
-  const data = await db.select().from(buildingsTable);
-  cache.buildings = data;
-  return data;
+	const cache = getBuildCache();
+	if (cache.buildings) return cache.buildings;
+	const data = await db.select().from(buildingsTable);
+	cache.buildings = data;
+	return data;
 }
 
 export async function getAllRoomsCached(): Promise<RoomData[]> {
-  const cache = getBuildCache();
-  if (cache.rooms) return cache.rooms;
-  const data = await db
-    .select({
-      id: roomsTable.id,
-      code: roomsTable.roomCode,
-      fullName: roomsTable.fullName,
-      directions: roomsTable.directions,
-      building: {
-        name: buildingsTable.buildingName,
-        lat: buildingsTable.lat,
-        lon: buildingsTable.lon,
-        directions: buildingsTable.directions,
-      },
-      collegeName: collegesTable.collegeName,
-      divisionName: divisionsTable.divisionName,
-      buildingId: roomsTable.buildingId,
-      collegeId: roomsTable.collegeId,
-      divisionId: roomsTable.divisionId,
-      imageUrl: roomsTable.imageUrl,
-      category: roomsTable.category,
-      version: roomsTable.version,
-      updatedAt: roomsTable.updatedAt,
-    })
-    .from(roomsTable)
-    .leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))
-    .leftJoin(collegesTable, eq(collegesTable.id, roomsTable.collegeId))
-    .leftJoin(divisionsTable, eq(divisionsTable.id, roomsTable.divisionId));
-  cache.rooms = data;
-  return data;
+	const cache = getBuildCache();
+	if (cache.rooms) return cache.rooms;
+	const data = await db
+		.select({
+			id: roomsTable.id,
+			code: roomsTable.roomCode,
+			fullName: roomsTable.fullName,
+			directions: roomsTable.directions,
+			building: {
+				name: buildingsTable.buildingName,
+				lat: buildingsTable.lat,
+				lon: buildingsTable.lon,
+				directions: buildingsTable.directions
+			},
+			collegeName: collegesTable.collegeName,
+			divisionName: divisionsTable.divisionName,
+			buildingId: roomsTable.buildingId,
+			collegeId: roomsTable.collegeId,
+			divisionId: roomsTable.divisionId,
+			imageUrl: roomsTable.imageUrl,
+			category: roomsTable.category,
+			version: roomsTable.version,
+			updatedAt: roomsTable.updatedAt
+		})
+		.from(roomsTable)
+		.leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))
+		.leftJoin(collegesTable, eq(collegesTable.id, roomsTable.collegeId))
+		.leftJoin(divisionsTable, eq(divisionsTable.id, roomsTable.divisionId));
+	cache.rooms = data;
+	return data;
 }
 
 export async function getAllCollegesCached(): Promise<CollegeData[]> {
-  const cache = getBuildCache();
-  if (cache.colleges) return cache.colleges;
-  const data = await db.select().from(collegesTable);
-  cache.colleges = data;
-  return data;
+	const cache = getBuildCache();
+	if (cache.colleges) return cache.colleges;
+	const data = await db.select().from(collegesTable);
+	cache.colleges = data;
+	return data;
 }
 
 export async function getAllDivisionsCached(): Promise<DivisionData[]> {
-  const cache = getBuildCache();
-  if (cache.divisions) return cache.divisions;
-  const data = await db.select().from(divisionsTable);
-  cache.divisions = data;
-  return data;
+	const cache = getBuildCache();
+	if (cache.divisions) return cache.divisions;
+	const data = await db.select().from(divisionsTable);
+	cache.divisions = data;
+	return data;
 }
 
 export async function getAllDormsCached(): Promise<DormData[]> {
-  const cache = getBuildCache();
-  if (cache.dorms) return cache.dorms;
-  const data = await db.select().from(dormsTable);
-  cache.dorms = data;
-  return data;
+	const cache = getBuildCache();
+	if (cache.dorms) return cache.dorms;
+	const data = await db.select().from(dormsTable);
+	cache.dorms = data;
+	return data;
 }
 
 // Legacy non-cached versions for runtime use
 export async function getAllBuildings(): Promise<BuildingData[]> {
-  try {
-    const data = await db.select().from(buildingsTable);
-    return data;
-  } catch (e) {
-    console.error(e);
-    throw new Error("Failed to fetch data for buildings", { cause: e });
-  }
+	try {
+		const data = await db.select().from(buildingsTable);
+		return data;
+	} catch (e) {
+		console.error(e);
+		throw new Error('Failed to fetch data for buildings', { cause: e });
+	}
 }
 
 export async function getAllRooms(): Promise<RoomData[]> {
-  try {
-    const data = await db
-      .select({
-        id: roomsTable.id,
-        code: roomsTable.roomCode,
-        fullName: roomsTable.fullName,
-        directions: roomsTable.directions,
-        building: {
-          name: buildingsTable.buildingName,
-          lat: buildingsTable.lat,
-          lon: buildingsTable.lon,
-          directions: buildingsTable.directions,
-        },
-        collegeName: collegesTable.collegeName,
-        divisionName: divisionsTable.divisionName,
-        buildingId: roomsTable.buildingId,
-        collegeId: roomsTable.collegeId,
-        divisionId: roomsTable.divisionId,
-        imageUrl: roomsTable.imageUrl,
-        category: roomsTable.category,
-        version: roomsTable.version,
-        updatedAt: roomsTable.updatedAt,
-      })
-      .from(roomsTable)
-      .leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))
-      .leftJoin(collegesTable, eq(collegesTable.id, roomsTable.collegeId))
-      .leftJoin(divisionsTable, eq(divisionsTable.id, roomsTable.divisionId));
-    return data;
-  } catch (e) {
-    console.error("Error: ", e);
-    throw new Error("Failed to fetch rooms", { cause: e });
-  }
+	try {
+		const data = await db
+			.select({
+				id: roomsTable.id,
+				code: roomsTable.roomCode,
+				fullName: roomsTable.fullName,
+				directions: roomsTable.directions,
+				building: {
+					name: buildingsTable.buildingName,
+					lat: buildingsTable.lat,
+					lon: buildingsTable.lon,
+					directions: buildingsTable.directions
+				},
+				collegeName: collegesTable.collegeName,
+				divisionName: divisionsTable.divisionName,
+				buildingId: roomsTable.buildingId,
+				collegeId: roomsTable.collegeId,
+				divisionId: roomsTable.divisionId,
+				imageUrl: roomsTable.imageUrl,
+				category: roomsTable.category,
+				version: roomsTable.version,
+				updatedAt: roomsTable.updatedAt
+			})
+			.from(roomsTable)
+			.leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))
+			.leftJoin(collegesTable, eq(collegesTable.id, roomsTable.collegeId))
+			.leftJoin(divisionsTable, eq(divisionsTable.id, roomsTable.divisionId));
+		return data;
+	} catch (e) {
+		console.error('Error: ', e);
+		throw new Error('Failed to fetch rooms', { cause: e });
+	}
 }
 
 export async function getRoomByCode(code: string) {
-  try {
-    const normalizedCode = code.toUpperCase();
-    const data = await db
-      .select({
-        id: roomsTable.id,
-        code: roomsTable.roomCode,
-        fullName: roomsTable.fullName,
-        directions: roomsTable.directions,
-        building: {
-          name: buildingsTable.buildingName,
-          lat: buildingsTable.lat,
-          lon: buildingsTable.lon,
-          directions: buildingsTable.directions,
-        },
-        collegeName: collegesTable.collegeName,
-        divisionName: divisionsTable.divisionName,
-        buildingId: roomsTable.buildingId,
-        collegeId: roomsTable.collegeId,
-        divisionId: roomsTable.divisionId,
-        imageUrl: roomsTable.imageUrl,
-        category: roomsTable.category,
-        version: roomsTable.version,
-        updatedAt: roomsTable.updatedAt,
-      })
-      .from(roomsTable)
-      .leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))
-      .leftJoin(collegesTable, eq(collegesTable.id, roomsTable.collegeId))
-      .leftJoin(divisionsTable, eq(divisionsTable.id, roomsTable.divisionId))
-      .where(sql`upper(${roomsTable.roomCode}) = ${normalizedCode}`);
-    if (data.length === 0 || typeof data[0] === "undefined") return null;
-    return data[0];
-  } catch (e) {
-    console.error("Error: ", e);
-    throw new Error("Failed to fetch rooms", { cause: e });
-  }
+	try {
+		const normalizedCode = code.toUpperCase();
+		const data = await db
+			.select({
+				id: roomsTable.id,
+				code: roomsTable.roomCode,
+				fullName: roomsTable.fullName,
+				directions: roomsTable.directions,
+				building: {
+					name: buildingsTable.buildingName,
+					lat: buildingsTable.lat,
+					lon: buildingsTable.lon,
+					directions: buildingsTable.directions
+				},
+				collegeName: collegesTable.collegeName,
+				divisionName: divisionsTable.divisionName,
+				buildingId: roomsTable.buildingId,
+				collegeId: roomsTable.collegeId,
+				divisionId: roomsTable.divisionId,
+				imageUrl: roomsTable.imageUrl,
+				category: roomsTable.category,
+				version: roomsTable.version,
+				updatedAt: roomsTable.updatedAt
+			})
+			.from(roomsTable)
+			.leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))
+			.leftJoin(collegesTable, eq(collegesTable.id, roomsTable.collegeId))
+			.leftJoin(divisionsTable, eq(divisionsTable.id, roomsTable.divisionId))
+			.where(sql`upper(${roomsTable.roomCode}) = ${normalizedCode}`);
+		if (data.length === 0 || typeof data[0] === 'undefined') return null;
+		return data[0];
+	} catch (e) {
+		console.error('Error: ', e);
+		throw new Error('Failed to fetch rooms', { cause: e });
+	}
 }
 
 export async function searchRooms(searchString: string) {
-  try {
-    const escaped = escapeLikePattern(searchString);
-    const data = await db
-      .select({
-        value: roomsTable.roomCode,
-        fullName: roomsTable.fullName,
-      })
-      .from(roomsTable)
-      .leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))
-      .leftJoin(collegesTable, eq(collegesTable.id, roomsTable.collegeId))
-      .leftJoin(divisionsTable, eq(divisionsTable.id, roomsTable.divisionId))
-      // Callers upper-case the query, so match both columns case-insensitively:
-      // full names are mixed case ("DSDS Main Lecture Hall") (#875).
-      .where(
-        sql`upper(${roomsTable.roomCode}) LIKE ${`%${escaped.toUpperCase()}%`}
-          OR upper(${roomsTable.fullName}) LIKE ${`%${escaped.toUpperCase()}%`}`,
-      )
-      .limit(6);
-    if (data.length === 0) return null;
-    return data;
-  } catch (e) {
-    console.error("Error: ", e);
-    throw new Error("Failed to fetch rooms", { cause: e });
-  }
+	try {
+		const escaped = escapeLikePattern(searchString);
+		const data = await db
+			.select({
+				value: roomsTable.roomCode,
+				fullName: roomsTable.fullName
+			})
+			.from(roomsTable)
+			.leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))
+			.leftJoin(collegesTable, eq(collegesTable.id, roomsTable.collegeId))
+			.leftJoin(divisionsTable, eq(divisionsTable.id, roomsTable.divisionId))
+			// Callers upper-case the query, so match both columns case-insensitively:
+			// full names are mixed case ("DSDS Main Lecture Hall") (#875).
+			.where(
+				sql`upper(${roomsTable.roomCode}) LIKE ${`%${escaped.toUpperCase()}%`}
+          OR upper(${roomsTable.fullName}) LIKE ${`%${escaped.toUpperCase()}%`}`
+			)
+			.limit(6);
+		if (data.length === 0) return null;
+		return data;
+	} catch (e) {
+		console.error('Error: ', e);
+		throw new Error('Failed to fetch rooms', { cause: e });
+	}
 }
 
-export async function getBuildingRooms(
-  buildingId: number,
-): Promise<RoomData[]> {
-  try {
-    const data = await db
-      .select({
-        id: roomsTable.id,
-        code: roomsTable.roomCode,
-        fullName: roomsTable.fullName,
-        directions: roomsTable.directions,
-        building: {
-          name: buildingsTable.buildingName,
-          lat: buildingsTable.lat,
-          lon: buildingsTable.lon,
-          directions: buildingsTable.directions,
-        },
-        collegeName: collegesTable.collegeName,
-        divisionName: divisionsTable.divisionName,
-        buildingId: roomsTable.buildingId,
-        collegeId: roomsTable.collegeId,
-        divisionId: roomsTable.divisionId,
-        imageUrl: roomsTable.imageUrl,
-        category: roomsTable.category,
-        version: roomsTable.version,
-        updatedAt: roomsTable.updatedAt,
-      })
-      .from(roomsTable)
-      .leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))
-      .leftJoin(collegesTable, eq(collegesTable.id, roomsTable.collegeId))
-      .leftJoin(divisionsTable, eq(divisionsTable.id, roomsTable.divisionId))
-      .where(eq(roomsTable.buildingId, buildingId));
-    return data;
-  } catch (e) {
-    console.error("Error: ", e);
-    throw new Error("Failed to fetch rooms", { cause: e });
-  }
+export async function getBuildingRooms(buildingId: number): Promise<RoomData[]> {
+	try {
+		const data = await db
+			.select({
+				id: roomsTable.id,
+				code: roomsTable.roomCode,
+				fullName: roomsTable.fullName,
+				directions: roomsTable.directions,
+				building: {
+					name: buildingsTable.buildingName,
+					lat: buildingsTable.lat,
+					lon: buildingsTable.lon,
+					directions: buildingsTable.directions
+				},
+				collegeName: collegesTable.collegeName,
+				divisionName: divisionsTable.divisionName,
+				buildingId: roomsTable.buildingId,
+				collegeId: roomsTable.collegeId,
+				divisionId: roomsTable.divisionId,
+				imageUrl: roomsTable.imageUrl,
+				category: roomsTable.category,
+				version: roomsTable.version,
+				updatedAt: roomsTable.updatedAt
+			})
+			.from(roomsTable)
+			.leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))
+			.leftJoin(collegesTable, eq(collegesTable.id, roomsTable.collegeId))
+			.leftJoin(divisionsTable, eq(divisionsTable.id, roomsTable.divisionId))
+			.where(eq(roomsTable.buildingId, buildingId));
+		return data;
+	} catch (e) {
+		console.error('Error: ', e);
+		throw new Error('Failed to fetch rooms', { cause: e });
+	}
 }
 export async function getCollegeRooms(collegeId: number): Promise<RoomData[]> {
-  try {
-    const data = await db
-      .select({
-        id: roomsTable.id,
-        code: roomsTable.roomCode,
-        fullName: roomsTable.fullName,
-        directions: roomsTable.directions,
-        building: {
-          name: buildingsTable.buildingName,
-          lat: buildingsTable.lat,
-          lon: buildingsTable.lon,
-          directions: buildingsTable.directions,
-        },
-        collegeName: collegesTable.collegeName,
-        divisionName: divisionsTable.divisionName,
-        buildingId: roomsTable.buildingId,
-        collegeId: roomsTable.collegeId,
-        divisionId: roomsTable.divisionId,
-        imageUrl: roomsTable.imageUrl,
-        category: roomsTable.category,
-        version: roomsTable.version,
-        updatedAt: roomsTable.updatedAt,
-      })
-      .from(roomsTable)
-      .leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))
-      .leftJoin(collegesTable, eq(collegesTable.id, roomsTable.collegeId))
-      .leftJoin(divisionsTable, eq(divisionsTable.id, roomsTable.divisionId))
-      .where(eq(roomsTable.collegeId, collegeId));
-    return data;
-  } catch (e) {
-    console.error("Error: ", e);
-    throw new Error("Failed to fetch rooms", { cause: e });
-  }
+	try {
+		const data = await db
+			.select({
+				id: roomsTable.id,
+				code: roomsTable.roomCode,
+				fullName: roomsTable.fullName,
+				directions: roomsTable.directions,
+				building: {
+					name: buildingsTable.buildingName,
+					lat: buildingsTable.lat,
+					lon: buildingsTable.lon,
+					directions: buildingsTable.directions
+				},
+				collegeName: collegesTable.collegeName,
+				divisionName: divisionsTable.divisionName,
+				buildingId: roomsTable.buildingId,
+				collegeId: roomsTable.collegeId,
+				divisionId: roomsTable.divisionId,
+				imageUrl: roomsTable.imageUrl,
+				category: roomsTable.category,
+				version: roomsTable.version,
+				updatedAt: roomsTable.updatedAt
+			})
+			.from(roomsTable)
+			.leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))
+			.leftJoin(collegesTable, eq(collegesTable.id, roomsTable.collegeId))
+			.leftJoin(divisionsTable, eq(divisionsTable.id, roomsTable.divisionId))
+			.where(eq(roomsTable.collegeId, collegeId));
+		return data;
+	} catch (e) {
+		console.error('Error: ', e);
+		throw new Error('Failed to fetch rooms', { cause: e });
+	}
 }
-export async function getDivisionRooms(
-  divisionId: number,
-): Promise<RoomData[]> {
-  try {
-    const data = await db
-      .select({
-        id: roomsTable.id,
-        code: roomsTable.roomCode,
-        fullName: roomsTable.fullName,
-        directions: roomsTable.directions,
-        building: {
-          name: buildingsTable.buildingName,
-          lat: buildingsTable.lat,
-          lon: buildingsTable.lon,
-          directions: buildingsTable.directions,
-        },
-        collegeName: collegesTable.collegeName,
-        divisionName: divisionsTable.divisionName,
-        buildingId: roomsTable.buildingId,
-        collegeId: roomsTable.collegeId,
-        divisionId: roomsTable.divisionId,
-        imageUrl: roomsTable.imageUrl,
-        category: roomsTable.category,
-        version: roomsTable.version,
-        updatedAt: roomsTable.updatedAt,
-      })
-      .from(roomsTable)
-      .leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))
-      .leftJoin(collegesTable, eq(collegesTable.id, roomsTable.collegeId))
-      .leftJoin(divisionsTable, eq(divisionsTable.id, roomsTable.divisionId))
-      .where(eq(roomsTable.divisionId, divisionId));
+export async function getDivisionRooms(divisionId: number): Promise<RoomData[]> {
+	try {
+		const data = await db
+			.select({
+				id: roomsTable.id,
+				code: roomsTable.roomCode,
+				fullName: roomsTable.fullName,
+				directions: roomsTable.directions,
+				building: {
+					name: buildingsTable.buildingName,
+					lat: buildingsTable.lat,
+					lon: buildingsTable.lon,
+					directions: buildingsTable.directions
+				},
+				collegeName: collegesTable.collegeName,
+				divisionName: divisionsTable.divisionName,
+				buildingId: roomsTable.buildingId,
+				collegeId: roomsTable.collegeId,
+				divisionId: roomsTable.divisionId,
+				imageUrl: roomsTable.imageUrl,
+				category: roomsTable.category,
+				version: roomsTable.version,
+				updatedAt: roomsTable.updatedAt
+			})
+			.from(roomsTable)
+			.leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))
+			.leftJoin(collegesTable, eq(collegesTable.id, roomsTable.collegeId))
+			.leftJoin(divisionsTable, eq(divisionsTable.id, roomsTable.divisionId))
+			.where(eq(roomsTable.divisionId, divisionId));
 
-    return data;
-  } catch (e) {
-    console.error("Error: ", e);
-    throw new Error("Failed to fetch rooms", { cause: e });
-  }
+		return data;
+	} catch (e) {
+		console.error('Error: ', e);
+		throw new Error('Failed to fetch rooms', { cause: e });
+	}
 }
 
 export async function getAllColleges(): Promise<CollegeData[]> {
-  try {
-    const data = await db.select().from(collegesTable);
-    return data;
-  } catch (e) {
-    console.error("Error: ", e);
-    throw new Error("Failed to fetch data for colleges", { cause: e });
-  }
+	try {
+		const data = await db.select().from(collegesTable);
+		return data;
+	} catch (e) {
+		console.error('Error: ', e);
+		throw new Error('Failed to fetch data for colleges', { cause: e });
+	}
 }
 
 export async function getAllDivisions(): Promise<DivisionData[]> {
-  try {
-    const data = await db.select().from(divisionsTable);
-    return data;
-  } catch (e) {
-    console.error("Error: ", e);
-    throw new Error("Failed to fetch data for divisions", { cause: e });
-  }
+	try {
+		const data = await db.select().from(divisionsTable);
+		return data;
+	} catch (e) {
+		console.error('Error: ', e);
+		throw new Error('Failed to fetch data for divisions', { cause: e });
+	}
 }
 
 const classListSelect = {
-  id: classesTable.id,
-  termId: classesTable.termId,
-  roomId: classesTable.roomId,
-  courseCode: classesTable.courseCode,
-  roomCode: roomsTable.roomCode,
-  section: classesTable.section,
-  type: classesTable.type,
-  schedule: classesTable.schedule,
-  directions: roomsTable.directions,
-  courseTitle: classesTable.courseTitle,
+	id: classesTable.id,
+	termId: classesTable.termId,
+	roomId: classesTable.roomId,
+	courseCode: classesTable.courseCode,
+	roomCode: roomsTable.roomCode,
+	section: classesTable.section,
+	type: classesTable.type,
+	schedule: classesTable.schedule,
+	directions: roomsTable.directions,
+	courseTitle: classesTable.courseTitle
 };
 
 function classListWhere(termId?: number, courseCodePrefix?: string) {
-  const filters = [];
-  if (termId != null) {
-    filters.push(eq(classesTable.termId, termId));
-  }
-  const prefix = courseCodePrefix?.trim();
-  if (prefix) {
-    filters.push(ilike(classesTable.courseCode, `${prefix.toUpperCase()}%`));
-  }
-  return filters.length > 0 ? and(...filters) : undefined;
+	const filters = [];
+	if (termId != null) {
+		filters.push(eq(classesTable.termId, termId));
+	}
+	const prefix = courseCodePrefix?.trim();
+	if (prefix) {
+		filters.push(ilike(classesTable.courseCode, `${prefix.toUpperCase()}%`));
+	}
+	return filters.length > 0 ? and(...filters) : undefined;
 }
 
 export type ClassCursorPage = {
-  rows: ClassMapValue[];
-  nextCursor: string | null;
-  hasMore: boolean;
+	rows: ClassMapValue[];
+	nextCursor: string | null;
+	hasMore: boolean;
 };
 
 // courseCode/section are nullable; COALESCE to '' in both ORDER BY and the
@@ -381,89 +377,85 @@ const sectionSortKey = sql`coalesce(${classesTable.section}, '')`;
 
 /** Keyset-paginated class list (#412): no OFFSET, no per-page COUNT(). */
 export async function queryClasses(options: {
-  termId?: number;
-  courseCodePrefix?: string;
-  limit?: number;
-  cursor?: ClassCursor;
+	termId?: number;
+	courseCodePrefix?: string;
+	limit?: number;
+	cursor?: ClassCursor;
 }): Promise<ClassCursorPage> {
-  try {
-    const limit = clampLimitValue(options.limit, {
-      defaultValue: 25,
-      max: 100,
-    });
-    const cursor = options.cursor;
-    const rows = await db
-      .select(classListSelect)
-      .from(classesTable)
-      .leftJoin(roomsTable, eq(roomsTable.id, classesTable.roomId))
-      .where(
-        and(
-          classListWhere(options.termId, options.courseCodePrefix),
-          cursor
-            ? sql`(${courseCodeSortKey}, ${sectionSortKey}, ${classesTable.id}) > (${cursor.courseCode}, ${cursor.section}, ${cursor.id})`
-            : undefined,
-        ),
-      )
-      .orderBy(
-        asc(courseCodeSortKey),
-        asc(sectionSortKey),
-        asc(classesTable.id),
-      )
-      .limit(limit + 1);
+	try {
+		const limit = clampLimitValue(options.limit, {
+			defaultValue: 25,
+			max: 100
+		});
+		const cursor = options.cursor;
+		const rows = await db
+			.select(classListSelect)
+			.from(classesTable)
+			.leftJoin(roomsTable, eq(roomsTable.id, classesTable.roomId))
+			.where(
+				and(
+					classListWhere(options.termId, options.courseCodePrefix),
+					cursor
+						? sql`(${courseCodeSortKey}, ${sectionSortKey}, ${classesTable.id}) > (${cursor.courseCode}, ${cursor.section}, ${cursor.id})`
+						: undefined
+				)
+			)
+			.orderBy(asc(courseCodeSortKey), asc(sectionSortKey), asc(classesTable.id))
+			.limit(limit + 1);
 
-    const hasMore = rows.length > limit;
-    const page = hasMore ? rows.slice(0, limit) : rows;
-    // Room TBA sections get a server-computed location hint (#846).
-    await attachProbableLocations(page);
-    const last = page.at(-1);
-    const nextCursor =
-      hasMore && last
-        ? encodeClassCursor({
-            courseCode: last.courseCode ?? "",
-            section: last.section ?? "",
-            id: last.id,
-          })
-        : null;
-    return { rows: page, nextCursor, hasMore };
-  } catch (e) {
-    console.error("Error: ", e);
-    throw new Error("Failed to query classes", { cause: e });
-  }
+		const hasMore = rows.length > limit;
+		const page = hasMore ? rows.slice(0, limit) : rows;
+		// Room TBA sections get a server-computed location hint (#846).
+		await attachProbableLocations(page);
+		const last = page.at(-1);
+		const nextCursor =
+			hasMore && last
+				? encodeClassCursor({
+						courseCode: last.courseCode ?? '',
+						section: last.section ?? '',
+						id: last.id
+					})
+				: null;
+		return { rows: page, nextCursor, hasMore };
+	} catch (e) {
+		console.error('Error: ', e);
+		throw new Error('Failed to query classes', { cause: e });
+	}
 }
 
 export async function getAllClasses(termId?: number): Promise<ClassMapValue[]> {
-  try {
-    const data = await db
-      .select(classListSelect)
-      .from(classesTable)
-      .leftJoin(roomsTable, eq(roomsTable.id, classesTable.roomId))
-      .where(termId != null ? eq(classesTable.termId, termId) : undefined);
-    return data;
-  } catch (e) {
-    console.error("Error: ", e);
-    throw new Error("Failed to fetch data for classes", { cause: e });
-  }
+	try {
+		const data = await db
+			.select(classListSelect)
+			.from(classesTable)
+			.leftJoin(roomsTable, eq(roomsTable.id, classesTable.roomId))
+			.where(termId != null ? eq(classesTable.termId, termId) : undefined);
+		return data;
+	} catch (e) {
+		console.error('Error: ', e);
+		throw new Error('Failed to fetch data for classes', { cause: e });
+	}
 }
 
 export async function getClassesForRoom(
-  roomCode: string,
-  termId?: number,
+	roomCode: string,
+	termId?: number
 ): Promise<ClassMapValue[]> {
-  try {
-    return await db
-      .select(classListSelect)
-      .from(classesTable)
-      .leftJoin(roomsTable, eq(roomsTable.id, classesTable.roomId))
-      .where(
-        and(
-          eq(roomsTable.roomCode, roomCode),
-          termId != null ? eq(classesTable.termId, termId) : undefined,
-        ),
-      );
-  } catch (e) {
-    console.error("Error: ", e);
-    throw new Error("Failed to fetch classes for room", { cause: e });
-  }
+	try {
+		return await db
+			.select(classListSelect)
+			.from(classesTable)
+			.leftJoin(roomsTable, eq(roomsTable.id, classesTable.roomId))
+			.where(
+				and(
+					eq(roomsTable.roomCode, roomCode),
+					termId != null ? eq(classesTable.termId, termId) : undefined
+				)
+			);
+	} catch (e) {
+		console.error('Error: ', e);
+		throw new Error('Failed to fetch classes for room', { cause: e });
+	}
 }
 
 /** Per-room class counts for one building/college/division, optionally scoped
@@ -480,27 +472,25 @@ export async function getClassesForRoom(
  * dropped, which matches counting by joined name — a null parent never matched.
  */
 export async function getRoomCountsByParent(
-  parent: "building" | "college" | "division",
+	parent: 'building' | 'college' | 'division'
 ): Promise<Map<number, number>> {
-  try {
-    const column =
-      parent === "building"
-        ? roomsTable.buildingId
-        : parent === "college"
-          ? roomsTable.collegeId
-          : roomsTable.divisionId;
-    const data = await db
-      .select({ id: column, count: sql<number>`count(*)::int` })
-      .from(roomsTable)
-      .where(isNotNull(column))
-      .groupBy(column);
-    return new Map(
-      data.flatMap((row) => (row.id === null ? [] : [[row.id, row.count]])),
-    );
-  } catch (e) {
-    console.error("Error: ", e);
-    throw new Error(`Failed to fetch room counts by ${parent}`, { cause: e });
-  }
+	try {
+		const column =
+			parent === 'building'
+				? roomsTable.buildingId
+				: parent === 'college'
+					? roomsTable.collegeId
+					: roomsTable.divisionId;
+		const data = await db
+			.select({ id: column, count: sql<number>`count(*)::int` })
+			.from(roomsTable)
+			.where(isNotNull(column))
+			.groupBy(column);
+		return new Map(data.flatMap((row) => (row.id === null ? [] : [[row.id, row.count]])));
+	} catch (e) {
+		console.error('Error: ', e);
+		throw new Error(`Failed to fetch room counts by ${parent}`, { cause: e });
+	}
 }
 
 /**
@@ -508,193 +498,183 @@ export async function getRoomCountsByParent(
  * its entries. A room with no classes is absent rather than zero, so callers can
  * tell "none listed" from "none this term" the same way the old classesMap did.
  */
-export async function getClassCountsByRoomCode(
-  termId?: number,
-): Promise<Map<string, number>> {
-  try {
-    const data = await db
-      .select({
-        roomCode: roomsTable.roomCode,
-        count: sql<number>`count(${classesTable.id})::int`,
-      })
-      .from(classesTable)
-      .innerJoin(roomsTable, eq(roomsTable.id, classesTable.roomId))
-      .where(termId != null ? eq(classesTable.termId, termId) : undefined)
-      .groupBy(roomsTable.roomCode);
-    return new Map(data.map((row) => [row.roomCode, row.count]));
-  } catch (e) {
-    console.error("Error: ", e);
-    throw new Error("Failed to fetch class counts by room", { cause: e });
-  }
+export async function getClassCountsByRoomCode(termId?: number): Promise<Map<string, number>> {
+	try {
+		const data = await db
+			.select({
+				roomCode: roomsTable.roomCode,
+				count: sql<number>`count(${classesTable.id})::int`
+			})
+			.from(classesTable)
+			.innerJoin(roomsTable, eq(roomsTable.id, classesTable.roomId))
+			.where(termId != null ? eq(classesTable.termId, termId) : undefined)
+			.groupBy(roomsTable.roomCode);
+		return new Map(data.map((row) => [row.roomCode, row.count]));
+	} catch (e) {
+		console.error('Error: ', e);
+		throw new Error('Failed to fetch class counts by room', { cause: e });
+	}
 }
 
 export async function getRoomClassCounts(
-  entityName: "building" | "college" | "division",
-  id: number,
-  termId?: number,
+	entityName: 'building' | 'college' | 'division',
+	id: number,
+	termId?: number
 ): Promise<Map<number, number>> {
-  try {
-    const column =
-      entityName === "building"
-        ? roomsTable.buildingId
-        : entityName === "college"
-          ? roomsTable.collegeId
-          : roomsTable.divisionId;
-    const data = await db
-      .select({
-        roomId: roomsTable.id,
-        count: sql<number>`count(${classesTable.id})::int`,
-      })
-      .from(roomsTable)
-      .leftJoin(
-        classesTable,
-        and(
-          eq(classesTable.roomId, roomsTable.id),
-          termId != null ? eq(classesTable.termId, termId) : undefined,
-        ),
-      )
-      .where(eq(column, id))
-      .groupBy(roomsTable.id);
-    return new Map(data.map((row) => [row.roomId, row.count]));
-  } catch (e) {
-    console.error("Error: ", e);
-    throw new Error("Failed to fetch room class counts", { cause: e });
-  }
+	try {
+		const column =
+			entityName === 'building'
+				? roomsTable.buildingId
+				: entityName === 'college'
+					? roomsTable.collegeId
+					: roomsTable.divisionId;
+		const data = await db
+			.select({
+				roomId: roomsTable.id,
+				count: sql<number>`count(${classesTable.id})::int`
+			})
+			.from(roomsTable)
+			.leftJoin(
+				classesTable,
+				and(
+					eq(classesTable.roomId, roomsTable.id),
+					termId != null ? eq(classesTable.termId, termId) : undefined
+				)
+			)
+			.where(eq(column, id))
+			.groupBy(roomsTable.id);
+		return new Map(data.map((row) => [row.roomId, row.count]));
+	} catch (e) {
+		console.error('Error: ', e);
+		throw new Error('Failed to fetch room class counts', { cause: e });
+	}
 }
 
 export type AliasMatch = {
-  alias: string;
-  targetType: string;
-  targetId: number;
-  value: string | null;
+	alias: string;
+	targetType: string;
+	targetId: number;
+	value: string | null;
 };
 
 export type AliasCacheRow = AliasMatch & {
-  id: number;
-  normalizedAlias: string;
+	id: number;
+	normalizedAlias: string;
 };
 
 /** All alias rows with resolved building names for PGlite cache refresh (#155). */
 export async function listAliasesForCache(): Promise<AliasCacheRow[]> {
-  try {
-    const rows = await db
-      .select({
-        id: aliasesTable.id,
-        alias: aliasesTable.alias,
-        normalizedAlias: aliasesTable.normalizedAlias,
-        targetType: aliasesTable.targetType,
-        targetId: aliasesTable.targetId,
-        buildingName: buildingsTable.buildingName,
-      })
-      .from(aliasesTable)
-      .leftJoin(
-        buildingsTable,
-        and(
-          eq(aliasesTable.targetType, "building"),
-          eq(buildingsTable.id, aliasesTable.targetId),
-        ),
-      );
+	try {
+		const rows = await db
+			.select({
+				id: aliasesTable.id,
+				alias: aliasesTable.alias,
+				normalizedAlias: aliasesTable.normalizedAlias,
+				targetType: aliasesTable.targetType,
+				targetId: aliasesTable.targetId,
+				buildingName: buildingsTable.buildingName
+			})
+			.from(aliasesTable)
+			.leftJoin(
+				buildingsTable,
+				and(eq(aliasesTable.targetType, 'building'), eq(buildingsTable.id, aliasesTable.targetId))
+			);
 
-    return rows.map((row) => ({
-      id: row.id,
-      alias: row.alias,
-      normalizedAlias: row.normalizedAlias,
-      targetType: row.targetType,
-      targetId: row.targetId,
-      value: row.buildingName,
-    }));
-  } catch (e) {
-    console.error("Error: ", e);
-    return [];
-  }
+		return rows.map((row) => ({
+			id: row.id,
+			alias: row.alias,
+			normalizedAlias: row.normalizedAlias,
+			targetType: row.targetType,
+			targetId: row.targetId,
+			value: row.buildingName
+		}));
+	} catch (e) {
+		console.error('Error: ', e);
+		return [];
+	}
 }
 
 /** Resolve a search term against the alias/synonym map (#155). Matches exact
  * and prefix normalized aliases, returning the (deduped) building targets. */
-export async function searchAliases(
-  searchString: string,
-): Promise<AliasMatch[]> {
-  try {
-    const normalized = normalizeAlias(searchString);
-    if (!normalized) return [];
-    const rows = await db
-      .select({
-        alias: aliasesTable.alias,
-        normalizedAlias: aliasesTable.normalizedAlias,
-        targetType: aliasesTable.targetType,
-        targetId: aliasesTable.targetId,
-        buildingName: buildingsTable.buildingName,
-      })
-      .from(aliasesTable)
-      .leftJoin(
-        buildingsTable,
-        and(
-          eq(aliasesTable.targetType, "building"),
-          eq(buildingsTable.id, aliasesTable.targetId),
-        ),
-      )
-      .where(
-        or(
-          eq(aliasesTable.normalizedAlias, normalized),
-          like(aliasesTable.normalizedAlias, `${normalized}%`),
-        ),
-      )
-      .limit(12);
+export async function searchAliases(searchString: string): Promise<AliasMatch[]> {
+	try {
+		const normalized = normalizeAlias(searchString);
+		if (!normalized) return [];
+		const rows = await db
+			.select({
+				alias: aliasesTable.alias,
+				normalizedAlias: aliasesTable.normalizedAlias,
+				targetType: aliasesTable.targetType,
+				targetId: aliasesTable.targetId,
+				buildingName: buildingsTable.buildingName
+			})
+			.from(aliasesTable)
+			.leftJoin(
+				buildingsTable,
+				and(eq(aliasesTable.targetType, 'building'), eq(buildingsTable.id, aliasesTable.targetId))
+			)
+			.where(
+				or(
+					eq(aliasesTable.normalizedAlias, normalized),
+					like(aliasesTable.normalizedAlias, `${normalized}%`)
+				)
+			)
+			.limit(12);
 
-    // Exact matches first, then dedupe by target.
-    rows.sort((a, b) => {
-      const ae = a.normalizedAlias === normalized ? 0 : 1;
-      const be = b.normalizedAlias === normalized ? 0 : 1;
-      return ae - be;
-    });
-    const seen = new Set<string>();
-    const matches: AliasMatch[] = [];
-    for (const row of rows) {
-      const key = `${row.targetType}:${row.targetId}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      matches.push({
-        alias: row.alias,
-        targetType: row.targetType,
-        targetId: row.targetId,
-        value: row.buildingName,
-      });
-    }
-    return matches;
-  } catch (e) {
-    console.error("Error: ", e);
-    return [];
-  }
+		// Exact matches first, then dedupe by target.
+		rows.sort((a, b) => {
+			const ae = a.normalizedAlias === normalized ? 0 : 1;
+			const be = b.normalizedAlias === normalized ? 0 : 1;
+			return ae - be;
+		});
+		const seen = new Set<string>();
+		const matches: AliasMatch[] = [];
+		for (const row of rows) {
+			const key = `${row.targetType}:${row.targetId}`;
+			if (seen.has(key)) continue;
+			seen.add(key);
+			matches.push({
+				alias: row.alias,
+				targetType: row.targetType,
+				targetId: row.targetId,
+				value: row.buildingName
+			});
+		}
+		return matches;
+	} catch (e) {
+		console.error('Error: ', e);
+		return [];
+	}
 }
 
 export async function getAllDorms(): Promise<DormData[]> {
-  try {
-    const data = await db.select().from(dormsTable);
-    return data.map(normalizeDormListFields);
-  } catch (e) {
-    console.error("Error: ", e);
-    throw new Error("Failed to fetch data for dorms", { cause: e });
-  }
+	try {
+		const data = await db.select().from(dormsTable);
+		return data.map(normalizeDormListFields);
+	} catch (e) {
+		console.error('Error: ', e);
+		throw new Error('Failed to fetch data for dorms', { cause: e });
+	}
 }
 
 export type FloraSpecimenData = {
-  id: number;
-  speciesId: number;
-  lat: number;
-  lon: number;
-  tagNumber: string | null;
-  plantedYear: number | null;
-  notes: string | null;
-  isNotable: boolean;
-  source: string;
-  sourceLicence: string | null;
-  scientificName: string;
-  family: string | null;
-  commonNames: string[] | null;
-  description: string | null;
-  imageUrl: string | null;
-  conservationStatus: string | null;
-  isNative: boolean | null;
+	id: number;
+	speciesId: number;
+	lat: number;
+	lon: number;
+	tagNumber: string | null;
+	plantedYear: number | null;
+	notes: string | null;
+	isNotable: boolean;
+	source: string;
+	sourceLicence: string | null;
+	scientificName: string;
+	family: string | null;
+	commonNames: string[] | null;
+	description: string | null;
+	imageUrl: string | null;
+	conservationStatus: string | null;
+	isNative: boolean | null;
 };
 
 /**
@@ -703,129 +683,117 @@ export type FloraSpecimenData = {
  * notable filter into the thousands, switch the map source to MapLibre
  * clustering and page this instead.
  */
-export async function getAllFloraSpecimens(
-  notableOnly = false,
-): Promise<FloraSpecimenData[]> {
-  try {
-    const data = await db
-      .select({
-        id: floraSpecimensTable.id,
-        speciesId: floraSpecimensTable.speciesId,
-        lat: floraSpecimensTable.lat,
-        lon: floraSpecimensTable.lon,
-        tagNumber: floraSpecimensTable.tagNumber,
-        plantedYear: floraSpecimensTable.plantedYear,
-        notes: floraSpecimensTable.notes,
-        isNotable: floraSpecimensTable.isNotable,
-        source: floraSpecimensTable.source,
-        sourceLicence: floraSpecimensTable.sourceLicence,
-        scientificName: floraSpeciesTable.scientificName,
-        family: floraSpeciesTable.family,
-        commonNames: floraSpeciesTable.commonNames,
-        description: floraSpeciesTable.description,
-        imageUrl: floraSpeciesTable.imageUrl,
-        conservationStatus: floraSpeciesTable.conservationStatus,
-        isNative: floraSpeciesTable.isNative,
-      })
-      .from(floraSpecimensTable)
-      .innerJoin(
-        floraSpeciesTable,
-        eq(floraSpecimensTable.speciesId, floraSpeciesTable.id),
-      )
-      .where(notableOnly ? eq(floraSpecimensTable.isNotable, true) : undefined)
-      .orderBy(
-        asc(floraSpeciesTable.scientificName),
-        asc(floraSpecimensTable.id),
-      );
-    return data;
-  } catch (e) {
-    console.error("Error: ", e);
-    throw new Error("Failed to fetch data for flora", { cause: e });
-  }
+export async function getAllFloraSpecimens(notableOnly = false): Promise<FloraSpecimenData[]> {
+	try {
+		const data = await db
+			.select({
+				id: floraSpecimensTable.id,
+				speciesId: floraSpecimensTable.speciesId,
+				lat: floraSpecimensTable.lat,
+				lon: floraSpecimensTable.lon,
+				tagNumber: floraSpecimensTable.tagNumber,
+				plantedYear: floraSpecimensTable.plantedYear,
+				notes: floraSpecimensTable.notes,
+				isNotable: floraSpecimensTable.isNotable,
+				source: floraSpecimensTable.source,
+				sourceLicence: floraSpecimensTable.sourceLicence,
+				scientificName: floraSpeciesTable.scientificName,
+				family: floraSpeciesTable.family,
+				commonNames: floraSpeciesTable.commonNames,
+				description: floraSpeciesTable.description,
+				imageUrl: floraSpeciesTable.imageUrl,
+				conservationStatus: floraSpeciesTable.conservationStatus,
+				isNative: floraSpeciesTable.isNative
+			})
+			.from(floraSpecimensTable)
+			.innerJoin(floraSpeciesTable, eq(floraSpecimensTable.speciesId, floraSpeciesTable.id))
+			.where(notableOnly ? eq(floraSpecimensTable.isNotable, true) : undefined)
+			.orderBy(asc(floraSpeciesTable.scientificName), asc(floraSpecimensTable.id));
+		return data;
+	} catch (e) {
+		console.error('Error: ', e);
+		throw new Error('Failed to fetch data for flora', { cause: e });
+	}
 }
 
 export async function getAllOrganizationsCached(): Promise<OrgData[]> {
-  const cache = getBuildCache();
-  if (cache.organizations) return cache.organizations;
-  const data = await db.select().from(organizationsTable);
-  cache.organizations = data;
-  return data;
+	const cache = getBuildCache();
+	if (cache.organizations) return cache.organizations;
+	const data = await db.select().from(organizationsTable);
+	cache.organizations = data;
+	return data;
 }
 
 export async function getAllOrganizations(): Promise<OrgData[]> {
-  try {
-    return await db.select().from(organizationsTable);
-  } catch (e) {
-    console.error("Error: ", e);
-    throw new Error("Failed to fetch data for organizations", { cause: e });
-  }
+	try {
+		return await db.select().from(organizationsTable);
+	} catch (e) {
+		console.error('Error: ', e);
+		throw new Error('Failed to fetch data for organizations', { cause: e });
+	}
 }
 
 export async function getAllPlacesCached(): Promise<PlaceData[]> {
-  const cache = getBuildCache();
-  if (cache.places) return cache.places;
-  const data = await db.select().from(placesTable);
-  cache.places = data;
-  return data;
+	const cache = getBuildCache();
+	if (cache.places) return cache.places;
+	const data = await db.select().from(placesTable);
+	cache.places = data;
+	return data;
 }
 
 export async function getAllPlaces(): Promise<PlaceData[]> {
-  try {
-    return await db.select().from(placesTable);
-  } catch (e) {
-    console.error("Error: ", e);
-    throw new Error("Failed to fetch data for places", { cause: e });
-  }
+	try {
+		return await db.select().from(placesTable);
+	} catch (e) {
+		console.error('Error: ', e);
+		throw new Error('Failed to fetch data for places', { cause: e });
+	}
 }
 
 export async function queryFinalExams(filters: {
-  courseCode?: string;
-  roomCode?: string;
-  date?: string;
-  termId?: number;
+	courseCode?: string;
+	roomCode?: string;
+	date?: string;
+	termId?: number;
 }): Promise<FinalExamRow[]> {
-  try {
-    const conditions = [];
-    if (filters.termId != null) {
-      conditions.push(eq(finalExamsTable.termId, filters.termId));
-    }
-    if (filters.courseCode) {
-      const code = normalizeCourseCode(filters.courseCode);
-      if (code) conditions.push(eq(finalExamsTable.courseCode, code));
-    }
-    if (filters.roomCode) {
-      conditions.push(eq(roomsTable.roomCode, filters.roomCode));
-    }
-    if (filters.date) {
-      conditions.push(eq(finalExamsTable.examDate, filters.date));
-    }
+	try {
+		const conditions = [];
+		if (filters.termId != null) {
+			conditions.push(eq(finalExamsTable.termId, filters.termId));
+		}
+		if (filters.courseCode) {
+			const code = normalizeCourseCode(filters.courseCode);
+			if (code) conditions.push(eq(finalExamsTable.courseCode, code));
+		}
+		if (filters.roomCode) {
+			conditions.push(eq(roomsTable.roomCode, filters.roomCode));
+		}
+		if (filters.date) {
+			conditions.push(eq(finalExamsTable.examDate, filters.date));
+		}
 
-    const data = await db
-      .select({
-        id: finalExamsTable.id,
-        termId: finalExamsTable.termId,
-        courseCode: finalExamsTable.courseCode,
-        section: finalExamsTable.section,
-        courseTitle: finalExamsTable.courseTitle,
-        roomId: finalExamsTable.roomId,
-        roomCode: roomsTable.roomCode,
-        examDate: finalExamsTable.examDate,
-        startsAt: finalExamsTable.startsAt,
-        endsAt: finalExamsTable.endsAt,
-        source: finalExamsTable.source,
-      })
-      .from(finalExamsTable)
-      .leftJoin(roomsTable, eq(roomsTable.id, finalExamsTable.roomId))
-      .where(conditions.length > 0 ? and(...conditions) : undefined)
-      .orderBy(
-        finalExamsTable.examDate,
-        finalExamsTable.startsAt,
-        finalExamsTable.courseCode,
-      );
+		const data = await db
+			.select({
+				id: finalExamsTable.id,
+				termId: finalExamsTable.termId,
+				courseCode: finalExamsTable.courseCode,
+				section: finalExamsTable.section,
+				courseTitle: finalExamsTable.courseTitle,
+				roomId: finalExamsTable.roomId,
+				roomCode: roomsTable.roomCode,
+				examDate: finalExamsTable.examDate,
+				startsAt: finalExamsTable.startsAt,
+				endsAt: finalExamsTable.endsAt,
+				source: finalExamsTable.source
+			})
+			.from(finalExamsTable)
+			.leftJoin(roomsTable, eq(roomsTable.id, finalExamsTable.roomId))
+			.where(conditions.length > 0 ? and(...conditions) : undefined)
+			.orderBy(finalExamsTable.examDate, finalExamsTable.startsAt, finalExamsTable.courseCode);
 
-    return data;
-  } catch (e) {
-    console.error("Error: ", e);
-    throw new Error("Failed to fetch final exams", { cause: e });
-  }
+		return data;
+	} catch (e) {
+		console.error('Error: ', e);
+		throw new Error('Failed to fetch final exams', { cause: e });
+	}
 }

@@ -1,34 +1,34 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test } from 'vitest';
 import {
-  ORG_CATEGORIES,
-  isStudentOrganization,
-  normalizeOrgCategory,
-  orgCategoryLabel,
-} from "./org-categories.js";
+	ORG_CATEGORIES,
+	isStudentOrganization,
+	normalizeOrgCategory,
+	orgCategoryLabel
+} from './org-categories.js';
 
-describe("normalizeOrgCategory", () => {
-  test("accepts known categories case/space-insensitively", () => {
-    expect(normalizeOrgCategory("student-org")).toBe("student-org");
-    expect(normalizeOrgCategory(" Office ")).toBe("office");
-    expect(normalizeOrgCategory("SERVICE")).toBe("service");
-  });
-  test("rejects unknown/empty/non-string", () => {
-    expect(normalizeOrgCategory("dorm")).toBeNull();
-    expect(normalizeOrgCategory("")).toBeNull();
-    expect(normalizeOrgCategory(null)).toBeNull();
-  });
-  test("every category round-trips and has a label", () => {
-    for (const c of ORG_CATEGORIES) {
-      expect(normalizeOrgCategory(c)).toBe(c);
-      expect(orgCategoryLabel(c)).toBeTruthy();
-    }
-  });
-  test("only student-facing categories use the organization marker", () => {
-    expect(isStudentOrganization("student-org")).toBe(true);
-    expect(isStudentOrganization("college-org")).toBe(true);
-    expect(isStudentOrganization("student-council")).toBe(true);
-    expect(isStudentOrganization("publication")).toBe(true);
-    expect(isStudentOrganization("office")).toBe(false);
-    expect(isStudentOrganization("unit")).toBe(false);
-  });
+describe('normalizeOrgCategory', () => {
+	test('accepts known categories case/space-insensitively', () => {
+		expect(normalizeOrgCategory('student-org')).toBe('student-org');
+		expect(normalizeOrgCategory(' Office ')).toBe('office');
+		expect(normalizeOrgCategory('SERVICE')).toBe('service');
+	});
+	test('rejects unknown/empty/non-string', () => {
+		expect(normalizeOrgCategory('dorm')).toBeNull();
+		expect(normalizeOrgCategory('')).toBeNull();
+		expect(normalizeOrgCategory(null)).toBeNull();
+	});
+	test('every category round-trips and has a label', () => {
+		for (const c of ORG_CATEGORIES) {
+			expect(normalizeOrgCategory(c)).toBe(c);
+			expect(orgCategoryLabel(c)).toBeTruthy();
+		}
+	});
+	test('only student-facing categories use the organization marker', () => {
+		expect(isStudentOrganization('student-org')).toBe(true);
+		expect(isStudentOrganization('college-org')).toBe(true);
+		expect(isStudentOrganization('student-council')).toBe(true);
+		expect(isStudentOrganization('publication')).toBe(true);
+		expect(isStudentOrganization('office')).toBe(false);
+		expect(isStudentOrganization('unit')).toBe(false);
+	});
 });

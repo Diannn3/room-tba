@@ -1,18 +1,16 @@
-import { env } from "$env/dynamic/private";
+import { env } from '$env/dynamic/private';
 const { DATABASE_URL } = env;
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
-import { e2eSchema } from "../../scripts/e2e-schema";
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
+import { e2eSchema } from '../../scripts/e2e-schema';
 
 /** Cap pool size in CI so Playwright + preview stay under Supabase session pooler limits. */
-const poolMax = Number(
-  process.env.DATABASE_POOL_MAX ?? (process.env.CI ? "2" : "10"),
-);
+const poolMax = Number(process.env.DATABASE_POOL_MAX ?? (process.env.CI ? '2' : '10'));
 
 const pool = new Pool({
-  connectionString: DATABASE_URL,
-  max: Number.isFinite(poolMax) && poolMax > 0 ? poolMax : 10,
-  idleTimeoutMillis: 10_000,
+	connectionString: DATABASE_URL,
+	max: Number.isFinite(poolMax) && poolMax > 0 ? poolMax : 10,
+	idleTimeoutMillis: 10_000
 });
 
 /**
@@ -23,9 +21,9 @@ const pool = new Pool({
  */
 const runSchema = e2eSchema();
 if (runSchema) {
-  pool.on("connect", (client) => {
-    void client.query(`SET search_path TO ${runSchema}`);
-  });
+	pool.on('connect', (client) => {
+		void client.query(`SET search_path TO ${runSchema}`);
+	});
 }
 
 export const db = drizzle(pool);

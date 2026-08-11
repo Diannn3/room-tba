@@ -1,22 +1,22 @@
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test, vi } from 'vitest';
 
-vi.mock("$env/dynamic/public", () => ({
-  env: { PUBLIC_APP_ENV: undefined },
+vi.mock('$env/dynamic/public', () => ({
+	env: { PUBLIC_APP_ENV: undefined }
 }));
 
-const { isStagingApp, isStagingAppEnv } = await import("./app-env");
+const { isStagingApp, isStagingAppEnv } = await import('./app-env');
 
-describe("isStagingAppEnv", () => {
-  test("true only for staging", () => {
-    expect(isStagingAppEnv("staging")).toBe(true);
-    expect(isStagingAppEnv("production")).toBe(false);
-    expect(isStagingAppEnv(undefined)).toBe(false);
-    expect(isStagingAppEnv("")).toBe(false);
-  });
+describe('isStagingAppEnv', () => {
+	test('true only for staging', () => {
+		expect(isStagingAppEnv('staging')).toBe(true);
+		expect(isStagingAppEnv('production')).toBe(false);
+		expect(isStagingAppEnv(undefined)).toBe(false);
+		expect(isStagingAppEnv('')).toBe(false);
+	});
 });
 
-describe("isStagingApp", () => {
-  test("false when PUBLIC_APP_ENV is unset", () => {
-    expect(isStagingApp()).toBe(false);
-  });
+describe('isStagingApp', () => {
+	test('false when PUBLIC_APP_ENV is unset', () => {
+		expect(isStagingApp()).toBe(false);
+	});
 });

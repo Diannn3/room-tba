@@ -3,39 +3,39 @@
  * its checkout. Consumed by both the /fork wizard island and the
  * `bun run fork:init` CLI, so the two never generate divergent configs.
  */
-import { slugifySegment } from "../site";
+import { slugifySegment } from '../site';
 
 export type ForkConfig = {
-  /** Full campus name, e.g. "University of the Philippines Diliman". */
-  name: string;
-  /** Where the fork will be hosted, e.g. "https://upd-room-tba.vercel.app". */
-  siteUrl: string;
-  /** Campus center as [lng, lat]. */
-  center: [number, number];
-  /** Map max bounds: [[west, south], [east, north]] in lng/lat. */
-  bounds: [[number, number], [number, number]];
-  defaultZoom: number;
-  transitOverlay: boolean;
-  /** Label for the transit overlay toggle, e.g. "Jeepney routes". */
-  transitLabel: string;
-  terrain: boolean;
+	/** Full campus name, e.g. "University of the Philippines Diliman". */
+	name: string;
+	/** Where the fork will be hosted, e.g. "https://upd-room-tba.vercel.app". */
+	siteUrl: string;
+	/** Campus center as [lng, lat]. */
+	center: [number, number];
+	/** Map max bounds: [[west, south], [east, north]] in lng/lat. */
+	bounds: [[number, number], [number, number]];
+	defaultZoom: number;
+	transitOverlay: boolean;
+	/** Label for the transit overlay toggle, e.g. "Jeepney routes". */
+	transitLabel: string;
+	terrain: boolean;
 };
 
 export function campusSlug(name: string): string {
-  return slugifySegment(name);
+	return slugifySegment(name);
 }
 
-const UPSTREAM_REPO_URL = "https://github.com/uplbtools/room-tba";
+const UPSTREAM_REPO_URL = 'https://github.com/uplbtools/room-tba';
 
 /** Vercel "Deploy" clone URL prefilled with the fork's env prompts. */
 export function vercelDeployUrl(slug: string): string {
-  const params = new URLSearchParams({
-    "repository-url": UPSTREAM_REPO_URL,
-    env: "DATABASE_URL,ADMIN_PASSWORD,ADMIN_SESSION_SECRET,ISR_BYPASS_TOKEN",
-    envDescription: "See .env.example",
-    "project-name": `${slug}-room-tba`,
-  });
-  return `https://vercel.com/new/clone?${params.toString()}`;
+	const params = new URLSearchParams({
+		'repository-url': UPSTREAM_REPO_URL,
+		env: 'DATABASE_URL,ADMIN_PASSWORD,ADMIN_SESSION_SECRET,ISR_BYPASS_TOKEN',
+		envDescription: 'See .env.example',
+		'project-name': `${slug}-room-tba`
+	});
+	return `https://vercel.com/new/clone?${params.toString()}`;
 }
 
 /** ~0.1 m precision; map clicks otherwise emit 15+ decimals. */
@@ -49,14 +49,14 @@ const zoomValue = (n: number) => Number(n.toFixed(2));
  * emitted as blank placeholders for the fork to fill in.
  */
 export function generateCampusConfig(config: ForkConfig): string {
-  const lng = coord(config.center[0]);
-  const lat = coord(config.center[1]);
-  const west = coord(config.bounds[0][0]);
-  const south = coord(config.bounds[0][1]);
-  const east = coord(config.bounds[1][0]);
-  const north = coord(config.bounds[1][1]);
-  const zoom = zoomValue(config.defaultZoom);
-  return `/**
+	const lng = coord(config.center[0]);
+	const lat = coord(config.center[1]);
+	const west = coord(config.bounds[0][0]);
+	const south = coord(config.bounds[0][1]);
+	const east = coord(config.bounds[1][0]);
+	const north = coord(config.bounds[1][1]);
+	const zoom = zoomValue(config.defaultZoom);
+	return `/**
  * Single source of truth for campus-specific config.
  *
  * Generated for ${config.name} by the Room TBA fork tools (the /fork wizard or

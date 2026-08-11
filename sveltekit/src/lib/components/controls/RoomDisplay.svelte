@@ -1,41 +1,47 @@
 <script lang="ts">
-	import { queryStore, sidePanelStore } from '$lib/store.svelte';
-	import type { RoomData } from '$lib/types';
-	import RoomResult from '$lib/components/room/RoomResult.svelte';
+	import { goto } from "$app/navigation";
+	import { resolve } from "$app/paths";
+import RoomResult from "$lib/components/room/RoomResult.svelte";
+import { slugifySegment } from "$lib/site";
+import { queryStore, sidePanelStore } from "$lib/store.svelte";
+import type { RoomData } from "$lib/types";
 
-	type Props = {
-		room: RoomData;
-		searchInput: string;
-		classCount?: number | null;
-	};
+type Props = {
+	room: RoomData;
+	searchInput: string;
+	classCount?: number | null;
+};
 
-	const { room, searchInput, classCount }: Props = $props();
-	const pattern = $derived(new RegExp(`(${searchInput.trim()})`, 'gi'));
-	function highlightSearch(original: string, pattern: RegExp): string {
-		return searchInput.length < 2
-			? original
-			: original.replaceAll(pattern, (substr) => `<mark>${substr}</mark>`);
-	}
+const { room, searchInput, classCount }: Props = $props();
+const pattern = $derived(new RegExp(`(${searchInput.trim()})`, "gi"));
+function highlightSearch(original: string, pattern: RegExp): string {
+	return searchInput.length < 2
+		? original
+		: original.replaceAll(pattern, (substr) => `<mark>${substr}</mark>`);
+}
 
-	// Class count is undefined while the batched count request is in flight (or
-	// offline), so the chip stays empty rather than flashing a wrong "0". A
-	// loaded 0 renders explicitly as "0 classes" (#342).
-	const classCountLabel = $derived(
-		typeof classCount === 'number' ? `${classCount} class${classCount !== 1 ? 'es' : ''}` : null
-	);
+// Class count is undefined while the batched count request is in flight (or
+// offline), so the chip stays empty rather than flashing a wrong "0". A
+// loaded 0 renders explicitly as "0 classes" (#342).
+const classCountLabel = $derived(
+	typeof classCount === "number"
+		? `${classCount} class${classCount !== 1 ? "es" : ""}`
+		: null,
+);
 
-	function openRoomData() {
-		queryStore.updateQuery({
-			type: 'result',
-			category: 'room',
-			value: room.code
-		});
-		queryStore.inputValue = room.code;
-		sidePanelStore.openPanel({
-			type: 'search-result',
-			component: RoomResult
-		});
-	}
+function openRoomData() {
+	queryStore.updateQuery({
+		type: "result",
+		category: "room",
+		value: room.code,
+	});
+	queryStore.inputValue = room.code;
+	goto(resolve(`/map/rooms/${slugifySegment(room.code)}-${room.id}`));
+	sidePanelStore.openPanel({
+		type: "search-result",
+		component: RoomResult,
+	});
+}
 </script>
 
 <button class="room-data" onclick={openRoomData}>

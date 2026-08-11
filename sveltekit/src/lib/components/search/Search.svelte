@@ -1,131 +1,141 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { debounce } from 'es-toolkit';
-	import { fade } from 'svelte/transition';
-	import ShieldCheck from '@lucide/svelte/icons/shield-check';
-	import { getAppData } from '$lib/context';
-	import { getMapChromeVisibility } from '$lib/map-chrome';
-	import {
-		adminAuthStore,
-		editorChromeStore,
-		mapEditStore,
-		modalStore,
-		proposalsStore,
-		queryStore,
-		sidePanelStore
-	} from '$lib/store.svelte';
-	import Suggestions from './Suggestions.svelte';
-	import MapFilterChips from '$lib/components/map-chrome/MapFilterChips.svelte';
-	import { observeBlockHeight } from '$lib/layout-css-vars';
-	import { registerSearchFocus } from '$lib/search-focus';
-	import { registerEphemeralOverlayDismisser } from '$lib/overlay-stack';
-	import { dropdownFadeIn, dropdownFadeOut } from '$lib/motion';
-	import { MediaQuery } from 'svelte/reactivity';
-	import SearchIcon from '@lucide/svelte/icons/search';
-	import MapPinPlus from '@lucide/svelte/icons/map-pin-plus';
-	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
+import ArrowLeft from "@lucide/svelte/icons/arrow-left";
+import MapPinPlus from "@lucide/svelte/icons/map-pin-plus";
+import SearchIcon from "@lucide/svelte/icons/search";
+import ShieldCheck from "@lucide/svelte/icons/shield-check";
+import { debounce } from "es-toolkit";
+import { onMount } from "svelte";
+import { MediaQuery } from "svelte/reactivity";
+import { fade } from "svelte/transition";
+import { goto } from "$app/navigation";
+import { resolve } from "$app/paths";
+import MapFilterChips from "$lib/components/map-chrome/MapFilterChips.svelte";
+import { getAppData } from "$lib/context";
+import { observeBlockHeight } from "$lib/layout-css-vars";
+import { getMapChromeVisibility } from "$lib/map-chrome";
+import { dropdownFadeIn, dropdownFadeOut } from "$lib/motion";
+import { registerEphemeralOverlayDismisser } from "$lib/overlay-stack";
+import { registerSearchFocus } from "$lib/search-focus";
+import {
+	adminAuthStore,
+	editorChromeStore,
+	mapEditStore,
+	modalStore,
+	proposalsStore,
+	queryStore,
+	sidePanelStore,
+} from "$lib/store.svelte";
+import Suggestions from "./Suggestions.svelte";
 
-	let searchElement = $state<HTMLInputElement | null>(null);
-	let shellMainEl = $state<HTMLDivElement | null>(null);
-	let chromeEl = $state<HTMLDivElement | null>(null);
-	let draftInput = $state('');
-	let searchFocused = $state(false);
-	const mobile = new MediaQuery('max-width:48rem');
-	const reducedMotion = new MediaQuery('(prefers-reduced-motion: reduce)');
+let searchElement = $state<HTMLInputElement | null>(null);
+let shellMainEl = $state<HTMLDivElement | null>(null);
+let chromeEl = $state<HTMLDivElement | null>(null);
+let draftInput = $state("");
+let searchFocused = $state(false);
+const mobile = new MediaQuery("max-width:48rem");
+const reducedMotion = new MediaQuery("(prefers-reduced-motion: reduce)");
 
-	const appData = getAppData();
-	const { loaded } = $derived(appData());
-	const chrome = $derived(getMapChromeVisibility());
+const appData = getAppData();
+const { loaded } = $derived(appData());
+const chrome = $derived(getMapChromeVisibility());
 
-	$effect(() => {
-		const el = mobile.current ? shellMainEl : chromeEl;
-		if (!el) return;
-		return observeBlockHeight(el, '--search-block-height');
-	});
+$effect(() => {
+	const el = mobile.current ? shellMainEl : chromeEl;
+	if (!el) return;
+	return observeBlockHeight(el, "--search-block-height");
+});
 
-	onMount(() => {
-		const unregisterFocus = registerSearchFocus(() => {
-			searchElement?.focus();
-			searchElement?.select();
-		});
-		const unregisterDismiss = registerEphemeralOverlayDismisser(() => {
-			searchFocused = false;
-			searchElement?.blur();
-		});
-		return () => {
-			unregisterFocus();
-			unregisterDismiss();
-		};
-	});
-
-	const commitSearchInput = debounce((searchInput: string) => {
-		queryStore.inputValue = searchInput;
-		queryStore.setType('query');
-	}, 200);
-
-	$effect(() => {
-		if (queryStore.type === 'result' || queryStore.category !== null) {
-			draftInput = queryStore.inputValue;
-			return;
-		}
-		if (queryStore.inputValue === '') {
-			draftInput = '';
-		}
-	});
-
-	function handleInput(event: Event & { currentTarget: EventTarget & HTMLInputElement }) {
-		if (queryStore.type === 'result' || queryStore.category !== null) {
-			queryStore.exitResultMode();
-		}
-		draftInput = event.currentTarget.value;
-		commitSearchInput(draftInput);
-	}
-
-	function closeSearchContext() {
-		commitSearchInput.cancel();
-		queryStore.clearQuery();
-		draftInput = '';
+onMount(() => {
+	const unregisterFocus = registerSearchFocus(() => {
 		searchElement?.focus();
-		// `openPanel()` metadata outranks the query in resolvePanelContent, so
-		// clearing the query alone would leave a stale panel on screen.
-		sidePanelStore.closePanel();
-	}
-
-	function dismissMobileSearch() {
-		searchFocused = false;
-		searchElement?.blur();
-	}
-
-	const mobileSearchActive = $derived(mobile.current && searchFocused);
-
-	const clearSelectionLabel = $derived(
-		queryStore.type === 'result' && queryStore.category !== null ? 'Close details' : 'Clear search'
-	);
-
-	function openEditorTools() {
-		searchFocused = false;
-		searchElement?.blur();
-		modalStore.openModal('editor-tools');
-	}
-
-	const showEditorChrome = $derived(
-		chrome.showEditorShelf && (adminAuthStore.canPublish || adminAuthStore.canReview)
-	);
-
-	const editorChipLabel = $derived(mapEditStore.enabled ? 'Editing' : 'Editor');
-	const editorOpenLabel = $derived(
-		proposalsStore.pendingCount > 0
-			? `Open editor tools, ${proposalsStore.pendingCount} pending`
-			: 'Open editor tools'
-	);
-
-	const showSearchDropdown = $derived(chrome.showSearchSuggestions && searchFocused);
-
-	$effect(() => {
-		if (queryStore.category !== null && queryStore.type === 'result') {
-			searchElement?.blur();
-		}
+		searchElement?.select();
 	});
+	const unregisterDismiss = registerEphemeralOverlayDismisser(() => {
+		searchFocused = false;
+		searchElement?.blur();
+	});
+	return () => {
+		unregisterFocus();
+		unregisterDismiss();
+	};
+});
+
+const commitSearchInput = debounce((searchInput: string) => {
+	queryStore.inputValue = searchInput;
+	queryStore.setType("query");
+}, 200);
+
+$effect(() => {
+	if (queryStore.type === "result" || queryStore.category !== null) {
+		draftInput = queryStore.inputValue;
+		return;
+	}
+	if (queryStore.inputValue === "") {
+		draftInput = "";
+	}
+});
+
+function handleInput(
+	event: Event & { currentTarget: EventTarget & HTMLInputElement },
+) {
+	if (queryStore.type === "result" || queryStore.category !== null) {
+		queryStore.exitResultMode();
+	}
+	draftInput = event.currentTarget.value;
+	commitSearchInput(draftInput);
+}
+
+function closeSearchContext() {
+	commitSearchInput.cancel();
+	queryStore.clearQuery();
+	draftInput = "";
+	searchElement?.focus();
+	// `openPanel()` metadata outranks the query in resolvePanelContent, so
+	// clearing the query alone would leave a stale panel on screen.
+	goto(resolve("/map"));
+	sidePanelStore.closePanel();
+}
+
+function dismissMobileSearch() {
+	searchFocused = false;
+	searchElement?.blur();
+}
+
+const mobileSearchActive = $derived(mobile.current && searchFocused);
+
+const clearSelectionLabel = $derived(
+	queryStore.type === "result" && queryStore.category !== null
+		? "Close details"
+		: "Clear search",
+);
+
+function openEditorTools() {
+	searchFocused = false;
+	searchElement?.blur();
+	modalStore.openModal("editor-tools");
+}
+
+const showEditorChrome = $derived(
+	chrome.showEditorShelf &&
+		(adminAuthStore.canPublish || adminAuthStore.canReview),
+);
+
+const editorChipLabel = $derived(mapEditStore.enabled ? "Editing" : "Editor");
+const editorOpenLabel = $derived(
+	proposalsStore.pendingCount > 0
+		? `Open editor tools, ${proposalsStore.pendingCount} pending`
+		: "Open editor tools",
+);
+
+const showSearchDropdown = $derived(
+	chrome.showSearchSuggestions && searchFocused,
+);
+
+$effect(() => {
+	if (queryStore.category !== null && queryStore.type === "result") {
+		searchElement?.blur();
+	}
+});
 </script>
 
 <div

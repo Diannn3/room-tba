@@ -4,17 +4,13 @@
  * the session (and precached by the PWA for offline use).
  */
 
-import {
-  buildTravelGraph,
-  type TravelGraph,
-  type WalkGraphData,
-} from "./engine";
+import { buildTravelGraph, type TravelGraph, type WalkGraphData } from './engine';
 
 let cached: Promise<TravelGraph> | null = null;
 
 export function loadTravelGraph(): Promise<TravelGraph> {
-  cached ??= import("../../generated/walk-graph.json").then((module) =>
-    buildTravelGraph(module.default as unknown as WalkGraphData),
-  );
-  return cached;
+	cached ??= import('../../generated/walk-graph.json').then((module) =>
+		buildTravelGraph(module.default as unknown as WalkGraphData)
+	);
+	return cached;
 }

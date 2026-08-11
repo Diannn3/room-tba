@@ -31,6 +31,7 @@
   import EntityEditorPinRow from "@ui/editor/EntityEditorPinRow.svelte";
   import EntityEditorMessage from "@ui/editor/EntityEditorMessage.svelte";
   import ImageUpload from "@ui/editor/ImageUpload.svelte";
+  import PhotoCollectionUpload from "@ui/editor/PhotoCollectionUpload.svelte";
   import ContributorPendingProposals from "./ContributorPendingProposals.svelte";
   import type { BundledRoomDraft } from "@lib/proposals/create-proposal-validation";
   import {
@@ -97,6 +98,7 @@
   let buildingName = $state("");
   let buildingDirections = $state("");
   let buildingType = $state<"admin" | "non-admin">("non-admin");
+  let buildingPhotos = $state<string[]>([]);
   let eventTitle = $state("");
   let eventStartsAt = $state("");
   let eventEndsAt = $state("");
@@ -106,6 +108,7 @@
   let eventImageUrl = $state<string | null>(null);
   let dormName = $state("");
   let dormGender = $state("");
+  let dormPhotos = $state<string[]>([]);
   let placeName = $state("");
   let placeCategory = $state<PlaceCategory>("landmark");
   let placeDescription = $state("");
@@ -116,6 +119,7 @@
   let organizationBuildingDraft = $state("");
   let roomCode = $state("");
   let roomDirections = $state("");
+  let roomPhotos = $state<string[]>([]);
   let roomBuildingDraft = $state("");
   let collegeName = $state("");
   let divisionCollegeDraft = $state("");
@@ -166,6 +170,7 @@
     buildingName = "";
     buildingDirections = "";
     buildingType = "non-admin";
+    buildingPhotos = [];
     if (clearPin) additionProposalStore.clearDraftPin();
     eventTitle = "";
     eventStartsAt = "";
@@ -174,6 +179,7 @@
     eventImageUrl = null;
     dormName = "";
     dormGender = "";
+    dormPhotos = [];
     placeName = "";
     placeCategory = "landmark";
     placeDescription = "";
@@ -184,6 +190,7 @@
     organizationBuildingDraft = "";
     roomCode = "";
     roomDirections = "";
+    roomPhotos = [];
     roomBuildingDraft = "";
     collegeName = "";
     divisionCollegeDraft = "";
@@ -193,7 +200,10 @@
   }
 
   function addBundledRoom() {
-    bundledRooms = [...bundledRooms, { roomCode: "", directions: "" }];
+    bundledRooms = [
+      ...bundledRooms,
+      { roomCode: "", directions: "", photoUrls: [] },
+    ];
   }
 
   function removeBundledRoom(index: number) {
@@ -206,6 +216,7 @@
       buildingName,
       buildingDirections,
       buildingType,
+      buildingPhotos,
       eventTitle,
       eventStartsAt,
       eventEndsAt,
@@ -213,6 +224,7 @@
       eventImageUrl,
       dormName,
       dormGender,
+      dormPhotos,
       placeName,
       placeCategory,
       placeDescription,
@@ -223,6 +235,7 @@
       organizationBuildingDraft,
       roomCode,
       roomDirections,
+      roomPhotos,
       roomBuildingDraft,
       collegeName,
       divisionCollegeDraft,
@@ -239,6 +252,7 @@
     buildingName = saved.buildingName;
     buildingDirections = saved.buildingDirections;
     buildingType = saved.buildingType;
+    buildingPhotos = saved.buildingPhotos ?? [];
     eventTitle = saved.eventTitle;
     eventStartsAt = saved.eventStartsAt;
     eventEndsAt = saved.eventEndsAt;
@@ -246,6 +260,7 @@
     eventImageUrl = saved.eventImageUrl;
     dormName = saved.dormName;
     dormGender = saved.dormGender;
+    dormPhotos = saved.dormPhotos ?? [];
     placeName = saved.placeName ?? "";
     placeCategory = saved.placeCategory ?? "landmark";
     placeDescription = saved.placeDescription ?? "";
@@ -256,11 +271,15 @@
     organizationBuildingDraft = saved.organizationBuildingDraft ?? "";
     roomCode = saved.roomCode;
     roomDirections = saved.roomDirections;
+    roomPhotos = saved.roomPhotos ?? [];
     roomBuildingDraft = saved.roomBuildingDraft ?? "";
     collegeName = saved.collegeName;
     divisionCollegeDraft = saved.divisionCollegeDraft;
     divisionName = saved.divisionName;
-    bundledRooms = saved.bundledRooms ?? [];
+    bundledRooms = (saved.bundledRooms ?? []).map((room) => ({
+      ...room,
+      photoUrls: room.photoUrls ?? [],
+    }));
     if (saved.draftPin) {
       additionProposalStore.setDraftPin(saved.draftPin);
     }
@@ -302,6 +321,7 @@
     buildingName;
     buildingDirections;
     buildingType;
+    buildingPhotos;
     eventTitle;
     eventStartsAt;
     eventEndsAt;
@@ -309,6 +329,7 @@
     eventImageUrl;
     dormName;
     dormGender;
+    dormPhotos;
     placeName;
     placeCategory;
     placeDescription;
@@ -319,6 +340,7 @@
     organizationBuildingDraft;
     roomCode;
     roomDirections;
+    roomPhotos;
     roomBuildingDraft;
     collegeName;
     divisionCollegeDraft;
@@ -414,6 +436,9 @@
           .map((room) => ({
             roomCode: room.roomCode.trim(),
             directions: room.directions.trim() || null,
+            ...(room.photoUrls.length > 0
+              ? { photoUrls: room.photoUrls }
+              : {}),
           }))
           .filter((room) => room.roomCode);
         return {
@@ -422,6 +447,9 @@
           buildingType,
           lat: draftPin?.lat,
           lon: draftPin?.lon,
+          ...(buildingPhotos.length > 0
+            ? { photoUrls: buildingPhotos }
+            : {}),
           ...(rooms.length > 0 ? { rooms } : {}),
         };
       }
@@ -461,6 +489,7 @@
           gender: dormGender.trim() || null,
           lat: draftPin?.lat ?? null,
           lon: draftPin?.lon ?? null,
+          ...(dormPhotos.length > 0 ? { photoUrls: dormPhotos } : {}),
         };
       case "create_place":
         return {
@@ -488,6 +517,7 @@
           roomCode: roomCode.trim(),
           directions: roomDirections.trim() || null,
           buildingId: Number(roomBuildingDraft),
+          ...(roomPhotos.length > 0 ? { photoUrls: roomPhotos } : {}),
         };
       case "create_college":
         return { collegeName: collegeName.trim() };
@@ -714,6 +744,15 @@
           </select>
         {/snippet}
       </EntityEditorFormField>
+      {#if adminAuthStore.isLoggedIn}
+        <PhotoCollectionUpload
+          inputId="addition-building-photo"
+          label="Building photos (optional)"
+          prefix={`buildings/${slugifySegment(buildingName.trim() || "building")}`}
+          bind:values={buildingPhotos}
+          disabled={submitting}
+        />
+      {/if}
       {#if !isPublish}
         <div class="bundled-rooms">
           <p class="bundled-rooms__lead">
@@ -748,6 +787,15 @@
                   />
                 {/snippet}
               </EntityEditorFormField>
+              {#if adminAuthStore.isLoggedIn}
+                <PhotoCollectionUpload
+                  inputId={`addition-bundled-room-photo-${index}`}
+                  label="Room photos (optional)"
+                  prefix={`rooms/${slugifySegment(room.roomCode.trim() || "room")}`}
+                  bind:values={room.photoUrls}
+                  disabled={submitting}
+                />
+              {/if}
               <button
                 type="button"
                 class="bundled-rooms__remove"
@@ -855,6 +903,15 @@
           />
         {/snippet}
       </EntityEditorFormField>
+      {#if adminAuthStore.isLoggedIn}
+        <PhotoCollectionUpload
+          inputId="addition-dorm-photo"
+          label="Dorm photos (optional)"
+          prefix={`dorms/${slugifySegment(dormName.trim() || "dorm")}`}
+          bind:values={dormPhotos}
+          disabled={submitting}
+        />
+      {/if}
     {:else if kind === "create_place"}
       <EntityEditorFormField
         label="What's it called?"
@@ -1021,6 +1078,15 @@
             placeholder="Third floor, left wing…"></textarea>
         {/snippet}
       </EntityEditorFormField>
+      {#if adminAuthStore.isLoggedIn}
+        <PhotoCollectionUpload
+          inputId="addition-room-photo"
+          label="Room photos (optional)"
+          prefix={`rooms/${slugifySegment(roomCode.trim() || "room")}`}
+          bind:values={roomPhotos}
+          disabled={submitting}
+        />
+      {/if}
     {:else if kind === "create_college"}
       <EntityEditorFormField
         label="College name"

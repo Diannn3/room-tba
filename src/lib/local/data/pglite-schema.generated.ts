@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS "buildings" (
   "lat" double precision NOT NULL,
   "directions" text NOT NULL,
   "image_url" text,
+  "photos" jsonb DEFAULT '[]'::jsonb NOT NULL,
   "cr_facilities" text[],
   "version" integer DEFAULT 1 NOT NULL,
   "updated_at" text DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -23,6 +24,7 @@ ALTER TABLE "buildings" ADD COLUMN IF NOT EXISTS "lat" double precision;
 ALTER TABLE "buildings" ADD COLUMN IF NOT EXISTS "directions" text;
 ALTER TABLE "buildings" ADD COLUMN IF NOT EXISTS "image_url" text;
 ALTER TABLE "buildings" ALTER COLUMN "image_url" DROP NOT NULL;
+ALTER TABLE "buildings" ADD COLUMN IF NOT EXISTS "photos" jsonb DEFAULT '[]'::jsonb NOT NULL;
 ALTER TABLE "buildings" ADD COLUMN IF NOT EXISTS "cr_facilities" text[];
 ALTER TABLE "buildings" ALTER COLUMN "cr_facilities" DROP NOT NULL;
 ALTER TABLE "buildings" ADD COLUMN IF NOT EXISTS "version" integer DEFAULT 1 NOT NULL;
@@ -125,6 +127,7 @@ CREATE TABLE IF NOT EXISTS "dorms" (
   "contact_phone" varchar(20)[],
   "facebook_link" text,
   "image_url" text,
+  "photos" jsonb DEFAULT '[]'::jsonb NOT NULL,
   "version" integer DEFAULT 1 NOT NULL,
   "updated_at" text DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -159,6 +162,7 @@ ALTER TABLE "dorms" ADD COLUMN IF NOT EXISTS "facebook_link" text;
 ALTER TABLE "dorms" ALTER COLUMN "facebook_link" DROP NOT NULL;
 ALTER TABLE "dorms" ADD COLUMN IF NOT EXISTS "image_url" text;
 ALTER TABLE "dorms" ALTER COLUMN "image_url" DROP NOT NULL;
+ALTER TABLE "dorms" ADD COLUMN IF NOT EXISTS "photos" jsonb DEFAULT '[]'::jsonb NOT NULL;
 ALTER TABLE "dorms" ADD COLUMN IF NOT EXISTS "version" integer DEFAULT 1 NOT NULL;
 ALTER TABLE "dorms" ADD COLUMN IF NOT EXISTS "updated_at" text DEFAULT CURRENT_TIMESTAMP NOT NULL;
 CREATE TABLE IF NOT EXISTS "organizations" (
@@ -284,6 +288,7 @@ CREATE TABLE IF NOT EXISTS "rooms" (
   "college_id" integer,
   "division_id" integer,
   "image_url" text,
+  "photos" jsonb DEFAULT '[]'::jsonb NOT NULL,
   "category" varchar(24),
   "version" integer DEFAULT 1 NOT NULL,
   "updated_at" text DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -302,6 +307,7 @@ ALTER TABLE "rooms" ADD COLUMN IF NOT EXISTS "division_id" integer;
 ALTER TABLE "rooms" ALTER COLUMN "division_id" DROP NOT NULL;
 ALTER TABLE "rooms" ADD COLUMN IF NOT EXISTS "image_url" text;
 ALTER TABLE "rooms" ALTER COLUMN "image_url" DROP NOT NULL;
+ALTER TABLE "rooms" ADD COLUMN IF NOT EXISTS "photos" jsonb DEFAULT '[]'::jsonb NOT NULL;
 ALTER TABLE "rooms" ADD COLUMN IF NOT EXISTS "category" varchar(24);
 ALTER TABLE "rooms" ALTER COLUMN "category" DROP NOT NULL;
 ALTER TABLE "rooms" ADD COLUMN IF NOT EXISTS "version" integer DEFAULT 1 NOT NULL;

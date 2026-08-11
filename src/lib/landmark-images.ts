@@ -7,6 +7,7 @@
  * builds URLs with its own key because Google's terms forbid storing imagery.
  */
 import manifest from "@constants/landmark-images.json";
+import type { EntityPhoto } from "./entity-photos";
 import {
   STREET_VIEW_ATTRIBUTION,
   hasStreetViewKey,
@@ -55,6 +56,8 @@ const LANDMARK_IMAGES = manifest as LandmarkImagesManifest;
 
 export type BuildingImagesInput = {
   name: string;
+  photos?: EntityPhoto[];
+  /** Legacy single-photo field used by older cached rows. */
   imageUrl?: string | null;
   lat?: number | null;
   lon?: number | null;
@@ -72,12 +75,32 @@ export type BuildingImagesInput = {
 export function buildingLandmarkImages(
   input: BuildingImagesInput,
 ): LandmarkImage[] {
-  const { name, imageUrl, lat, lon, panoId, googleKey } = input;
+  const { name, photos, imageUrl, lat, lon, panoId, googleKey } = input;
   const entry = LANDMARK_IMAGES[`building:${name}`];
   const images: LandmarkImage[] = [];
 
-  if (imageUrl) {
-    images.push({ src: imageUrl, alt: name, source: "contributor" });
+  const contributorPhotos =
+    photos && photos.length > 0
+      ? photos
+      : imageUrl
+        ? [
+            {
+              url: imageUrl,
+              attributionName: null,
+              attributionProfileUrl: null,
+            },
+          ]
+        : [];
+  for (const photo of contributorPhotos) {
+    images.push({
+      src: photo.url,
+      alt: name,
+      credit: photo.attributionName
+        ? `Photo by ${photo.attributionName}`
+        : undefined,
+      creditUrl: photo.attributionProfileUrl ?? undefined,
+      source: "contributor",
+    });
   }
 
   if (hasStreetViewKey(googleKey) && panoId && lat != null && lon != null) {

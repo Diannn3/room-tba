@@ -1,10 +1,13 @@
 <script lang="ts">
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import ChevronRight from "@lucide/svelte/icons/chevron-right";
+  import type { EntityPhoto } from "@lib/entity-photos";
   import { buildingLandmarkImages } from "@lib/landmark-images";
 
   type Props = {
-    /** Contributor-uploaded photo, stored in R2. Always shown first. */
+    /** Contributor-uploaded photos, stored in R2. Always shown first. */
+    photos?: EntityPhoto[];
+    /** Legacy single photo field used by older cached rows. */
     imageUrl?: string | null;
     name: string;
     lat?: number | null;
@@ -15,11 +18,20 @@
     captured?: string | null;
   };
 
-  const { imageUrl, name, lat, lon, panoId, captured }: Props = $props();
+  const {
+    photos,
+    imageUrl,
+    name,
+    lat,
+    lon,
+    panoId,
+    captured,
+  }: Props = $props();
 
   const images = $derived(
     buildingLandmarkImages({
       name,
+      photos,
       imageUrl,
       lat,
       lon,

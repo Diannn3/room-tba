@@ -2,19 +2,23 @@ import type { Results } from '@electric-sql/pglite';
 import type { JeepneyRoute } from '$lib/constants/jeepney-routes';
 import { syncToastStore } from '$lib/store.svelte';
 import type {
-	AnnouncementData,
-	BuildingData,
-	CollegeData,
-	DivisionData,
-	DormData,
-	EventData,
-	OrgData,
-	PlaceData,
-	RoomData,
-	TableSyncInfo
-} from '$lib/types';
-import { getDB } from './pgliteDB';
-import { getSyncKey, getSyncKeysFromLs } from './sync-keys';
+  AnnouncementData,
+  BuildingData,
+  CollegeData,
+  DivisionData,
+  DormData,
+  EventData,
+  OrgData,
+  PlaceData,
+  RoomData,
+  TableSyncInfo,
+} from "@lib/types";
+import { normalizeEntityPhotos } from "@lib/entity-photos";
+import { getDB } from "./pgliteDB";
+import { syncToastStore } from "@lib/store.svelte";
+import type { Results } from "@electric-sql/pglite";
+import { getSyncKey, getSyncKeysFromLs } from "./sync-keys";
+import type { JeepneyRoute } from "@constants/jeepney-routes";
 
 export { getSyncKey, getSyncKeysFromLs };
 
@@ -82,48 +86,50 @@ export async function syncBuildings(
 	if (!trustedRemote) return;
 	const localDB = await getDB();
 
-	await localDB.waitReady;
-	syncToastStore.startBuildingsSync(remoteBuildings.length);
-	for (const b of remoteBuildings) {
-		try {
-			await localDB.query(
-				`
-        INSERT INTO buildings (id, building_name, lon, lat, directions, type, rooms_fetched, image_url, cr_facilities, version, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, false, $7, $8, $9, $10)
-        ON CONFLICT (id) DO UPDATE SET
-        id = EXCLUDED.id,
-        building_name = EXCLUDED.building_name,
-        lon = EXCLUDED.lon,
-        lat = EXCLUDED.lat,
-        directions = EXCLUDED.directions,
-        type = EXCLUDED.type,
-        rooms_fetched = EXCLUDED.rooms_fetched,
-        image_url = EXCLUDED.image_url,
-        cr_facilities = EXCLUDED.cr_facilities,
-        version = EXCLUDED.version,
-        updated_at = EXCLUDED.updated_at;
+  await localDB.waitReady;
+  syncToastStore.startBuildingsSync(remoteBuildings.length);
+  for (const b of remoteBuildings) {
+    try {
+      await localDB.query(
+        `
+         INSERT INTO buildings (id, building_name, lon, lat, directions, type, rooms_fetched, image_url, photos, cr_facilities, version, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, false, $7, $8, $9, $10, $11)
+         ON CONFLICT (id) DO UPDATE SET
+         id = EXCLUDED.id,
+         building_name = EXCLUDED.building_name,
+         lon = EXCLUDED.lon,
+         lat = EXCLUDED.lat,
+         directions = EXCLUDED.directions,
+         type = EXCLUDED.type,
+         rooms_fetched = EXCLUDED.rooms_fetched,
+         image_url = EXCLUDED.image_url,
+         photos = EXCLUDED.photos,
+         cr_facilities = EXCLUDED.cr_facilities,
+         version = EXCLUDED.version,
+         updated_at = EXCLUDED.updated_at;
         `,
-				[
-					b.id,
-					b.buildingName,
-					b.lon,
-					b.lat,
-					b.directions,
-					b.buildingType,
-					b.imageUrl ?? null,
-					b.crFacilities ?? null,
-					b.version,
-					b.updatedAt
-				]
-			);
-			syncToastStore.updateBuildingsSync();
-		} catch (e) {
-			console.error(e);
-		}
-	}
-	if (trustedRemote) {
-		updateSyncKeyFromLs('buildings', checker.newKey ?? '');
-	}
+        [
+          b.id,
+          b.buildingName,
+          b.lon,
+          b.lat,
+          b.directions,
+          b.buildingType,
+          b.imageUrl ?? null,
+          JSON.stringify(b.photos ?? []),
+          b.crFacilities ?? null,
+          b.version,
+          b.updatedAt,
+        ],
+      );
+      syncToastStore.updateBuildingsSync();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  if (trustedRemote) {
+    updateSyncKeyFromLs("buildings", checker.newKey ?? "");
+  }
 }
 
 export async function syncColleges(
@@ -239,65 +245,67 @@ export async function syncDorms(
 
 	const localDB = await getDB();
 
-	await localDB.waitReady;
-	syncToastStore.startDormsSync(remoteDorms.length);
-	for (const b of remoteDorms) {
-		try {
-			await localDB.query(
-				`
-        INSERT INTO dorms (id, dorm_name, short_name, lat, lon, gender, capacity, managing_office, contact_email, amenities, osm_link, description, is_up_managed, price_range, contact_phone, facebook_link, image_url, version, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
-        ON CONFLICT (id) DO UPDATE SET
-        id = EXCLUDED.id,
-        dorm_name = EXCLUDED.dorm_name,
-        short_name = EXCLUDED.short_name,
-        lat = EXCLUDED.lat,
-        lon = EXCLUDED.lon,
-        gender = EXCLUDED.gender,
-        capacity = EXCLUDED.capacity,
-        managing_office = EXCLUDED.managing_office,
-        contact_email = EXCLUDED.contact_email,
-        amenities = EXCLUDED.amenities,
-        osm_link = EXCLUDED.osm_link,
-        description = EXCLUDED.description,
-        is_up_managed = EXCLUDED.is_up_managed,
-        price_range = EXCLUDED.price_range,
-        contact_phone = EXCLUDED.contact_phone,
-        facebook_link = EXCLUDED.facebook_link,
-        image_url = EXCLUDED.image_url,
-        version = EXCLUDED.version,
-        updated_at = EXCLUDED.updated_at;
+  await localDB.waitReady;
+  syncToastStore.startDormsSync(remoteDorms.length);
+  for (const b of remoteDorms) {
+    try {
+      await localDB.query(
+        `
+         INSERT INTO dorms (id, dorm_name, short_name, lat, lon, gender, capacity, managing_office, contact_email, amenities, osm_link, description, is_up_managed, price_range, contact_phone, facebook_link, image_url, photos, version, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
+         ON CONFLICT (id) DO UPDATE SET
+         id = EXCLUDED.id,
+         dorm_name = EXCLUDED.dorm_name,
+         short_name = EXCLUDED.short_name,
+         lat = EXCLUDED.lat,
+         lon = EXCLUDED.lon,
+         gender = EXCLUDED.gender,
+         capacity = EXCLUDED.capacity,
+         managing_office = EXCLUDED.managing_office,
+         contact_email = EXCLUDED.contact_email,
+         amenities = EXCLUDED.amenities,
+         osm_link = EXCLUDED.osm_link,
+         description = EXCLUDED.description,
+         is_up_managed = EXCLUDED.is_up_managed,
+         price_range = EXCLUDED.price_range,
+         contact_phone = EXCLUDED.contact_phone,
+         facebook_link = EXCLUDED.facebook_link,
+         image_url = EXCLUDED.image_url,
+         photos = EXCLUDED.photos,
+         version = EXCLUDED.version,
+         updated_at = EXCLUDED.updated_at;
         `,
-				[
-					b.id,
-					b.dormName,
-					b.shortName,
-					b.lat,
-					b.lon,
-					b.gender,
-					b.capacity,
-					b.managingOffice,
-					b.contactEmail,
-					b.amenities ?? null,
-					b.osmLink,
-					b.description,
-					b.isUpManaged,
-					b.priceRange,
-					b.contactPhone,
-					b.facebookLink,
-					b.imageUrl ?? null,
-					b.version,
-					b.updatedAt
-				]
-			);
-			syncToastStore.updateDormsSync();
-		} catch (e) {
-			console.error(e);
-		}
-	}
-	if (trustedRemote) {
-		updateSyncKeyFromLs('dorms', checker.newKey ?? '');
-	}
+        [
+          b.id,
+          b.dormName,
+          b.shortName,
+          b.lat,
+          b.lon,
+          b.gender,
+          b.capacity,
+          b.managingOffice,
+          b.contactEmail,
+          b.amenities ?? null,
+          b.osmLink,
+          b.description,
+          b.isUpManaged,
+          b.priceRange,
+          b.contactPhone,
+          b.facebookLink,
+          b.imageUrl ?? null,
+          JSON.stringify(b.photos ?? []),
+          b.version,
+          b.updatedAt,
+        ],
+      );
+      syncToastStore.updateDormsSync();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  if (trustedRemote) {
+    updateSyncKeyFromLs("dorms", checker.newKey ?? "");
+  }
 }
 
 export async function syncOrganizations(

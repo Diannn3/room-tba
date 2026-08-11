@@ -779,6 +779,28 @@
       map.removeSource(EVENT_ROUTE_SOURCE_ID);
   }
 
+  function ensureExternalCampusesLayers(map: mapGl.MapLibreMap) {
+    if (!map.getSource(EXTERNAL_CAMPUSES_SOURCE_ID)) {
+      map.addSource(EXTERNAL_CAMPUSES_SOURCE_ID, {
+        type: "geojson",
+        data: EXTERNAL_CAMPUSES_GEOJSON,
+      });
+    }
+
+    if (!map.getLayer(EXTERNAL_CAMPUSES_LAYER_ID)) {
+      map.addLayer({
+        id: EXTERNAL_CAMPUSES_LAYER_ID,
+        type: "fill",
+        source: EXTERNAL_CAMPUSES_SOURCE_ID,
+        paint: {
+          "fill-color": "#4b5563",
+          "fill-opacity": 0.15,
+          "fill-outline-color": "#4b5563",
+        },
+      });
+    }
+  }
+
   function ensureTrailLayers(map: mapGl.MapLibreMap) {
     // Trail line source + casing + line
     if (!map.getSource(MAKILING_TRAIL_SOURCE_ID)) {

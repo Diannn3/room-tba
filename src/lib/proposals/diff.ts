@@ -1,3 +1,5 @@
+import { entityPhotoUrls } from "@lib/entity-photos";
+
 export const FIELD_LABELS: Record<string, string> = {
 	buildingName: 'Building name',
 	directions: 'Directions',
@@ -73,6 +75,19 @@ function formatLocations(value: unknown): string | null {
 				: name;
 		})
 		.join('; ');
+}
+
+function currentPhotoValue(current: Record<string, unknown>): unknown {
+  if ("photos" in current) return current.photos;
+  if ("photoUrls" in current) return current.photoUrls;
+  return typeof current.imageUrl === "string" && current.imageUrl.trim()
+    ? [current.imageUrl]
+    : [];
+}
+
+function formatPhotos(value: unknown): string | null {
+  const count = entityPhotoUrls(value).length;
+  return count === 0 ? null : `${count} photo${count === 1 ? "" : "s"}`;
 }
 
 function formatValue(value: unknown): string | null {

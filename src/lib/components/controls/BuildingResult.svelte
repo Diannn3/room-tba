@@ -132,7 +132,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
   let nameDraft = $state("");
   let directionsDraft = $state("");
   let typeDraft = $state<BuildingData["buildingType"]>("non-admin");
-  let photosDraft = $state<string[]>([]);
+  let photosDraft = $state<EntityPhoto[]>([]);
   let crFacilitiesDraft = $state<string[]>([]);
   let savingField = $state<BuildingEditableField | null>(null);
   let savedField = $state<BuildingEditableField | null>(null);
@@ -274,12 +274,17 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
 
     nameDraft = current.buildingName;
     directionsDraft = current.directions ?? "";
-    typeDraft = current.buildingType;
     photosDraft =
       current.photos && current.photos.length > 0
-        ? current.photos.map((photo) => photo.url)
+        ? [...current.photos]
         : current.imageUrl
-          ? [current.imageUrl]
+          ? [
+              {
+                url: current.imageUrl,
+                attributionName: null,
+                attributionProfileUrl: null,
+              },
+            ]
           : [];
     crFacilitiesDraft = sanitizeCrFacilities(current.crFacilities);
     savedField = null;
@@ -304,11 +309,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
           saved.fields.typeDraft === "non-admin"
         ) {
           typeDraft = saved.fields.typeDraft;
-        }
-        if (Array.isArray(saved.fields.photosDraft)) {
-          photosDraft = saved.fields.photosDraft.filter(
-            (value): value is string => typeof value === "string",
-          );
+          photosDraft = normalizeEntityPhotos(saved.fields.photosDraft);
         }
       }
     }
@@ -379,7 +380,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     } else if (field === "buildingType") {
       body.buildingType = typeDraft;
     } else if (field === "photos") {
-      body.photoUrls = photosDraft;
+      body.photoUrls = photosDraft.map((photo) => photo.url);
     } else if (field === "crFacilities") {
       body.crFacilities = sanitizeCrFacilities(crFacilitiesDraft);
     }
@@ -524,9 +525,10 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     const current = building;
     if (!current) return true;
     const existing = existingPhotoUrls(current);
+    const draftUrls = photosDraft.map((photo) => photo.url);
     return (
-      photosDraft.length === existing.length &&
-      photosDraft.every((url, index) => url === existing[index])
+      draftUrls.length === existing.length &&
+      draftUrls.every((url, index) => url === existing[index])
     );
   });
   const allFieldsUnchanged = $derived.by(() => {
@@ -561,7 +563,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
       patch.buildingType = typeDraft;
     }
     if (!photosUnchanged) {
-      patch.photoUrls = photosDraft;
+      patch.photoUrls = photosDraft.map((photo) => photo.url);
     }
     if (crFacilitiesChanged) {
       patch.crFacilities = sanitizeCrFacilities(crFacilitiesDraft);

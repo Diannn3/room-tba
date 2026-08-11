@@ -145,15 +145,19 @@ const SYNCED_TABLES: PgTable[] = [
 function localType(sqlType: string): string {
   const base = sqlType.replace(/\[\]$/, "");
   const suffix = sqlType.endsWith("[]") ? "[]" : "";
+  if (base === "jsonb") return "jsonb";
   if (/^(integer|text|boolean|numeric|double precision|uuid)$/.test(base))
     return base + suffix;
   if (/^varchar\(\d+\)$/.test(base)) return base + suffix;
-  // timestamps, date, time, jsonb, and pg enums all degrade to text
+  // timestamps, date, time, and pg enums degrade to text
   return `text${suffix}`;
 }
 
-function renderDefault(value: unknown): string | undefined {
+function renderDefault(value: unknown, sqlType?: string): string | undefined {
   if (value === undefined) return undefined;
+  if (sqlType === "jsonb") {
+    return `'${JSON.stringify(value).replace(/'/g, "''")}'::jsonb`;
+  }
   if (typeof value === "boolean" || typeof value === "number")
     return String(value);
   if (typeof value === "string") return `'${value.replace(/'/g, "''")}'`;
@@ -167,7 +171,7 @@ function tableColumns(table: PgTable): { name: string; cols: LocalColumn[] } {
     name: col.name,
     type: localType(col.getSQLType()),
     notNull: col.notNull,
-    default: renderDefault(col.default),
+    default: renderDefault(col.default, col.getSQLType()),
     primaryKey: col.primary,
   }));
   return {

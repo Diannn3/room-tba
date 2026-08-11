@@ -12,6 +12,7 @@ import {
   termsTable,
 } from "@drizzle/schema";
 import type { QueryStoreState } from "./store.svelte";
+import type { EntityPhoto } from "./entity-photos";
 
 export type AppData = {
   buildings: {
@@ -63,6 +64,7 @@ type RoomData = {
   collegeName: string | null;
   divisionName: string | null;
   imageUrl?: string | null;
+  photos?: EntityPhoto[];
   /** Room purpose category (#537): classroom | office | org-tambayan | … | null. */
   category?: string | null;
   version: number;
@@ -70,7 +72,9 @@ type RoomData = {
   floor?: number | null;
 };
 
-type BuildingData = typeof buildingsTable.$inferSelect;
+type BuildingData = Omit<typeof buildingsTable.$inferSelect, "photos"> & {
+  photos?: EntityPhoto[];
+};
 
 type BuildingType = BuildingData["buildingType"];
 
@@ -120,7 +124,9 @@ type DivisionData = {
   floor?: number | null;
 };
 
-type DormData = typeof dormsTable.$inferSelect;
+type DormData = Omit<typeof dormsTable.$inferSelect, "photos"> & {
+  photos?: EntityPhoto[];
+};
 
 type OrgData = typeof organizationsTable.$inferSelect;
 type PlaceData = typeof placesTable.$inferSelect;

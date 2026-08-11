@@ -18,6 +18,7 @@ import {
   date,
   time,
 } from "drizzle-orm/pg-core";
+import type { EntityPhoto } from "../src/lib/entity-photos";
 
 export const buildingEnum = pgEnum("building_type", ["admin", "non-admin"]);
 export const eventCategoryEnum = pgEnum("event_category", [
@@ -106,6 +107,7 @@ export const dormsTable = pgTable("dorms", {
   contactPhone: varchar("contact_phone", { length: 20 }).array(),
   facebookLink: text("facebook_link"),
   imageUrl: text("image_url"),
+  photos: jsonb("photos").$type<EntityPhoto[]>().notNull().default([]),
   version: integer().default(1).notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }).defaultNow().notNull(),
 });
@@ -325,6 +327,7 @@ export const buildingsTable = pgTable("buildings", {
   lat: doublePrecision().notNull(),
   directions: text().notNull(),
   imageUrl: text("image_url"),
+  photos: jsonb("photos").$type<EntityPhoto[]>().notNull().default([]),
   crFacilities: text("cr_facilities").array(),
   // Street View *metadata* only. Google's terms forbid storing their imagery,
   // so the pixels render live and only the lookup result is cached here.
@@ -413,6 +416,7 @@ export const roomsTable = pgTable(
     collegeId: integer("college_id"),
     divisionId: integer("division_id"),
     imageUrl: text("image_url"),
+    photos: jsonb("photos").$type<EntityPhoto[]>().notNull().default([]),
     category: varchar({ length: 24 }),
     version: integer().default(1).notNull(),
     updatedAt: timestamp("updated_at", { mode: "string" })

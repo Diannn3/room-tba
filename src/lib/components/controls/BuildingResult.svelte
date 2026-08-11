@@ -1,6 +1,7 @@
 <script lang="ts">
   
   import Box from "@lucide/svelte/icons/box";
+
   import { tick } from "svelte";
 import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
   import EntityEditorField from "$lib/components/editor/EntityEditorField.svelte";
@@ -61,7 +62,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     | "buildingName"
     | "directions"
     | "buildingType"
-    | "imageUrl"
+    | "photos"
     | "crFacilities";
 
   const appData = getAppData();
@@ -131,7 +132,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
   let nameDraft = $state("");
   let directionsDraft = $state("");
   let typeDraft = $state<BuildingData["buildingType"]>("non-admin");
-  let imageDraft = $state<string | null>(null);
+  let photosDraft = $state<string[]>([]);
   let crFacilitiesDraft = $state<string[]>([]);
   let savingField = $state<BuildingEditableField | null>(null);
   let savedField = $state<BuildingEditableField | null>(null);
@@ -152,7 +153,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     buildingName: "Building name",
     directions: "Building directions",
     buildingType: "Building type",
-    imageUrl: "Building photo",
+    photos: "Building photos",
     crFacilities: "CR facilities",
   };
 
@@ -271,12 +272,15 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
       return;
     }
 
-    draftBuildingId = current.id;
-    draftVersion = current.version;
     nameDraft = current.buildingName;
     directionsDraft = current.directions ?? "";
     typeDraft = current.buildingType;
-    imageDraft = current.imageUrl ?? null;
+    photosDraft =
+      current.photos && current.photos.length > 0
+        ? current.photos.map((photo) => photo.url)
+        : current.imageUrl
+          ? [current.imageUrl]
+          : [];
     crFacilitiesDraft = sanitizeCrFacilities(current.crFacilities);
     savedField = null;
     fieldError = null;
@@ -301,6 +305,11 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
         ) {
           typeDraft = saved.fields.typeDraft;
         }
+        if (Array.isArray(saved.fields.photosDraft)) {
+          photosDraft = saved.fields.photosDraft.filter(
+            (value): value is string => typeof value === "string",
+          );
+        }
       }
     }
   });
@@ -309,7 +318,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     if (canPublish || !editing || !building) return;
     scheduleEntityContributorDraftSave("building", building.id, () => ({
       editing: true,
-      fields: { nameDraft, directionsDraft, typeDraft },
+      fields: { nameDraft, directionsDraft, typeDraft, photosDraft },
     }));
   });
 
@@ -354,7 +363,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
       buildingName?: string;
       directions?: string;
       buildingType?: BuildingData["buildingType"];
-      imageUrl?: string | null;
+      photoUrls?: string[];
       crFacilities?: string[];
     } = { version: current.version };
 
@@ -369,8 +378,8 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
       body.directions = directionsDraft.trim();
     } else if (field === "buildingType") {
       body.buildingType = typeDraft;
-    } else if (field === "imageUrl") {
-      body.imageUrl = imageDraft || null;
+    } else if (field === "photos") {
+      body.photoUrls = photosDraft;
     } else if (field === "crFacilities") {
       body.crFacilities = sanitizeCrFacilities(crFacilitiesDraft);
     }
@@ -503,6 +512,23 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
       : [...crFacilitiesDraft, slug];
   }
 
+  function existingPhotoUrls(current: BuildingData) {
+    return current.photos && current.photos.length > 0
+      ? current.photos.map((photo) => photo.url)
+      : current.imageUrl
+        ? [current.imageUrl]
+        : [];
+  }
+
+  const photosUnchanged = $derived.by(() => {
+    const current = building;
+    if (!current) return true;
+    const existing = existingPhotoUrls(current);
+    return (
+      photosDraft.length === existing.length &&
+      photosDraft.every((url, index) => url === existing[index])
+    );
+  });
   const allFieldsUnchanged = $derived.by(() => {
     const current = building;
     if (!current) return true;
@@ -510,6 +536,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
       nameDraft.trim() === current.buildingName &&
       directionsDraft.trim() === (current.directions ?? "") &&
       typeDraft === current.buildingType &&
+      photosUnchanged &&
       !crFacilitiesChanged
     );
   });
@@ -532,6 +559,9 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     }
     if (typeDraft !== current.buildingType) {
       patch.buildingType = typeDraft;
+    }
+    if (!photosUnchanged) {
+      patch.photoUrls = photosDraft;
     }
     if (crFacilitiesChanged) {
       patch.crFacilities = sanitizeCrFacilities(crFacilitiesDraft);

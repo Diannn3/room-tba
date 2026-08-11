@@ -22,7 +22,13 @@ import {
 } from "@constants/proposals";
 import { recordProposalContribution } from "./contribution-service";
 import { parseImageUrl } from "@lib/r2-upload";
+import {
+  parseEntityPhotoUrls,
+  reconcileEntityPhotos,
+  type ParsedEntityPhotoUrls,
+} from "@lib/entity-photos";
 import { R2_PUBLIC_URL } from "astro:env/server";
+import { resolvePhotoAttribution } from "./entity-photo-service";
 import { canWithdrawProposal } from "./proposal-access";
 export {
   canViewProposalSubmitterDetails,
@@ -32,13 +38,16 @@ import {
   EditConflictError,
   DuplicateSlugError,
   createBuilding,
+  getBuildingById,
   createCollege,
   createDivision,
   createDorm,
+  getDormById,
   createEvent,
   createOrganization,
   createPlace,
   createRoom,
+  getRoomById,
   updateBuilding,
   updateCollege,
   updateDivision,
@@ -797,28 +806,117 @@ function validateProposalImageUrl(
   }
 }
 
+function parseProposalPhotoUrls(patch: Record<string, unknown>, label: string) {
+  const parsed = parseEntityPhotoUrls(patch.photoUrls, R2_PUBLIC_URL);
+  if (!parsed.ok) {
+    throw new ProposalActionError(`${label}: ${parsed.error}`);
+  }
+  if (parsed.provided) {
+    patch.photoUrls = parsed.photoUrls;
+  }
+  return parsed;
+}
+
 const IMAGE_PATCH_ENTITY_LABELS: Readonly<Record<string, string>> = {
   create_event: "Event image",
   event: "Event image",
-  building: "Building image",
-  room: "Room image",
-  dorm: "Dorm image",
-  create_dorm: "Dorm image",
+  building: "Building photos",
+  room: "Room photos",
+  dorm: "Dorm photos",
+  create_building: "Building photos",
+  create_room: "Room photos",
+  create_dorm: "Dorm photos",
 };
+
+const EVENT_IMAGE_ENTITY_TYPES: Readonly<Record<string, true>> = {
+  event: true,
+  create_event: true,
+};
+
+async function proposalEntityPhotos(
+  proposal: EditProposalRow,
+  entityType: "building" | "room" | "dorm",
+  requestedUrls: string[],
+) {
+  const current =
+    entityType === "building"
+      ? await getBuildingById(proposal.entityId)
+      : entityType === "room"
+        ? await getRoomById(proposal.entityId)
+        : await getDormById(proposal.entityId);
+  if (!current) {
+    throw new ProposalActionError(
+      `The ${entityType} no longer exists for this photo change.`,
+      400,
+    );
+  }
+  const attribution = await resolvePhotoAttribution(
+    proposal.submitterUserId,
+    proposal.submitterName,
+  );
+  return reconcileEntityPhotos(
+    current.photos ?? [],
+    requestedUrls,
+    attribution,
+  );
+}
 
 async function applyProposalPatch(proposal: EditProposalRow, editedBy: string) {
   const patch = proposal.proposedPatch as Record<string, unknown>;
   const entityType = proposal.entityType as ProposalEntityType;
-
   const imageLabel = IMAGE_PATCH_ENTITY_LABELS[entityType];
+  let parsedPhotoUrls: ParsedEntityPhotoUrls | null = null;
+
   if (imageLabel) {
-    validateProposalImageUrl(patch, imageLabel);
+    if (EVENT_IMAGE_ENTITY_TYPES[entityType]) {
+      validateProposalImageUrl(patch, imageLabel);
+    } else {
+      parsedPhotoUrls = parseProposalPhotoUrls(patch, imageLabel);
+    }
   }
 
+  const photoAttribution =
+    parsedPhotoUrls && isCreateProposalType(entityType)
+      ? await resolvePhotoAttribution(
+          proposal.submitterUserId,
+          proposal.submitterName,
+        )
+      : null;
+
+  if (parsedPhotoUrls && !isCreateProposalType(entityType)) {
+    if (parsedPhotoUrls.provided) {
+      patch.photos = await proposalEntityPhotos(
+        proposal,
+        entityType as "building" | "room" | "dorm",
+        parsedPhotoUrls.photoUrls,
+      );
+    } else {
+      delete patch.photos;
+    }
+    delete patch.photoUrls;
+  }
   if (isCreateProposalType(entityType)) {
     switch (entityType) {
       case "create_building": {
         const rooms = parseBundledRooms(patch);
+        const bundledPhotoUrls = rooms.map((room) => {
+          const parsed = parseEntityPhotoUrls(room.photoUrls, R2_PUBLIC_URL);
+          if (!parsed.ok) {
+            throw new ProposalActionError(
+              `Room ${room.roomCode}: ${parsed.error}`,
+            );
+          }
+          return parsed.photoUrls;
+        });
+        const attribution = photoAttribution ?? {
+          name: proposal.submitterName,
+          profileUrl: null,
+        };
+        const buildingPhotos = reconcileEntityPhotos(
+          [],
+          parsedPhotoUrls?.photoUrls ?? [],
+          attribution,
+        );
         const building = await createBuilding(
           {
             buildingName:
@@ -829,6 +927,7 @@ async function applyProposalPatch(proposal: EditProposalRow, editedBy: string) {
               patch.buildingType === "admin" ? "admin" : "non-admin",
             lat: patch.lat as number,
             lon: patch.lon as number,
+            photos: buildingPhotos,
           },
           editedBy,
         );
@@ -836,12 +935,17 @@ async function applyProposalPatch(proposal: EditProposalRow, editedBy: string) {
           throw new ProposalActionError("Failed to create building.", 500);
         }
         try {
-          for (const room of rooms) {
+          for (const [index, room] of rooms.entries()) {
             await createRoom(
               {
                 roomCode: room.roomCode,
                 directions: room.directions || null,
                 buildingId: building.id,
+                photos: reconcileEntityPhotos(
+                  [],
+                  bundledPhotoUrls[index] ?? [],
+                  attribution,
+                ),
               },
               editedBy,
             );
@@ -884,12 +988,32 @@ async function applyProposalPatch(proposal: EditProposalRow, editedBy: string) {
           editedBy,
         );
       }
-      case "create_dorm":
-        return createDorm(patch as DormCreateInput, editedBy);
+      case "create_dorm": {
+        const attribution = photoAttribution ?? {
+          name: proposal.submitterName,
+          profileUrl: null,
+        };
+        const photos = reconcileEntityPhotos(
+          [],
+          parsedPhotoUrls?.photoUrls ?? [],
+          attribution,
+        );
+        return createDorm({ ...patch, photos } as DormCreateInput, editedBy);
+      }
       case "create_place":
         return createPlace(patch as PlaceCreateInput, editedBy);
-      case "create_room":
-        return createRoom(patch as RoomCreateInput, editedBy);
+      case "create_room": {
+        const attribution = photoAttribution ?? {
+          name: proposal.submitterName,
+          profileUrl: null,
+        };
+        const photos = reconcileEntityPhotos(
+          [],
+          parsedPhotoUrls?.photoUrls ?? [],
+          attribution,
+        );
+        return createRoom({ ...patch, photos } as RoomCreateInput, editedBy);
+      }
       case "create_event":
         return createEvent(patch as EventWriteInput, editedBy);
       case "create_organization":

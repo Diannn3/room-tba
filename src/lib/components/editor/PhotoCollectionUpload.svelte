@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { MAX_ENTITY_PHOTOS } from "@lib/entity-photos";
-  import ImageUpload from "./ImageUpload.svelte";
+  import type { EntityPhoto } from "@lib/entity-photos";
+  import EntityPhotoUpload from "./EntityPhotoUpload.svelte";
 
   type Props = {
     values?: string[];
@@ -18,52 +18,41 @@
     label = "Photos (optional)",
   }: Props = $props();
 
-  const slotCount = $derived(
-    Math.min(MAX_ENTITY_PHOTOS, Math.max(1, values.length + 1)),
-  );
+  let photos = $state<EntityPhoto[]>([]);
 
-  function updatePhoto(index: number, value: string | null) {
-    const next = [...values];
-    if (value) {
-      next[index] = value;
-    } else {
-      next.splice(index, 1);
-    }
-    values = next.filter((url): url is string => Boolean(url));
+  function urlsEqual(left: string[], right: string[]) {
+    return (
+      left.length === right.length &&
+      left.every((url, index) => url === right[index])
+    );
   }
+
+  $effect(() => {
+    const next = values.map((url) => ({
+      url,
+      attributionName: null,
+      attributionProfileUrl: null,
+    }));
+    if (
+      !urlsEqual(
+        next.map((photo) => photo.url),
+        photos.map((photo) => photo.url),
+      )
+    ) {
+      photos = next;
+    }
+  });
+
+  $effect(() => {
+    const next = photos.map((photo) => photo.url);
+    if (!urlsEqual(next, values)) values = next;
+  });
 </script>
 
-<div class="photo-collection-upload">
-  <p class="photo-collection-upload__label">{label}</p>
-  <p class="entity-editor-muted photo-collection-upload__hint">
-    Add up to {MAX_ENTITY_PHOTOS} photos. JPEG, PNG, or WebP up to 5 MB each.
-  </p>
-  {#each Array.from({ length: slotCount }) as _, index (index)}
-    <ImageUpload
-      inputId={`${inputId}-${index + 1}`}
-      label={`Photo ${index + 1}`}
-      prefix={prefix}
-      value={values[index] ?? null}
-      {disabled}
-      onValueChange={(value) => updatePhoto(index, value)}
-    />
-  {/each}
-</div>
-
-<style>
-  .photo-collection-upload {
-    display: grid;
-    gap: 0.5rem;
-  }
-
-  .photo-collection-upload__label {
-    margin: 0;
-    color: #3d3437;
-    font-size: 0.875rem;
-    font-weight: 650;
-  }
-
-  .photo-collection-upload__hint {
-    margin: 0;
-  }
-</style>
+<EntityPhotoUpload
+  bind:photos
+  {prefix}
+  {disabled}
+  {inputId}
+  {label}
+/>

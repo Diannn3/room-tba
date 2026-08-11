@@ -9,6 +9,7 @@
     inputId?: string;
     label?: string;
     onValueChange?: (value: string | null) => void;
+    onuploaded?: (value: string) => void;
   };
 
   let {
@@ -17,8 +18,10 @@
     disabled = false,
     inputId = "image-upload-input",
     label = "Event image",
-  }: Props = $props();
+    onValueChange,
+    onuploaded,
 
+  }: Props = $props();
   let uploading = $state(false);
   let error = $state<string | null>(null);
   let uploadConfigured = $state<boolean | null>(null);
@@ -93,6 +96,7 @@
 
       value = data.url;
       onValueChange?.(value);
+      onuploaded?.(value);
     } catch (uploadError) {
       error =
         uploadError instanceof Error

@@ -26,8 +26,9 @@ mock.module("astro:env/server", () => ({
   R2_ACCESS_KEY_ID: "",
   R2_SECRET_ACCESS_KEY: "",
   R2_BUCKET_NAME: "",
-  R2_PUBLIC_URL: "",
-  // Unconfigured on purpose: services must take their skip/bypass paths.
+  // Deterministic origin for URL validation; credentials stay absent so
+  // upload storage remains intentionally unconfigured in integration tests.
+  R2_PUBLIC_URL: "https://cdn.example.test",
   RESEND_API_KEY: "",
   RESEND_FROM_EMAIL: "",
   TURNSTILE_SECRET_KEY: "",

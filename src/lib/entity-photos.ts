@@ -82,3 +82,60 @@ export function reconcileEntityPhotos(
     };
   });
 }
+
+/** Returns stored photo URLs from either normalized entities or URL arrays. */
+export function entityPhotoUrls(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (typeof item === "string") return item;
+    if (!item || typeof item !== "object" || !("url" in item)) return [];
+    const url = item.url;
+    return typeof url === "string" ? url : [];
+  });
+}
+
+/** Normalizes JSONB/API photo collections while preserving optional credits. */
+export function normalizeEntityPhotos(value: unknown): EntityPhoto[] {
+  let candidate = value;
+  if (typeof candidate === "string") {
+    try {
+      candidate = JSON.parse(candidate);
+    } catch {
+      return [];
+    }
+  }
+  if (!Array.isArray(candidate)) return [];
+
+  const seen = new Set<string>();
+  const normalized: EntityPhoto[] = [];
+  for (const item of candidate) {
+    if (
+      !item ||
+      typeof item !== "object" ||
+      !("url" in item) ||
+      typeof item.url !== "string"
+    ) {
+      continue;
+    }
+    const url = item.url.trim();
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    normalized.push({
+      url,
+      attributionName:
+        "attributionName" in item &&
+        typeof item.attributionName === "string" &&
+        item.attributionName.trim()
+          ? item.attributionName.trim()
+          : null,
+      attributionProfileUrl:
+        "attributionProfileUrl" in item &&
+        typeof item.attributionProfileUrl === "string" &&
+        item.attributionProfileUrl.trim()
+          ? item.attributionProfileUrl.trim()
+          : null,
+    });
+    if (normalized.length === MAX_ENTITY_PHOTOS) break;
+  }
+  return normalized;
+}

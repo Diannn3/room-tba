@@ -3,22 +3,32 @@ import { ORG_CATEGORIES, type OrgCategory } from '$lib/constants/org-categories'
 import { normalizePlaceCategory } from '$lib/constants/place-categories';
 
 export type BundledRoomDraft = {
-	roomCode: string;
-	directions: string;
+  roomCode: string;
+  directions: string;
+  photoUrls: string[];
 };
 
-export function parseBundledRooms(patch: Record<string, unknown>): BundledRoomDraft[] {
-	if (!Array.isArray(patch.rooms)) return [];
-	const rooms: BundledRoomDraft[] = [];
-	for (const entry of patch.rooms) {
-		if (!entry || typeof entry !== 'object') continue;
-		const row = entry as Record<string, unknown>;
-		const roomCode = typeof row.roomCode === 'string' ? row.roomCode.trim() : '';
-		if (!roomCode) continue;
-		const directions = typeof row.directions === 'string' ? row.directions.trim() : '';
-		rooms.push({ roomCode, directions });
-	}
-	return rooms;
+export function parseBundledRooms(
+  patch: Record<string, unknown>,
+): BundledRoomDraft[] {
+  if (!Array.isArray(patch.rooms)) return [];
+  const rooms: BundledRoomDraft[] = [];
+  for (const entry of patch.rooms) {
+    if (!entry || typeof entry !== "object") continue;
+    const row = entry as Record<string, unknown>;
+    const roomCode =
+      typeof row.roomCode === "string" ? row.roomCode.trim() : "";
+    if (!roomCode) continue;
+    const directions =
+      typeof row.directions === "string" ? row.directions.trim() : "";
+    const photoUrls = Array.isArray(row.photoUrls)
+      ? row.photoUrls.filter(
+          (value): value is string => typeof value === "string",
+        )
+      : [];
+    rooms.push({ roomCode, directions, photoUrls });
+  }
+  return rooms;
 }
 
 export function validateBundledRooms(rooms: BundledRoomDraft[], maxRooms = 20): void {

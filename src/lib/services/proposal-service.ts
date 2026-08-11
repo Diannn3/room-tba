@@ -746,6 +746,17 @@ function validateProposalImageUrl(patch: Record<string, unknown>, label: string)
 	}
 }
 
+function parseProposalPhotoUrls(patch: Record<string, unknown>, label: string) {
+  const parsed = parseEntityPhotoUrls(patch.photoUrls, R2_PUBLIC_URL);
+  if (!parsed.ok) {
+    throw new ProposalActionError(`${label}: ${parsed.error}`);
+  }
+  if (parsed.provided) {
+    patch.photoUrls = parsed.photoUrls;
+  }
+  return parsed;
+}
+
 const IMAGE_PATCH_ENTITY_LABELS: Readonly<Record<string, string>> = {
 	create_event: 'Event image',
 	event: 'Event image',
@@ -754,6 +765,39 @@ const IMAGE_PATCH_ENTITY_LABELS: Readonly<Record<string, string>> = {
 	dorm: 'Dorm image',
 	create_dorm: 'Dorm image'
 };
+
+const EVENT_IMAGE_ENTITY_TYPES: Readonly<Record<string, true>> = {
+  event: true,
+  create_event: true,
+};
+
+async function proposalEntityPhotos(
+  proposal: EditProposalRow,
+  entityType: "building" | "room" | "dorm",
+  requestedUrls: string[],
+) {
+  const current =
+    entityType === "building"
+      ? await getBuildingById(proposal.entityId)
+      : entityType === "room"
+        ? await getRoomById(proposal.entityId)
+        : await getDormById(proposal.entityId);
+  if (!current) {
+    throw new ProposalActionError(
+      `The ${entityType} no longer exists for this photo change.`,
+      400,
+    );
+  }
+  const attribution = await resolvePhotoAttribution(
+    proposal.submitterUserId,
+    proposal.submitterName,
+  );
+  return reconcileEntityPhotos(
+    current.photos ?? [],
+    requestedUrls,
+    attribution,
+  );
+}
 
 async function applyProposalPatch(proposal: EditProposalRow, editedBy: string) {
 	const patch = proposal.proposedPatch as Record<string, unknown>;

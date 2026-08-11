@@ -22,6 +22,7 @@
     stepIndex,
     REVIEW_SHORTCUT_HINTS,
   } from "@lib/proposals/review-shortcuts";
+ import { entityPhotoUrls } from "@lib/entity-photos";
 
   const appActions = getAppActions();
   const appData = getAppData();
@@ -64,6 +65,22 @@
       resolveEntityName,
     );
   }
+ 
+ function proposalPhotoUrls(patch: Record<string, unknown>): string[] {
+   const values =
+     entityPhotoUrls(patch.photoUrls).length > 0
+       ? entityPhotoUrls(patch.photoUrls)
+       : typeof patch.imageUrl === "string"
+         ? [patch.imageUrl]
+         : [];
+   return values.filter((url) => {
+     try {
+       return new URL(url).protocol === "https:";
+     } catch {
+       return false;
+     }
+   });
+ }
 
   function isStale(proposal: {
     currentVersion?: number | null;
@@ -585,9 +602,12 @@
 
             <ul class="entity-review-list entity-review-sublist">
               {#each group.proposals as proposal (proposal.id)}
-                {@const diffs = diffsFor(proposal)}
-                {@const stale = isStale(proposal)}
-                {@const pinChange = proposalPinChange(proposal)}
+                 {@const diffs = diffsFor(proposal)}
+                 {@const stale = isStale(proposal)}
+                 {@const pinChange = proposalPinChange(proposal)}
+                 {@const photoUrls = proposalPhotoUrls(
+                   proposal.proposedPatch as Record<string, unknown>,
+                 )}
                 <li
                   class="entity-review-item"
                   class:entity-review-item--focused={focusedProposal?.id ===
@@ -660,6 +680,27 @@
                             </li>
                           {/each}
                         </ul>
+ 
+                         {#if photoUrls.length > 0}
+                           <div
+                             class="entity-review-photo-preview"
+                             aria-label="Proposed photos"
+                           >
+                             <strong>Proposed photos</strong>
+                             <div class="entity-review-photo-strip">
+                               {#each photoUrls as url, index (url)}
+                                 <img
+                                   src={url}
+                                   alt={`Proposed ${proposal.entityLabel} photo ${index + 1}`}
+                                   loading="lazy"
+                                   width="160"
+                                   height="100"
+                                   referrerpolicy="no-referrer"
+                                 />
+                               {/each}
+                             </div>
+                           </div>
+                         {/if}
 
                         {#if pinChange}
                           <div class="entity-review-preview">
@@ -893,6 +934,32 @@
     margin: 0.375rem 0 0;
     font-size: 0.8rem;
     color: hsl(0, 0%, 40%);
+  }
+
+  .entity-review-photo-preview {
+    margin: 0.5rem 0 0;
+  }
+
+  .entity-review-photo-preview strong {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.75rem;
+  }
+
+  .entity-review-photo-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  .entity-review-photo-strip img {
+    width: 10rem;
+    max-width: 100%;
+    height: 6.25rem;
+    border: 1px solid hsl(0, 0%, 84%);
+    border-radius: 6px;
+    background: hsl(0, 0%, 96%);
+    object-fit: cover;
   }
 
   .entity-review-batch {

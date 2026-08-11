@@ -3,6 +3,7 @@ import type {
   ProposalEntityType,
 } from "@lib/services/proposal-service";
 import { FIELD_LABELS } from "./diff";
+import { entityPhotoUrls } from "@lib/entity-photos";
 import {
   validateSubmitterName,
   validateSubmitterNote,
@@ -180,10 +181,14 @@ export function summarizeProposalPatch(
     .filter(([key]) => key !== "rooms")
     .map(([key, value]) => {
       const label = FIELD_LABELS[key] ?? key;
+      const photoCount =
+        key === "photoUrls" ? entityPhotoUrls(value).length : null;
       const rendered =
-        typeof value === "string" || typeof value === "number"
-          ? String(value)
-          : JSON.stringify(value);
+        photoCount !== null
+          ? `${photoCount} photo${photoCount === 1 ? "" : "s"}`
+          : typeof value === "string" || typeof value === "number"
+            ? String(value)
+            : JSON.stringify(value);
       return `${label}: ${rendered}`;
     });
 }

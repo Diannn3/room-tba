@@ -1,3 +1,5 @@
+import { entityPhotoUrls } from "@lib/entity-photos";
+
 export const FIELD_LABELS: Record<string, string> = {
   buildingName: "Building name",
   directions: "Directions",
@@ -24,6 +26,7 @@ export const FIELD_LABELS: Record<string, string> = {
   endsAt: "Ends",
   sourceUrl: "Source URL",
   imageUrl: "Image",
+  photoUrls: "Photos",
   crFacilities: "CR facilities",
   recurrence: "Recurrence",
   rooms: "Bundled rooms",
@@ -78,6 +81,19 @@ function formatLocations(value: unknown): string | null {
     .join("; ");
 }
 
+function currentPhotoValue(current: Record<string, unknown>): unknown {
+  if ("photos" in current) return current.photos;
+  if ("photoUrls" in current) return current.photoUrls;
+  return typeof current.imageUrl === "string" && current.imageUrl.trim()
+    ? [current.imageUrl]
+    : [];
+}
+
+function formatPhotos(value: unknown): string | null {
+  const count = entityPhotoUrls(value).length;
+  return count === 0 ? null : `${count} photo${count === 1 ? "" : "s"}`;
+}
+
 function formatValue(value: unknown): string | null {
   if (value === null || value === undefined) return null;
   if (typeof value === "string") return value.trim() === "" ? null : value;
@@ -107,8 +123,18 @@ export function buildFieldDiffs(
   const diffs: FieldDiff[] = [];
   for (const [field, proposed] of Object.entries(patch)) {
     if (SKIPPED_KEYS.has(field)) continue;
-    const format = field === "locations" ? formatLocations : formatValue;
-    const beforeRaw = current ? current[field] : null;
+    const format =
+      field === "locations"
+        ? formatLocations
+        : field === "photoUrls"
+          ? formatPhotos
+          : formatValue;
+    const beforeRaw =
+      current && field === "photoUrls"
+        ? currentPhotoValue(current)
+        : current
+          ? current[field]
+          : null;
     const before = current ? format(beforeRaw) : null;
     const after = format(proposed);
     if (current && before === after) continue;

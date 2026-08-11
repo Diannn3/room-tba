@@ -47,6 +47,29 @@ describe("buildFieldDiffs", () => {
     ]);
   });
 
+  test("summarizes photo collections by count", () => {
+    expect(
+      buildFieldDiffs(
+        {
+          photos: [{ url: "https://cdn.example.test/old.jpg" }],
+        },
+        {
+          photoUrls: [
+            "https://cdn.example.test/old.jpg",
+            "https://cdn.example.test/new.jpg",
+          ],
+        },
+      ),
+    ).toEqual([
+      {
+        field: "photoUrls",
+        label: "Photos",
+        before: "1 photo",
+        after: "2 photos",
+      },
+    ]);
+  });
+
   test("create proposals (null current) list every patch field with null before", () => {
     const diffs = buildFieldDiffs(null, { roomCode: "CEM 203", lat: 14.16 });
     expect(diffs).toEqual([

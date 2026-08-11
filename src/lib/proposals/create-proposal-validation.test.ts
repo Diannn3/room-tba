@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   ProposalValidationError,
+  parseBundledRooms,
   validateCreateProposalPatch,
 } from "./create-proposal-validation";
 
@@ -25,5 +26,27 @@ describe("create_jeepney_stop proposal validation", () => {
         lon: 121.24,
       }),
     ).toThrow(ProposalValidationError);
+  });
+});
+
+describe("bundled room proposal photos", () => {
+  test("preserves optional photo URLs in room drafts", () => {
+    expect(
+      parseBundledRooms({
+        rooms: [
+          {
+            roomCode: "ICS 101",
+            directions: "First floor",
+            photoUrls: ["https://cdn.example.test/room.jpg"],
+          },
+        ],
+      }),
+    ).toEqual([
+      {
+        roomCode: "ICS 101",
+        directions: "First floor",
+        photoUrls: ["https://cdn.example.test/room.jpg"],
+      },
+    ]);
   });
 });

@@ -5,6 +5,7 @@ import { normalizePlaceCategory } from "@constants/place-categories";
 export type BundledRoomDraft = {
   roomCode: string;
   directions: string;
+  photoUrls: string[];
 };
 
 export function parseBundledRooms(
@@ -20,7 +21,12 @@ export function parseBundledRooms(
     if (!roomCode) continue;
     const directions =
       typeof row.directions === "string" ? row.directions.trim() : "";
-    rooms.push({ roomCode, directions });
+    const photoUrls = Array.isArray(row.photoUrls)
+      ? row.photoUrls.filter(
+          (value): value is string => typeof value === "string",
+        )
+      : [];
+    rooms.push({ roomCode, directions, photoUrls });
   }
   return rooms;
 }

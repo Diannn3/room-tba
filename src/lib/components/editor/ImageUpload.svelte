@@ -8,6 +8,7 @@
     disabled?: boolean;
     inputId?: string;
     label?: string;
+    onValueChange?: (value: string | null) => void;
   };
 
   let {
@@ -91,7 +92,7 @@
       }
 
       value = data.url;
-      uploadConfigured = true;
+      onValueChange?.(value);
     } catch (uploadError) {
       error =
         uploadError instanceof Error
@@ -104,6 +105,7 @@
 
   function clearImage() {
     value = null;
+    onValueChange?.(null);
     error = null;
   }
 

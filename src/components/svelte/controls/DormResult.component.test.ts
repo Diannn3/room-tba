@@ -28,6 +28,7 @@ function dorm(overrides: Partial<DormData> = {}): DormData {
     contactPhone: [],
     facebookLink: null,
     imageUrl: null,
+    photos: [],
     version: 1,
     updatedAt: "2026-07-21T00:00:00.000Z",
     ...overrides,

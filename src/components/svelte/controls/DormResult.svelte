@@ -33,7 +33,7 @@
     scheduleEntityContributorDraftSave,
   } from "@lib/contributor-drafts";
   import EntityEditorToggle from "@ui/editor/EntityEditorToggle.svelte";
-  import DormEditorPanel from "@ui/controls/DormEditorPanel.svelte";
+  import EntityPhotoGallery from "./EntityPhotoGallery.svelte";
   import EntityLastUpdated from "../EntityLastUpdated.svelte";
   import EntityShareCopyLink from "./EntityShareCopyLink.svelte";
   import EntityBackToList from "./EntityBackToList.svelte";
@@ -58,7 +58,7 @@
     | "amenities"
     | "facebookLink"
     | "osmLink"
-    | "imageUrl";
+    | "photos";
 
   type DormPatchResponse = {
     success?: boolean;
@@ -91,7 +91,7 @@
   let amenitiesDraft = $state("");
   let facebookLinkDraft = $state("");
   let osmLinkDraft = $state("");
-  let imageDraft = $state<string | null>(null);
+  let photosDraft = $state<string[]>([]);
   let savingField = $state<DormEditableField | null>(null);
   let savedField = $state<DormEditableField | null>(null);
   let fieldError = $state<string | null>(null);
@@ -128,7 +128,7 @@
     amenities: "Amenities",
     facebookLink: "Facebook link",
     osmLink: "OpenStreetMap link",
-    imageUrl: "Dorm photo",
+    photos: "Dorm photos",
   };
 
   const amenities = $derived(dorm?.amenities ?? []);
@@ -198,8 +198,6 @@
       return;
     }
 
-    draftDormId = current.id;
-    draftVersion = current.version;
     nameDraft = current.dormName;
     shortNameDraft = current.shortName ?? "";
     descriptionDraft = current.description ?? "";
@@ -217,7 +215,12 @@
     amenitiesDraft = listToLines(current.amenities);
     facebookLinkDraft = current.facebookLink ?? "";
     osmLinkDraft = current.osmLink ?? "";
-    imageDraft = current.imageUrl ?? null;
+    photosDraft =
+      current.photos && current.photos.length > 0
+        ? current.photos.map((photo) => photo.url)
+        : current.imageUrl
+          ? [current.imageUrl]
+          : [];
     savedField = null;
     fieldError = null;
     mergePrompt = null;
@@ -268,6 +271,11 @@
         if (typeof fields.osmLinkDraft === "string") {
           osmLinkDraft = fields.osmLinkDraft;
         }
+        if (Array.isArray(fields.photosDraft)) {
+          photosDraft = fields.photosDraft.filter(
+            (value): value is string => typeof value === "string",
+          );
+        }
       }
     }
   });
@@ -290,6 +298,7 @@
         amenitiesDraft,
         facebookLinkDraft,
         osmLinkDraft,
+        photosDraft,
       },
     }));
   });
@@ -317,15 +326,17 @@
     return fieldLabels[field];
   }
 
-  function syncDormFromServer(updated: DormData) {
-    appActions.upsertDorm(updated);
-    queryStore.hydrateQuery({
-      type: "result",
-      category: "dorm",
-      value: updated.dormName,
-    });
+  function existingPhotoUrls(current: DormData) {
+    return current.photos && current.photos.length > 0
+      ? current.photos.map((photo) => photo.url)
+      : current.imageUrl
+        ? [current.imageUrl]
+        : [];
   }
 
+  function photosAreUnchanged(current: DormData) {
+    return arraysEqual(photosDraft, existingPhotoUrls(current));
+  }
   function fieldIsUnchanged(field: DormEditableField, current: DormData) {
     switch (field) {
       case "dormName":
@@ -365,8 +376,8 @@
         return facebookLinkDraft.trim() === (current.facebookLink ?? "");
       case "osmLink":
         return osmLinkDraft.trim() === (current.osmLink ?? "");
-      case "imageUrl":
-        return (imageDraft ?? null) === (current.imageUrl ?? null);
+      case "photos":
+        return photosAreUnchanged(current);
     }
   }
 
@@ -389,9 +400,8 @@
       amenities?: string[];
       facebookLink?: string | null;
       osmLink?: string | null;
-      imageUrl?: string | null;
+      photoUrls?: string[];
     } = { version: current.version };
-
     if (field === "dormName") {
       const trimmedName = nameDraft.trim();
       if (trimmedName.length === 0) {
@@ -432,8 +442,8 @@
       body.facebookLink = facebookLinkDraft.trim() || null;
     } else if (field === "osmLink") {
       body.osmLink = osmLinkDraft.trim() || null;
-    } else if (field === "imageUrl") {
-      body.imageUrl = imageDraft || null;
+    } else if (field === "photos") {
+      body.photoUrls = photosDraft;
     }
 
     savingField = field;
@@ -557,6 +567,7 @@
     "amenities",
     "facebookLink",
     "osmLink",
+    "photos",
   ];
 
   const allFieldsUnchanged = $derived.by(() => {
@@ -604,7 +615,7 @@
       patch.facebookLink = facebookLinkDraft.trim() || null;
     if (!fieldIsUnchanged("osmLink", current))
       patch.osmLink = osmLinkDraft.trim() || null;
-
+    if (!fieldIsUnchanged("photos", current)) patch.photoUrls = photosDraft;
     savingField = "dormName" as DormEditableField;
     savedField = null;
     fieldError = null;
@@ -754,15 +765,12 @@
       </div>
     {/if}
 
-    {#if !editing && dorm.imageUrl}
-      <img
-        class="entity-image"
-        src={dorm.imageUrl}
+    {#if !editing}
+      <EntityPhotoGallery
+        name={dorm.dormName}
+        photos={dorm.photos}
+        imageUrl={dorm.imageUrl}
         alt={dorm.dormName}
-        width="800"
-        height="450"
-        loading="lazy"
-        decoding="async"
       />
     {/if}
 
@@ -800,7 +808,7 @@
           bind:amenitiesDraft
           bind:facebookLinkDraft
           bind:osmLinkDraft
-          bind:imageDraft
+          bind:photosDraft
           {fieldLabel}
           {fieldIsUnchanged}
           {saveField}

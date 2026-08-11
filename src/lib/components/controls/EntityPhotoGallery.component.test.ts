@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/svelte";
 import { describe, expect, test } from "vitest";
-import EntityPhotoGallery from "@ui/controls/EntityPhotoGallery.svelte";
+import EntityPhotoGallery from '$lib/components/controls/EntityPhotoGallery.svelte';
 
 describe("EntityPhotoGallery", () => {
   test("renders contributor attribution as a profile link", () => {

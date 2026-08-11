@@ -21,6 +21,12 @@ import { recordProposalContribution } from './contribution-service';
 import { parseImageUrl } from '$lib/r2-upload';
 import { env } from '$env/dynamic/private';
 const { R2_PUBLIC_URL } = env;
+import {
+	parseEntityPhotoUrls,
+	reconcileEntityPhotos,
+	type ParsedEntityPhotoUrls
+} from '$lib/entity-photos';
+import { resolvePhotoAttribution } from './entity-photo-service';
 import { canWithdrawProposal } from './proposal-access';
 export {
 	canViewProposalSubmitterDetails,
@@ -30,13 +36,16 @@ import {
 	EditConflictError,
 	DuplicateSlugError,
 	createBuilding,
+	getBuildingById,
 	createCollege,
 	createDivision,
 	createDorm,
+	getDormById,
 	createEvent,
 	createOrganization,
 	createPlace,
 	createRoom,
+	getRoomById,
 	updateBuilding,
 	updateCollege,
 	updateDivision,

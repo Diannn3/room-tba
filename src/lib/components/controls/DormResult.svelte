@@ -19,6 +19,7 @@
 	import CircleDollarSign from '@lucide/svelte/icons/circle-dollar-sign';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import type { DormData } from '$lib/types';
+	import { normalizeEntityPhotos, type EntityPhoto } from '$lib/entity-photos';
 	import {
 		getStoredProposalForEntity,
 		mergeEntityRecord,
@@ -31,8 +32,9 @@
 		readEntityContributorDraft,
 		scheduleEntityContributorDraftSave
 	} from '$lib/contributor-drafts';
-	import EntityEditorToggle from '$lib/components/editor/EntityEditorToggle.svelte';
 	import DormEditorPanel from '$lib/components/controls/DormEditorPanel.svelte';
+	import EntityEditorToggle from '$lib/components/editor/EntityEditorToggle.svelte';
+	import EntityPhotoGallery from './EntityPhotoGallery.svelte';
 	import EntityLastUpdated from '../EntityLastUpdated.svelte';
 	import EntityShareCopyLink from './EntityShareCopyLink.svelte';
 	import EntityBackToList from './EntityBackToList.svelte';
@@ -53,7 +55,7 @@
 		| 'amenities'
 		| 'facebookLink'
 		| 'osmLink'
-		| 'imageUrl';
+		| 'photos';
 
 	type DormPatchResponse = {
 		success?: boolean;
@@ -84,7 +86,7 @@
 	let amenitiesDraft = $state('');
 	let facebookLinkDraft = $state('');
 	let osmLinkDraft = $state('');
-	let imageDraft = $state<string | null>(null);
+	let photosDraft = $state<EntityPhoto[]>([]);
 	let savingField = $state<DormEditableField | null>(null);
 	let savedField = $state<DormEditableField | null>(null);
 	let fieldError = $state<string | null>(null);
@@ -121,7 +123,7 @@
 		amenities: 'Amenities',
 		facebookLink: 'Facebook link',
 		osmLink: 'OpenStreetMap link',
-		imageUrl: 'Dorm photo'
+		photos: 'Dorm photos'
 	};
 
 	const amenities = $derived(dorm?.amenities ?? []);
@@ -208,7 +210,9 @@
 		amenitiesDraft = listToLines(current.amenities);
 		facebookLinkDraft = current.facebookLink ?? '';
 		osmLinkDraft = current.osmLink ?? '';
-		imageDraft = current.imageUrl ?? null;
+		photosDraft = normalizeEntityPhotos(
+			current.photos?.length ? current.photos : current.imageUrl ? [current.imageUrl] : []
+		);
 		savedField = null;
 		fieldError = null;
 		mergePrompt = null;
@@ -343,11 +347,15 @@
 			case 'amenities':
 				return arraysEqual(linesToList(amenitiesDraft), current.amenities ?? []);
 			case 'facebookLink':
-				return facebookLinkDraft.trim() === (current.facebookLink ?? '');
 			case 'osmLink':
 				return osmLinkDraft.trim() === (current.osmLink ?? '');
-			case 'imageUrl':
-				return (imageDraft ?? null) === (current.imageUrl ?? null);
+			case 'photos':
+				return arraysEqual(
+					photosDraft.map((photo) => photo.url),
+					normalizeEntityPhotos(
+						current.photos?.length ? current.photos : current.imageUrl ? [current.imageUrl] : []
+					).map((photo) => photo.url)
+				);
 		}
 	}
 
@@ -370,7 +378,7 @@
 			amenities?: string[];
 			facebookLink?: string | null;
 			osmLink?: string | null;
-			imageUrl?: string | null;
+			photoUrls?: string[];
 		} = { version: current.version };
 
 		if (field === 'dormName') {
@@ -413,8 +421,8 @@
 			body.facebookLink = facebookLinkDraft.trim() || null;
 		} else if (field === 'osmLink') {
 			body.osmLink = osmLinkDraft.trim() || null;
-		} else if (field === 'imageUrl') {
-			body.imageUrl = imageDraft || null;
+		} else if (field === 'photos') {
+			body.photoUrls = photosDraft.map((photo) => photo.url);
 		}
 
 		savingField = field;
@@ -531,7 +539,8 @@
 		'contactPhone',
 		'amenities',
 		'facebookLink',
-		'osmLink'
+		'osmLink',
+		'photos'
 	];
 
 	const allFieldsUnchanged = $derived.by(() => {
@@ -573,6 +582,7 @@
 		if (!fieldIsUnchanged('facebookLink', current))
 			patch.facebookLink = facebookLinkDraft.trim() || null;
 		if (!fieldIsUnchanged('osmLink', current)) patch.osmLink = osmLinkDraft.trim() || null;
+		if (!fieldIsUnchanged('photos', current)) patch.photoUrls = photosDraft.map((photo) => photo.url);
 
 		savingField = 'dormName' as DormEditableField;
 		savedField = null;
@@ -706,15 +716,11 @@
 			</div>
 		{/if}
 
-		{#if !editing && dorm.imageUrl}
-			<img
-				class="entity-image"
-				src={dorm.imageUrl}
-				alt={dorm.dormName}
-				width="800"
-				height="450"
-				loading="lazy"
-				decoding="async"
+		{#if !editing}
+			<EntityPhotoGallery
+				name={dorm.dormName}
+				photos={dorm.photos}
+				imageUrl={dorm.imageUrl}
 			/>
 		{/if}
 
@@ -752,7 +758,7 @@
 					bind:amenitiesDraft
 					bind:facebookLinkDraft
 					bind:osmLinkDraft
-					bind:imageDraft
+					bind:photosDraft
 					{fieldLabel}
 					{fieldIsUnchanged}
 					{saveField}

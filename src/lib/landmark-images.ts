@@ -6,7 +6,7 @@
  * require, and Street View is stored only as compass headings — the client
  * builds URLs with its own key because Google's terms forbid storing imagery.
  */
-import manifest from "@constants/landmark-images.json";
+import manifest from '$lib/constants/landmark-images.json';
 import type { EntityPhoto } from "./entity-photos";
 import {
   STREET_VIEW_ATTRIBUTION,

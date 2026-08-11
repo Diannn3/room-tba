@@ -8,8 +8,9 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
   import EntityEditorPanel from "$lib/components/editor/EntityEditorPanel.svelte";
   import EntityEditorPinRow from "$lib/components/editor/EntityEditorPinRow.svelte";
   import EntityEditorToggle from "$lib/components/editor/EntityEditorToggle.svelte";
-  import ImageUpload from "$lib/components/editor/ImageUpload.svelte";
   import MergeEntityPrompt from "$lib/components/editor/MergeEntityPrompt.svelte";
+  import EntityPhotoUpload from "$lib/components/editor/EntityPhotoUpload.svelte";
+  import BuildingPhoto from "./BuildingPhoto.svelte";
   import MapChromeActionChip from "$lib/components/map-chrome/MapChromeActionChip.svelte";
   import {
     CR_FACILITIES,
@@ -40,6 +41,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     persistEntityChange,
   } from "$lib/proposals/client";
   import { getBuildingShareUrl } from "$lib/share-links";
+  import { normalizeEntityPhotos, type EntityPhoto } from "$lib/entity-photos";
   import {
     adminAuthStore,
     building3DStore,
@@ -827,23 +829,22 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
 
 							{#if adminAuthStore.isLoggedIn}
 								<div class="editor-image-row">
-									<ImageUpload
-										label="Building photo"
-										inputId="building-image-editor"
-										prefix="buildings"
-										bind:value={imageDraft}
+									<EntityPhotoUpload
+										label="Building photos (optional)"
+										inputId="building-photo-editor"
+										prefix={`buildings/${building.id}`}
+										bind:photos={photosDraft}
 										disabled={savingField !== null}
 									/>
 									<button
 										type="button"
 										class="field-save-btn"
-										disabled={savingField !== null ||
-											(imageDraft ?? null) === (building.imageUrl ?? null)}
-										onclick={() => saveField('imageUrl')}
+										disabled={savingField !== null || photosUnchanged}
+										onclick={() => saveField('photos')}
 									>
 										{fieldSaveActionLabel({
 											canPublish,
-											isSaving: savingField === 'imageUrl'
+											isSaving: savingField === 'photos'
 										})}
 									</button>
 								</div>
@@ -853,17 +854,13 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
 				</EntityEditorPanel>
 			</section>
 		{:else}
-			{#if building.imageUrl}
-				<img
-					class="entity-image"
-					src={building.imageUrl}
-					alt={building.buildingName}
-					width="800"
-					height="450"
-					loading="lazy"
-					decoding="async"
-				/>
-			{/if}
+			<BuildingPhoto
+				photos={building.photos}
+				imageUrl={building.imageUrl}
+				name={building.buildingName}
+				lat={building.lat}
+				lon={building.lon}
+			/>
 			<section class="entity-directions" aria-label="Directions">
 				<div class="entity-directions__segment">
 					{#if hasMapPin}

@@ -1,3 +1,6 @@
+import { env } from '$env/dynamic/private';
+import { parseEntityPhotoUrls, reconcileEntityPhotos } from '$lib/entity-photos';
+import { resolvePhotoAttribution } from '$lib/services/entity-photo-service';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
 import { createDorm } from '$lib/services/admin-service';
 import type { RequestHandler } from './$types';
@@ -38,8 +41,15 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
 	if ((lat !== null && !Number.isFinite(lat)) || (lon !== null && !Number.isFinite(lon))) {
 		return json({ error: 'Invalid dorm map pin' }, 400);
 	}
+	const parsedPhotoUrls = parseEntityPhotoUrls(body.photoUrls, env.R2_PUBLIC_URL);
+	if (!parsedPhotoUrls.ok) return json({ error: parsedPhotoUrls.error }, 400);
 
 	try {
+		const attribution = await resolvePhotoAttribution(
+			auth.session.id,
+			auth.session.displayName
+		);
+		const photos = reconcileEntityPhotos([], parsedPhotoUrls.photoUrls, attribution);
 		const dorm = await createDorm(
 			{
 				dormName,
@@ -47,7 +57,8 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
 				lat,
 				lon,
 				shortName: typeof body.shortName === 'string' ? body.shortName.trim() : null,
-				description: typeof body.description === 'string' ? body.description.trim() : null
+				description: typeof body.description === 'string' ? body.description.trim() : null,
+				photos
 			},
 			auth.editedBy
 		);

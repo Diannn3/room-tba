@@ -7,6 +7,7 @@ import { normalizeRoomCategory } from '$lib/constants/room-categories';
 import { db } from '$lib/db';
 import { normalizeEntityName } from '$lib/entity-names';
 import { entityIndexPath } from '$lib/entity-urls';
+import { normalizeEntityPhotos, type EntityPhoto } from '$lib/entity-photos';
 import {
 	buildingIsrPath,
 	collegeIsrPath,
@@ -225,6 +226,7 @@ export async function getRoomById(id: number): Promise<RoomData | null> {
 			collegeId: roomsTable.collegeId,
 			divisionId: roomsTable.divisionId,
 			imageUrl: roomsTable.imageUrl,
+			photos: roomsTable.photos,
 			version: roomsTable.version,
 			updatedAt: roomsTable.updatedAt
 		})
@@ -255,6 +257,7 @@ export async function getAllRoomsAdmin(): Promise<RoomWithRelations[]> {
 			collegeId: roomsTable.collegeId,
 			divisionId: roomsTable.divisionId,
 			imageUrl: roomsTable.imageUrl,
+			photos: roomsTable.photos,
 			version: roomsTable.version,
 			updatedAt: roomsTable.updatedAt
 		})
@@ -271,7 +274,7 @@ export type RoomUpdateInput = {
 	buildingId?: number | null;
 	collegeId?: number | null;
 	divisionId?: number | null;
-	imageUrl?: string | null;
+	photos?: EntityPhoto[];
 	category?: string | null;
 };
 
@@ -399,7 +402,11 @@ export async function updateRoom(
 	if (input.buildingId !== undefined) updates.buildingId = input.buildingId ?? null;
 	if (input.collegeId !== undefined) updates.collegeId = input.collegeId ?? null;
 	if (input.divisionId !== undefined) updates.divisionId = input.divisionId ?? null;
-	if (input.imageUrl !== undefined) updates.imageUrl = input.imageUrl;
+	if (input.photos !== undefined) {
+		const photos = normalizePhotoInput(input.photos);
+		updates.photos = photos;
+		updates.imageUrl = photos[0]?.url ?? null;
+	}
 	if (input.category !== undefined) updates.category = normalizeRoomCategory(input.category);
 
 	if (Object.keys(updates).length > 0) {
@@ -462,12 +469,14 @@ export type RoomCreateInput = {
 	buildingId?: number | null;
 	collegeId?: number | null;
 	divisionId?: number | null;
+	photos?: EntityPhoto[];
 };
 
 export async function createRoom(
 	input: RoomCreateInput,
 	editedBy = 'admin'
 ): Promise<RoomData | null> {
+	const photos = normalizePhotoInput(input.photos);
 	const [inserted] = await db
 		.insert(roomsTable)
 		.values({
@@ -475,7 +484,8 @@ export async function createRoom(
 			directions: input.directions?.trim() || null,
 			buildingId: input.buildingId ?? null,
 			collegeId: input.collegeId ?? null,
-			divisionId: input.divisionId ?? null
+			photos,
+			imageUrl: photos[0]?.url ?? null,
 		})
 		.returning({ id: roomsTable.id });
 
@@ -666,7 +676,7 @@ export type BuildingUpdateInput = {
 	lon?: number;
 	buildingType?: 'admin' | 'non-admin';
 	directions?: string;
-	imageUrl?: string | null;
+	photos?: EntityPhoto[];
 	crFacilities?: string[] | null;
 };
 
@@ -683,7 +693,11 @@ export async function updateBuilding(
 	if (input.lon !== undefined) updates.lon = input.lon;
 	if (input.buildingType !== undefined) updates.buildingType = input.buildingType;
 	if (input.directions !== undefined) updates.directions = input.directions;
-	if (input.imageUrl !== undefined) updates.imageUrl = input.imageUrl;
+	if (input.photos !== undefined) {
+		const photos = normalizePhotoInput(input.photos);
+		updates.photos = photos;
+		updates.imageUrl = photos[0]?.url ?? null;
+	}
 	if (input.crFacilities !== undefined)
 		updates.crFacilities = sanitizeCrFacilities(input.crFacilities);
 
@@ -746,12 +760,14 @@ export type BuildingCreateInput = {
 	lon: number;
 	buildingType?: 'admin' | 'non-admin';
 	directions?: string;
+	photos?: EntityPhoto[];
 };
 
 export async function createBuilding(
 	input: BuildingCreateInput,
 	editedBy = 'admin'
 ): Promise<BuildingAdmin | null> {
+	const photos = normalizePhotoInput(input.photos);
 	const [inserted] = await db
 		.insert(buildingsTable)
 		.values({
@@ -759,7 +775,9 @@ export async function createBuilding(
 			lat: input.lat,
 			lon: input.lon,
 			buildingType: input.buildingType ?? 'non-admin',
-			directions: input.directions?.trim() ?? ''
+			directions: input.directions?.trim() ?? '',
+			photos,
+			imageUrl: photos[0]?.url ?? null
 		})
 		.returning();
 
@@ -990,7 +1008,7 @@ export type DormUpdateInput = Partial<{
 	priceRange: string | null;
 	contactPhone: string[];
 	facebookLink: string | null;
-	imageUrl: string | null;
+	photos: EntityPhoto[];
 }>;
 
 export async function updateDorm(
@@ -1002,7 +1020,12 @@ export async function updateDorm(
 ): Promise<DormAdmin | null> {
 	const updates: Record<string, unknown> = {};
 	for (const [key, value] of Object.entries(input)) {
-		if (value !== undefined) updates[key] = value;
+		if (key !== 'photos' && key !== 'imageUrl' && value !== undefined) updates[key] = value;
+	}
+	if (input.photos !== undefined) {
+		const photos = normalizePhotoInput(input.photos);
+		updates.photos = photos;
+		updates.imageUrl = photos[0]?.url ?? null;
 	}
 	// Clearing the policy in the editor sends "", which would store an empty
 	// string that reads as "recorded, and it is nothing". Null is the honest
@@ -1156,6 +1179,7 @@ export async function createDorm(
 	input: DormCreateInput,
 	editedBy = 'admin'
 ): Promise<DormAdmin | null> {
+	const photos = normalizePhotoInput(input.photos);
 	const [inserted] = await db
 		.insert(dormsTable)
 		.values({
@@ -1173,7 +1197,9 @@ export async function createDorm(
 			isUpManaged: input.isUpManaged ?? true,
 			priceRange: input.priceRange ?? null,
 			contactPhone: input.contactPhone ?? null,
-			facebookLink: input.facebookLink ?? null
+			facebookLink: input.facebookLink ?? null,
+			photos,
+			imageUrl: photos[0]?.url ?? null
 		})
 		.returning();
 

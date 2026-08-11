@@ -1,8 +1,9 @@
 <script lang="ts">
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import ChevronRight from "@lucide/svelte/icons/chevron-right";
-  import type { EntityPhoto } from "@lib/entity-photos";
-  import { buildingLandmarkImages } from "@lib/landmark-images";
+  import { env } from '$env/dynamic/public';
+  import type { EntityPhoto } from '$lib/entity-photos';
+  import { buildingLandmarkImages } from '$lib/landmark-images';
 
   type Props = {
     /** Contributor-uploaded photos, stored in R2. Always shown first. */
@@ -36,7 +37,7 @@
       lat,
       lon,
       panoId,
-      googleKey: import.meta.env.PUBLIC_GOOGLE_MAPS_API_KEY,
+      googleKey: env.PUBLIC_GOOGLE_MAPS_API_KEY,
     }),
   );
 

@@ -6,33 +6,23 @@ import { escapeLikePattern } from '$lib/like-escape';
 import { normalizeAlias } from '$lib/site';
 import { normalizeDormListFields } from '$lib/string-lists';
 import type {
-  AnnouncementData,
-  BuildingData,
-  ClassMapValue,
-  CollegeData,
-  DivisionData,
-  DormData,
-  EntityLoadResult,
-  EventData,
-  OrgData,
-  PlaceData,
-  RoomData,
-  TableSyncInfo,
-} from "@lib/types";
-import { normalizeEntityPhotos } from "@lib/entity-photos";
-import { getDB, isLocalCacheReady } from "./pgliteDB";
-import { ENTITY_FETCH_OPTIONS, fetchJsonWithRetry } from "./fetch-json";
-import { escapeLikePattern } from "@lib/like-escape";
-import {
-  getLocalBuildingRooms,
-  getLocalCollegeRooms,
-  getLocalDivisionRooms,
-} from "./sync";
-import { refreshStoredEventTiming, sortStoredEvents } from "@lib/event-time";
-import { normalizeAlias } from "@lib/site";
-import { normalizeDormListFields } from "@lib/string-lists";
-import type { Results } from "@electric-sql/pglite";
-import type { JeepneyRoute, JeepneyStop } from "@constants/jeepney-routes";
+	AnnouncementData,
+	BuildingData,
+	ClassMapValue,
+	CollegeData,
+	DivisionData,
+	DormData,
+	EntityLoadResult,
+	EventData,
+	OrgData,
+	PlaceData,
+	RoomData,
+	TableSyncInfo
+} from '$lib/types';
+import { normalizeEntityPhotos } from '$lib/entity-photos';
+import { getDB, isLocalCacheReady } from './pgliteDB';
+import { ENTITY_FETCH_OPTIONS, fetchJsonWithRetry } from './fetch-json';
+import { getLocalBuildingRooms, getLocalCollegeRooms, getLocalDivisionRooms } from './sync';
 
 export async function getLocalJeepneyRoutes(): Promise<JeepneyRoute[] | undefined> {
 	try {
@@ -626,7 +616,8 @@ export async function fetchEntityRoomsRemote(
 	const url = `/api/rooms?${entityName}_id=${id}`;
 	try {
 		const response = await fetch(url);
-		const fetchedData = (await response.json()) as RoomData[];
+		const payload = (await response.json()) as RoomData[] | { data?: RoomData[] };
+		const fetchedData = Array.isArray(payload) ? payload : payload.data;
 		if (response.ok && Array.isArray(fetchedData)) {
 			return fetchedData;
 		}

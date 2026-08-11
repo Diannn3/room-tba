@@ -2,8 +2,9 @@ import { env } from '$env/dynamic/private';
 import { parseRequiredEditorVersion } from '$lib/admin/expected-version';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
 import { errorResponse, json } from '$lib/api/json';
-import { parseImageUrl } from '$lib/r2-upload-core';
-import { DuplicateNameError, EditConflictError, updateBuilding } from '$lib/services/admin-service';
+import { parseEntityPhotoUrls, reconcileEntityPhotos } from '$lib/entity-photos';
+import { resolvePhotoAttribution } from '$lib/services/entity-photo-service';
+import { DuplicateNameError, EditConflictError, getBuildingById, updateBuilding } from '$lib/services/admin-service';
 import type { RequestHandler } from './$types';
 
 type BuildingPatchBody = {
@@ -12,7 +13,7 @@ type BuildingPatchBody = {
 	lon?: number;
 	buildingType?: 'admin' | 'non-admin';
 	directions?: string;
-	imageUrl?: string | null;
+	photoUrls?: unknown;
 	crFacilities?: string[] | null;
 	version?: number;
 };
@@ -43,9 +44,9 @@ export const PATCH: RequestHandler = async ({ cookies, params, request }) => {
 		return errorResponse('Invalid building type', 400);
 	}
 
-	const parsedImageUrl = parseImageUrl(body.imageUrl, env.R2_PUBLIC_URL, 'Building image');
-	if (!parsedImageUrl.ok) {
-		return errorResponse(parsedImageUrl.error, 400);
+	const parsedPhotoUrls = parseEntityPhotoUrls(body.photoUrls, env.R2_PUBLIC_URL);
+	if (!parsedPhotoUrls.ok) {
+		return errorResponse(parsedPhotoUrls.error, 400);
 	}
 
 	const parsedVersion = parseRequiredEditorVersion(body.version);
@@ -59,7 +60,18 @@ export const PATCH: RequestHandler = async ({ cookies, params, request }) => {
 		if (body.lon !== undefined) updates.lon = body.lon;
 		if (body.buildingType !== undefined) updates.buildingType = body.buildingType;
 		if (body.directions !== undefined) updates.directions = body.directions;
-		if (parsedImageUrl.provided) updates.imageUrl = parsedImageUrl.imageUrl;
+		if (parsedPhotoUrls.provided) {
+			const current = await getBuildingById(id);
+			const attribution = await resolvePhotoAttribution(
+				auth.session.id,
+				auth.session.displayName
+			);
+			updates.photos = reconcileEntityPhotos(
+				current?.photos ?? [],
+				parsedPhotoUrls.photoUrls,
+				attribution
+			);
+		}
 		if (body.crFacilities !== undefined) updates.crFacilities = body.crFacilities;
 
 		const building = await updateBuilding(id, updates, expectedVersion, auth.editedBy);

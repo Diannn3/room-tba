@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/svelte";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import EntityPhotoUpload from "@ui/editor/EntityPhotoUpload.svelte";
+import EntityPhotoUpload from '$lib/components/editor/EntityPhotoUpload.svelte';
 
 beforeEach(() => {
   vi.stubGlobal(

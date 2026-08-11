@@ -45,8 +45,8 @@ export async function getEntityHistory(
 // Fields that can be restored from a snapshot. Anything else in the snapshot
 // (id, version, updatedAt, joined labels) must never be written back.
 const REVERTABLE_FIELDS: Record<string, string[]> = {
-	building: ['buildingName', 'lat', 'lon', 'buildingType', 'directions', 'imageUrl'],
-	room: ['roomCode', 'directions', 'buildingId', 'collegeId', 'divisionId', 'imageUrl'],
+	building: ['buildingName', 'lat', 'lon', 'buildingType', 'directions', 'imageUrl', 'photos'],
+	room: ['roomCode', 'directions', 'buildingId', 'collegeId', 'divisionId', 'imageUrl', 'photos'],
 	college: ['collegeName'],
 	division: ['divisionName', 'collegeId'],
 	dorm: [
@@ -65,7 +65,8 @@ const REVERTABLE_FIELDS: Record<string, string[]> = {
 		'priceRange',
 		'contactPhone',
 		'facebookLink',
-		'imageUrl'
+		'imageUrl',
+		'photos'
 	],
 	// Scalar fields only; locations/routes restore is out of scope for v1.
 	event: [

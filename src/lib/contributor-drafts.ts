@@ -27,6 +27,9 @@ export type SuggestAdditionDraft = {
 	eventEndsAt: string;
 	eventCategory: 'tradition' | 'fair' | 'ceremony' | 'sports' | 'other';
 	eventImageUrl: string | null;
+	buildingPhotos?: string[];
+	dormPhotos?: string[];
+	roomPhotos?: string[];
 	dormName: string;
 	dormGender: string;
 	placeName?: string;
@@ -40,7 +43,11 @@ export type SuggestAdditionDraft = {
 	roomCode: string;
 	roomDirections: string;
 	roomBuildingDraft: string;
-	bundledRooms: Array<{ roomCode: string; directions: string }>;
+	bundledRooms: Array<{
+		roomCode: string;
+		directions: string;
+		photoUrls?: string[];
+	}>;
 	collegeName: string;
 	divisionCollegeDraft: string;
 	divisionName: string;

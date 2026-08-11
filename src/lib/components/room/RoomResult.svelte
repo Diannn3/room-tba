@@ -10,7 +10,8 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
   import EntityEditorField from "$lib/components/editor/EntityEditorField.svelte";
   import EntityEditorPanel from "$lib/components/editor/EntityEditorPanel.svelte";
   import EntityEditorToggle from "$lib/components/editor/EntityEditorToggle.svelte";
-  import ImageUpload from "$lib/components/editor/ImageUpload.svelte";
+  import EntityPhotoUpload from "$lib/components/editor/EntityPhotoUpload.svelte";
+  import EntityPhotoGallery from "$lib/components/controls/EntityPhotoGallery.svelte";
   import TermSelector from "$lib/components/TermSelector.svelte";
   import {
     ROOM_CATEGORIES,
@@ -44,6 +45,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     toastStore,
   } from "$lib/store.svelte";
   import type { FinalExamRow, RoomData } from "$lib/types";
+  import { normalizeEntityPhotos, type EntityPhoto } from "$lib/entity-photos";
   import EntityDirectionsChip from "../controls/EntityDirectionsChip.svelte";
   import EntityGoogleMapsLink from "../controls/EntityGoogleMapsLink.svelte";
   import EntityShareCopyLink from "../controls/EntityShareCopyLink.svelte";
@@ -58,7 +60,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     | "buildingId"
     | "collegeId"
     | "divisionId"
-    | "imageUrl"
+    | "photos"
     | "category";
 
   const appData = getAppData();
@@ -73,7 +75,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     buildingId: "Building",
     collegeId: "College",
     divisionId: "Division",
-    imageUrl: "Room photo",
+    photos: "Room photos",
     category: "Room category",
   };
 
@@ -84,7 +86,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
   let buildingDraft = $state("");
   let collegeDraft = $state("");
   let divisionDraft = $state("");
-  let imageDraft = $state<string | null>(null);
+  let photosDraft = $state<EntityPhoto[]>([]);
   let categoryDraft = $state("");
   let savingField = $state<RoomEditableField | null>(null);
   let savedField = $state<RoomEditableField | null>(null);
@@ -156,7 +158,9 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     buildingDraft = room.buildingId === null ? "" : String(room.buildingId);
     collegeDraft = room.collegeId === null ? "" : String(room.collegeId);
     divisionDraft = room.divisionId === null ? "" : String(room.divisionId);
-    imageDraft = room.imageUrl ?? null;
+    photosDraft = normalizeEntityPhotos(
+      room.photos?.length ? room.photos : room.imageUrl ? [room.imageUrl] : []
+    );
     categoryDraft = room.category ?? "";
     savedField = null;
     fieldError = null;
@@ -185,6 +189,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
         if (typeof saved.fields.divisionDraft === "string") {
           divisionDraft = saved.fields.divisionDraft;
         }
+        photosDraft = normalizeEntityPhotos(saved.fields.photosDraft);
       }
     }
   });
@@ -197,9 +202,8 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
       fields: {
         codeDraft,
         directionsDraft,
-        buildingDraft,
-        collegeDraft,
         divisionDraft,
+        photosDraft,
       },
     }));
   });
@@ -210,6 +214,15 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
 
   function selectValueToId(value: string) {
     return value === "" ? null : Number(value);
+  }
+  function roomPhotoUrls(room: RoomData) {
+    return normalizeEntityPhotos(
+      room.photos?.length ? room.photos : room.imageUrl ? [room.imageUrl] : []
+    ).map((photo) => photo.url);
+  }
+
+  function photosUnchanged(room: RoomData) {
+    return photosDraft.map((photo) => photo.url).join('\n') === roomPhotoUrls(room).join('\n');
   }
 
   function syncRoomFromServer(room: RoomData) {
@@ -232,7 +245,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
       buildingId?: number | null;
       collegeId?: number | null;
       divisionId?: number | null;
-      imageUrl?: string | null;
+      photoUrls?: string[];
       category?: string | null;
     } = { version: room.version };
 
@@ -251,8 +264,8 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
       body.collegeId = selectValueToId(collegeDraft);
     } else if (field === "divisionId") {
       body.divisionId = selectValueToId(divisionDraft);
-    } else if (field === "imageUrl") {
-      body.imageUrl = imageDraft || null;
+    } else if (field === "photos") {
+      body.photoUrls = photosDraft.map((photo) => photo.url);
     } else if (field === "category") {
       body.category = categoryDraft || null;
     }
@@ -414,6 +427,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
       buildingDraft === String(room.buildingId ?? "") &&
       collegeDraft === String(room.collegeId ?? "") &&
       divisionDraft === String(room.divisionId ?? "") &&
+      photosUnchanged(room) &&
       categoryDraft === (room.category ?? "")
     );
   });
@@ -442,6 +456,14 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     }
     if (divisionDraft !== String(room.divisionId ?? "")) {
       patch.divisionId = selectValueToId(divisionDraft);
+    }
+    if (
+      photosDraft.map((photo) => photo.url).join('\n') !==
+      normalizeEntityPhotos(room.photos?.length ? room.photos : room.imageUrl ? [room.imageUrl] : [])
+        .map((photo) => photo.url)
+        .join('\n')
+    ) {
+      patch.photoUrls = photosDraft.map((photo) => photo.url);
     }
     if (categoryDraft !== (room.category ?? "")) {
       patch.category = categoryDraft || null;
@@ -738,23 +760,22 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
 
 						{#if adminAuthStore.isLoggedIn}
 							<div class="editor-image-row">
-								<ImageUpload
-									label="Room photo"
-									inputId="room-image-editor"
-									prefix="rooms"
-									bind:value={imageDraft}
+								<EntityPhotoUpload
+									label="Room photos (optional)"
+									inputId="room-photo-editor"
+									prefix={`rooms/${currentRoom.value.id}`}
+									bind:photos={photosDraft}
 									disabled={savingField !== null}
 								/>
 								<button
 									type="button"
 									class="field-save-btn"
-									disabled={savingField !== null ||
-										(imageDraft ?? null) === (currentRoom.value.imageUrl ?? null)}
-									onclick={() => saveField('imageUrl')}
+									disabled={savingField !== null || photosUnchanged(currentRoom.value)}
+									onclick={() => saveField('photos')}
 								>
 									{fieldSaveActionLabel({
 										canPublish,
-										isSaving: savingField === 'imageUrl'
+										isSaving: savingField === 'photos'
 									})}
 								</button>
 							</div>
@@ -796,17 +817,11 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
 			</section>
 		{/if}
 
-		{#if currentRoom.value.imageUrl}
-			<img
-				class="entity-image"
-				src={currentRoom.value.imageUrl}
-				alt={currentRoom.value.code}
-				width="800"
-				height="450"
-				loading="lazy"
-				decoding="async"
-			/>
-		{/if}
+		<EntityPhotoGallery
+			name={currentRoom.value.code}
+			photos={currentRoom.value.photos}
+			imageUrl={currentRoom.value.imageUrl}
+		/>
 
 		<section class="entity-directions" aria-label="Directions">
 			<div class="entity-directions__segment">

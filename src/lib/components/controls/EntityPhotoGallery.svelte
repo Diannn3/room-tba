@@ -1,8 +1,7 @@
 <script lang="ts">
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import ChevronRight from "@lucide/svelte/icons/chevron-right";
-  import type { EntityPhoto } from "@lib/entity-photos";
-
+  import type { EntityPhoto } from '$lib/entity-photos';
   type Props = {
     name: string;
     photos?: EntityPhoto[];

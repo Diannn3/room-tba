@@ -1,11 +1,13 @@
 import { env } from '$env/dynamic/private';
 import { parseRequiredEditorVersion } from '$lib/admin/expected-version';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
-import { parseImageUrl } from '$lib/r2-upload-core';
+import { parseEntityPhotoUrls, reconcileEntityPhotos } from '$lib/entity-photos';
+import { resolvePhotoAttribution } from '$lib/services/entity-photo-service';
 import {
 	DuplicateNameError,
 	EditConflictError,
 	ManualPositionError,
+	getRoomById,
 	updateRoom,
 	updateRoomPosition
 } from '$lib/services/admin-service';
@@ -17,7 +19,7 @@ type RoomPatchBody = {
 	buildingId?: number | null;
 	collegeId?: number | null;
 	divisionId?: number | null;
-	imageUrl?: string | null;
+	photoUrls?: unknown;
 	version?: number;
 	position?: {
 		floor: number;
@@ -88,9 +90,9 @@ export const PATCH: RequestHandler = async ({ cookies, params, request }) => {
 		return json({ error: 'Position must include a valid floor, posX, and posY' }, 400);
 	}
 
-	const parsedImageUrl = parseImageUrl(body.imageUrl, env.R2_PUBLIC_URL, 'Room image');
-	if (!parsedImageUrl.ok) {
-		return json({ error: parsedImageUrl.error }, 400);
+	const parsedPhotoUrls = parseEntityPhotoUrls(body.photoUrls, env.R2_PUBLIC_URL);
+	if (!parsedPhotoUrls.ok) {
+		return json({ error: parsedPhotoUrls.error }, 400);
 	}
 
 	const parsedVersion = parseRequiredEditorVersion(body.version);
@@ -106,7 +108,18 @@ export const PATCH: RequestHandler = async ({ cookies, params, request }) => {
 		if (body.buildingId !== undefined) updates.buildingId = body.buildingId;
 		if (body.collegeId !== undefined) updates.collegeId = body.collegeId;
 		if (body.divisionId !== undefined) updates.divisionId = body.divisionId;
-		if (parsedImageUrl.provided) updates.imageUrl = parsedImageUrl.imageUrl;
+		if (parsedPhotoUrls.provided) {
+			const current = await getRoomById(id);
+			const attribution = await resolvePhotoAttribution(
+				auth.session.id,
+				auth.session.displayName
+			);
+			updates.photos = reconcileEntityPhotos(
+				current?.photos ?? [],
+				parsedPhotoUrls.photoUrls,
+				attribution
+			);
+		}
 		const hasRoomFieldUpdates = Object.keys(updates).length > 0;
 
 		if (body.position && hasRoomFieldUpdates) {

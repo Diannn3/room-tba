@@ -72,8 +72,9 @@ type RoomData = {
 	floor?: number | null;
 };
 
-type BuildingData = Omit<typeof buildingsTable.$inferSelect, "photos"> & {
-  photos?: EntityPhoto[];
+type BuildingData = Omit<typeof buildingsTable.$inferSelect, 'photos' | 'directions'> & {
+	directions: string | null;
+	photos?: EntityPhoto[];
 };
 
 type BuildingType = BuildingData['buildingType'];

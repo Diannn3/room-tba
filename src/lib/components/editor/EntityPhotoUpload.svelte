@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { MAX_ENTITY_PHOTOS, type EntityPhoto } from "@lib/entity-photos";
-  import ImageUpload from "./ImageUpload.svelte";
+  import { MAX_ENTITY_PHOTOS, type EntityPhoto } from '$lib/entity-photos';
+  import ImageUpload from './ImageUpload.svelte';
 
   type Props = {
     photos?: EntityPhoto[];

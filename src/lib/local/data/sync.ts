@@ -2,23 +2,20 @@ import type { Results } from '@electric-sql/pglite';
 import type { JeepneyRoute } from '$lib/constants/jeepney-routes';
 import { syncToastStore } from '$lib/store.svelte';
 import type {
-  AnnouncementData,
-  BuildingData,
-  CollegeData,
-  DivisionData,
-  DormData,
-  EventData,
-  OrgData,
-  PlaceData,
-  RoomData,
-  TableSyncInfo,
-} from "@lib/types";
-import { normalizeEntityPhotos } from "@lib/entity-photos";
-import { getDB } from "./pgliteDB";
-import { syncToastStore } from "@lib/store.svelte";
-import type { Results } from "@electric-sql/pglite";
-import { getSyncKey, getSyncKeysFromLs } from "./sync-keys";
-import type { JeepneyRoute } from "@constants/jeepney-routes";
+	AnnouncementData,
+	BuildingData,
+	CollegeData,
+	DivisionData,
+	DormData,
+	EventData,
+	OrgData,
+	PlaceData,
+	RoomData,
+	TableSyncInfo
+} from '$lib/types';
+import { normalizeEntityPhotos } from '$lib/entity-photos';
+import { getDB } from './pgliteDB';
+import { getSyncKey, getSyncKeysFromLs } from './sync-keys';
 
 export { getSyncKey, getSyncKeysFromLs };
 

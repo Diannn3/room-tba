@@ -1,6 +1,6 @@
 <script lang="ts">
-  import type { EntityPhoto } from "@lib/entity-photos";
-  import EntityPhotoUpload from "./EntityPhotoUpload.svelte";
+  import type { EntityPhoto } from '$lib/entity-photos';
+  import EntityPhotoUpload from './EntityPhotoUpload.svelte';
 
   type Props = {
     values?: string[];

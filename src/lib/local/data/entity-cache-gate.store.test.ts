@@ -22,7 +22,7 @@ const REMOTE: BuildingData[] = [
     lon: 121,
     lat: 14,
     directions: null,
-    buildingType: "academic",
+    buildingType: "non-admin",
     imageUrl: null,
     photos: [],
     crFacilities: null,

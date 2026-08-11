@@ -4,10 +4,10 @@
 	import EntityEditorField from '$lib/components/editor/EntityEditorField.svelte';
 	import EntityEditorPanel from '$lib/components/editor/EntityEditorPanel.svelte';
 	import EntityEditorPinRow from '$lib/components/editor/EntityEditorPinRow.svelte';
-	import ImageUpload from '$lib/components/editor/ImageUpload.svelte';
+	import EntityPhotoUpload from '$lib/components/editor/EntityPhotoUpload.svelte';
 	import { entityEditorSavedMessage, fieldSaveActionLabel } from '$lib/editor/field-action-label';
 	import { adminAuthStore, mapEditStore, mapProposalStore } from '$lib/store.svelte';
-import type { DormData } from '$lib/types';
+	import type { DormData } from '$lib/types';
 	import '../editor/entity-editor.css';
 
 	type DormEditableField =
@@ -24,7 +24,7 @@ import type { DormData } from '$lib/types';
 		| 'amenities'
 		| 'facebookLink'
 		| 'osmLink'
-		| 'imageUrl';
+		| 'photos';
 
 	type Props = {
 		dorm: DormData;
@@ -52,7 +52,7 @@ import type { DormData } from '$lib/types';
 		amenitiesDraft: string;
 		facebookLinkDraft: string;
 		osmLinkDraft: string;
-		imageDraft: string | null;
+		photosDraft: import('$lib/entity-photos').EntityPhoto[];
 		fieldLabel: (field: DormEditableField) => string;
 		fieldIsUnchanged: (field: DormEditableField, current: DormData) => boolean;
 		saveField: (field: DormEditableField) => void;
@@ -85,7 +85,7 @@ import type { DormData } from '$lib/types';
 		amenitiesDraft = $bindable(''),
 		facebookLinkDraft = $bindable(''),
 		osmLinkDraft = $bindable(''),
-		imageDraft = $bindable(null),
+		photosDraft = $bindable([]),
 		fieldLabel,
 		fieldIsUnchanged,
 		saveField,
@@ -329,22 +329,22 @@ import type { DormData } from '$lib/types';
 
 	{#if adminAuthStore.isLoggedIn}
 		<div class="editor-image-row">
-			<ImageUpload
-				label="Dorm photo"
-				inputId="dorm-image-editor"
-				prefix="dorms"
-				bind:value={imageDraft}
+			<EntityPhotoUpload
+				label="Dorm photos (optional)"
+				inputId="dorm-photo-editor"
+				prefix={`dorms/${dorm.id}`}
+				bind:photos={photosDraft}
 				{disabled}
 			/>
 			<button
 				type="button"
 				class="field-save-btn"
-				disabled={disabled || fieldIsUnchanged('imageUrl', dorm)}
-				onclick={() => saveField('imageUrl')}
+				disabled={disabled || fieldIsUnchanged('photos', dorm)}
+				onclick={() => saveField('photos')}
 			>
 				{fieldSaveActionLabel({
 					canPublish,
-					isSaving: savingField === 'imageUrl'
+					isSaving: savingField === 'photos'
 				})}
 			</button>
 		</div>

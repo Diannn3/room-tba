@@ -114,6 +114,7 @@ describe("photo collection normalization", () => {
         attributionProfileUrl: "https://profiles.example.test/contributor",
       },
       { url: `${PUBLIC_URL}/second.jpg` },
+      `${PUBLIC_URL}/legacy.jpg`,
       { url: "" },
       null,
     ]);
@@ -125,6 +126,11 @@ describe("photo collection normalization", () => {
       },
       {
         url: `${PUBLIC_URL}/second.jpg`,
+        attributionName: null,
+        attributionProfileUrl: null,
+      },
+      {
+        url: `${PUBLIC_URL}/legacy.jpg`,
         attributionName: null,
         attributionProfileUrl: null,
       },

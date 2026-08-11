@@ -109,32 +109,38 @@ export function normalizeEntityPhotos(value: unknown): EntityPhoto[] {
   const seen = new Set<string>();
   const normalized: EntityPhoto[] = [];
   for (const item of candidate) {
-    if (
-      !item ||
-      typeof item !== "object" ||
-      !("url" in item) ||
-      typeof item.url !== "string"
+    let url: string;
+    let attributionName: string | null = null;
+    let attributionProfileUrl: string | null = null;
+
+    if (typeof item === "string") {
+      url = item.trim();
+    } else if (
+      item &&
+      typeof item === "object" &&
+      "url" in item &&
+      typeof item.url === "string"
     ) {
-      continue;
-    }
-    const url = item.url.trim();
-    if (!url || seen.has(url)) continue;
-    seen.add(url);
-    normalized.push({
-      url,
-      attributionName:
+      url = item.url.trim();
+      attributionName =
         "attributionName" in item &&
         typeof item.attributionName === "string" &&
         item.attributionName.trim()
           ? item.attributionName.trim()
-          : null,
-      attributionProfileUrl:
+          : null;
+      attributionProfileUrl =
         "attributionProfileUrl" in item &&
         typeof item.attributionProfileUrl === "string" &&
         item.attributionProfileUrl.trim()
           ? item.attributionProfileUrl.trim()
-          : null,
-    });
+          : null;
+    } else {
+      continue;
+    }
+
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    normalized.push({ url, attributionName, attributionProfileUrl });
     if (normalized.length === MAX_ENTITY_PHOTOS) break;
   }
   return normalized;

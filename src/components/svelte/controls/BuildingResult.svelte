@@ -25,7 +25,7 @@
   import EntityEditorPanel from "@ui/editor/EntityEditorPanel.svelte";
   import EntityEditorField from "@ui/editor/EntityEditorField.svelte";
   import EntityEditorPinRow from "@ui/editor/EntityEditorPinRow.svelte";
-  import ImageUpload from "@ui/editor/ImageUpload.svelte";
+  import PhotoCollectionUpload from "@ui/editor/PhotoCollectionUpload.svelte";
   import { fieldSaveActionLabel } from "@lib/editor/field-action-label";
   import { entityEditorSavedMessage } from "@lib/editor/field-action-label";
   import { tick } from "svelte";
@@ -62,7 +62,7 @@
     | "buildingName"
     | "directions"
     | "buildingType"
-    | "imageUrl"
+    | "photos"
     | "crFacilities";
 
   const appData = getAppData();
@@ -132,7 +132,7 @@
   let nameDraft = $state("");
   let directionsDraft = $state("");
   let typeDraft = $state<BuildingData["buildingType"]>("non-admin");
-  let imageDraft = $state<string | null>(null);
+  let photosDraft = $state<string[]>([]);
   let crFacilitiesDraft = $state<string[]>([]);
   let savingField = $state<BuildingEditableField | null>(null);
   let savedField = $state<BuildingEditableField | null>(null);
@@ -153,7 +153,7 @@
     buildingName: "Building name",
     directions: "Building directions",
     buildingType: "Building type",
-    imageUrl: "Building photo",
+    photos: "Building photos",
     crFacilities: "CR facilities",
   };
 
@@ -272,12 +272,15 @@
       return;
     }
 
-    draftBuildingId = current.id;
-    draftVersion = current.version;
     nameDraft = current.buildingName;
     directionsDraft = current.directions ?? "";
     typeDraft = current.buildingType;
-    imageDraft = current.imageUrl ?? null;
+    photosDraft =
+      current.photos && current.photos.length > 0
+        ? current.photos.map((photo) => photo.url)
+        : current.imageUrl
+          ? [current.imageUrl]
+          : [];
     crFacilitiesDraft = sanitizeCrFacilities(current.crFacilities);
     savedField = null;
     fieldError = null;
@@ -302,6 +305,11 @@
         ) {
           typeDraft = saved.fields.typeDraft;
         }
+        if (Array.isArray(saved.fields.photosDraft)) {
+          photosDraft = saved.fields.photosDraft.filter(
+            (value): value is string => typeof value === "string",
+          );
+        }
       }
     }
   });
@@ -310,7 +318,7 @@
     if (canPublish || !editing || !building) return;
     scheduleEntityContributorDraftSave("building", building.id, () => ({
       editing: true,
-      fields: { nameDraft, directionsDraft, typeDraft },
+      fields: { nameDraft, directionsDraft, typeDraft, photosDraft },
     }));
   });
 
@@ -355,7 +363,7 @@
       buildingName?: string;
       directions?: string;
       buildingType?: BuildingData["buildingType"];
-      imageUrl?: string | null;
+      photoUrls?: string[];
       crFacilities?: string[];
     } = { version: current.version };
 
@@ -370,8 +378,8 @@
       body.directions = directionsDraft.trim();
     } else if (field === "buildingType") {
       body.buildingType = typeDraft;
-    } else if (field === "imageUrl") {
-      body.imageUrl = imageDraft || null;
+    } else if (field === "photos") {
+      body.photoUrls = photosDraft;
     } else if (field === "crFacilities") {
       body.crFacilities = sanitizeCrFacilities(crFacilitiesDraft);
     }
@@ -504,6 +512,23 @@
       : [...crFacilitiesDraft, slug];
   }
 
+  function existingPhotoUrls(current: BuildingData) {
+    return current.photos && current.photos.length > 0
+      ? current.photos.map((photo) => photo.url)
+      : current.imageUrl
+        ? [current.imageUrl]
+        : [];
+  }
+
+  const photosUnchanged = $derived.by(() => {
+    const current = building;
+    if (!current) return true;
+    const existing = existingPhotoUrls(current);
+    return (
+      photosDraft.length === existing.length &&
+      photosDraft.every((url, index) => url === existing[index])
+    );
+  });
   const allFieldsUnchanged = $derived.by(() => {
     const current = building;
     if (!current) return true;
@@ -511,6 +536,7 @@
       nameDraft.trim() === current.buildingName &&
       directionsDraft.trim() === (current.directions ?? "") &&
       typeDraft === current.buildingType &&
+      photosUnchanged &&
       !crFacilitiesChanged
     );
   });
@@ -533,6 +559,9 @@
     }
     if (typeDraft !== current.buildingType) {
       patch.buildingType = typeDraft;
+    }
+    if (!photosUnchanged) {
+      patch.photoUrls = photosDraft;
     }
     if (crFacilitiesChanged) {
       patch.crFacilities = sanitizeCrFacilities(crFacilitiesDraft);
@@ -807,23 +836,22 @@
 
               {#if adminAuthStore.isLoggedIn}
                 <div class="editor-image-row">
-                  <ImageUpload
-                    label="Building photo"
-                    inputId="building-image-editor"
-                    prefix="buildings"
-                    bind:value={imageDraft}
+                  <PhotoCollectionUpload
+                    label="Building photos (optional)"
+                    inputId="building-photo-editor"
+                    prefix={`buildings/${building.id}`}
+                    bind:values={photosDraft}
                     disabled={savingField !== null}
                   />
                   <button
                     type="button"
                     class="field-save-btn"
-                    disabled={savingField !== null ||
-                      (imageDraft ?? null) === (building.imageUrl ?? null)}
-                    onclick={() => saveField("imageUrl")}
+                    disabled={savingField !== null || photosUnchanged}
+                    onclick={() => saveField("photos")}
                   >
                     {fieldSaveActionLabel({
                       canPublish,
-                      isSaving: savingField === "imageUrl",
+                      isSaving: savingField === "photos",
                     })}
                   </button>
                 </div>
@@ -834,6 +862,7 @@
       </section>
     {:else}
       <BuildingPhoto
+        photos={building.photos}
         imageUrl={building.imageUrl}
         name={building.buildingName}
         lat={building.lat}

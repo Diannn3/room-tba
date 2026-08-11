@@ -395,4 +395,134 @@ describeIntegration("proposals service", () => {
       },
     ]);
   });
+  test("approval persists attributed room photos", async () => {
+    if (!integrationDatabaseUrl()) return;
+    const client = await connectE2eClient(integrationDatabaseUrl()!);
+    const { rows } = await client.query<{
+      version: number;
+      contributor_id: number;
+      contributor_name: string;
+      reviewer_id: number;
+      reviewer_name: string;
+    }>(
+      `
+       SELECT
+         r.version,
+         contributor.id AS contributor_id,
+         contributor.username AS contributor_name,
+         reviewer.id AS reviewer_id,
+         reviewer.username AS reviewer_name
+       FROM rooms r
+       CROSS JOIN admin_users contributor
+       CROSS JOIN admin_users reviewer
+       WHERE r.id = 1
+         AND contributor.username = $1
+         AND reviewer.username = $2
+       LIMIT 1
+     `,
+      [E2E_FIXTURES.users.contributor, E2E_FIXTURES.users.admin],
+    );
+    const fixture = rows[0];
+    await client.end();
+    if (!fixture) throw new Error("Contributor fixtures were not seeded.");
+
+    const photoUrl = `https://cdn.example.test/integration/room-${Date.now()}.jpg`;
+    const { approveProposal, submitProposal } = await import(
+      "@lib/services/proposal-service"
+    );
+    const proposal = await submitProposal({
+      entityType: "room",
+      entityId: 1,
+      baseVersion: fixture.version,
+      patch: { photoUrls: [photoUrl] },
+      submitterName: fixture.contributor_name,
+      submitterUserId: fixture.contributor_id,
+      proposalId: null,
+    });
+    await approveProposal(proposal.id, {
+      id: fixture.reviewer_id,
+      username: fixture.reviewer_name,
+      displayName: fixture.reviewer_name,
+      role: "admin",
+    });
+
+    const verifyClient = await connectE2eClient(integrationDatabaseUrl()!);
+    const stored = await verifyClient.query<{
+      photos: Array<{
+        url: string;
+        attributionName: string | null;
+        attributionProfileUrl: string | null;
+      }>;
+    }>("SELECT photos FROM rooms WHERE id = 1");
+    await verifyClient.end();
+    expect(stored.rows[0]?.photos).toEqual([
+      {
+        url: photoUrl,
+        attributionName: fixture.contributor_name,
+        attributionProfileUrl: null,
+      },
+    ]);
+  });
+
+  test("create dorm proposal persists optional photos", async () => {
+    if (!integrationDatabaseUrl()) return;
+    const dormName = `E2E Photo Dorm ${Date.now()}`;
+    const photoUrl = `https://cdn.example.test/integration/dorm-${Date.now()}.jpg`;
+    const client = await connectE2eClient(integrationDatabaseUrl()!);
+    const { rows } = await client.query<{
+      id: number;
+      username: string;
+    }>("SELECT id, username FROM admin_users WHERE username = $1 LIMIT 1", [
+      E2E_FIXTURES.users.admin,
+    ]);
+    await client.end();
+    const reviewer = rows[0];
+    if (!reviewer) throw new Error("Admin fixture was not seeded.");
+
+    const { approveProposal, submitProposal } = await import(
+      "@lib/services/proposal-service"
+    );
+    const proposal = await submitProposal({
+      entityType: "create_dorm",
+      entityId: 0,
+      baseVersion: 0,
+      patch: {
+        dormName,
+        gender: "coed",
+        lat: E2E_FIXTURES.dormLat,
+        lon: E2E_FIXTURES.dormLon,
+        photoUrls: [photoUrl],
+      },
+      submitterName: "E2E Photo Creator",
+      submitterUserId: null,
+      proposalId: null,
+    });
+    const result = await approveProposal(proposal.id, {
+      id: reviewer.id,
+      username: reviewer.username,
+      displayName: reviewer.username,
+      role: "admin",
+    });
+    const published = result.published as { id?: number };
+    if (!published.id) throw new Error("Created dorm id was not returned.");
+
+    const verifyClient = await connectE2eClient(integrationDatabaseUrl()!);
+    const stored = await verifyClient.query<{
+      id: number;
+      photos: Array<{
+        url: string;
+        attributionName: string | null;
+        attributionProfileUrl: string | null;
+      }>;
+    }>("SELECT id, photos FROM dorms WHERE id = $1", [published.id]);
+    await verifyClient.query("DELETE FROM dorms WHERE id = $1", [published.id]);
+    await verifyClient.end();
+    expect(stored.rows[0]?.photos).toEqual([
+      {
+        url: photoUrl,
+        attributionName: "E2E Photo Creator",
+        attributionProfileUrl: null,
+      },
+    ]);
+  });
 });

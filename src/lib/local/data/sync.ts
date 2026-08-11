@@ -737,9 +737,10 @@ export async function getLocalBuildingRooms(id: number) {
     r.building_id as "buildingId",
     r.college_id as "collegeId",
     r.division_id as "divisionId",
-    r.category as category,
-    r.version,
-    r.updated_at as "updatedAt",
+     r.photos as photos,
+     r.category as category,
+     r.version,
+     r.updated_at as "updatedAt",
     rp.floor
     FROM rooms AS r
     LEFT JOIN buildings AS b ON b.id = r.building_id
@@ -750,7 +751,10 @@ export async function getLocalBuildingRooms(id: number) {
     `,
       [id],
     )) as Results<RoomData>;
-    return data.rows;
+    return data.rows.map((row) => ({
+      ...row,
+      photos: normalizeEntityPhotos(row.photos),
+    }));
   } catch (e) {
     console.error(e);
   }
@@ -804,20 +808,21 @@ export async function syncBuildingRooms(
     try {
       await localDB.query(
         `
-            INSERT INTO rooms (id, room_code, directions, building_id, college_id, division_id, image_url, version, updated_at, category, full_name)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-            ON CONFLICT (id) DO UPDATE SET
-            id = EXCLUDED.id,
-            room_code = EXCLUDED.room_code,
-            directions = EXCLUDED.directions,
-            building_id = EXCLUDED.building_id,
-            college_id = EXCLUDED.college_id,
-            division_id = EXCLUDED.division_id,
-            image_url = EXCLUDED.image_url,
-            version = EXCLUDED.version,
-            updated_at = EXCLUDED.updated_at,
-            category = EXCLUDED.category,
-            full_name = EXCLUDED.full_name;
+             INSERT INTO rooms (id, room_code, directions, building_id, college_id, division_id, image_url, photos, version, updated_at, category, full_name)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+             ON CONFLICT (id) DO UPDATE SET
+             id = EXCLUDED.id,
+             room_code = EXCLUDED.room_code,
+             directions = EXCLUDED.directions,
+             building_id = EXCLUDED.building_id,
+             college_id = EXCLUDED.college_id,
+             division_id = EXCLUDED.division_id,
+             image_url = EXCLUDED.image_url,
+             photos = EXCLUDED.photos,
+             version = EXCLUDED.version,
+             updated_at = EXCLUDED.updated_at,
+             category = EXCLUDED.category,
+             full_name = EXCLUDED.full_name;
             `,
         [
           room.id,
@@ -827,6 +832,7 @@ export async function syncBuildingRooms(
           room.collegeId,
           room.divisionId,
           room.imageUrl ?? null,
+          JSON.stringify(room.photos ?? []),
           room.version,
           room.updatedAt,
           room.category ?? null,
@@ -887,9 +893,9 @@ export async function getLocalCollegeRooms(id: number) {
     d.division_name as "divisionName",
     r.building_id as "buildingId",
     r.college_id as "collegeId",
-    r.division_id as "divisionId",
-    r.version,
-    r.updated_at as "updatedAt"
+     r.photos as photos,
+     r.version,
+     r.updated_at as "updatedAt"
     FROM rooms AS r
     LEFT JOIN buildings AS b ON b.id = r.building_id
     LEFT JOIN colleges as c ON c.id = r.college_id
@@ -898,7 +904,10 @@ export async function getLocalCollegeRooms(id: number) {
     `,
       [id],
     )) as Results<RoomData>;
-    return data.rows;
+    return data.rows.map((row) => ({
+      ...row,
+      photos: normalizeEntityPhotos(row.photos),
+    }));
   } catch (e) {
     console.error(e);
   }
@@ -937,20 +946,21 @@ export async function syncCollegeRooms(
     try {
       await localDB.query(
         `
-            INSERT INTO rooms (id, room_code, directions, building_id, college_id, division_id, image_url, version, updated_at, category, full_name)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-            ON CONFLICT (id) DO UPDATE SET
-            id = EXCLUDED.id,
-            room_code = EXCLUDED.room_code,
-            directions = EXCLUDED.directions,
-            building_id = EXCLUDED.building_id,
-            college_id = EXCLUDED.college_id,
-            division_id = EXCLUDED.division_id,
-            image_url = EXCLUDED.image_url,
-            version = EXCLUDED.version,
-            updated_at = EXCLUDED.updated_at,
-            category = EXCLUDED.category,
-            full_name = EXCLUDED.full_name;
+             INSERT INTO rooms (id, room_code, directions, building_id, college_id, division_id, image_url, photos, version, updated_at, category, full_name)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+             ON CONFLICT (id) DO UPDATE SET
+             id = EXCLUDED.id,
+             room_code = EXCLUDED.room_code,
+             directions = EXCLUDED.directions,
+             building_id = EXCLUDED.building_id,
+             college_id = EXCLUDED.college_id,
+             division_id = EXCLUDED.division_id,
+             image_url = EXCLUDED.image_url,
+             photos = EXCLUDED.photos,
+             version = EXCLUDED.version,
+             updated_at = EXCLUDED.updated_at,
+             category = EXCLUDED.category,
+             full_name = EXCLUDED.full_name;
             `,
         [
           room.id,
@@ -960,6 +970,7 @@ export async function syncCollegeRooms(
           room.collegeId,
           room.divisionId,
           room.imageUrl ?? null,
+          JSON.stringify(room.photos ?? []),
           room.version,
           room.updatedAt,
           room.category ?? null,
@@ -1020,9 +1031,9 @@ export async function getLocalDivisionRooms(id: number) {
     d.division_name as "divisionName",
     r.building_id as "buildingId",
     r.college_id as "collegeId",
-    r.division_id as "divisionId",
-    r.version,
-    r.updated_at as "updatedAt"
+     r.photos as photos,
+     r.version,
+     r.updated_at as "updatedAt"
     FROM rooms AS r
     LEFT JOIN buildings AS b ON b.id = r.building_id
     LEFT JOIN colleges as c ON c.id = r.college_id
@@ -1031,7 +1042,10 @@ export async function getLocalDivisionRooms(id: number) {
     `,
       [id],
     )) as Results<RoomData>;
-    return data.rows;
+    return data.rows.map((row) => ({
+      ...row,
+      photos: normalizeEntityPhotos(row.photos),
+    }));
   } catch (e) {
     console.error(e);
   }
@@ -1070,20 +1084,21 @@ export async function syncDivisionRooms(
     try {
       await localDB.query(
         `
-            INSERT INTO rooms (id, room_code, directions, building_id, college_id, division_id, image_url, version, updated_at, category, full_name)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-            ON CONFLICT (id) DO UPDATE SET
-            id = EXCLUDED.id,
-            room_code = EXCLUDED.room_code,
-            directions = EXCLUDED.directions,
-            building_id = EXCLUDED.building_id,
-            college_id = EXCLUDED.college_id,
-            division_id = EXCLUDED.division_id,
-            image_url = EXCLUDED.image_url,
-            version = EXCLUDED.version,
-            updated_at = EXCLUDED.updated_at,
-            category = EXCLUDED.category,
-            full_name = EXCLUDED.full_name;
+             INSERT INTO rooms (id, room_code, directions, building_id, college_id, division_id, image_url, photos, version, updated_at, category, full_name)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+             ON CONFLICT (id) DO UPDATE SET
+             id = EXCLUDED.id,
+             room_code = EXCLUDED.room_code,
+             directions = EXCLUDED.directions,
+             building_id = EXCLUDED.building_id,
+             college_id = EXCLUDED.college_id,
+             division_id = EXCLUDED.division_id,
+             image_url = EXCLUDED.image_url,
+             photos = EXCLUDED.photos,
+             version = EXCLUDED.version,
+             updated_at = EXCLUDED.updated_at,
+             category = EXCLUDED.category,
+             full_name = EXCLUDED.full_name;
             `,
         [
           room.id,
@@ -1093,6 +1108,7 @@ export async function syncDivisionRooms(
           room.collegeId,
           room.divisionId,
           room.imageUrl ?? null,
+          JSON.stringify(room.photos ?? []),
           room.version,
           room.updatedAt,
           room.category ?? null,

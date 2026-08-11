@@ -129,13 +129,13 @@ describeIntegration(
 
       await updateAccountProfile(passwordUserId, {
         displayName: "Visible Profile",
-        avatarUrl: "https://example.com/avatar.png",
+        avatarUrl: "https://cdn.example.test/profiles/avatar.webp",
         profileUrl: "https://example.com/about",
         showInCredits: false,
       });
       await expect(getAccountProfile(passwordUserId)).resolves.toMatchObject({
         displayName: "Visible Profile",
-        avatarUrl: "https://example.com/avatar.png",
+        avatarUrl: "https://cdn.example.test/profiles/avatar.webp",
         profileUrl: "https://example.com/about",
         showInCredits: false,
       });

@@ -1,5 +1,6 @@
 <script lang="ts">
   import LoadingIndicator from "@ui/LoadingIndicator.svelte";
+ import ImageUpload from "@ui/editor/ImageUpload.svelte";
   import IconButton from "@ui/IconButton.svelte";
   import { fade, fly } from "svelte/transition";
   import { X, User2 } from "@lucide/svelte";
@@ -330,21 +331,13 @@
               />
             {/snippet}
           </EntityEditorFormField>
-          <EntityEditorFormField
-            label="Avatar URL"
-            inputId="account-avatar-url"
-            hint="Optional HTTPS image URL shown in public credits."
-          >
-            {#snippet control()}
-              <input
-                id="account-avatar-url"
-                type="url"
-                placeholder="https://example.com/avatar.png"
-                bind:value={avatarUrlDraft}
-                disabled={savingProfile}
-              />
-            {/snippet}
-          </EntityEditorFormField>
+           <ImageUpload
+             label="Profile photo (optional)"
+             inputId="account-avatar-upload"
+             prefix={`profiles/${profile.username}`}
+             bind:value={avatarUrlDraft}
+             disabled={savingProfile}
+           />
           <EntityEditorFormField
             label="Profile URL"
             inputId="account-profile-url"

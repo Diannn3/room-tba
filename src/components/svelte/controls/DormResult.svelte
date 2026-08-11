@@ -20,6 +20,7 @@
   import TriangleAlert from "@lucide/svelte/icons/triangle-alert";
   import { CAMPUS_CURFEW } from "@constants/campus-curfew";
   import type { DormData } from "@lib/types";
+  import { normalizeEntityPhotos, type EntityPhoto } from "@lib/entity-photos";
   import {
     getStoredProposalForEntity,
     mergeEntityRecord,
@@ -91,7 +92,7 @@
   let amenitiesDraft = $state("");
   let facebookLinkDraft = $state("");
   let osmLinkDraft = $state("");
-  let photosDraft = $state<string[]>([]);
+  let photosDraft = $state<EntityPhoto[]>([]);
   let savingField = $state<DormEditableField | null>(null);
   let savedField = $state<DormEditableField | null>(null);
   let fieldError = $state<string | null>(null);
@@ -214,12 +215,17 @@
     contactPhoneDraft = listToLines(current.contactPhone);
     amenitiesDraft = listToLines(current.amenities);
     facebookLinkDraft = current.facebookLink ?? "";
-    osmLinkDraft = current.osmLink ?? "";
     photosDraft =
       current.photos && current.photos.length > 0
-        ? current.photos.map((photo) => photo.url)
+        ? [...current.photos]
         : current.imageUrl
-          ? [current.imageUrl]
+          ? [
+              {
+                url: current.imageUrl,
+                attributionName: null,
+                attributionProfileUrl: null,
+              },
+            ]
           : [];
     savedField = null;
     fieldError = null;
@@ -270,11 +276,7 @@
         }
         if (typeof fields.osmLinkDraft === "string") {
           osmLinkDraft = fields.osmLinkDraft;
-        }
-        if (Array.isArray(fields.photosDraft)) {
-          photosDraft = fields.photosDraft.filter(
-            (value): value is string => typeof value === "string",
-          );
+          photosDraft = normalizeEntityPhotos(fields.photosDraft);
         }
       }
     }
@@ -335,7 +337,10 @@
   }
 
   function photosAreUnchanged(current: DormData) {
-    return arraysEqual(photosDraft, existingPhotoUrls(current));
+    return arraysEqual(
+      photosDraft.map((photo) => photo.url),
+      existingPhotoUrls(current),
+    );
   }
   function fieldIsUnchanged(field: DormEditableField, current: DormData) {
     switch (field) {
@@ -443,7 +448,7 @@
     } else if (field === "osmLink") {
       body.osmLink = osmLinkDraft.trim() || null;
     } else if (field === "photos") {
-      body.photoUrls = photosDraft;
+      body.photoUrls = photosDraft.map((photo) => photo.url);
     }
 
     savingField = field;
@@ -615,7 +620,9 @@
       patch.facebookLink = facebookLinkDraft.trim() || null;
     if (!fieldIsUnchanged("osmLink", current))
       patch.osmLink = osmLinkDraft.trim() || null;
-    if (!fieldIsUnchanged("photos", current)) patch.photoUrls = photosDraft;
+    if (!fieldIsUnchanged("photos", current)) {
+      patch.photoUrls = photosDraft.map((photo) => photo.url);
+    }
     savingField = "dormName" as DormEditableField;
     savedField = null;
     fieldError = null;

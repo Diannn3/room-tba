@@ -13,6 +13,7 @@
   import Box from "@lucide/svelte/icons/box";
   import MapChromeActionChip from "@ui/map-chrome/MapChromeActionChip.svelte";
   import type { BuildingData, RoomData } from "@lib/types";
+  import { normalizeEntityPhotos, type EntityPhoto } from "@lib/entity-photos";
   import ResultDisplay from "./ResultDisplay.svelte";
   import BuildingPhoto from "./BuildingPhoto.svelte";
   import EntityShareCopyLink from "./EntityShareCopyLink.svelte";
@@ -25,7 +26,7 @@
   import EntityEditorPanel from "@ui/editor/EntityEditorPanel.svelte";
   import EntityEditorField from "@ui/editor/EntityEditorField.svelte";
   import EntityEditorPinRow from "@ui/editor/EntityEditorPinRow.svelte";
-  import PhotoCollectionUpload from "@ui/editor/PhotoCollectionUpload.svelte";
+  import EntityPhotoUpload from "@ui/editor/EntityPhotoUpload.svelte";
   import { fieldSaveActionLabel } from "@lib/editor/field-action-label";
   import { entityEditorSavedMessage } from "@lib/editor/field-action-label";
   import { tick } from "svelte";
@@ -132,7 +133,7 @@
   let nameDraft = $state("");
   let directionsDraft = $state("");
   let typeDraft = $state<BuildingData["buildingType"]>("non-admin");
-  let photosDraft = $state<string[]>([]);
+  let photosDraft = $state<EntityPhoto[]>([]);
   let crFacilitiesDraft = $state<string[]>([]);
   let savingField = $state<BuildingEditableField | null>(null);
   let savedField = $state<BuildingEditableField | null>(null);
@@ -274,12 +275,17 @@
 
     nameDraft = current.buildingName;
     directionsDraft = current.directions ?? "";
-    typeDraft = current.buildingType;
     photosDraft =
       current.photos && current.photos.length > 0
-        ? current.photos.map((photo) => photo.url)
+        ? [...current.photos]
         : current.imageUrl
-          ? [current.imageUrl]
+          ? [
+              {
+                url: current.imageUrl,
+                attributionName: null,
+                attributionProfileUrl: null,
+              },
+            ]
           : [];
     crFacilitiesDraft = sanitizeCrFacilities(current.crFacilities);
     savedField = null;
@@ -304,11 +310,7 @@
           saved.fields.typeDraft === "non-admin"
         ) {
           typeDraft = saved.fields.typeDraft;
-        }
-        if (Array.isArray(saved.fields.photosDraft)) {
-          photosDraft = saved.fields.photosDraft.filter(
-            (value): value is string => typeof value === "string",
-          );
+          photosDraft = normalizeEntityPhotos(saved.fields.photosDraft);
         }
       }
     }
@@ -379,7 +381,7 @@
     } else if (field === "buildingType") {
       body.buildingType = typeDraft;
     } else if (field === "photos") {
-      body.photoUrls = photosDraft;
+      body.photoUrls = photosDraft.map((photo) => photo.url);
     } else if (field === "crFacilities") {
       body.crFacilities = sanitizeCrFacilities(crFacilitiesDraft);
     }
@@ -524,9 +526,10 @@
     const current = building;
     if (!current) return true;
     const existing = existingPhotoUrls(current);
+    const draftUrls = photosDraft.map((photo) => photo.url);
     return (
-      photosDraft.length === existing.length &&
-      photosDraft.every((url, index) => url === existing[index])
+      draftUrls.length === existing.length &&
+      draftUrls.every((url, index) => url === existing[index])
     );
   });
   const allFieldsUnchanged = $derived.by(() => {
@@ -561,7 +564,7 @@
       patch.buildingType = typeDraft;
     }
     if (!photosUnchanged) {
-      patch.photoUrls = photosDraft;
+      patch.photoUrls = photosDraft.map((photo) => photo.url);
     }
     if (crFacilitiesChanged) {
       patch.crFacilities = sanitizeCrFacilities(crFacilitiesDraft);
@@ -836,11 +839,11 @@
 
               {#if adminAuthStore.isLoggedIn}
                 <div class="editor-image-row">
-                  <PhotoCollectionUpload
+                  <EntityPhotoUpload
                     label="Building photos (optional)"
                     inputId="building-photo-editor"
                     prefix={`buildings/${building.id}`}
-                    bind:values={photosDraft}
+                    bind:photos={photosDraft}
                     disabled={savingField !== null}
                   />
                   <button

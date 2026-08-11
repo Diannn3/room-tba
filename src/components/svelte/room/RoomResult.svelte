@@ -29,7 +29,7 @@
   import EntityEditorToggle from "@ui/editor/EntityEditorToggle.svelte";
   import EntityEditorPanel from "@ui/editor/EntityEditorPanel.svelte";
   import EntityEditorField from "@ui/editor/EntityEditorField.svelte";
-  import PhotoCollectionUpload from "@ui/editor/PhotoCollectionUpload.svelte";
+  import EntityPhotoUpload from "@ui/editor/EntityPhotoUpload.svelte";
   import { fieldSaveActionLabel } from "@lib/editor/field-action-label";
   import { entityEditorSavedMessage } from "@lib/editor/field-action-label";
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
@@ -45,6 +45,7 @@
     ROOM_CATEGORY_LABELS,
     roomCategoryLabel,
   } from "@constants/room-categories";
+  import { normalizeEntityPhotos, type EntityPhoto } from "@lib/entity-photos";
   import type { FinalExamRow, RoomData } from "@lib/types";
   import Classes from "./Classes.svelte";
   import FinalExamsList from "./FinalExamsList.svelte";
@@ -84,7 +85,7 @@
   let buildingDraft = $state("");
   let collegeDraft = $state("");
   let divisionDraft = $state("");
-  let photosDraft = $state<string[]>([]);
+  let photosDraft = $state<EntityPhoto[]>([]);
   let categoryDraft = $state("");
   let savingField = $state<RoomEditableField | null>(null);
   let savedField = $state<RoomEditableField | null>(null);
@@ -155,12 +156,17 @@
     directionsDraft = room.directions ?? "";
     buildingDraft = room.buildingId === null ? "" : String(room.buildingId);
     collegeDraft = room.collegeId === null ? "" : String(room.collegeId);
-    divisionDraft = room.divisionId === null ? "" : String(room.divisionId);
     photosDraft =
       room.photos && room.photos.length > 0
-        ? room.photos.map((photo) => photo.url)
+        ? [...room.photos]
         : room.imageUrl
-          ? [room.imageUrl]
+          ? [
+              {
+                url: room.imageUrl,
+                attributionName: null,
+                attributionProfileUrl: null,
+              },
+            ]
           : [];
     categoryDraft = room.category ?? "";
     savedField = null;
@@ -189,11 +195,7 @@
         }
         if (typeof saved.fields.divisionDraft === "string") {
           divisionDraft = saved.fields.divisionDraft;
-        }
-        if (Array.isArray(saved.fields.photosDraft)) {
-          photosDraft = saved.fields.photosDraft.filter(
-            (value): value is string => typeof value === "string",
-          );
+          photosDraft = normalizeEntityPhotos(saved.fields.photosDraft);
         }
       }
     }
@@ -263,7 +265,7 @@
     } else if (field === "divisionId") {
       body.divisionId = selectValueToId(divisionDraft);
     } else if (field === "photos") {
-      body.photoUrls = photosDraft;
+      body.photoUrls = photosDraft.map((photo) => photo.url);
     } else if (field === "category") {
       body.category = categoryDraft || null;
     }
@@ -428,9 +430,10 @@
     const room = currentRoom.value;
     if (!room) return true;
     const existing = existingPhotoUrls(room);
+    const draftUrls = photosDraft.map((photo) => photo.url);
     return (
-      photosDraft.length === existing.length &&
-      photosDraft.every((url, index) => url === existing[index])
+      draftUrls.length === existing.length &&
+      draftUrls.every((url, index) => url === existing[index])
     );
   });
   const allFieldsUnchanged = $derived.by(() => {
@@ -473,7 +476,7 @@
       patch.divisionId = selectValueToId(divisionDraft);
     }
     if (!photosUnchanged) {
-      patch.photoUrls = photosDraft;
+      patch.photoUrls = photosDraft.map((photo) => photo.url);
     }
     if (categoryDraft !== (room.category ?? "")) {
       patch.category = categoryDraft || null;
@@ -779,11 +782,11 @@
 
             {#if adminAuthStore.isLoggedIn}
               <div class="editor-image-row">
-                <PhotoCollectionUpload
+                <EntityPhotoUpload
                   label="Room photos (optional)"
                   inputId="room-photo-editor"
                   prefix={`rooms/${currentRoom.value.id}`}
-                  bind:values={photosDraft}
+                  bind:photos={photosDraft}
                   disabled={savingField !== null}
                 />
                 <button

@@ -1,10 +1,11 @@
 <script lang="ts">
+  import type { EntityPhoto } from "@lib/entity-photos";
   import type { DormData } from "@lib/types";
   import EntityEditorPanel from "@ui/editor/EntityEditorPanel.svelte";
   import EntityEditorPinRow from "@ui/editor/EntityEditorPinRow.svelte";
   import EntityEditorField from "@ui/editor/EntityEditorField.svelte";
   import EntityEditorCheckboxField from "@ui/editor/EntityEditorCheckboxField.svelte";
-  import PhotoCollectionUpload from "@ui/editor/PhotoCollectionUpload.svelte";
+  import EntityPhotoUpload from "@ui/editor/EntityPhotoUpload.svelte";
   import {
     fieldSaveActionLabel,
     entityEditorSavedMessage,
@@ -58,7 +59,7 @@
     amenitiesDraft: string;
     facebookLinkDraft: string;
     osmLinkDraft: string;
-    photosDraft: string[];
+    photosDraft: EntityPhoto[];
     fieldLabel: (field: DormEditableField) => string;
     fieldIsUnchanged: (field: DormEditableField, current: DormData) => boolean;
     saveField: (field: DormEditableField) => void;
@@ -362,11 +363,11 @@
 
   {#if adminAuthStore.isLoggedIn}
     <div class="editor-image-row">
-      <PhotoCollectionUpload
+      <EntityPhotoUpload
         label="Dorm photos (optional)"
         inputId="dorm-photo-editor"
         prefix={`dorms/${dorm.id}`}
-        bind:values={photosDraft}
+        bind:photos={photosDraft}
         {disabled}
       />
       <button

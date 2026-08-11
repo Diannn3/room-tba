@@ -29,7 +29,7 @@
   import EntityEditorToggle from "@ui/editor/EntityEditorToggle.svelte";
   import EntityEditorPanel from "@ui/editor/EntityEditorPanel.svelte";
   import EntityEditorField from "@ui/editor/EntityEditorField.svelte";
-  import ImageUpload from "@ui/editor/ImageUpload.svelte";
+  import PhotoCollectionUpload from "@ui/editor/PhotoCollectionUpload.svelte";
   import { fieldSaveActionLabel } from "@lib/editor/field-action-label";
   import { entityEditorSavedMessage } from "@lib/editor/field-action-label";
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
@@ -51,6 +51,7 @@
   import FollowPrompt from "@ui/community/FollowPrompt.svelte";
   import TermSelector from "@ui/TermSelector.svelte";
   import BuildingResult from "@ui/controls/BuildingResult.svelte";
+  import EntityPhotoGallery from "../controls/EntityPhotoGallery.svelte";
 
   type RoomEditableField =
     | "roomCode"
@@ -58,7 +59,7 @@
     | "buildingId"
     | "collegeId"
     | "divisionId"
-    | "imageUrl"
+    | "photos"
     | "category";
 
   const appData = getAppData();
@@ -73,8 +74,7 @@
     buildingId: "Building",
     collegeId: "College",
     divisionId: "Division",
-    imageUrl: "Room photo",
-    category: "Room category",
+    photos: "Room photos",
   };
 
   let draftRoomId = $state<number | null>(null);
@@ -84,7 +84,7 @@
   let buildingDraft = $state("");
   let collegeDraft = $state("");
   let divisionDraft = $state("");
-  let imageDraft = $state<string | null>(null);
+  let photosDraft = $state<string[]>([]);
   let categoryDraft = $state("");
   let savingField = $state<RoomEditableField | null>(null);
   let savedField = $state<RoomEditableField | null>(null);
@@ -156,7 +156,12 @@
     buildingDraft = room.buildingId === null ? "" : String(room.buildingId);
     collegeDraft = room.collegeId === null ? "" : String(room.collegeId);
     divisionDraft = room.divisionId === null ? "" : String(room.divisionId);
-    imageDraft = room.imageUrl ?? null;
+    photosDraft =
+      room.photos && room.photos.length > 0
+        ? room.photos.map((photo) => photo.url)
+        : room.imageUrl
+          ? [room.imageUrl]
+          : [];
     categoryDraft = room.category ?? "";
     savedField = null;
     fieldError = null;
@@ -185,6 +190,11 @@
         if (typeof saved.fields.divisionDraft === "string") {
           divisionDraft = saved.fields.divisionDraft;
         }
+        if (Array.isArray(saved.fields.photosDraft)) {
+          photosDraft = saved.fields.photosDraft.filter(
+            (value): value is string => typeof value === "string",
+          );
+        }
       }
     }
   });
@@ -200,6 +210,7 @@
         buildingDraft,
         collegeDraft,
         divisionDraft,
+        photosDraft,
       },
     }));
   });
@@ -232,7 +243,7 @@
       buildingId?: number | null;
       collegeId?: number | null;
       divisionId?: number | null;
-      imageUrl?: string | null;
+      photoUrls?: string[];
       category?: string | null;
     } = { version: room.version };
 
@@ -251,8 +262,8 @@
       body.collegeId = selectValueToId(collegeDraft);
     } else if (field === "divisionId") {
       body.divisionId = selectValueToId(divisionDraft);
-    } else if (field === "imageUrl") {
-      body.imageUrl = imageDraft || null;
+    } else if (field === "photos") {
+      body.photoUrls = photosDraft;
     } else if (field === "category") {
       body.category = categoryDraft || null;
     }
@@ -405,6 +416,23 @@
     });
   }
 
+  function existingPhotoUrls(room: RoomData) {
+    return room.photos && room.photos.length > 0
+      ? room.photos.map((photo) => photo.url)
+      : room.imageUrl
+        ? [room.imageUrl]
+        : [];
+  }
+
+  const photosUnchanged = $derived.by(() => {
+    const room = currentRoom.value;
+    if (!room) return true;
+    const existing = existingPhotoUrls(room);
+    return (
+      photosDraft.length === existing.length &&
+      photosDraft.every((url, index) => url === existing[index])
+    );
+  });
   const allFieldsUnchanged = $derived.by(() => {
     const room = currentRoom.value;
     if (!room) return true;
@@ -414,6 +442,7 @@
       buildingDraft === String(room.buildingId ?? "") &&
       collegeDraft === String(room.collegeId ?? "") &&
       divisionDraft === String(room.divisionId ?? "") &&
+      photosUnchanged &&
       categoryDraft === (room.category ?? "")
     );
   });
@@ -442,6 +471,9 @@
     }
     if (divisionDraft !== String(room.divisionId ?? "")) {
       patch.divisionId = selectValueToId(divisionDraft);
+    }
+    if (!photosUnchanged) {
+      patch.photoUrls = photosDraft;
     }
     if (categoryDraft !== (room.category ?? "")) {
       patch.category = categoryDraft || null;
@@ -747,24 +779,22 @@
 
             {#if adminAuthStore.isLoggedIn}
               <div class="editor-image-row">
-                <ImageUpload
-                  label="Room photo"
-                  inputId="room-image-editor"
-                  prefix="rooms"
-                  bind:value={imageDraft}
+                <PhotoCollectionUpload
+                  label="Room photos (optional)"
+                  inputId="room-photo-editor"
+                  prefix={`rooms/${currentRoom.value.id}`}
+                  bind:values={photosDraft}
                   disabled={savingField !== null}
                 />
                 <button
                   type="button"
                   class="field-save-btn"
-                  disabled={savingField !== null ||
-                    (imageDraft ?? null) ===
-                      (currentRoom.value.imageUrl ?? null)}
-                  onclick={() => saveField("imageUrl")}
+                  disabled={savingField !== null || photosUnchanged}
+                  onclick={() => saveField("photos")}
                 >
                   {fieldSaveActionLabel({
                     canPublish,
-                    isSaving: savingField === "imageUrl",
+                    isSaving: savingField === "photos",
                   })}
                 </button>
               </div>
@@ -807,17 +837,12 @@
       </section>
     {/if}
 
-    {#if currentRoom.value.imageUrl}
-      <img
-        class="entity-image"
-        src={currentRoom.value.imageUrl}
-        alt={currentRoom.value.code}
-        width="800"
-        height="450"
-        loading="lazy"
-        decoding="async"
-      />
-    {/if}
+    <EntityPhotoGallery
+      name={currentRoom.value.code}
+      photos={currentRoom.value.photos}
+      imageUrl={currentRoom.value.imageUrl}
+      alt={currentRoom.value.code}
+    />
 
     <section class="entity-directions" aria-label="Directions">
       <div class="entity-directions__segment">

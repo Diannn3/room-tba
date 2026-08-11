@@ -21,6 +21,7 @@ function room(overrides: Partial<RoomData> = {}): RoomData {
     collegeName: null,
     divisionName: null,
     category: null,
+    photos: [],
     version: 1,
     updatedAt: "2026-08-04T00:00:00.000Z",
     ...overrides,

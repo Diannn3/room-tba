@@ -116,8 +116,8 @@
       <p class="finals-status" role="status">Loading final exams…</p>
     {:else if exams.length === 0}
       <p class="finals-status">
-        No final exam schedule published for this term yet.{#if finalsWindow}
-          The academic calendar sets final exams for {finalsWindow}.{/if}
+        No final exam schedule published for this term yet.{#if finalsWindow}{" "}The
+          academic calendar sets final exams for {finalsWindow}.{/if}
       </p>
     {:else if filtered.length === 0}
       <p class="finals-status">No exams match “{filter}”.</p>

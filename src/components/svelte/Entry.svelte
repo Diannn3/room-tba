@@ -296,6 +296,9 @@
       return;
     }
     landingModalAutoOpenConsumed = true;
+    // Auto-open counts as seen: the welcome tour shows once per browser, not
+    // on every visit. Reopen stays available from the app menu.
+    localStorage.setItem("hideLandingModal", "true");
     modalStore.openModal("landing");
   });
   $effect(() => {

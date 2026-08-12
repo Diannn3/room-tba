@@ -28,6 +28,10 @@
   import { onMount } from "svelte";
   import { jitteredBackoffDelay, sleep } from "@lib/local/data/fetch-json";
   import {
+    loadAppDataSnapshot,
+    saveAppDataSnapshot,
+  } from "@lib/local/data/app-data-snapshot";
+  import {
     fetchRemoteEvents,
     getBuildings,
     getColleges,
@@ -249,6 +253,7 @@
 
       const hasData = hasUsableCampusData(nextData);
       if (hasData) {
+        saveAppDataSnapshot(nextData);
         appBootstrapStore.setHasCachedData(true);
       } else if (!hasCachedDataAtStart) {
         appBootstrapStore.setHasCachedData(false);
@@ -395,12 +400,27 @@
           getSyncKeysFromLs() ?? {},
         ).some(Boolean);
 
+        // Fast path: last visit's data as flat JSON. Applies in milliseconds
+        // while PGlite (5 MB wasm) and the network are still warming up, so a
+        // returning visitor (or a wiki round-trip) skips the splash screen.
+        let pgliteCacheApplied = false;
+        void loadAppDataSnapshot().then((snapshot) => {
+          if (!snapshot || !hasUsableCampusData(snapshot)) return;
+          if (networkDataApplied || pgliteCacheApplied) return;
+          applyData(snapshot);
+          appBootstrapStore.setHasCachedData(true);
+          appBootstrapStore.complete();
+          dismissStaticLoadingShell();
+        }, console.error);
+
         void loadCachedAppData().then((cached) => {
           if (!hasUsableCampusData(cached)) return;
           appBootstrapStore.setHasCachedData(true);
           // The network may have painted fresher rows while the cache was
           // still hydrating; never regress the UI back to the cached copy.
           if (networkDataApplied) return;
+          pgliteCacheApplied = true;
+          saveAppDataSnapshot(cached);
           applyData(cached);
           appBootstrapStore.complete();
           dismissStaticLoadingShell();

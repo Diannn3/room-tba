@@ -51,3 +51,6 @@ data/transit-geometry-cache/
 !data/final-exams-sample.json
 .vercel
 .env*.local
+
+# graphify knowledge-graph output (local tool artifacts)
+graphify-out/

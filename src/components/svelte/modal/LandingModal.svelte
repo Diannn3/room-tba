@@ -25,7 +25,6 @@
   type LandingTab = "welcome" | "campus";
 
   let activeTab = $state<LandingTab>("welcome");
-  let dontShowAgain = $state(false);
   let installPrompt = $state<
     | (Event & {
         prompt: () => Promise<void>;
@@ -119,9 +118,6 @@
   }
 
   function handleGetStarted() {
-    if (dontShowAgain) {
-      localStorage.setItem("hideLandingModal", "true");
-    }
     if (installPrompt) {
       void installPrompt.prompt();
       installPrompt.userChoice.then(({ outcome }) => {
@@ -369,10 +365,6 @@
       <button class="primary-btn" onclick={handleGetStarted}>Get Started</button
       >
     {/if}
-    <label class="checkbox-label">
-      <input type="checkbox" bind:checked={dontShowAgain} />
-      Don't show again
-    </label>
   </footer>
 </div>
 
@@ -712,23 +704,6 @@
     align-items: center;
     gap: 0.5rem;
     background-color: hsl(5, 75%, 28%);
-  }
-
-  .checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.8125rem;
-    color: hsl(0, 0%, 22%);
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .checkbox-label input[type="checkbox"] {
-    cursor: pointer;
-    width: 1rem;
-    height: 1rem;
-    accent-color: hsl(5, 75%, 28%);
   }
 
   @media screen and (max-width: 48rem) {

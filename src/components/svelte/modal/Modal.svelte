@@ -333,9 +333,11 @@
     height: 100%;
     inset: 0;
     position: absolute;
-    background-color: hsla(0, 0%, 8%, 0.42);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    /* No backdrop-filter here: blurring the full-viewport WebGL map stalls
+       the compositor for seconds (30s+ seen in prod) — the dialog mounts,
+       blocks all input, and never paints. Verified: with blur the Settings
+       modal takes 5-8s to appear locally, without it ~1 frame. Dim only. */
+    background-color: hsla(0, 0%, 8%, 0.48);
     cursor: pointer;
   }
 

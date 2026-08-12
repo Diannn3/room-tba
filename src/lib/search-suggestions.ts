@@ -21,18 +21,64 @@ type Suggestion = {
 const MAX_SUGGESTIONS = 8;
 const MAX_PER_CATEGORY = 4;
 
+/**
+ * Relevance of `needle` inside a display name; lower is better, null = miss.
+ * 0 exact name or exact parenthesized acronym ("Institute of Computer
+ *   Science (ICS)" for "ics"), 1 word-start ("Comp" in "Computer"), 2 mid-word
+ *   substring ("ics" in "Economics").
+ *
+ * Mid-word matches used to win on alphabetical order alone: searching "ICS"
+ * surfaced Econom-ics- and Kinet-ics- while the ICS building never made the
+ * top 8.
+ */
+export function nameMatchScore(
+  name: string | null | undefined,
+  needle: string,
+): number | null {
+  if (!name) return null;
+  const haystack = name.toLowerCase();
+  const index = haystack.indexOf(needle);
+  if (index === -1) return null;
+  if (haystack === needle || haystack.includes(`(${needle})`)) return 0;
+  const before = index === 0 ? "" : haystack[index - 1];
+  return before === "" || !/[a-z0-9]/.test(before) ? 1 : 2;
+}
+
+/** Description hits rank behind any name hit. */
+function descriptionMatchScore(
+  description: string | null | undefined,
+  needle: string,
+): number | null {
+  return description?.toLowerCase().includes(needle) ? 3 : null;
+}
+
+function bestScore(...scores: (number | null)[]): number | null {
+  const hits = scores.filter((s): s is number => s !== null);
+  return hits.length ? Math.min(...hits) : null;
+}
+
+type Scored = { score: number; suggestion: Suggestion };
+
 function takeMatches<T>(
   items: T[],
-  predicate: (item: T) => boolean,
+  score: (item: T) => number | null,
   map: (item: T) => Suggestion,
-): Suggestion[] {
-  const out: Suggestion[] = [];
+): Scored[] {
+  const out: Scored[] = [];
   for (const item of items) {
-    if (!predicate(item)) continue;
-    out.push(map(item));
-    if (out.length >= MAX_PER_CATEGORY) break;
+    const s = score(item);
+    if (s === null) continue;
+    out.push({ score: s, suggestion: map(item) });
   }
-  return out;
+  return out
+    .sort(
+      (a, b) =>
+        a.score - b.score ||
+        a.suggestion.value
+          .toLowerCase()
+          .localeCompare(b.suggestion.value.toLowerCase()),
+    )
+    .slice(0, MAX_PER_CATEGORY);
 }
 
 export function buildEntitySuggestions(
@@ -54,7 +100,7 @@ export function buildEntitySuggestions(
   const suggestions = [
     ...takeMatches(
       data.filteredBuildings,
-      ({ buildingName }) => buildingName.toLowerCase().includes(needle),
+      ({ buildingName }) => nameMatchScore(buildingName, needle),
       (b) => ({
         value: b.buildingName,
         category: "building",
@@ -65,19 +111,21 @@ export function buildEntitySuggestions(
     ),
     ...takeMatches(
       data.colleges,
-      ({ collegeName }) => collegeName.toLowerCase().includes(needle),
+      ({ collegeName }) => nameMatchScore(collegeName, needle),
       ({ collegeName }) => ({ value: collegeName, category: "college" }),
     ),
     ...takeMatches(
       data.divisions,
-      ({ divisionName }) => divisionName.toLowerCase().includes(needle),
+      ({ divisionName }) => nameMatchScore(divisionName, needle),
       ({ divisionName }) => ({ value: divisionName, category: "division" }),
     ),
     ...takeMatches(
       data.filteredDorms,
       ({ dormName, shortName }) =>
-        dormName.toLowerCase().includes(needle) ||
-        Boolean(shortName?.toLowerCase().includes(needle)),
+        bestScore(
+          nameMatchScore(dormName, needle),
+          nameMatchScore(shortName, needle),
+        ),
       (d) => ({
         value: d.dormName,
         category: "dorm",
@@ -88,8 +136,10 @@ export function buildEntitySuggestions(
     ...takeMatches(
       data.events,
       ({ title, description }) =>
-        title.toLowerCase().includes(needle) ||
-        Boolean(description?.toLowerCase().includes(needle)),
+        bestScore(
+          nameMatchScore(title, needle),
+          descriptionMatchScore(description, needle),
+        ),
       (e) => ({
         value: e.title,
         category: "event",
@@ -100,8 +150,10 @@ export function buildEntitySuggestions(
     ...takeMatches(
       data.organizations,
       ({ name, description }) =>
-        name.toLowerCase().includes(needle) ||
-        Boolean(description?.toLowerCase().includes(needle)),
+        bestScore(
+          nameMatchScore(name, needle),
+          descriptionMatchScore(description, needle),
+        ),
       (o) => ({
         value: o.name,
         category: "organization",
@@ -112,8 +164,10 @@ export function buildEntitySuggestions(
     ...takeMatches(
       data.places,
       ({ name, description }) =>
-        name.toLowerCase().includes(needle) ||
-        Boolean(description?.toLowerCase().includes(needle)),
+        bestScore(
+          nameMatchScore(name, needle),
+          descriptionMatchScore(description, needle),
+        ),
       (p) => ({
         value: p.name,
         category: "place",
@@ -124,8 +178,13 @@ export function buildEntitySuggestions(
   ];
 
   return suggestions
-    .sort(({ value: a }, { value: b }) =>
-      a.toLowerCase().localeCompare(b.toLowerCase()),
+    .sort(
+      (a, b) =>
+        a.score - b.score ||
+        a.suggestion.value
+          .toLowerCase()
+          .localeCompare(b.suggestion.value.toLowerCase()),
     )
-    .slice(0, MAX_SUGGESTIONS);
+    .slice(0, MAX_SUGGESTIONS)
+    .map(({ suggestion }) => suggestion);
 }

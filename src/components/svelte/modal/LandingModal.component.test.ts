@@ -107,16 +107,10 @@ describe("landing modal controls", () => {
     expect(localStorage.getItem("hideLandingModal")).toBeNull();
   });
 
-  test("Get Started persists the don't-show-again choice", async () => {
+  test("has no don't-show-again checkbox (auto-open persists as seen)", () => {
     modalStore.openModal("landing");
     render(LandingModal);
 
-    await fireEvent.click(
-      screen.getByRole("checkbox", { name: /Don't show again/i }),
-    );
-    await fireEvent.click(screen.getByRole("button", { name: "Get Started" }));
-
-    expect(localStorage.getItem("hideLandingModal")).toBe("true");
-    expect(modalStore.open).toBe(false);
+    expect(screen.queryByRole("checkbox")).toBeNull();
   });
 });

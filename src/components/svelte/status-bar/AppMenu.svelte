@@ -537,6 +537,10 @@
   }
 
   .app-menu__nav-action {
+    /* No global border-box reset in this app: without this, min-height +
+       padding stack to 64px-tall rows and width: 100% + padding overflows
+       the panel sideways (stray horizontal scrollbar). */
+    box-sizing: border-box;
     width: 100%;
     min-height: 2.75rem;
     border: 0;

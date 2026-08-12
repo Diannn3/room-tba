@@ -600,6 +600,12 @@
        (tabs, week grid) own their horizontal scrolling; the root never does. */
     flex: 1 1 auto;
     min-width: 0;
+    /* min-height too: overflow-y stays visible here (unlike the sibling
+       screens' overflow: hidden), so without this the automatic min-size is
+       content height, the screen outgrows the fixed .ui-layer, and
+       .planner-body's overflow-y: auto never engages — the course list
+       becomes unscrollable and everything below the fold is unreachable. */
+    min-height: 0;
     max-width: 100%;
     overflow-x: clip;
     display: flex;

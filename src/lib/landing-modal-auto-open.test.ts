@@ -14,6 +14,19 @@ describe("shouldAutoOpenLandingModal", () => {
     expect(shouldAutoOpenLandingModal(ready)).toBe(true);
   });
 
+  it("opens while data is still loading (no waiting for phase ready)", () => {
+    expect(shouldAutoOpenLandingModal({ ...ready, phase: "remote" })).toBe(
+      true,
+    );
+    expect(shouldAutoOpenLandingModal({ ...ready, phase: "sync" })).toBe(true);
+  });
+
+  it("stays closed on the bootstrap error overlay", () => {
+    expect(shouldAutoOpenLandingModal({ ...ready, phase: "error" })).toBe(
+      false,
+    );
+  });
+
   it("does not reopen after the auto-open slot was consumed", () => {
     expect(shouldAutoOpenLandingModal({ ...ready, consumed: true })).toBe(
       false,

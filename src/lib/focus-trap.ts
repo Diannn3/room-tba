@@ -7,13 +7,28 @@ function focusableElements(container: HTMLElement): HTMLElement[] {
   );
 }
 
-/** Trap Tab within a dialog and restore focus on teardown. */
+/** Innermost trap wins when several are open (menu under a modal, etc.). */
+const activeTraps: symbol[] = [];
+
+/**
+ * Trap Tab within a dialog and restore focus on teardown.
+ *
+ * Listens on `document`, not the container: openers like the app menu
+ * restore focus to their trigger when they close, so the first Escape after
+ * "menu → Settings" used to land outside the dialog and never reach a
+ * container-scoped listener — the modal looked un-closable.
+ */
 export function trapFocus(
   container: HTMLElement,
   options?: { onEscape?: () => void; initialFocus?: HTMLElement | null },
 ): () => void {
   const previous = document.activeElement;
+  const trapId = Symbol("focus-trap");
+  activeTraps.push(trapId);
+  const isInnermost = () => activeTraps[activeTraps.length - 1] === trapId;
+
   const handleKeydown = (event: KeyboardEvent) => {
+    if (!isInnermost()) return;
     if (event.key === "Escape") {
       options?.onEscape?.();
       event.stopPropagation();
@@ -28,8 +43,15 @@ export function trapFocus(
     const last = items[items.length - 1]!;
     const active = document.activeElement;
 
+    if (!container.contains(active)) {
+      // Focus escaped (or never arrived): pull the next Tab into the dialog.
+      event.preventDefault();
+      (event.shiftKey ? last : first).focus();
+      return;
+    }
+
     if (event.shiftKey) {
-      if (active === first || !container.contains(active)) {
+      if (active === first) {
         event.preventDefault();
         last.focus();
       }
@@ -42,13 +64,15 @@ export function trapFocus(
     }
   };
 
-  container.addEventListener("keydown", handleKeydown);
+  document.addEventListener("keydown", handleKeydown, true);
   queueMicrotask(() => {
     (options?.initialFocus ?? focusableElements(container)[0])?.focus();
   });
 
   return () => {
-    container.removeEventListener("keydown", handleKeydown);
+    const index = activeTraps.indexOf(trapId);
+    if (index !== -1) activeTraps.splice(index, 1);
+    document.removeEventListener("keydown", handleKeydown, true);
     if (previous instanceof HTMLElement && document.contains(previous)) {
       previous.focus();
     }

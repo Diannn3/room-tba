@@ -14,7 +14,13 @@ import type { DBData } from "@lib/context";
  * origin, so "Clear cached data" covers the snapshot for free.
  */
 const SNAPSHOT_CACHE = "app-data-snapshot";
-const SNAPSHOT_URL = "/__app-data-snapshot__";
+/**
+ * Bump when the DBData shape changes: a snapshot written by an older deploy
+ * is then ignored instead of feeding stale field names to new code. Old
+ * entries linger until the next write or a cache clear; that is fine.
+ */
+const SNAPSHOT_VERSION = 1;
+const SNAPSHOT_URL = `/__app-data-snapshot__?v=${SNAPSHOT_VERSION}`;
 
 export async function loadAppDataSnapshot(): Promise<DBData | null> {
   try {

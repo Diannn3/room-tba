@@ -1,3 +1,27 @@
+## [2.19.1](https://github.com/uplbtools/room-tba/compare/v2.19.0...v2.19.1) (2026-08-12)
+
+
+### Bug Fixes
+
+* **chrome:** size app menu rows with border-box ([d9903b9](https://github.com/uplbtools/room-tba/commit/d9903b951131a09514c28fba3ac0e7645ada40f0))
+* **finals:** repair empty-state copy ([021469b](https://github.com/uplbtools/room-tba/commit/021469b9928479b89608baf6e89bdd1134e4804d))
+* **modal:** paint dialogs immediately and let Escape close them ([1dc638c](https://github.com/uplbtools/room-tba/commit/1dc638cb3d19d03273fa1173d79c905129def1be))
+* **onboarding:** show the welcome modal once, and while data loads ([e54101a](https://github.com/uplbtools/room-tba/commit/e54101a2c861a651ed99cab9cf162bb482223a51))
+* **planner:** make the course and section list scrollable ([33e7e25](https://github.com/uplbtools/room-tba/commit/33e7e25915da03bb84b70fc4c3022500aff12874))
+* **search:** rank exact and word-start matches above substrings ([11264ea](https://github.com/uplbtools/room-tba/commit/11264ea86d6d3ef615f13eb665fcd099098e4397))
+
+
+### Performance Improvements
+
+* **bootstrap:** paint returning visits from a JSON snapshot ([4c38c13](https://github.com/uplbtools/room-tba/commit/4c38c13953d1f7e046df8ebee399a420421a9395))
+
+# [2.19.0](https://github.com/uplbtools/room-tba/compare/v2.18.2...v2.19.0) (2026-08-11)
+
+
+### Features
+
+* **map:** add Wayback imagery ([#967](https://github.com/uplbtools/room-tba/issues/967)) ([#1012](https://github.com/uplbtools/room-tba/issues/1012)) ([d25a32b](https://github.com/uplbtools/room-tba/commit/d25a32b18fcb5351ab4642b2e5bd5eee94fdf930))
+
 ## [2.18.2](https://github.com/uplbtools/room-tba/compare/v2.18.1...v2.18.2) (2026-08-11)
 
 

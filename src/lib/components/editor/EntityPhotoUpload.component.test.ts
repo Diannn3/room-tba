@@ -50,7 +50,7 @@ describe("EntityPhotoUpload", () => {
     expect(container.querySelector('img[src*="two.jpg"]')).toBeTruthy();
   });
 
-  test("reports the URL after a successful upload", async () => {
+  test("keeps the uploaded URL in the photo collection", async () => {
     const onuploaded = vi.fn();
     const { container } = render(EntityPhotoUpload, {
       props: { onuploaded },
@@ -68,6 +68,9 @@ describe("EntityPhotoUpload", () => {
       expect(onuploaded).toHaveBeenCalledWith(
         "https://cdn.example.test/new.jpg",
       );
+      expect(
+        container.querySelector('img[src="https://cdn.example.test/new.jpg"]'),
+      ).toBeTruthy();
     });
   });
 });

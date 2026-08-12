@@ -327,28 +327,26 @@
 		{/snippet}
 	</EntityEditorField>
 
-	{#if adminAuthStore.isLoggedIn}
-		<div class="editor-image-row">
-			<EntityPhotoUpload
-				label="Dorm photos (optional)"
-				inputId="dorm-photo-editor"
-				prefix={`dorms/${dorm.id}`}
-				bind:photos={photosDraft}
-				{disabled}
-			/>
-			<button
-				type="button"
-				class="field-save-btn"
-				disabled={disabled || fieldIsUnchanged('photos', dorm)}
-				onclick={() => saveField('photos')}
-			>
-				{fieldSaveActionLabel({
-					canPublish,
-					isSaving: savingField === 'photos'
-				})}
-			</button>
-		</div>
-	{/if}
+	<div class="editor-image-row">
+		<EntityPhotoUpload
+			label="Dorm photos (optional)"
+			inputId="dorm-photo-editor"
+			prefix={`dorms/${dorm.id}`}
+			bind:photos={photosDraft}
+			{disabled}
+		/>
+		<button
+			type="button"
+			class="field-save-btn"
+			disabled={disabled || fieldIsUnchanged('photos', dorm)}
+			onclick={() => saveField('photos')}
+		>
+			{fieldSaveActionLabel({
+				canPublish,
+				isSaving: savingField === 'photos'
+			})}
+		</button>
+	</div>
 
 	<p class="editor-note">
 		{#if canPublish}

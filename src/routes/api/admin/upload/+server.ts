@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/private';
-import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
+import { getEditorSession } from '$lib/admin/require-editor';
 import { checkRateLimit, clientIp, rateLimitResponse } from '$lib/api/rate-limit';
 import {
 	buildUploadKey,
@@ -10,16 +10,12 @@ import {
 } from '$lib/r2-upload';
 import type { RequestHandler } from './$types';
 
-// Authenticated image upload to Cloudflare R2. Events persist the returned URL
-// via events.image_url; rooms/buildings/dorms have no image columns yet.
+// Image upload endpoint for contributors and editors.
 
 /** Per editor session (or IP fallback): 30 uploads / 10 minutes. */
 const UPLOAD_LIMIT = { max: 30, windowMs: 10 * 60 * 1000 };
 
-export const GET: RequestHandler = async ({ cookies }) => {
-	const auth = await editorSessionOrUnauthorized(cookies);
-	if (auth instanceof Response) return auth;
-
+export const GET: RequestHandler = async () => {
 	return json({
 		configured: isR2Configured(),
 		maxBytes: UPLOAD_MAX_BYTES,
@@ -28,12 +24,11 @@ export const GET: RequestHandler = async ({ cookies }) => {
 };
 
 export const POST: RequestHandler = async ({ cookies, request }) => {
-	const auth = await editorSessionOrUnauthorized(cookies);
-	if (auth instanceof Response) return auth;
+	const session = getEditorSession(cookies);
 
 	const ip = clientIp(request);
 	const rate = checkRateLimit(
-		`upload:${auth.session.id}:${ip}`,
+		`upload:${session?.id ?? 'anonymous'}:${ip}`,
 		UPLOAD_LIMIT.max,
 		UPLOAD_LIMIT.windowMs
 	);
@@ -54,7 +49,7 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
 	if (!env.R2_PUBLIC_URL?.trim()) {
 		return json(
 			{
-				error: 'Image uploads require R2_PUBLIC_URL so saved event URLs can be validated.'
+				error: 'Image uploads require R2_PUBLIC_URL so saved URLs can be validated.'
 			},
 			503
 		);
@@ -94,7 +89,7 @@ export const POST: RequestHandler = async ({ cookies, request }) => {
 			success: true,
 			url: uploaded.url,
 			key: uploaded.key,
-			uploadedBy: auth.editedBy
+			uploadedBy: session ? session.displayName || session.username : 'anonymous contributor'
 		});
 	} catch (error) {
 		console.error('Failed to upload image:', error);

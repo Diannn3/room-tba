@@ -827,28 +827,26 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
 								{/snippet}
 							</EntityEditorField>
 
-							{#if adminAuthStore.isLoggedIn}
-								<div class="editor-image-row">
-									<EntityPhotoUpload
-										label="Building photos (optional)"
-										inputId="building-photo-editor"
-										prefix={`buildings/${building.id}`}
-										bind:photos={photosDraft}
-										disabled={savingField !== null}
-									/>
-									<button
-										type="button"
-										class="field-save-btn"
-										disabled={savingField !== null || photosUnchanged}
-										onclick={() => saveField('photos')}
-									>
-										{fieldSaveActionLabel({
-											canPublish,
-											isSaving: savingField === 'photos'
-										})}
-									</button>
-								</div>
-							{/if}
+							<div class="editor-image-row">
+								<EntityPhotoUpload
+									label="Building photos (optional)"
+									inputId="building-photo-editor"
+									prefix={`buildings/${building.id}`}
+									bind:photos={photosDraft}
+									disabled={savingField !== null}
+								/>
+								<button
+									type="button"
+									class="field-save-btn"
+									disabled={savingField !== null || photosUnchanged}
+									onclick={() => saveField('photos')}
+								>
+									{fieldSaveActionLabel({
+										canPublish,
+										isSaving: savingField === 'photos'
+									})}
+								</button>
+							</div>
 						</div>
 					</details>
 				</EntityEditorPanel>

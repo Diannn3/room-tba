@@ -31,6 +31,7 @@
   import EntityEditorPinRow from "$lib/components/editor/EntityEditorPinRow.svelte";
   import EntityEditorMessage from "$lib/components/editor/EntityEditorMessage.svelte";
   import ImageUpload from "$lib/components/editor/ImageUpload.svelte";
+  import PhotoCollectionUpload from "$lib/components/editor/PhotoCollectionUpload.svelte";
   import ContributorPendingProposals from "./ContributorPendingProposals.svelte";
   import type { BundledRoomDraft } from "$lib/proposals/create-proposal-validation";
   import {
@@ -734,6 +735,13 @@
 					</select>
 				{/snippet}
 			</EntityEditorFormField>
+			<PhotoCollectionUpload
+				label="Building photos (optional)"
+				inputId="addition-building-photo"
+				prefix={`buildings/${slugifySegment(buildingName.trim() || 'building')}`}
+				bind:values={buildingPhotos}
+				disabled={submitting}
+			/>
 			{#if !isPublish}
 				<div class="bundled-rooms">
 					<p class="bundled-rooms__lead">
@@ -814,15 +822,13 @@
 					</select>
 				{/snippet}
 			</EntityEditorFormField>
-			{#if adminAuthStore.isLoggedIn}
-				<ImageUpload
-					inputId="addition-event-image"
-					label="Event image (optional)"
-					prefix={`events/${slugifySegment(eventTitle.trim() || 'event')}`}
-					bind:value={eventImageUrl}
-					disabled={submitting}
-				/>
-			{/if}
+			<ImageUpload
+				inputId="addition-event-image"
+				label="Event image (optional)"
+				prefix={`events/${slugifySegment(eventTitle.trim() || 'event')}`}
+				bind:value={eventImageUrl}
+				disabled={submitting}
+			/>
 		{:else if kind === 'create_dorm'}
 			<EntityEditorFormField label="What's the dorm called?" inputId="addition-dorm-name">
 				{#snippet control()}
@@ -848,6 +854,13 @@
 					/>
 				{/snippet}
 			</EntityEditorFormField>
+			<PhotoCollectionUpload
+				label="Dorm photos (optional)"
+				inputId="addition-dorm-photo"
+				prefix={`dorms/${slugifySegment(dormName.trim() || 'dorm')}`}
+				bind:values={dormPhotos}
+				disabled={submitting}
+			/>
 		{:else if kind === 'create_place'}
 			<EntityEditorFormField
 				label="What's it called?"
@@ -1002,6 +1015,13 @@
 						placeholder="Third floor, left wing…"></textarea>
 				{/snippet}
 			</EntityEditorFormField>
+			<PhotoCollectionUpload
+				label="Room photos (optional)"
+				inputId="addition-room-photo"
+				prefix={`rooms/${slugifySegment(roomCode.trim() || 'room')}`}
+				bind:values={roomPhotos}
+				disabled={submitting}
+			/>
 		{:else if kind === 'create_college'}
 			<EntityEditorFormField
 				label="College name"

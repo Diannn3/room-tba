@@ -670,6 +670,7 @@ export async function submitProposal(input: SubmitProposalInput): Promise<EditPr
 				...input.patch
 			}
 		: input.patch;
+	normalizeProposalPhotoPatch(input.entityType as ProposalEntityType, mergedPatch);
 
 	if (isCreate) {
 		// isCreate proves entityType is a create type; TS loses the narrowing here.
@@ -765,14 +766,15 @@ function parseProposalPhotoUrls(patch: Record<string, unknown>, label: string) {
   }
   return parsed;
 }
-
 const IMAGE_PATCH_ENTITY_LABELS: Readonly<Record<string, string>> = {
 	create_event: 'Event image',
 	event: 'Event image',
+	create_building: 'Building image',
 	building: 'Building image',
+	create_room: 'Room image',
 	room: 'Room image',
-	dorm: 'Dorm image',
-	create_dorm: 'Dorm image'
+	create_dorm: 'Dorm image',
+	dorm: 'Dorm image'
 };
 
 function normalizeProposalPhotoPatch(
@@ -856,6 +858,29 @@ async function applyProposalPatch(proposal: EditProposalRow, editedBy: string) {
 	if (imageLabel) {
 		validateProposalImageUrl(patch, imageLabel);
 	}
+	if (
+		entityType === 'building' ||
+		entityType === 'room' ||
+		entityType === 'dorm' ||
+		entityType === 'create_building' ||
+		entityType === 'create_room' ||
+		entityType === 'create_dorm'
+	) {
+		const parsed = parseProposalPhotoUrls(patch, `${imageLabel ?? 'Entity'} photos`);
+		if (parsed.provided) {
+			patch.photos =
+				entityType === 'building' || entityType === 'room' || entityType === 'dorm'
+					? await proposalEntityPhotos(proposal, entityType, parsed.photoUrls)
+					: await (async () => {
+							const attribution = await resolvePhotoAttribution(
+								proposal.submitterUserId,
+								proposal.submitterName
+							);
+							return reconcileEntityPhotos([], parsed.photoUrls, attribution);
+						})();
+			delete patch.photoUrls;
+		}
+	}
 
 	if (isCreateProposalType(entityType)) {
 		switch (entityType) {
@@ -867,7 +892,8 @@ async function applyProposalPatch(proposal: EditProposalRow, editedBy: string) {
 						directions: typeof patch.directions === 'string' ? patch.directions : '',
 						buildingType: patch.buildingType === 'admin' ? 'admin' : 'non-admin',
 						lat: patch.lat as number,
-						lon: patch.lon as number
+						lon: patch.lon as number,
+						photos: patch.photos as BuildingUpdateInput['photos']
 					},
 					editedBy
 				);
@@ -880,7 +906,12 @@ async function applyProposalPatch(proposal: EditProposalRow, editedBy: string) {
 							{
 								roomCode: room.roomCode,
 								directions: room.directions || null,
-								buildingId: building.id
+								buildingId: building.id,
+								photos: room.photoUrls.map((url) => ({
+									url,
+									attributionName: null,
+									attributionProfileUrl: null
+								}))
 							},
 							editedBy
 						);

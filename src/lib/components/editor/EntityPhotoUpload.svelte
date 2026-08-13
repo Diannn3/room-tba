@@ -5,6 +5,7 @@
   type Props = {
     photos?: EntityPhoto[];
     prefix?: string;
+    endpoint?: string;
     disabled?: boolean;
     inputId?: string;
     label?: string;
@@ -14,6 +15,7 @@
   let {
     photos = $bindable([]),
     prefix = "uploads",
+    endpoint = "/api/uploads/editor-photo",
     disabled = false,
     inputId = "entity-photo-upload",
     label = "Photos (optional)",
@@ -51,6 +53,7 @@
           inputId={`${inputId}-${index + 1}`}
           label={`Photo ${index + 1}`}
           prefix={prefix}
+          {endpoint}
           value={photos[index]?.url ?? null}
           {disabled}
           onValueChange={(url) => updatePhoto(index, url)}

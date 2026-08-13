@@ -11,6 +11,7 @@
 		<ImageUpload
 			inputId="event-placement-image"
 			label="Event image (optional)"
+			endpoint="/api/uploads/editor-photo"
 			prefix={uploadPrefix}
 			bind:value={draft.imageUrl}
 			disabled={eventPlacementStore.creating}

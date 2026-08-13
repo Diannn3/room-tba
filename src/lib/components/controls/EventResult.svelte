@@ -796,6 +796,7 @@
 						</EntityEditorFormField>
 						<ImageUpload
 							inputId="event-image-editor"
+							endpoint="/api/uploads/editor-photo"
 							prefix={`events/${event.slug}`}
 							bind:value={form.imageUrl}
 							disabled={saving}

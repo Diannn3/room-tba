@@ -5,6 +5,7 @@
   type Props = {
     values?: string[];
     prefix?: string;
+    endpoint?: string;
     disabled?: boolean;
     inputId?: string;
     label?: string;
@@ -13,6 +14,7 @@
   let {
     values = $bindable([]),
     prefix = "uploads",
+    endpoint = "/api/uploads/editor-photo",
     disabled = false,
     inputId = "entity-photo-upload",
     label = "Photos (optional)",
@@ -52,6 +54,7 @@
 <EntityPhotoUpload
   bind:photos
   {prefix}
+  {endpoint}
   {disabled}
   {inputId}
   {label}

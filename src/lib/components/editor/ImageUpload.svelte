@@ -5,6 +5,7 @@
   type Props = {
     value?: string | null;
     prefix?: string;
+    endpoint?: string;
     disabled?: boolean;
     inputId?: string;
     label?: string;
@@ -15,6 +16,7 @@
   let {
     value = $bindable(null),
     prefix = "uploads",
+    endpoint = "/api/uploads/editor-photo",
     disabled = false,
     inputId = "image-upload-input",
     label = "Event image",
@@ -31,7 +33,7 @@
   $effect(() => {
     let cancelled = false;
     uploadConfigured = null;
-    fetch("/api/admin/upload", { credentials: "same-origin" })
+    fetch(endpoint, { credentials: "same-origin" })
       .then(async (res) => {
         if (cancelled) return;
         if (res.status === 401 || res.status === 403) {
@@ -68,8 +70,7 @@
       const formData = new FormData();
       formData.set("file", file);
       if (prefix) formData.set("prefix", prefix);
-
-      const res = await fetch("/api/admin/upload", {
+      const res = await fetch(endpoint, {
         method: "POST",
         credentials: "same-origin",
         body: formData,

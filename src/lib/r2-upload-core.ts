@@ -83,7 +83,7 @@ export type ParsedEventImageUrl =
 	| { ok: true; imageUrl: string | null; provided: boolean }
 	| { ok: false; error: string };
 
-/** Validates image URLs saved on entities (typically from /api/admin/upload). */
+/** Validates image URLs saved on entities or account avatars. */
 export function parseImageUrl(
 	value: unknown,
 	publicBaseUrl?: string | null,

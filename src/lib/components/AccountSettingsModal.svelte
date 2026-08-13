@@ -9,6 +9,7 @@
 	import EntityEditorFormField from '$lib/components/editor/EntityEditorFormField.svelte';
 	import EntityEditorSubmitButton from '$lib/components/editor/EntityEditorSubmitButton.svelte';
 	import EntityEditorMessage from '$lib/components/editor/EntityEditorMessage.svelte';
+	import ImageUpload from '$lib/components/editor/ImageUpload.svelte';
 	import './editor/entity-editor.css';
 	import { MediaQuery } from 'svelte/reactivity';
 
@@ -326,10 +327,17 @@
 							/>
 						{/snippet}
 					</EntityEditorFormField>
+					<ImageUpload
+						inputId="account-avatar-upload"
+						label="Profile photo"
+						endpoint="/api/account/avatar"
+						bind:value={avatarUrlDraft}
+						disabled={savingProfile}
+					/>
 					<EntityEditorFormField
 						label="Avatar URL"
 						inputId="account-avatar-url"
-						hint="Optional HTTPS image URL shown in public credits."
+						hint="Optional HTTPS image URL shown in public credits. Uploading a profile photo fills this field."
 					>
 						{#snippet control()}
 							<input

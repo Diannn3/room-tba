@@ -331,9 +331,10 @@
 		<EntityPhotoUpload
 			label="Dorm photos (optional)"
 			inputId="dorm-photo-editor"
+			endpoint="/api/uploads/editor-photo"
 			prefix={`dorms/${dorm.id}`}
 			bind:photos={photosDraft}
-			{disabled}
+			disabled={savingField !== null}
 		/>
 		<button
 			type="button"

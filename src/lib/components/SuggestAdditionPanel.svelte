@@ -738,6 +738,7 @@
 			<PhotoCollectionUpload
 				label="Building photos (optional)"
 				inputId="addition-building-photo"
+				endpoint="/api/uploads/suggestion-photo"
 				prefix={`buildings/${slugifySegment(buildingName.trim() || 'building')}`}
 				bind:values={buildingPhotos}
 				disabled={submitting}
@@ -825,6 +826,7 @@
 			<ImageUpload
 				inputId="addition-event-image"
 				label="Event image (optional)"
+				endpoint="/api/uploads/suggestion-photo"
 				prefix={`events/${slugifySegment(eventTitle.trim() || 'event')}`}
 				bind:value={eventImageUrl}
 				disabled={submitting}
@@ -857,6 +859,7 @@
 			<PhotoCollectionUpload
 				label="Dorm photos (optional)"
 				inputId="addition-dorm-photo"
+				endpoint="/api/uploads/suggestion-photo"
 				prefix={`dorms/${slugifySegment(dormName.trim() || 'dorm')}`}
 				bind:values={dormPhotos}
 				disabled={submitting}
@@ -1018,6 +1021,7 @@
 			<PhotoCollectionUpload
 				label="Room photos (optional)"
 				inputId="addition-room-photo"
+				endpoint="/api/uploads/suggestion-photo"
 				prefix={`rooms/${slugifySegment(roomCode.trim() || 'room')}`}
 				bind:values={roomPhotos}
 				disabled={submitting}

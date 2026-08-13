@@ -1,3 +1,10 @@
+## [2.19.3](https://github.com/uplbtools/room-tba/compare/v2.19.2...v2.19.3) (2026-08-13)
+
+
+### Bug Fixes
+
+* **map:** measure-route legibility, mode-aware snapping, visible route line ([a7893ad](https://github.com/uplbtools/room-tba/commit/a7893aded2dc8f371e613d62557f3b051d8ea6ec))
+
 ## [2.19.1](https://github.com/uplbtools/room-tba/compare/v2.19.0...v2.19.1) (2026-08-12)
 
 

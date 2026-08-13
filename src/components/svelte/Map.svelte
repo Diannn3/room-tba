@@ -1,13 +1,15 @@
 <script lang="ts">
   import { MapLibre, Marker } from "svelte-maplibre";
   import * as maplibregl from "maplibre-gl";
-  import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
+  // `?worker&url`, NOT `?url`. MapLibre 6 is ESM-only and its worker is a
+  // module that imports a sibling chunk (maplibre-gl-shared). `?url` copies the
+  // worker file verbatim without that sibling, so in production the module
+  // worker fails on its first import and NO vector tile ever loads (blank
+  // basemap under working pins, #1003). `?worker&url` routes it through Vite's
+  // worker pipeline, emitting a self-contained worker with its imports bundled.
+  // Ref: MapLibre v5->v6 migration guide (setWorkerUrl + Vite).
+  import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 
-  // In production Vite inlines maplibre into the app chunk and boots its
-  // worker by importScripts-ing that same chunk; vector tiles survive but the
-  // GeoJSON source path dies inside the worker ("f is not defined"), so no
-  // geojson line layer (jeepney/event routes) ever rendered on prod. Point
-  // maplibre at its self-contained CSP worker bundle instead.
   maplibregl.setWorkerUrl(maplibreWorkerUrl);
   import { getAppActions, getAppData } from "@lib/context";
   import {

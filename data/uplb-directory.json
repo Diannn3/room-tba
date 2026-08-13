@@ -1105,5 +1105,239 @@
     "lat": 14.164643,
     "lng": 121.241124,
     "source": "https://www.openstreetmap.org/node/7785052612"
+  },
+  {
+    "name": "UPOU Main Building",
+    "type": "academic",
+    "building_or_area": "UPOU headquarters campus, Brgy. Maahas, Los Baños",
+    "description": "Main administration and academic building of the UP Open University.",
+    "lat": 14.173872,
+    "lng": 121.262554,
+    "source": "https://www.openstreetmap.org/way/135956497"
+  },
+  {
+    "name": "UPOU Teaching and Learning Hub",
+    "type": "academic",
+    "building_or_area": "UPOU headquarters campus, Brgy. Maahas, Los Baños",
+    "description": "Teaching, learning, and conference facility of the UP Open University.",
+    "lat": 14.173736,
+    "lng": 121.261975,
+    "source": "https://www.openstreetmap.org/way/1153990240"
+  },
+  {
+    "name": "UPOU Community Hub",
+    "type": "unit",
+    "building_or_area": "UPOU headquarters campus, Brgy. Maahas, Los Baños",
+    "description": "Events and co-working hub on the UP Open University grounds.",
+    "lat": 14.175692,
+    "lng": 121.262017,
+    "source": "https://www.openstreetmap.org/way/459953051"
+  },
+  {
+    "name": "Harrar Hall (IRRI)",
+    "type": "unit",
+    "building_or_area": "IRRI headquarters campus",
+    "description": "Main headquarters building of the International Rice Research Institute.",
+    "lat": 14.16932,
+    "lng": 121.25483,
+    "source": "https://www.openstreetmap.org/way/85789142"
+  },
+  {
+    "name": "Chandler Hall (IRRI)",
+    "type": "unit",
+    "building_or_area": "IRRI headquarters campus",
+    "description": "Training and conference building at IRRI headquarters.",
+    "lat": 14.16847,
+    "lng": 121.25457,
+    "source": "https://www.openstreetmap.org/way/85789155"
+  },
+  {
+    "name": "F.F. Hill Hall (IRRI)",
+    "type": "unit",
+    "building_or_area": "IRRI headquarters campus",
+    "description": "Office and research building at IRRI headquarters.",
+    "lat": 14.1694,
+    "lng": 121.25556,
+    "source": "https://www.openstreetmap.org/way/85789153"
+  },
+  {
+    "name": "Bradfield Hall (IRRI)",
+    "type": "unit",
+    "building_or_area": "IRRI headquarters campus",
+    "description": "Laboratory and office building at IRRI headquarters.",
+    "lat": 14.17078,
+    "lng": 121.25622,
+    "source": "https://www.openstreetmap.org/way/259493092"
+  },
+  {
+    "name": "Drilon Hall (IRRI)",
+    "type": "unit",
+    "building_or_area": "IRRI headquarters campus",
+    "description": "Campus building at IRRI headquarters.",
+    "lat": 14.17017,
+    "lng": 121.25608,
+    "source": "https://www.openstreetmap.org/way/113355839"
+  },
+  {
+    "name": "R.P. Cantrell Building (IRRI)",
+    "type": "unit",
+    "building_or_area": "IRRI headquarters campus",
+    "description": "Office building at IRRI headquarters.",
+    "lat": 14.16991,
+    "lng": 121.25542,
+    "source": "https://www.openstreetmap.org/way/113355856"
+  },
+  {
+    "name": "N.C. Brady Laboratory (IRRI)",
+    "type": "unit",
+    "building_or_area": "IRRI headquarters campus",
+    "description": "Research laboratory at IRRI headquarters.",
+    "lat": 14.16918,
+    "lng": 121.2584,
+    "source": "https://www.openstreetmap.org/way/226495748"
+  },
+  {
+    "name": "K.J. Lampe Laboratory (IRRI)",
+    "type": "unit",
+    "building_or_area": "IRRI headquarters campus",
+    "description": "Research laboratory at IRRI headquarters.",
+    "lat": 14.16937,
+    "lng": 121.25898,
+    "source": "https://www.openstreetmap.org/way/226495721"
+  },
+  {
+    "name": "Kenzo Hemmi Laboratory (IRRI)",
+    "type": "unit",
+    "building_or_area": "IRRI headquarters campus",
+    "description": "Research laboratory at IRRI headquarters.",
+    "lat": 14.16989,
+    "lng": 121.25951,
+    "source": "https://www.openstreetmap.org/way/143938191"
+  },
+  {
+    "name": "IRRI Library",
+    "type": "unit",
+    "building_or_area": "IRRI headquarters campus",
+    "description": "Library of the International Rice Research Institute, one of the world's largest rice science collections.",
+    "lat": 14.16834,
+    "lng": 121.25432,
+    "source": "https://www.openstreetmap.org/node/3328100830"
+  },
+  {
+    "name": "IRRI Events and Visitors Office",
+    "type": "office",
+    "building_or_area": "IRRI headquarters campus",
+    "description": "Visitor reception and events office at IRRI headquarters.",
+    "lat": 14.16867,
+    "lng": 121.25498,
+    "source": "https://www.openstreetmap.org/node/3327934302"
+  },
+  {
+    "name": "IRRI Emergency Brigade",
+    "type": "service",
+    "building_or_area": "IRRI headquarters campus",
+    "description": "Fire and emergency response station on the IRRI campus.",
+    "lat": 14.1712,
+    "lng": 121.25798,
+    "source": "https://www.openstreetmap.org/node/3084468900"
+  },
+  {
+    "name": "IRRI Safety and Security Services",
+    "type": "service",
+    "building_or_area": "IRRI headquarters campus",
+    "description": "Campus safety and security office at IRRI.",
+    "lat": 14.17111,
+    "lng": 121.25785,
+    "source": "https://www.openstreetmap.org/node/4049772510"
+  },
+  {
+    "name": "IRRI Transport Services",
+    "type": "service",
+    "building_or_area": "IRRI headquarters campus",
+    "description": "Transport services and motorpool at IRRI headquarters.",
+    "lat": 14.17136,
+    "lng": 121.2577,
+    "source": "https://www.openstreetmap.org/way/226495720"
+  },
+  {
+    "name": "Zeigler Experiment Station (IRRI)",
+    "type": "landmark",
+    "building_or_area": "IRRI headquarters campus",
+    "description": "IRRI's experimental rice fields, visible along Pili Drive.",
+    "lat": 14.16857,
+    "lng": 121.25551,
+    "source": "https://www.openstreetmap.org/node/7682420243"
+  },
+  {
+    "name": "UPOU Faculty of Education (FEd)",
+    "type": "academic",
+    "building_or_area": "Teaching and Learning Hub, UPOU headquarters campus, Brgy. Maahas, Los Baños",
+    "description": "UPOU's academic unit for teacher education and distance-education degrees at all levels.",
+    "lat": null,
+    "lng": null,
+    "source": "https://fed.upou.edu.ph/"
+  },
+  {
+    "name": "UPOU Faculty of Information and Communication Studies (FICS)",
+    "type": "academic",
+    "building_or_area": "Teaching and Learning Hub, UPOU headquarters campus, Brgy. Maahas, Los Baños",
+    "description": "UPOU's academic unit for information science, communication, and multimedia studies.",
+    "lat": null,
+    "lng": null,
+    "source": "https://fics.upou.edu.ph/"
+  },
+  {
+    "name": "UPOU Faculty of Management and Development Studies (FMDS)",
+    "type": "academic",
+    "building_or_area": "Teaching and Learning Hub, UPOU headquarters campus, Brgy. Maahas, Los Baños",
+    "description": "UPOU's academic unit for management, development, and health social science programs.",
+    "lat": null,
+    "lng": null,
+    "source": "https://fmds.upou.edu.ph/"
+  },
+  {
+    "name": "UPOU Office of the University Registrar",
+    "type": "office",
+    "building_or_area": "1/F UPOU Main Building, UPOU headquarters campus, Brgy. Maahas, Los Baños",
+    "description": "Admissions, records, registration, and billing for UP Open University students.",
+    "lat": null,
+    "lng": null,
+    "source": "https://registrar.upou.edu.ph/"
+  },
+  {
+    "name": "UPOU Office of Student Affairs (OSA)",
+    "type": "office",
+    "building_or_area": "UPOU Community Hub, UPOU headquarters campus, Brgy. Maahas, Los Baños",
+    "description": "Scholarships, learner support, testing centers, and student organizations of the UP Open University.",
+    "lat": null,
+    "lng": null,
+    "source": "https://osa.upou.edu.ph/"
+  },
+  {
+    "name": "UPOU Library",
+    "type": "unit",
+    "building_or_area": "UPOU Community Hub, UPOU headquarters campus, Brgy. Maahas, Los Baños",
+    "description": "University Library of the UP Open University; physical collection with delivery support for distance learners.",
+    "lat": null,
+    "lng": null,
+    "source": "https://www.upou.edu.ph/about/office-of-the-vice-chancellor-for-academic-affairs/university-library/"
+  },
+  {
+    "name": "UPOU Center for Open and Digital Teaching and Learning (CODTL)",
+    "type": "unit",
+    "building_or_area": "Digital Futures Hub, UPOU headquarters campus, Brgy. Maahas, Los Baños",
+    "description": "Course design, educational media production, and open and digital learning research center of UPOU.",
+    "lat": null,
+    "lng": null,
+    "source": "https://codtl.upou.edu.ph/about/"
+  },
+  {
+    "name": "UPOU Office of the Chancellor",
+    "type": "office",
+    "building_or_area": "3/F UPOU Main Building, UPOU headquarters campus, Brgy. Maahas, Los Baños",
+    "description": "Executive office of the UP Open University chancellor.",
+    "lat": null,
+    "lng": null,
+    "source": "https://www.upou.edu.ph/about/office-of-the-chancellor/"
   }
 ]

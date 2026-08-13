@@ -57,6 +57,29 @@ describe("TerrainStore", () => {
 });
 
 describe("MapViewStore", () => {
+  test("cameraDebug persists to localStorage and hydrates in a new instance", () => {
+    localStorage.removeItem("camera-debug");
+    const store = new MapViewStore();
+    expect(store.cameraDebug).toBe(false);
+    store.toggleCameraDebug();
+    expect(localStorage.getItem("camera-debug")).toBe("true");
+
+    const rehydrated = new MapViewStore();
+    expect(rehydrated.cameraDebug).toBe(true);
+    rehydrated.toggleCameraDebug();
+    expect(localStorage.getItem("camera-debug")).toBe("false");
+    localStorage.removeItem("camera-debug");
+  });
+
+  test("showAll leaves cameraDebug alone (it resets pin layers, not chrome)", () => {
+    localStorage.removeItem("camera-debug");
+    const store = new MapViewStore();
+    store.toggleCameraDebug();
+    store.showAll();
+    expect(store.cameraDebug).toBe(true);
+    localStorage.removeItem("camera-debug");
+  });
+
   test("toggleEventsOnly flips eventsOnly", () => {
     const store = new MapViewStore();
     store.toggleEventsOnly();

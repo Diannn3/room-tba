@@ -32,6 +32,8 @@
   import Map from "@ui/Map.svelte";
   import MapAttribution from "@ui/MapAttribution.svelte";
   import MeasureRoutePanel from "@ui/MeasureRoutePanel.svelte";
+  import CameraDebugHud from "@ui/CameraDebugHud.svelte";
+  import MapContextMenu from "@ui/map-chrome/MapContextMenu.svelte";
   import TravelTimeLegend from "@ui/TravelTimeLegend.svelte";
   import Toast from "@ui/Toast.svelte";
   import Building3DViewer from "@ui/Building3DViewer.svelte";
@@ -450,6 +452,7 @@
           <MapAttribution />
         </div>
       {/if}
+      <MapContextMenu />
       <div class="inner-layer">
         <MainControls />
         <div class="bottom-band">
@@ -458,6 +461,9 @@
           {/if}
           {#if measureRouteStore.active}
             <MeasureRoutePanel />
+          {/if}
+          {#if mapViewStore.cameraDebug}
+            <CameraDebugHud />
           {/if}
         </div>
       </div>

@@ -471,16 +471,16 @@
   }
 
   .control-kicker {
-    font-size: 0.625rem;
+    font-size: 0.6875rem;
     letter-spacing: 0.04em;
     line-height: 1.15;
-    opacity: 0.72;
+    opacity: 0.8;
     text-transform: uppercase;
   }
 
   .control-value {
     overflow: visible;
-    font-size: 0.75rem;
+    font-size: 0.875rem;
     line-height: 1.15;
     text-overflow: clip;
     white-space: nowrap;

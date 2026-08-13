@@ -129,6 +129,20 @@ describe("nearestNodeIndex", () => {
     expect(nearestNodeIndex(graph, 14.1601, 121.24005)).toBe(0);
     expect(nearestNodeIndex(graph, 14.1612, 121.2411)).toBe(3);
   });
+
+  test("mode-aware snap skips nodes the mode cannot leave", () => {
+    // Node 4 hangs off node 1 by a footway only. A tap on top of it must
+    // still snap drive to a road node, not report the leg as unroutable.
+    const extended: WalkGraphData = {
+      meta: { coordScale: 1e6, nodeCount: 5, edgeCount: 6 },
+      nodes: [...fixture.nodes, [5, 14.1613, 121.24]],
+      edges: [...fixture.edges, [1, 4, 35, "footway", null, []]],
+    };
+    const g = buildTravelGraph(extended);
+    expect(nearestNodeIndex(g, 14.1613, 121.24)).toBe(4);
+    expect(nearestNodeIndex(g, 14.1613, 121.24, "cycle")).toBe(4);
+    expect(nearestNodeIndex(g, 14.1613, 121.24, "drive")).toBe(1);
+  });
 });
 
 describe("isochroneFeatures", () => {

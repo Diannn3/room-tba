@@ -154,7 +154,7 @@
   }
 
   .measure-panel__title {
-    font-size: 0.8125rem;
+    font-size: 0.9375rem;
     font-weight: 600;
   }
 
@@ -192,9 +192,9 @@
 
   .measure-panel__hint {
     margin: 0;
-    font-size: 0.6875rem;
+    font-size: 0.8125rem;
     line-height: 1.35;
-    color: hsl(0, 0%, 35%);
+    color: hsl(0, 0%, 28%);
   }
 
   .measure-panel__modes {
@@ -212,8 +212,9 @@
     border: 1px solid var(--map-chrome-border, hsl(5 10% 68%));
     border-radius: 999px;
     background: none;
-    padding: 0.25rem 0.375rem;
-    font-size: 0.6875rem;
+    padding: 0.375rem 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
     color: inherit;
     cursor: pointer;
     white-space: nowrap;
@@ -237,11 +238,11 @@
 
   .measure-panel__total {
     margin: 0;
-    font-size: 0.75rem;
+    font-size: 0.875rem;
   }
 
   .measure-panel__legs {
-    font-size: 0.6875rem;
+    font-size: 0.8125rem;
   }
 
   .measure-panel__legs summary {
@@ -264,12 +265,12 @@
   }
 
   .measure-panel__leg-name {
-    color: hsl(0, 0%, 35%);
+    color: hsl(0, 0%, 30%);
   }
 
   .measure-panel__attribution {
     margin: 0;
-    font-size: 0.625rem;
-    color: hsl(0, 0%, 45%);
+    font-size: 0.6875rem;
+    color: hsl(0, 0%, 38%);
   }
 </style>

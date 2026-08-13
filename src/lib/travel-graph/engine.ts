@@ -94,15 +94,31 @@ export function edgeSeconds(
   return meters / (kph / 3.6);
 }
 
-/** Snap a tap to the closest graph node. Linear scan: 1k nodes is nothing. */
+/**
+ * Snap a tap to the closest graph node. Linear scan: 1k nodes is nothing.
+ *
+ * Pass `mode` to skip nodes the mode cannot leave (e.g. a footway-only node
+ * for `drive`) — otherwise a tap beside a footpath snaps drive/cycle legs to
+ * an unreachable node and the whole leg reports "no route" even though a
+ * drivable road runs right next to it.
+ */
 export function nearestNodeIndex(
   graph: TravelGraph,
   lat: number,
   lng: number,
+  mode: TravelMode = "walk",
 ): number {
   let best = 0;
   let bestMeters = Number.POSITIVE_INFINITY;
   for (let i = 0; i < graph.lat.length; i++) {
+    if (
+      mode !== "walk" &&
+      !graph.adjacency[i].some(
+        ({ edge }) => edgeSeconds(graph.edges[edge], mode) !== null,
+      )
+    ) {
+      continue;
+    }
     const meters = distanceMeters(
       { lat, lon: lng },
       { lat: graph.lat[i], lon: graph.lng[i] },

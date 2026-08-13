@@ -1,6 +1,5 @@
 <script lang="ts">
-import { pwaInfo } from "virtual:pwa-info";
-import { onMount, type Snippet } from "svelte";
+import type { Snippet } from "svelte";
 import { browser } from "$app/environment";
 import { page } from "$app/state";
 import "../styles/font-face.css";
@@ -43,28 +42,6 @@ const HOME_SEO: SeoData = {
 // Entity routes return their own metadata from `load`; everything else in the
 // group is the app itself and keeps the home card.
 const seo = $derived(page.data.seo ?? HOME_SEO);
-
-onMount(async () => {
-	if (pwaInfo) {
-		const { registerSW } = await import("virtual:pwa-register");
-		registerSW({
-			immediate: true,
-			onRegistered(r) {
-				// uncomment following code if you want check for updates
-				// r && setInterval(() => {
-				//    console.log('Checking for sw update')
-				//    r.update()
-				// }, 20000 /* 20s for testing purposes */)
-				console.log(`SW Registered: ${r}`);
-			},
-			onRegisterError(error) {
-				console.log("SW registration error", error);
-			},
-		});
-	}
-});
-
-const webManifestLink = $derived(pwaInfo ? pwaInfo.webManifest.linkTag : "");
 
 // #716: the desktop/mobile split is viewport-based (not User-Agent), so the
 // same check works for every render path — SSR, prerendered shell, and
@@ -111,8 +88,7 @@ if (browser) {
 		rel="stylesheet"
 	/>
 
-	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-	{@html webManifestLink}
+	<link rel="manifest" href="/manifest.webmanifest" />
 </svelte:head>
 
 {@render children()}

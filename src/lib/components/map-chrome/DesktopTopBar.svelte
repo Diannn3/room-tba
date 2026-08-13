@@ -59,7 +59,7 @@
         {link.label}
       </button>
     {/each}
-    <a href="/wiki" class="desktop-top-bar__link">Wiki</a>
+    <!-- <a href="/wiki" class="desktop-top-bar__link">Wiki</a> -->
     <AppMenu />
     <button
       type="button"

@@ -831,7 +831,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
 								<EntityPhotoUpload
 									label="Building photos (optional)"
 									inputId="building-photo-editor"
-									endpoint="/api/uploads/editor-photo"
+									endpoint={canPublish ? "/api/uploads/editor-photo" : "/api/uploads/suggestion-photo"}
 									prefix={`buildings/${building.id}`}
 									bind:photos={photosDraft}
 									disabled={savingField !== null}

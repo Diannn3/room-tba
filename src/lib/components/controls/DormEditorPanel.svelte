@@ -331,7 +331,7 @@
 		<EntityPhotoUpload
 			label="Dorm photos (optional)"
 			inputId="dorm-photo-editor"
-			endpoint="/api/uploads/editor-photo"
+			endpoint={canPublish ? "/api/uploads/editor-photo" : "/api/uploads/suggestion-photo"}
 			prefix={`dorms/${dorm.id}`}
 			bind:photos={photosDraft}
 			disabled={savingField !== null}

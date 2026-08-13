@@ -629,6 +629,10 @@ button.map-chrome-chip:disabled {
 /* Map tools flyout — shared width; mobile sizing in Entry.svelte */
 .map-tools-panel {
   width: min(24rem, calc(100vw - 1rem));
+  /* --tools-panel-max-h is set by MapToolsFlyout to the space below the
+     trigger, so the panel never runs off the bottom of a short viewport; the
+     body scrolls within it. Falls back to the plain viewport cap. */
+  max-height: min(28rem, var(--tools-panel-max-h, 75vh));
 }
 
 .map-tools-panel

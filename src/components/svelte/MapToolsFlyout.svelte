@@ -83,9 +83,13 @@
     if (!mapToolsStore.open || !el || mobile.current) return;
     const apply = () => {
       const top = el.getBoundingClientRect().top;
+      // Stop above the attribution strip, not the viewport edge — the strip
+      // z-stacks above the panel and was printing over its last row.
+      const attribution = document.querySelector(".map-attrib-corner");
+      const reserved = 12 + (attribution?.getBoundingClientRect().height ?? 0);
       el.style.setProperty(
         "--tools-panel-max-h",
-        `${Math.max(160, window.innerHeight - top - 12)}px`,
+        `${Math.max(160, window.innerHeight - top - reserved)}px`,
       );
     };
     apply();
@@ -273,13 +277,13 @@
   }
 
   .map-tools-flyout__tool-label {
-    font-size: 0.8125rem;
+    font-size: 0.9375rem;
     font-weight: 600;
   }
 
   .map-tools-flyout__tool-description {
-    font-size: 0.6875rem;
-    line-height: 1.25;
-    color: hsl(0, 0%, 40%);
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    color: hsl(0, 0%, 32%);
   }
 </style>

@@ -558,12 +558,30 @@
 
   const MEASURE_ROUTE_SOURCE_ID = "measure-route-line";
   const MEASURE_ROUTE_LAYER_ID = "measure-route-line";
+  const MEASURE_ROUTE_CASING_ID = "measure-route-line-casing";
 
   function ensureMeasureRouteLayers(map: mapGl.MapLibreMap) {
     if (!map.getSource(MEASURE_ROUTE_SOURCE_ID)) {
       map.addSource(MEASURE_ROUTE_SOURCE_ID, {
         type: "geojson",
         data: { type: "FeatureCollection", features: [] },
+      });
+    }
+
+    // Solid white casing under the dashes: a bare 4px dashed line vanished
+    // against grey buildings once zoomed out, so back it with the same
+    // zoom-scaled glow the journey polyline uses.
+    if (!map.getLayer(MEASURE_ROUTE_CASING_ID)) {
+      map.addLayer({
+        id: MEASURE_ROUTE_CASING_ID,
+        type: "line",
+        source: MEASURE_ROUTE_SOURCE_ID,
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": "#ffffff",
+          "line-width": JOURNEY_CASING_WIDTH,
+          "line-opacity": 0.8,
+        },
       });
     }
 
@@ -578,8 +596,8 @@
         layout: { "line-cap": "round", "line-join": "round" },
         paint: {
           "line-color": "#7c3aed",
-          "line-width": 4,
-          "line-opacity": 0.9,
+          "line-width": JOURNEY_LINE_WIDTH,
+          "line-opacity": 1,
           "line-dasharray": [0.2, 1.6],
         },
       });
@@ -587,8 +605,8 @@
   }
 
   function clearMeasureRouteLayers(map: mapGl.MapLibreMap) {
-    if (map.getLayer(MEASURE_ROUTE_LAYER_ID)) {
-      map.removeLayer(MEASURE_ROUTE_LAYER_ID);
+    for (const id of [MEASURE_ROUTE_LAYER_ID, MEASURE_ROUTE_CASING_ID]) {
+      if (map.getLayer(id)) map.removeLayer(id);
     }
     if (map.getSource(MEASURE_ROUTE_SOURCE_ID)) {
       map.removeSource(MEASURE_ROUTE_SOURCE_ID);
@@ -2668,8 +2686,16 @@
     loadTravelGraph()
       .then((graph) => {
         if (cancelled) return;
-        const nodes = waypoints.map((w) => nearestNodeIndex(graph, w.lat, w.lng));
+        // Snap per mode: drive/cycle skip nodes their filters cannot leave,
+        // so a tap beside a footpath still measures along the nearest road.
         const modes: TravelMode[] = ["walk", "cycle", "drive"];
+        const nodesByMode = Object.fromEntries(
+          modes.map((m) => [
+            m,
+            waypoints.map((w) => nearestNodeIndex(graph, w.lat, w.lng, m)),
+          ]),
+        ) as Record<TravelMode, number[]>;
+        const nodes = nodesByMode[mode];
         const summaries = {
           walk: [] as ({ seconds: number; meters: number } | null)[],
           cycle: [] as ({ seconds: number; meters: number } | null)[],
@@ -2681,7 +2707,13 @@
         };
         for (let i = 0; i + 1 < nodes.length; i++) {
           for (const legMode of modes) {
-            const route = shortestPath(graph, nodes[i], nodes[i + 1], legMode);
+            const legNodes = nodesByMode[legMode];
+            const route = shortestPath(
+              graph,
+              legNodes[i],
+              legNodes[i + 1],
+              legMode,
+            );
             summaries[legMode].push(
               route ? { seconds: route.seconds, meters: route.meters } : null,
             );

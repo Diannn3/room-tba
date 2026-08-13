@@ -52,3 +52,21 @@ describe("MapViewControls My classes toggle", () => {
     expect(mapViewStore.highlightMyBuildings).toBe(true);
   });
 });
+
+describe("MapViewControls camera details toggle", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    mapViewStore.cameraDebug = false;
+  });
+
+  test("row toggles the camera debug flag and tracks aria-pressed", async () => {
+    render(MapViewControls, { props: { embedded: true, variant: "modes" } });
+
+    const toggle = screen.getByRole("button", {
+      name: /show a live camera readout/i,
+    });
+    expect(toggle.getAttribute("aria-pressed")).toBe("false");
+    toggle.click();
+    expect(mapViewStore.cameraDebug).toBe(true);
+  });
+});

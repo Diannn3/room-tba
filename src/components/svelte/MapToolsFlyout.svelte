@@ -29,6 +29,7 @@
   import { MediaQuery } from "svelte/reactivity";
 
   let panelEl = $state<HTMLDivElement | null>(null);
+  let shellEl = $state<HTMLDivElement | null>(null);
   const reducedMotion = new MediaQuery("(prefers-reduced-motion: reduce)");
   const mobile = new MediaQuery("max-width:48rem");
   // Transit moved to the sidebar's Jeepney routes browse panel; Map tools now
@@ -72,6 +73,25 @@
     if (!mapToolsStore.open || !panelEl) return;
     return trapFocus(panelEl, { onEscape: () => mapToolsStore.close() });
   });
+
+  // The desktop panel opens absolutely below the trigger, which can sit well
+  // down the screen. A plain `max-height: 75vh` is measured from the viewport
+  // top, so the panel ran off the bottom edge with no way to scroll to it.
+  // Cap it to the space that actually remains below its own top edge instead.
+  $effect(() => {
+    const el = shellEl;
+    if (!mapToolsStore.open || !el || mobile.current) return;
+    const apply = () => {
+      const top = el.getBoundingClientRect().top;
+      el.style.setProperty(
+        "--tools-panel-max-h",
+        `${Math.max(160, window.innerHeight - top - 12)}px`,
+      );
+    };
+    apply();
+    window.addEventListener("resize", apply);
+    return () => window.removeEventListener("resize", apply);
+  });
 </script>
 
 <div class="map-tools-flyout">
@@ -87,6 +107,7 @@
   {#if mapToolsStore.open}
     <div
       class="map-tools-panel-shell"
+      bind:this={shellEl}
       in:fade={panelFadeIn(reducedMotion.current)}
       out:fade={panelFadeOut(reducedMotion.current)}
     >

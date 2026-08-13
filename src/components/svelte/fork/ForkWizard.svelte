@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import * as maplibregl from "maplibre-gl";
-  import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
+  import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
   import "maplibre-gl/dist/maplibre-gl.css";
   import { campusMap } from "../../../campus.config";
   import {
@@ -12,9 +12,8 @@
   } from "@lib/fork/campus-config-template";
   import { copyTextToClipboard } from "@lib/clipboard";
 
-  // Same prod trap as Map.svelte: Vite inlines maplibre into the app chunk and
-  // the GeoJSON path dies inside the worker ("f is not defined") on production
-  // builds. Point maplibre at its self-contained CSP worker bundle.
+  // See Map.svelte: `?worker&url` (not `?url`) so Vite bundles the v6 module
+  // worker with its sibling chunk; `?url` leaves it unable to load, no tiles.
   maplibregl.setWorkerUrl(maplibreWorkerUrl);
 
   /** Plain OSM raster style — works on any deployment, no MapTiler key. */

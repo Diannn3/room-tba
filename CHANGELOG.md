@@ -1,3 +1,11 @@
+## [2.19.2](https://github.com/uplbtools/room-tba/compare/v2.19.1...v2.19.2) (2026-08-13)
+
+
+### Bug Fixes
+
+* **map-chrome:** keep the map tools panel within the viewport ([37f2579](https://github.com/uplbtools/room-tba/commit/37f2579ef7cac64d54021a5d39c9ca7cd846937c))
+* **map:** restore vector basemap on MapLibre 6 (?worker&url) ([13e7cbc](https://github.com/uplbtools/room-tba/commit/13e7cbc8c5bd88e8793146fac6c8c97e72063555)), closes [#1003](https://github.com/uplbtools/room-tba/issues/1003)
+
 ## [2.19.1](https://github.com/uplbtools/room-tba/compare/v2.19.0...v2.19.1) (2026-08-12)
 
 

@@ -1105,5 +1105,77 @@
     "lat": 14.164643,
     "lng": 121.241124,
     "source": "https://www.openstreetmap.org/node/7785052612"
+  },
+  {
+    "name": "UPOU Faculty of Education (FEd)",
+    "type": "academic",
+    "building_or_area": "Teaching and Learning Hub, UPOU headquarters campus, Brgy. Maahas, Los Baños",
+    "description": "UPOU's academic unit for teacher education and distance-education degrees at all levels.",
+    "lat": null,
+    "lng": null,
+    "source": "https://fed.upou.edu.ph/"
+  },
+  {
+    "name": "UPOU Faculty of Information and Communication Studies (FICS)",
+    "type": "academic",
+    "building_or_area": "Teaching and Learning Hub, UPOU headquarters campus, Brgy. Maahas, Los Baños",
+    "description": "UPOU's academic unit for information science, communication, and multimedia studies.",
+    "lat": null,
+    "lng": null,
+    "source": "https://fics.upou.edu.ph/"
+  },
+  {
+    "name": "UPOU Faculty of Management and Development Studies (FMDS)",
+    "type": "academic",
+    "building_or_area": "Teaching and Learning Hub, UPOU headquarters campus, Brgy. Maahas, Los Baños",
+    "description": "UPOU's academic unit for management, development, and health social science programs.",
+    "lat": null,
+    "lng": null,
+    "source": "https://fmds.upou.edu.ph/"
+  },
+  {
+    "name": "UPOU Office of the University Registrar",
+    "type": "office",
+    "building_or_area": "1/F UPOU Main Building, UPOU headquarters campus, Brgy. Maahas, Los Baños",
+    "description": "Admissions, records, registration, and billing for UP Open University students.",
+    "lat": null,
+    "lng": null,
+    "source": "https://registrar.upou.edu.ph/"
+  },
+  {
+    "name": "UPOU Office of Student Affairs (OSA)",
+    "type": "office",
+    "building_or_area": "UPOU Community Hub, UPOU headquarters campus, Brgy. Maahas, Los Baños",
+    "description": "Scholarships, learner support, testing centers, and student organizations of the UP Open University.",
+    "lat": null,
+    "lng": null,
+    "source": "https://osa.upou.edu.ph/"
+  },
+  {
+    "name": "UPOU Library",
+    "type": "unit",
+    "building_or_area": "UPOU Community Hub, UPOU headquarters campus, Brgy. Maahas, Los Baños",
+    "description": "University Library of the UP Open University; physical collection with delivery support for distance learners.",
+    "lat": null,
+    "lng": null,
+    "source": "https://www.upou.edu.ph/about/office-of-the-vice-chancellor-for-academic-affairs/university-library/"
+  },
+  {
+    "name": "UPOU Center for Open and Digital Teaching and Learning (CODTL)",
+    "type": "unit",
+    "building_or_area": "Digital Futures Hub, UPOU headquarters campus, Brgy. Maahas, Los Baños",
+    "description": "Course design, educational media production, and open and digital learning research center of UPOU.",
+    "lat": null,
+    "lng": null,
+    "source": "https://codtl.upou.edu.ph/about/"
+  },
+  {
+    "name": "UPOU Office of the Chancellor",
+    "type": "office",
+    "building_or_area": "3/F UPOU Main Building, UPOU headquarters campus, Brgy. Maahas, Los Baños",
+    "description": "Executive office of the UP Open University chancellor.",
+    "lat": null,
+    "lng": null,
+    "source": "https://www.upou.edu.ph/about/office-of-the-chancellor/"
   }
 ]

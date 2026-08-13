@@ -9,6 +9,7 @@
   import GraduationCap from "@lucide/svelte/icons/graduation-cap";
   import MapIcon from "@lucide/svelte/icons/map";
   import Satellite from "@lucide/svelte/icons/satellite";
+  import Gauge from "@lucide/svelte/icons/gauge";
   import {
     mapStore,
     mapViewStore,
@@ -84,6 +85,11 @@
     mapViewStore.satellite
       ? "Showing satellite imagery. Switch to the standard map."
       : "Showing the standard map. Switch to satellite imagery.",
+  );
+  const cameraDebugTitle = $derived(
+    mapViewStore.cameraDebug
+      ? "Hide the live camera readout."
+      : "Show a live camera readout (zoom, pitch, bearing, center).",
   );
   function syncCamera() {
     const map = mapStore.mapInstance;
@@ -248,6 +254,25 @@
         </span>
       </button>
     {/if}
+
+    <div class="divider"></div>
+
+    <button
+      class="control mode-toggle camera-debug-toggle"
+      class:active={mapViewStore.cameraDebug}
+      onclick={mapViewStore.toggleCameraDebug}
+      title={cameraDebugTitle}
+      aria-label={cameraDebugTitle}
+      aria-pressed={mapViewStore.cameraDebug}
+    >
+      <Gauge size={18} aria-hidden="true" />
+      <span class="control-copy">
+        <span class="control-kicker">Camera details</span>
+        <span class="control-value">
+          {mapViewStore.cameraDebug ? "On" : "Off"}
+        </span>
+      </span>
+    </button>
   {/if}
 
   {#if showCameraNav}
@@ -520,13 +545,15 @@
   }
 
   .camera-toggle,
-  .satellite-toggle {
+  .satellite-toggle,
+  .camera-debug-toggle {
     border-color: hsl(5, 34%, 78%);
     background-color: hsl(0, 100%, 99%);
   }
 
   .camera-toggle:hover,
-  .satellite-toggle:hover {
+  .satellite-toggle:hover,
+  .camera-debug-toggle:hover {
     border-color: hsl(5, 34%, 68%);
     background-color: hsl(0, 78%, 97%);
   }

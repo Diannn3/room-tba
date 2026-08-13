@@ -27,9 +27,23 @@ export class MapViewStore {
   satellite: boolean = $state(false);
   /** A locally changed Esri World Imagery Wayback release, when selected. */
   waybackSnapshot: WaybackSnapshot | null = $state(null);
+  /** Live camera readout HUD (#964). Persisted: map debugging spans reloads. */
+  cameraDebug: boolean = $state(
+    typeof localStorage !== "undefined" &&
+      localStorage.getItem("camera-debug") === "true",
+  );
 
   toggleEventsOnly = () => {
     this.eventsOnly = !this.eventsOnly;
+  };
+
+  toggleCameraDebug = () => {
+    this.cameraDebug = !this.cameraDebug;
+    try {
+      localStorage.setItem("camera-debug", String(this.cameraDebug));
+    } catch {
+      // Private mode: the toggle still works for this session.
+    }
   };
 
   toggleSatellite = () => {

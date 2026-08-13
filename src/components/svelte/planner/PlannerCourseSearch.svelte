@@ -20,6 +20,7 @@
   let rows = $state<ClassMapValue[]>([]);
   let nextCursor = $state<string | null>(null);
   let hasMore = $state(false);
+  let sentinelEl = $state<HTMLDivElement | null>(null);
   const expanded = new SvelteSet<string>();
 
   // Browse mode (no query) pages through the term 100 at a time (#planner).
@@ -41,6 +42,25 @@
       loadingMore = false;
     }
   }
+
+  // Auto-load the next page when the end of the list scrolls into view, so
+  // browsing does not stall on a "Show more" click every 100 sections. The
+  // button stays as the visible affordance and keyboard path. Reading
+  // rows.length re-arms the observer after each page: if the sentinel is
+  // still on screen (short viewport), a fresh observer fires again.
+  $effect(() => {
+    const el = sentinelEl;
+    void rows.length;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) loadMore();
+      },
+      { rootMargin: "300px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  });
 
   $effect(() => {
     const q = query.trim();
@@ -245,12 +265,20 @@
             {/if}
           </div>
         {/each}
+        {#if hasMore && !query.trim()}
+          <div
+            class="course-search__sentinel"
+            bind:this={sentinelEl}
+            aria-hidden="true"
+          ></div>
+        {/if}
       </div>
     </div>
     {#if hasMore}
       <p class="course-search__note">
-        Showing the first {rows.length} sections.
         {#if !query.trim()}
+          Showing {courses.length} courses so far ({courses.at(-1)?.courseCode}
+          and earlier).
           <button
             type="button"
             class="course-search__more"
@@ -260,7 +288,8 @@
             {loadingMore ? "Loading…" : "Show more"}
           </button>
         {:else}
-          Search a course code to find the rest.
+          Showing the first {rows.length} sections. Search a fuller course code
+          to find the rest.
         {/if}
       </p>
     {/if}
@@ -346,6 +375,11 @@
     display: flex;
     flex-direction: column;
     gap: 0.375rem;
+  }
+
+  .course-search__sentinel {
+    height: 1px;
+    flex-shrink: 0;
   }
 
   .course-item {

@@ -16,6 +16,10 @@ const sw = self as unknown as ServiceWorkerGlobalScope;
 // offline-maps.ts writes downloaded areas straight into `map-tiles` /
 // `map-assets`, and stable names let them survive deploys.
 const APP_CACHE = `app-${version}`;
+// Server `load` payloads for client-side navigations. Versioned alongside the
+// app: a payload written by an older deploy can no longer match the node graph
+// the new client expects, so it must not outlive it.
+const DATA_CACHE = `data-${version}`;
 const RUNTIME_CACHES = ['map-tiles', 'map-assets', 'pglite-wasm', 'desktop-only-css'];
 
 // The SPA shell served for app navigations. Fetched at install time — not
@@ -164,6 +168,45 @@ async function handleNavigation(request: Request, url: URL): Promise<Response> {
 	return shell ?? fetch(request);
 }
 
+/**
+ * Client-side navigations do not issue a `navigate` request — the router
+ * fetches `<path>/__data.json` for every route with a server `load`. Left
+ * unhandled, that fetch rejects offline, and because a raw TypeError is not an
+ * HttpError, SvelteKit renders its root error page as "500 Internal Error"
+ * (see `load_data` in @sveltejs/kit/src/runtime/client/client.js).
+ *
+ * Network-first: online navigations stay authoritative, and every payload is
+ * kept so the same route works offline later.
+ */
+async function handleDataRequest(request: Request, url: URL): Promise<Response> {
+	const cache = await caches.open(DATA_CACHE);
+	// Key on pathname alone. `x-sveltekit-invalidated` and the trailing-slash
+	// flag vary per navigation while the payload does not, so keying on the full
+	// URL would miss on every revisit.
+	const key = url.origin + url.pathname;
+
+	try {
+		const response = await fetch(request);
+		if (response.ok) {
+			await cache.put(key, response.clone());
+			await trimCache(cache, 200);
+		}
+		return response;
+	} catch (error) {
+		const cached = await cache.match(key);
+		if (cached) return cached;
+
+		// Offline and never visited online. The router understands a top-level
+		// redirect node, so hand it back to the shell — an offline user lands on
+		// the working map instead of an error page. Guard against the shell
+		// itself to keep this from looping.
+		if (url.pathname !== `${SHELL}/__data.json`) {
+			return Response.json({ type: 'redirect', location: SHELL });
+		}
+		throw error;
+	}
+}
+
 sw.addEventListener('install', (event) => {
 	// registerType 'autoUpdate' parity: a new worker takes over immediately.
 	void sw.skipWaiting();
@@ -181,7 +224,7 @@ sw.addEventListener('activate', (event) => {
 		(async () => {
 			// Drop every cache we do not own: previous app-<version> caches and the
 			// old workbox-precache-* caches left behind by vite-plugin-pwa.
-			const keep = new Set([APP_CACHE, ...RUNTIME_CACHES]);
+			const keep = new Set([APP_CACHE, DATA_CACHE, ...RUNTIME_CACHES]);
 			const keys = await caches.keys();
 			await Promise.all(keys.filter((key) => !keep.has(key)).map((key) => caches.delete(key)));
 			await sw.clients.claim();
@@ -189,25 +232,34 @@ sw.addEventListener('activate', (event) => {
 	);
 });
 
-sw.addEventListener('fetch', ({request, respondWith}) => {
+// `event` must stay intact: FetchEvent.respondWith is bound to the event, so
+// destructuring it off and calling it bare throws "Illegal invocation" and the
+// worker silently stops handling every request.
+sw.addEventListener('fetch', (event) => {
+	const { request } = event;
 	if (request.method !== 'GET') return;
 
 	const url = new URL(request.url);
 	if (url.protocol !== 'https:' && url.protocol !== 'http:') return;
 
 	if (request.mode === 'navigate') {
-		respondWith(handleNavigation(request, url));
+		event.respondWith(handleNavigation(request, url));
+		return;
+	}
+
+	if (url.origin === sw.location.origin && url.pathname.endsWith('/__data.json')) {
+		event.respondWith(handleDataRequest(request, url));
 		return;
 	}
 
 	for (const rule of RUNTIME_RULES) {
 		if (rule.pattern.test(url.href)) {
-			respondWith(cacheFirst(request, rule.cacheName, rule.maxEntries));
+			event.respondWith(cacheFirst(request, rule.cacheName, rule.maxEntries));
 			return;
 		}
 	}
 
 	if (url.origin === sw.location.origin && precache.includes(url.pathname)) {
-		respondWith(cacheFirst(request, APP_CACHE));
+		event.respondWith(cacheFirst(request, APP_CACHE));
 	}
 });

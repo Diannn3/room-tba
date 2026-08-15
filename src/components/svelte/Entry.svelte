@@ -14,6 +14,7 @@
     adminAuthStore,
     mapEditStore,
     mapToolsStore,
+    mapViewStore,
     travelTimeStore,
     measureRouteStore,
     editorChromeStore,

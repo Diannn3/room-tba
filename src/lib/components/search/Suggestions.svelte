@@ -67,6 +67,7 @@ type RoomHit = {
 	value: string;
 	category: "room";
 	fullName?: string | null;
+	id: number;
 };
 
 let aliasResults = $state<AliasHit[]>([]);
@@ -119,13 +120,14 @@ $effect(() => {
 		try {
 			const response = await fetch(url);
 			const roomsFetch = (await response.json()) as {
-				data?: { value: string; fullName?: string | null }[] | null;
+				data?: { value: string; fullName?: string | null, id: number }[] | null;
 			};
 			if (cancelled) return;
 			if (response.ok && Array.isArray(roomsFetch?.data)) {
 				roomResults = roomsFetch.data.map((val) => ({
 					...val,
 					category: "room" as const,
+					id: val.id
 				}));
 				roomLoading = false;
 				return;
@@ -142,7 +144,7 @@ $effect(() => {
 		if (cancelled) return;
 		const local = await searchLocalRooms(upper);
 		roomResults = local
-			? local.map((val) => ({ ...val, category: "room" as const }))
+			? local.map((val) => ({ ...val, category: "room" as const, id: val.id }))
 			: [];
 		roomLoading = false;
 	})();
@@ -194,6 +196,7 @@ $effect(() => {
 					value={roomResult.value}
 					category={roomResult.category}
 					secondary={roomResult.fullName}
+					entityId={roomResult.id}
 				/>
 			{/each}
 		{/if}

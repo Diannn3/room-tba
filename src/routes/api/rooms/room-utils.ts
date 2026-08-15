@@ -52,7 +52,8 @@ export async function searchRooms(searchString: string) {
 		const data = await db
 			.select({
 				value: roomsTable.roomCode,
-				fullName: roomsTable.fullName
+				fullName: roomsTable.fullName,
+				id: roomsTable.id
 			})
 			.from(roomsTable)
 			.leftJoin(buildingsTable, eq(buildingsTable.id, roomsTable.buildingId))

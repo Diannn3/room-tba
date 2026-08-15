@@ -90,7 +90,6 @@ export class QueryStore {
 	};
 
 	addRecentSearch(recentSearch: RecentSearch) {
-		console.log(recentSearch);
 		const qIndex = this.recentSearches.findIndex((query) => {
 			if (query.category !== recentSearch.category) return false;
 			if (recentSearch.category === 'event' && recentSearch.eventSlug && query.eventSlug) {

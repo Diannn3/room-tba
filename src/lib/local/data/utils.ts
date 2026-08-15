@@ -806,19 +806,19 @@ export async function getLocalRoomsCounts(): Promise<
  * when there are none (matching the server contract). */
 export async function searchLocalRooms(
 	searchString: string
-): Promise<{ value: string; fullName: string | null }[] | null> {
+): Promise<{ value: string; fullName: string | null, id: number }[] | null> {
 	try {
 		const escaped = escapeLikePattern(searchString);
 		const localDB = await getDB();
 		await localDB.waitReady;
 		const data = (await localDB.query(
-			`SELECT room_code AS value, full_name AS "fullName" FROM rooms
+			`SELECT room_code AS value, full_name AS "fullName", id FROM rooms
        WHERE upper(room_code) LIKE upper($1) ESCAPE '\\'
           OR upper(full_name) LIKE upper($1) ESCAPE '\\'
        ORDER BY length(room_code), room_code
        LIMIT 6`,
 			[`%${escaped}%`]
-		)) as Results<{ value: string; fullName: string | null }>;
+		)) as Results<{ value: string; fullName: string | null, id: number }>;
 		return data.rows.length ? data.rows : null;
 	} catch (e) {
 		console.error(e);

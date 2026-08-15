@@ -63,7 +63,6 @@ export class QueryStore {
 		this.inputValue = obj.value;
 
 		if (obj.type === 'result' && obj.category !== null && obj.category !== 'browse') {
-			console.log(obj);
 			this.addRecentSearch({
 				category: obj.category,
 				value: obj.value,

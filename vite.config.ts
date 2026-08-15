@@ -3,6 +3,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
+import { SW_KILL_SWITCH } from './src/lib/constants/sw-kill-switch';
 
 export default defineConfig({
 	plugins: [
@@ -23,12 +24,19 @@ export default defineConfig({
 				'@test': 'src/test'
 			},
 
+			// The worker is still built and deployed when the kill switch is on —
+			// existing registrations update to it and self-destruct. Only the client
+			// registration is suppressed, so new visitors never pick one up.
+			serviceWorker: {
+				register: !SW_KILL_SWITCH
+			},
+
 			typescript: {
 				config: (config) => {
 					config.include.push('../drizzle.config.ts');
 				}
 			}
-		}),
+		})
 	],
 	// @vercel/og loads resvg/yoga WASM through its own resolver. Letting Vite
 	// pre-bundle or SSR-transform it breaks that and the /og.png request dies

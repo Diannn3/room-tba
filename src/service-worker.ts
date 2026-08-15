@@ -4,11 +4,15 @@
 /// <reference lib="webworker" />
 
 // Hand-written replacement for the workbox worker vite-plugin-pwa generated.
-// SvelteKit picks this file up and registers it from its own client runtime;
+// SvelteKit picks this file up and registers it from the SSR'd HTML;
 // `$service-worker` supplies the exact build/static/prerendered URL lists, so
 // a missing shell fails the install loudly in DevTools instead of shipping a
 // worker whose precache silently matched no HTML (the glob failure mode).
+// Relative, not `$lib`: SvelteKit only sanctions `$service-worker` and
+// `$env/static/public` as aliased imports inside a worker (see the
+// importer_is_service_worker guard in @sveltejs/kit's vite plugin).
 import { build, files, prerendered, version } from '$service-worker';
+import { SW_KILL_SWITCH } from './lib/constants/sw-kill-switch';
 
 const sw = self as unknown as ServiceWorkerGlobalScope;
 
@@ -207,59 +211,105 @@ async function handleDataRequest(request: Request, url: URL): Promise<Response> 
 	}
 }
 
-sw.addEventListener('install', (event) => {
-	// registerType 'autoUpdate' parity: a new worker takes over immediately.
-	void sw.skipWaiting();
-	event.waitUntil(
-		caches
-			.open(APP_CACHE)
-			// cache: 'reload' bypasses the HTTP cache so the shell and manifest are
-			// fetched fresh; hashed assets are unaffected either way.
-			.then((cache) => cache.addAll(precache.map((url) => new Request(url, { cache: 'reload' }))))
-	);
-});
+if (SW_KILL_SWITCH) {
+	// Teardown build (see $lib/sw-kill-switch). It ships at the same URL as the
+	// worker it replaces, so the browser's routine update check on navigation
+	// picks it up and a client stuck on a bad worker recovers by itself.
+	//
+	// No `fetch` listener is registered on purpose: with none attached, requests
+	// bypass the worker entirely, so even the window before this activates is
+	// served live from the network rather than from the bad shell.
+	sw.addEventListener('install', () => {
+		// Don't wait for the previous worker's tabs to close.
+		void sw.skipWaiting();
+	});
 
-sw.addEventListener('activate', (event) => {
-	event.waitUntil(
-		(async () => {
-			// Drop every cache we do not own: previous app-<version> caches and the
-			// old workbox-precache-* caches left behind by vite-plugin-pwa.
-			const keep = new Set([APP_CACHE, DATA_CACHE, ...RUNTIME_CACHES]);
-			const keys = await caches.keys();
-			await Promise.all(keys.filter((key) => !keep.has(key)).map((key) => caches.delete(key)));
-			await sw.clients.claim();
-		})()
-	);
-});
+	sw.addEventListener('activate', (event) => {
+		event.waitUntil(
+			(async () => {
+				// Everything, downloaded offline maps included: offline-maps.ts only
+				// ever writes `map-tiles`/`map-assets`, so with no worker left to serve
+				// out of them they are unreadable bytes.
+				const keys = await caches.keys();
+				await Promise.all(keys.map((key) => caches.delete(key)));
 
-// `event` must stay intact: FetchEvent.respondWith is bound to the event, so
-// destructuring it off and calling it bare throws "Illegal invocation" and the
-// worker silently stops handling every request.
-sw.addEventListener('fetch', (event) => {
-	const { request } = event;
-	if (request.method !== 'GET') return;
+				await sw.registration.unregister();
 
-	const url = new URL(request.url);
-	if (url.protocol !== 'https:' && url.protocol !== 'http:') return;
+				// Reload the tabs this worker inherited so they drop the controller now
+				// rather than running stale until they happen to be closed.
+				//
+				// Deliberately no `clients.claim()`. matchAll() without
+				// `includeUncontrolled` returns only already-controlled clients — exactly
+				// the set that needs rescuing. Claiming first would also capture a
+				// first-time visitor who just registered this worker and reload them
+				// into an endless register → unregister → reload loop.
+				for (const client of await sw.clients.matchAll({ type: 'window' })) {
+					try {
+						await (client as WindowClient).navigate(client.url);
+					} catch {
+						// Refused (already unloading, or a cross-origin URL). The
+						// unregister above still stands; that tab recovers on its next
+						// navigation instead.
+					}
+				}
+			})()
+		);
+	});
+} else {
+	sw.addEventListener('install', (event) => {
+		// registerType 'autoUpdate' parity: a new worker takes over immediately.
+		void sw.skipWaiting();
+		event.waitUntil(
+			caches
+				.open(APP_CACHE)
+				// cache: 'reload' bypasses the HTTP cache so the shell and manifest are
+				// fetched fresh; hashed assets are unaffected either way.
+				.then((cache) => cache.addAll(precache.map((url) => new Request(url, { cache: 'reload' }))))
+		);
+	});
 
-	if (request.mode === 'navigate') {
-		event.respondWith(handleNavigation(request, url));
-		return;
-	}
+	sw.addEventListener('activate', (event) => {
+		event.waitUntil(
+			(async () => {
+				// Drop every cache we do not own: previous app-<version> caches and the
+				// old workbox-precache-* caches left behind by vite-plugin-pwa.
+				const keep = new Set([APP_CACHE, DATA_CACHE, ...RUNTIME_CACHES]);
+				const keys = await caches.keys();
+				await Promise.all(keys.filter((key) => !keep.has(key)).map((key) => caches.delete(key)));
+				await sw.clients.claim();
+			})()
+		);
+	});
 
-	if (url.origin === sw.location.origin && url.pathname.endsWith('/__data.json')) {
-		event.respondWith(handleDataRequest(request, url));
-		return;
-	}
+	// `event` must stay intact: FetchEvent.respondWith is bound to the event, so
+	// destructuring it off and calling it bare throws "Illegal invocation" and the
+	// worker silently stops handling every request.
+	sw.addEventListener('fetch', (event) => {
+		const { request } = event;
+		if (request.method !== 'GET') return;
 
-	for (const rule of RUNTIME_RULES) {
-		if (rule.pattern.test(url.href)) {
-			event.respondWith(cacheFirst(request, rule.cacheName, rule.maxEntries));
+		const url = new URL(request.url);
+		if (url.protocol !== 'https:' && url.protocol !== 'http:') return;
+
+		if (request.mode === 'navigate') {
+			event.respondWith(handleNavigation(request, url));
 			return;
 		}
-	}
 
-	if (url.origin === sw.location.origin && precache.includes(url.pathname)) {
-		event.respondWith(cacheFirst(request, APP_CACHE));
-	}
-});
+		if (url.origin === sw.location.origin && url.pathname.endsWith('/__data.json')) {
+			event.respondWith(handleDataRequest(request, url));
+			return;
+		}
+
+		for (const rule of RUNTIME_RULES) {
+			if (rule.pattern.test(url.href)) {
+				event.respondWith(cacheFirst(request, rule.cacheName, rule.maxEntries));
+				return;
+			}
+		}
+
+		if (url.origin === sw.location.origin && precache.includes(url.pathname)) {
+			event.respondWith(cacheFirst(request, APP_CACHE));
+		}
+	});
+}

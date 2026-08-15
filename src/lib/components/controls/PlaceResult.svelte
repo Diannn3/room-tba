@@ -11,7 +11,7 @@
   import {
     PLACE_CATEGORIES,
     PLACE_CATEGORY_LABELS,
-    isLandmarkPlaceCategory,
+    isPlaceLandmark,
     placeDirectoryLabel,
   } from "$lib/constants/place-categories";
   import type { PlaceData } from "$lib/types";
@@ -142,7 +142,7 @@
 {#if place}
 	<div class="entity-detail">
 		<header class="entity-header">
-			{#if isLandmarkPlaceCategory(place.category)}
+			{#if isPlaceLandmark(place.category)}
 				<EntityBackToList tab="landmarks" label="Back to landmarks" />
 			{:else}
 				<EntityBackToList tab="services" label="Back to establishments" />

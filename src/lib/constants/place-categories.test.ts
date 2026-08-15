@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import {
 	PLACE_CATEGORIES,
-	isLandmarkPlaceCategory,
+	isPlaceLandmark,
 	normalizePlaceCategory,
 	placeCategoryLabel,
 	placeDirectoryLabel
@@ -29,9 +29,9 @@ describe('normalizePlaceCategory', () => {
 	});
 
 	test('separates landmarks from services and establishments', () => {
-		expect(isLandmarkPlaceCategory('landmark')).toBe(true);
-		expect(isLandmarkPlaceCategory('tourist-spot')).toBe(true);
-		expect(isLandmarkPlaceCategory('food')).toBe(false);
+		expect(isPlaceLandmark('landmark')).toBe(true);
+		expect(isPlaceLandmark('tourist-spot')).toBe(true);
+		expect(isPlaceLandmark('food')).toBe(false);
 		expect(placeDirectoryLabel('landmark')).toBe('Landmark');
 		expect(placeDirectoryLabel('food')).toBe('Service / establishment · Food');
 	});

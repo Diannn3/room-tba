@@ -1,6 +1,6 @@
 <script lang="ts">
 	import MapBrowseList from "$lib/components/map/MapBrowseList.svelte";
-	import { isLandmarkPlaceCategory, placeCategoryLabel } from "$lib/constants/place-categories";
+	import { isPlaceLandmark, placeCategoryLabel } from "$lib/constants/place-categories";
 	import { getAppData } from "$lib/context";
 	import { getPlaceCanonicalPath } from "$lib/entity-urls";
 	import type { PageData } from "./$types";
@@ -15,7 +15,7 @@
 		data.items.length > 0
 			? data.items
 			: (appData().places ?? [])
-					.filter((place) => isLandmarkPlaceCategory(place.category))
+					.filter((place) => isPlaceLandmark(place.category))
 					.sort((a, b) => a.name.localeCompare(b.name))
 					.map((place) => ({
 						href: getPlaceCanonicalPath(place),

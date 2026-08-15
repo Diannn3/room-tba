@@ -33,7 +33,7 @@ export function placeCategoryLabel(value: unknown): string | null {
 	return c ? PLACE_CATEGORY_LABELS[c] : null;
 }
 
-export function isLandmarkPlaceCategory(value: unknown): boolean {
+export function isPlaceLandmark(value: unknown): boolean {
 	const category = normalizePlaceCategory(value);
 	return category === 'landmark' || category === 'tourist-spot';
 }

@@ -1,5 +1,5 @@
 import { isStudentOrganization, type OrgCategory } from '$lib/constants/org-categories';
-import { isLandmarkPlaceCategory, type PlaceCategory } from '$lib/constants/place-categories';
+import { isPlaceLandmark, type PlaceCategory } from '$lib/constants/place-categories';
 import { formatCampusDateShort } from '$lib/event-time';
 import type { ProposalCreateType } from '$lib/proposals/client';
 
@@ -110,7 +110,7 @@ export function draftPinMapProps(preview: DraftPinPreview): DraftPinMapProps {
 				label: preview.label
 			};
 		case 'place': {
-			const landmark = isLandmarkPlaceCategory(preview.placeCategory);
+			const landmark = isPlaceLandmark(preview.placeCategory);
 			return {
 				component: 'entity',
 				tone: landmark ? 'landmark' : 'establishment',

@@ -35,7 +35,8 @@ export default defineConfig({
 				config: (config) => {
 					config.include.push('../drizzle.config.ts');
 				}
-			}
+			},
+			inspector: true
 		})
 	],
 	// @vercel/og loads resvg/yoga WASM through its own resolver. Letting Vite

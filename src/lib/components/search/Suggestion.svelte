@@ -12,7 +12,7 @@ import Users from "@lucide/svelte/icons/users";
 import X from "@lucide/svelte/icons/x";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
-import { isLandmarkPlaceCategory } from "$lib/constants/place-categories";
+import { isPlaceLandmark } from "$lib/constants/place-categories";
 import { getAppData } from "$lib/context";
 import {
 	buildingPreviewFromRow,
@@ -69,7 +69,7 @@ function handleSuggestionClick() {
 	}
 	if (!places || typeof id === "undefined") return;
 	const place = places.find((place) => (place.id = id));
-	if (place && isLandmarkPlaceCategory(place.category)) {
+	if (place && isPlaceLandmark(place.category)) {
 		goto(
 			resolve(`/map/landmarks/${slugifySegment(value)}-${id}`),
 		);

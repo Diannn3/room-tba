@@ -63,7 +63,7 @@ import {
 	TERRAIN_UNAVAILABLE_OFFLINE_MESSAGE,
 } from "$lib/constants/map-terrain";
 import { isStudentOrganization } from "$lib/constants/org-categories";
-import { isLandmarkPlaceCategory } from "$lib/constants/place-categories";
+import { isPlaceLandmark } from "$lib/constants/place-categories";
 import {
 	ISOCHRONE_CAP_MINUTES,
 	VIRIDIS_STOPS,
@@ -274,12 +274,12 @@ const filteredPlaces = $derived.by(() => {
 			place.lon != null &&
 			(placePinFilter === "all" ||
 				(placePinFilter === "landmark") ===
-					isLandmarkPlaceCategory(place.category)),
+					isPlaceLandmark(place.category)),
 	);
 });
 
 function isLandmarkPlace(place: PlaceData) {
-	return isLandmarkPlaceCategory(place.category);
+	return isPlaceLandmark(place.category);
 }
 
 function handlePlaceMarkerClick(place: PlaceData) {

@@ -1,5 +1,5 @@
 import { isStudentOrganization } from '$lib/constants/org-categories';
-import { isLandmarkPlaceCategory } from '$lib/constants/place-categories';
+import { isPlaceLandmark } from '$lib/constants/place-categories';
 import type { SearchCategory } from './app-data';
 import {
 	getDormRouteSlug,
@@ -156,7 +156,7 @@ export function getOrganizationSegment(
 }
 
 export function getPlaceSegment(place: Pick<PlaceData, 'category'>): EntitySegment {
-	return isLandmarkPlaceCategory(place.category) ? 'landmarks' : 'establishments';
+	return isPlaceLandmark(place.category) ? 'landmarks' : 'establishments';
 }
 
 export function getOrganizationCanonicalPath(

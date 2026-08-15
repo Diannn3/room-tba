@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { EntityIndexItem, SeoData } from '$lib/components/seo/seo-data';
 import {
-	isLandmarkPlaceCategory,
+	isPlaceLandmark,
 	placeCategoryLabel,
 	placeDirectoryLabel
 } from '$lib/constants/place-categories';
@@ -101,7 +101,7 @@ export async function loadPlaceIndexPage(segment: PlaceSegment) {
 	const copy = PLACE_INDEX_COPY[segment];
 
 	const items: EntityIndexItem[] = places
-		.filter((place) => isLandmarkPlaceCategory(place.category) === wantLandmarks)
+		.filter((place) => isPlaceLandmark(place.category) === wantLandmarks)
 		.sort((a, b) => a.name.localeCompare(b.name))
 		.map((place) => {
 			const href = getPlaceCanonicalPath(place);

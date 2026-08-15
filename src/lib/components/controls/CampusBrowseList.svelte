@@ -12,7 +12,7 @@
     orgCategoryLabel,
   } from "$lib/constants/org-categories";
   import {
-    isLandmarkPlaceCategory,
+    isPlaceLandmark,
     placeDirectoryLabel,
   } from "$lib/constants/place-categories";
   import {
@@ -28,6 +28,9 @@
   import DormResult from "./DormResult.svelte";
   import PlaceResult from "./PlaceResult.svelte";
   import { campusTransit } from "$lib/campus.config";
+	import { resolve } from "$app/paths";
+	import { goto } from "$app/navigation";
+	import { slugifySegment } from "$lib/site";
 
   // Derived from campusTransit.label so a fork edits one place:
   // label Jeepney routes → title Jeepney Routes, plural jeepney routes,
@@ -209,7 +212,7 @@
     const needle = filterText.trim().toLowerCase();
     const rows = places
       .filter((row) => {
-        const landmark = isLandmarkPlaceCategory(row.category);
+        const landmark = isPlaceLandmark(row.category);
         return activeTab === "landmarks" ? landmark : !landmark;
       })
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -232,7 +235,7 @@
         id: row.id,
         label: row.dormName,
         meta: row.isUpManaged ? "UP-managed dorm" : "Private dorm",
-        open: () => openDorm(row.dormName),
+        open: () => openDorm(row.dormName, row.id),
       }));
     }
     if (activeTab === "divisions") {
@@ -240,7 +243,7 @@
         id: row.id,
         label: row.divisionName,
         meta: null as string | null,
-        open: () => openDivision(row.divisionName),
+        open: () => openDivision(row.divisionName, id),
       }));
     }
     if (activeTab === "organizations" || activeTab === "offices") {
@@ -248,7 +251,7 @@
         id: row.id,
         label: row.name,
         meta: orgCategoryLabel(row.category),
-        open: () => openOrg(row.name),
+        open: () => openOrg(row.name, row.id),
       }));
     }
     if (activeTab === "landmarks" || activeTab === "services") {
@@ -256,7 +259,7 @@
         id: row.id,
         label: row.name,
         meta: placeDirectoryLabel(row.category),
-        open: () => openPlace(row.name),
+        open: () => openPlace(row.name, row.id, isPlaceLandmark(row)),
       }));
     }
     if (activeTab === "jeepney") {
@@ -309,6 +312,7 @@
       type: "result",
       value: name,
     });
+    goto(resolve(`/map/buildings/${slugifySegment(name)}`))
     queryStore.inputValue = name;
     sidePanelStore.openPanel({
       type: "search-result",
@@ -322,6 +326,7 @@
       type: "result",
       value: name,
     });
+    goto(resolve(`/map/colleges/${slugifySegment(name)}`))  
     queryStore.inputValue = name;
     sidePanelStore.openPanel({
       type: "search-result",
@@ -335,6 +340,7 @@
       type: "result",
       value: name,
     });
+    goto(resolve(`/map/divisions/${slugifySegment(name)}`))  
     queryStore.inputValue = name;
     sidePanelStore.openPanel({
       type: "search-result",
@@ -342,12 +348,13 @@
     });
   }
 
-  function openOrg(name: string) {
+  function openOrg(name: string, id: number) {
     queryStore.updateQuery({
       category: "organization",
       type: "result",
       value: name,
     });
+    goto(resolve(`/map/organizations/${slugifySegment(name)}-${id}`));
     queryStore.inputValue = name;
     sidePanelStore.openPanel({
       type: "search-result",
@@ -355,12 +362,13 @@
     });
   }
 
-  function openDorm(name: string) {
+  function openDorm(name: string, id: number) {
     queryStore.updateQuery({
       category: "dorm",
       type: "result",
       value: name,
     });
+    goto(resolve(`/map/dorms/${slugifySegment(name)}-${id}`));
     queryStore.inputValue = name;
     sidePanelStore.openPanel({
       type: "search-result",
@@ -368,12 +376,17 @@
     });
   }
 
-  function openPlace(name: string) {
+  function openPlace(name: string, id: number, landmark: boolean) {
     queryStore.updateQuery({
       category: "place",
       type: "result",
       value: name,
     });
+    if (landmark) {
+      goto(resolve(`/map/landmarks/${slugifySegment(name)}-${id}`));
+    } else {
+      goto(resolve(`/map/establishments/${slugifySegment(name)}-${id}`));
+    }
     queryStore.inputValue = name;
     sidePanelStore.openPanel({
       type: "search-result",

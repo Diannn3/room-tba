@@ -1,5 +1,5 @@
 import { checkRateLimit, clientIp, rateLimitResponse } from '$lib/api/rate-limit';
-import { requestPasswordReset } from '$lib/services/admin-user-service';
+import { requestPasswordReset } from '$lib/services/admin/user';
 import type { RequestHandler } from './$types';
 
 const LIMIT = { max: 5, windowMs: 60 * 1000 };

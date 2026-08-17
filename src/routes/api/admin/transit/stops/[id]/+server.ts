@@ -1,7 +1,7 @@
 import { parseRequiredEditorVersion } from '$lib/admin/expected-version';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
-import { EditConflictError } from '$lib/services/edit-conflict-error';
-import { updateJeepneyStop } from '$lib/services/transit-service';
+import { EditConflictError } from '$lib/services/contribution/edit-conflict-error';
+import { updateJeepneyStop } from '$lib/services/transit';
 import type { RequestHandler } from './$types';
 
 function json(data: unknown, status = 200) {

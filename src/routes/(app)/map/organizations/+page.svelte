@@ -1,6 +1,6 @@
 <script lang="ts">
 	import MapBrowseList from "$lib/components/map/MapBrowseList.svelte";
-	import { isStudentOrganization } from "$lib/constants/content/categories/org-categories";
+	import { isStudentOrganization } from "$lib/constants/content/categories/org"
 	import { getAppData } from "$lib/context";
 	import { getOrganizationCanonicalPath } from "$lib/entity-urls";
 	import type { PageData } from "./$types";

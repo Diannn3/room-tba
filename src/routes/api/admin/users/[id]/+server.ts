@@ -1,5 +1,5 @@
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
-import { AccountActionError, updateManagedUser } from '$lib/services/admin-user-service';
+import { AccountActionError, updateManagedUser } from '$lib/services/admin/user';
 import type { RequestHandler } from './$types';
 
 export const PATCH: RequestHandler = async ({ cookies, params, request }) => {

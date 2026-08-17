@@ -22,7 +22,7 @@ import {
 	roomPositionsTable,
 	roomsTable
 } from '$lib/server/db/schema';
-import { getDefaultTerm } from '$lib/services/term-service';
+import { getDefaultTerm } from '$lib/services/term';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ url, cookies }) => {

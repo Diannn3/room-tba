@@ -26,7 +26,7 @@
     isStudentOrganization,
     orgCategoryLabel,
     ORG_CATEGORIES,
-  } from "$lib/constants/content/categories/org-categories";
+  } from "$lib/constants/content/categories/org"
   import { persistEntityChange } from "$lib/proposals/client";
   import { handlePersistEntityResult } from "$lib/editor/handle-persist-result";
   import { getOrganizationShareUrl } from "$lib/share-links";

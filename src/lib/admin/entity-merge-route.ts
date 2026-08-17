@@ -1,7 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
 import { json } from '$lib/api/json';
-import { EditConflictError, DuplicateNameError } from '$lib/services/admin-service';
+import { EditConflictError, DuplicateNameError } from '$lib/services/admin/actions';
 
 type MergeHandler<TEntity> = (input: {
 	sourceId: number;

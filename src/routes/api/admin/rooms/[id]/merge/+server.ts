@@ -1,6 +1,6 @@
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
-import { DuplicateNameError, EditConflictError } from '$lib/services/admin-service';
-import { mergeRooms } from '$lib/services/merge-service';
+import { DuplicateNameError, EditConflictError } from '$lib/services/admin/actions';
+import { mergeRooms } from '$lib/services/contribution/merge';
 import type { RequestHandler } from './$types';
 
 type RoomMergeBody = {

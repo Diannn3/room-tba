@@ -11,8 +11,8 @@
     getPlaceCanonicalPath,
     getRoomCanonicalPath,
   } from "$lib/entity-urls";
-  import { orgCategoryLabel } from "$lib/constants/content/categories/org-categories";
-  import { placeCategoryLabel } from "$lib/constants/content/categories/place-categories";
+  import { orgCategoryLabel } from "$lib/constants/content/categories/org"
+  import { placeCategoryLabel } from "$lib/constants/content/categories/place"
   import {
     resetDocumentMeta,
     updateTermAwareDocumentMeta,

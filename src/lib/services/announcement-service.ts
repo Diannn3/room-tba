@@ -5,7 +5,7 @@ import { announcementsTable } from '$lib/server/db/schema';
 import { normalizeAnnouncementSeverity } from '$lib/constants/announcement-severities';
 import { filterPublished } from '$lib/announcements';
 import type { AnnouncementData } from '$lib/types';
-import { EditConflictError, refreshSyncKey } from './admin-service';
+import { EditConflictError, refreshSyncKey } from './admin/actions';
 
 export type AnnouncementUpdateInput = Partial<{
 	title: string;

@@ -17,7 +17,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     ROOM_CATEGORIES,
     ROOM_CATEGORY_LABELS,
     roomCategoryLabel,
-  } from "$lib/constants/content/categories/room-categories";
+  } from "$lib/constants/content/categories/room"
   import { getAppData } from "$lib/context";
   import {
     clearEntityContributorDraft,

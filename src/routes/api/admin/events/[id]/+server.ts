@@ -8,7 +8,7 @@ import {
 	EditConflictError,
 	type EventWriteInput,
 	updateEvent
-} from '$lib/services/admin-service';
+} from '$lib/services/admin/actions';
 import { slugifySegment } from '$lib/site';
 import type { RequestHandler } from './$types';
 

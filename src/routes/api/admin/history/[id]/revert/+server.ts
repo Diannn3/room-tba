@@ -1,6 +1,6 @@
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
-import { DuplicateNameError, EditConflictError } from '$lib/services/admin-service';
-import { HistoryRevertError, revertToHistoryEntry } from '$lib/services/history-service';
+import { DuplicateNameError, EditConflictError } from '$lib/services/admin/actions';
+import { HistoryRevertError, revertToHistoryEntry } from '$lib/services/entity/history';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ cookies, params, request }) => {

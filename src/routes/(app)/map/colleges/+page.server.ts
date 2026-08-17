@@ -1,6 +1,6 @@
 import type { EntityIndexItem, SeoData } from '$lib/components/seo/seo-data';
 import { entityIndexPath, getCollegeCanonicalPath } from '$lib/entity-urls';
-import { getAllColleges, getRoomCountsByParent } from '$lib/services/map-data-service';
+import { getAllColleges, getRoomCountsByParent } from '$lib/services/entity/map-data';
 import { breadcrumbSchema, jsonLd, webpageSchema } from '$lib/site';
 import type { PageServerLoad } from './$types';
 

@@ -1,5 +1,5 @@
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
-import { linkGoogleIdentity } from '$lib/services/admin-user-service';
+import { linkGoogleIdentity } from '$lib/services/admin/user';
 import { createServerSupabaseClient } from '$lib/supabase/server';
 import type { RequestHandler } from './$types';
 

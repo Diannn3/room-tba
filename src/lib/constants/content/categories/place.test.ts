@@ -5,7 +5,7 @@ import {
 	normalizePlaceCategory,
 	placeCategoryLabel,
 	placeDirectoryLabel
-} from './place-categories.js';
+} from './place.js';
 
 describe('normalizePlaceCategory', () => {
 	test('accepts known categories, case/space-insensitively', () => {

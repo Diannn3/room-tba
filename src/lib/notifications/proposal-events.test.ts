@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import type { EditProposalSummary } from '$lib/services/proposal-service';
+import type { EditProposalSummary } from '$lib/services/contribution/proposal-action';
 
 // Hoisted so the vi.mock factory below can reference it.
 const { notify } = vi.hoisted(() => ({

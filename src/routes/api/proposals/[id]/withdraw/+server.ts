@@ -6,7 +6,7 @@ import {
 	ProposalActionError,
 	ProposalValidationError,
 	withdrawProposal
-} from '$lib/services/proposal-service';
+} from '$lib/services/contribution/proposal-action';
 import type { RequestHandler } from './$types';
 
 type WithdrawBody = { submitterName?: string };

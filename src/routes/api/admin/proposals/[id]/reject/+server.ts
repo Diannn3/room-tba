@@ -3,7 +3,7 @@ import {
 	emitProposalReviewed,
 	logNotificationEmitFailure
 } from '$lib/notifications/proposal-events';
-import { ProposalActionError, rejectProposal } from '$lib/services/proposal-service';
+import { ProposalActionError, rejectProposal } from '$lib/services/contribution/proposal-action';
 import type { RequestHandler } from './$types';
 
 type RejectBody = { note?: string };

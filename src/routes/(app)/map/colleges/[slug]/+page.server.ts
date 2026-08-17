@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 import { getCollegeSlug } from '$lib/app-data';
 import type { SeoData } from '$lib/components/seo/seo-data';
 import { entityIndexPath, getCollegeCanonicalPath } from '$lib/entity-urls';
-import { getCollegePageData, resolveCollegeNameFromSlug } from '$lib/services/ssg-service';
+import { getCollegePageData, resolveCollegeNameFromSlug } from '$lib/services/page-data/entity';
 import {
 	absoluteUrl,
 	breadcrumbSchema,

@@ -5,7 +5,7 @@ import {
 	getProposalById,
 	toPublicProposalView,
 	toSubmitterProposalView
-} from '$lib/services/proposal-service';
+} from '$lib/services/contribution/proposal-action';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ cookies, params }) => {

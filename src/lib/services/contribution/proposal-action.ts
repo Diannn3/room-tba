@@ -17,7 +17,7 @@ import { normalizeAlias } from '$lib/site';
 import type { SessionUser } from '$lib/admin/auth';
 import { db } from '$lib/db';
 import { validateSubmitterName, validateSubmitterNote } from '$lib/constants/contribute/proposals';
-import { recordProposalContribution } from './contribution-service';
+import { recordProposalContribution } from './contributor-action';
 import { parseImageUrl } from '$lib/r2-upload';
 import { env } from '$env/dynamic/private';
 const { R2_PUBLIC_URL } = env;
@@ -26,7 +26,7 @@ import {
 	reconcileEntityPhotos,
 	type ParsedEntityPhotoUrls
 } from '$lib/entity-photos';
-import { resolvePhotoAttribution } from './entity-photo-service';
+import { resolvePhotoAttribution } from './entity-photo';
 import { canWithdrawProposal } from './proposal-access';
 export {
 	canViewProposalSubmitterDetails,
@@ -67,13 +67,13 @@ import {
 	type PlaceUpdateInput,
 	type RoomCreateInput,
 	type RoomUpdateInput
-} from './admin-service';
+} from '../admin/actions';
 import {
 	createJeepneyStop,
 	updateJeepneyStop,
 	type JeepneyStopCreateInput,
 	type JeepneyStopWriteInput
-} from './transit-service';
+} from '../transit';
 import { allowEntityScopedProposalMerge } from '$lib/proposals/proposal-merge-policy';
 import {
 	ProposalValidationError,

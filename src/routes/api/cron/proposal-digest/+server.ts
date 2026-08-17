@@ -1,6 +1,6 @@
 import { timingSafeEqual } from 'node:crypto';
 import { env } from '$env/dynamic/private';
-import { sendProposalDigest } from '$lib/services/digest-service';
+import { sendProposalDigest } from '$lib/services/email/digest';
 import type { RequestHandler } from './$types';
 
 /** Daily editor digest of pending proposals (#272). Invoked by Vercel Cron. */

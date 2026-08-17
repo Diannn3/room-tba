@@ -9,7 +9,7 @@ import {
 	eventsTable
 } from '$lib/server/db/schema';
 import { db } from '$lib/db';
-import { getBuildCache } from './ssg-cache';
+import { getBuildCache } from '../page-data/ssg-cache';
 import type {
 	BuildingData,
 	DormData,

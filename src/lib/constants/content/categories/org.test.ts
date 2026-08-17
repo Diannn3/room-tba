@@ -4,7 +4,7 @@ import {
 	isStudentOrganization,
 	normalizeOrgCategory,
 	orgCategoryLabel
-} from './org-categories.js';
+} from './org.js';
 
 describe('normalizeOrgCategory', () => {
 	test('accepts known categories case/space-insensitively', () => {

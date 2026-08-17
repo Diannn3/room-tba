@@ -1,6 +1,6 @@
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
-import { ORG_CATEGORIES, type OrgCategory } from '$lib/constants/content/categories/org-categories';
-import { createOrganization } from '$lib/services/admin-service';
+import { ORG_CATEGORIES, type OrgCategory } from '$lib/constants/content/categories/org';
+import { createOrganization } from '$lib/services/admin/actions';
 import type { RequestHandler } from './$types';
 
 function json(data: unknown, status = 200) {

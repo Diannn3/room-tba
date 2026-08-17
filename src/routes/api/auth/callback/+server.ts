@@ -1,5 +1,5 @@
 import { createSessionToken, setSessionCookie } from '$lib/admin/auth';
-import { linkOrCreateContributorFromSupabase } from '$lib/services/admin-user-service';
+import { linkOrCreateContributorFromSupabase } from '$lib/services/admin/user';
 import { createServerSupabaseClient } from '$lib/supabase/server';
 import type { RequestHandler } from './$types';
 

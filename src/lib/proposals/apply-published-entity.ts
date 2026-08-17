@@ -8,7 +8,7 @@ import type {
 	OrgData,
 	PlaceData
 } from '$lib/types';
-import type { ProposalEntityType } from '$lib/services/proposal-service';
+import type { ProposalEntityType } from '$lib/services/contribution/proposal-action';
 import {
 	invalidateLocalSyncKeys,
 	requestCampusDataRefresh

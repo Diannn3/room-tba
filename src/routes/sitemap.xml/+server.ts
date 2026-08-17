@@ -20,8 +20,8 @@ import {
 	getAllOrganizations,
 	getAllPlaces,
 	getAllRooms
-} from '$lib/services/map-data-service';
-import { getSeoEvents } from '$lib/services/event-service';
+} from '$lib/services/entity/map-data';
+import { getSeoEvents } from '$lib/services/entity/event';
 import { absoluteUrl } from '$lib/site';
 import { getTransitRoutePath, getTransitStopPath, TRANSIT_INDEX_PATH } from '$lib/transit-urls';
 import type { RequestHandler } from './$types';

@@ -1,4 +1,4 @@
-import type { ProposalCreateType } from '$lib/services/proposal-service';
+import type { ProposalCreateType } from '$lib/services/contribution/proposal-action';
 import type { EventPlacementDraft } from '$lib/store.svelte';
 
 const DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -37,7 +37,7 @@ export type SuggestAdditionDraft = {
 	placeDescription?: string;
 	placeHours?: string;
 	organizationName?: string;
-	organizationCategory?: import('$lib/constants/content/categories/org-categories').OrgCategory;
+	organizationCategory?: import('$lib/constants/content/categories/org').OrgCategory;
 	organizationDescription?: string;
 	organizationBuildingDraft?: string;
 	roomCode: string;

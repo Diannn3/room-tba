@@ -2,7 +2,7 @@ import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
 import {
 	countPendingProposals,
 	listPendingProposalsForReview
-} from '$lib/services/proposal-service';
+} from '$lib/services/contribution/proposal-action';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ cookies }) => {

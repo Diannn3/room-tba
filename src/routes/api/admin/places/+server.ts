@@ -1,6 +1,6 @@
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
-import { normalizePlaceCategory } from '$lib/constants/content/categories/place-categories';
-import { createPlace } from '$lib/services/admin-service';
+import { normalizePlaceCategory } from '$lib/constants/content/categories/place';
+import { createPlace } from '$lib/services/admin/actions';
 import type { RequestHandler } from './$types';
 
 function json(data: unknown, status = 200) {

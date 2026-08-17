@@ -1,5 +1,5 @@
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
-import { getEntityHistory } from '$lib/services/history-service';
+import { getEntityHistory } from '$lib/services/entity/history';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ cookies, url }) => {

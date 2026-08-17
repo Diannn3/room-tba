@@ -2,8 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { and, eq, ne, sql } from 'drizzle-orm';
 import { parsePublishingActor } from '$lib/admin/auth';
 import { sanitizeCrFacilities } from '$lib/constants/map/cr-facilities';
-import { normalizePlaceCategory } from '$lib/constants/content/categories/place-categories';
-import { normalizeRoomCategory } from '$lib/constants/content/categories/room-categories';
+import { normalizePlaceCategory } from '$lib/constants/content/categories/place';
+import { normalizeRoomCategory } from '$lib/constants/content/categories/room';
 import { db } from '$lib/db';
 import { normalizeEntityName } from '$lib/entity-names';
 import { entityIndexPath } from '$lib/entity-urls';
@@ -36,11 +36,11 @@ import {
 	updateTable
 } from '$lib/server/db/schema';
 import type { EventData, PlaceData, RoomData } from '$lib/types';
-import { recordEditorContribution } from './contribution-service';
-import { EditConflictError } from './edit-conflict-error';
-import { getEventById } from './event-service';
+import { recordEditorContribution } from '../contribution/contributor-action';
+import { EditConflictError } from '../contribution/edit-conflict-error';
+import { getEventById } from '../entity/event';
 
-export { EditConflictError } from './edit-conflict-error';
+export { EditConflictError } from '../contribution/edit-conflict-error';
 
 function normalizePhotoInput(photos?: EntityPhoto[]): EntityPhoto[] {
   return normalizeEntityPhotos(photos ?? []);

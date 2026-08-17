@@ -4,10 +4,10 @@ import {
 	isPlaceLandmark,
 	placeCategoryLabel,
 	placeDirectoryLabel
-} from '$lib/constants/content/categories/place-categories';
+} from '$lib/constants/content/categories/place';
 import { entityIndexPath, getPlaceCanonicalPath, parseRouteSlug } from '$lib/entity-urls';
-import { getAllPlaces } from '$lib/services/map-data-service';
-import { getPlacePageData } from '$lib/services/ssg-service';
+import { getAllPlaces } from '$lib/services/entity/map-data';
+import { getPlacePageData } from '$lib/services/page-data/entity';
 import {
 	absoluteUrl,
 	breadcrumbSchema,

@@ -11,7 +11,7 @@ import {
 	authenticateAdminUser,
 	authenticateLegacyAdminPassword,
 	getAdminUserBySupabaseId
-} from '$lib/services/admin-user-service';
+} from '$lib/services/admin/user';
 import { createServerSupabaseClient } from '$lib/supabase/server';
 import { verifyTurnstileToken } from '$lib/turnstile';
 import type { RequestHandler } from './$types';

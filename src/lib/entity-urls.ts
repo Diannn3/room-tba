@@ -1,5 +1,5 @@
-import { isStudentOrganization } from '$lib/constants/content/categories/org-categories';
-import { isPlaceLandmark } from '$lib/constants/content/categories/place-categories';
+import { isStudentOrganization } from '$lib/constants/content/categories/org';
+import { isPlaceLandmark } from '$lib/constants/content/categories/place';
 import type { SearchCategory } from './app-data';
 import {
 	getDormRouteSlug,

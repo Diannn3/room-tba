@@ -3,7 +3,7 @@ import {
 	AccountActionError,
 	createAdminUser,
 	listAllAdminUsers
-} from '$lib/services/admin-user-service';
+} from '$lib/services/admin/user';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ cookies }) => {

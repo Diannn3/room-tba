@@ -3,7 +3,7 @@ import { getDormRouteSlug } from '$lib/app-data';
 import type { SeoData } from '$lib/components/seo/seo-data';
 import { entityIndexPath, getDormCanonicalPath } from '$lib/entity-urls';
 import { parseIdRouteSlug } from '$lib/route-slugs';
-import { getDormPageData } from '$lib/services/ssg-service';
+import { getDormPageData } from '$lib/services/page-data/entity';
 import {
 	absoluteUrl,
 	breadcrumbSchema,

@@ -1,6 +1,6 @@
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
 import { checkRateLimit, clientIp, rateLimitResponse } from '$lib/api/rate-limit';
-import { AccountActionError, changePassword } from '$lib/services/admin-user-service';
+import { AccountActionError, changePassword } from '$lib/services/admin/user';
 import type { RequestHandler } from './$types';
 
 const LIMIT = { max: 8, windowMs: 30 * 1000 };

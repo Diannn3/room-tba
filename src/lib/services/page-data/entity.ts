@@ -11,8 +11,8 @@ import {
 	placesTable,
 	roomsTable
 } from '$lib/server/db/schema';
-import { getEventBySlug } from './event-service';
-import { getDefaultTerm } from './term-service';
+import { getEventBySlug } from '../entity/event';
+import { getDefaultTerm } from '../term';
 
 export async function resolveBuildingNameFromSlug(slug: string): Promise<string | null> {
 	const rows = await db.select({ buildingName: buildingsTable.buildingName }).from(buildingsTable);

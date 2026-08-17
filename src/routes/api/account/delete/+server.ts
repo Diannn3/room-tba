@@ -1,7 +1,7 @@
 import { clearSessionCookie } from '$lib/admin/auth';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
 import { checkRateLimit, clientIp, rateLimitResponse } from '$lib/api/rate-limit';
-import { AccountActionError, softDeleteAccount } from '$lib/services/admin-user-service';
+import { AccountActionError, softDeleteAccount } from '$lib/services/admin/user';
 import type { RequestHandler } from './$types';
 
 const LIMIT = { max: 5, windowMs: 60 * 1000 };

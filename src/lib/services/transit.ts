@@ -2,8 +2,8 @@ import { and, asc, eq, max, sql } from 'drizzle-orm';
 import { jeepneyRoutesTable, jeepneyStopsTable } from '$lib/server/db/schema';
 import { db } from '$lib/db';
 import type { JeepneyRoute, JeepneyStop } from '$lib/constants/map/jeepney-routes';
-import { refreshSyncKey, recordEditorHistory } from './admin-service';
-import { EditConflictError } from './edit-conflict-error';
+import { refreshSyncKey, recordEditorHistory } from './admin/actions';
+import { EditConflictError } from './contribution/edit-conflict-error';
 
 export type JeepneyStopWriteInput = Partial<{
 	name: string;

@@ -3,7 +3,7 @@ import {
 	createRoom,
 	DuplicateNameError,
 	findRoomMergeCandidate
-} from '$lib/services/admin-service';
+} from '$lib/services/admin/actions';
 import type { RequestHandler } from './$types';
 
 function json(data: unknown, status = 200) {

@@ -6,7 +6,7 @@ import {
 } from '$lib/admin/auth';
 import { checkRateLimit, clientIp, rateLimitResponse } from '$lib/api/rate-limit';
 import { type SignupInput, validateContributorSignup } from '$lib/auth/contributor-signup';
-import { AccountActionError, createAdminUser } from '$lib/services/admin-user-service';
+import { AccountActionError, createAdminUser } from '$lib/services/admin/user';
 import { verifyTurnstileToken } from '$lib/turnstile';
 import type { RequestHandler } from './$types';
 

@@ -7,7 +7,7 @@ import {
 	ProposalActionError,
 	ProposalValidationError,
 	requestProposalChanges
-} from '$lib/services/proposal-service';
+} from '$lib/services/contribution/proposal-action';
 import type { RequestHandler } from './$types';
 
 type RequestChangesBody = { note?: string };

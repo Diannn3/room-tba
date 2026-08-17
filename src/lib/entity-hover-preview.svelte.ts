@@ -1,5 +1,5 @@
-import { orgCategoryLabel } from '$lib/constants/content/categories/org-categories';
-import { placeDirectoryLabel } from '$lib/constants/content/categories/place-categories';
+import { orgCategoryLabel } from '$lib/constants/content/categories/org';
+import { placeDirectoryLabel } from '$lib/constants/content/categories/place';
 import type { BuildingData, DormData, EventData, OrgData, PlaceData } from '$lib/types';
 
 export type EntityHoverPreview =

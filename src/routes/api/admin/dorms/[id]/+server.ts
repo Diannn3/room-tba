@@ -3,8 +3,8 @@ import { parseRequiredEditorVersion } from '$lib/admin/expected-version';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
 import { errorResponse, json } from '$lib/api/json';
 import { parseEntityPhotoUrls, reconcileEntityPhotos } from '$lib/entity-photos';
-import { resolvePhotoAttribution } from '$lib/services/entity-photo-service';
-import { DuplicateNameError, EditConflictError, getDormById, updateDorm } from '$lib/services/admin-service';
+import { resolvePhotoAttribution } from '$lib/services/contribution/entity-photo';
+import { DuplicateNameError, EditConflictError, getDormById, updateDorm } from '$lib/services/admin/actions';
 import type { RequestHandler } from './$types';
 
 type DormPatchBody = {

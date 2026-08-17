@@ -4,7 +4,7 @@ import {
 	type DivisionAdmin,
 	type DivisionUpdateInput,
 	updateDivision
-} from '$lib/services/admin-service';
+} from '$lib/services/admin/actions';
 import type { RequestHandler } from './$types';
 
 type DivisionPatchBody = {

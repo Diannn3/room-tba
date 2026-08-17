@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 import { getBuildingSlug } from '$lib/app-data';
 import type { SeoData } from '$lib/components/seo/seo-data';
 import { entityIndexPath, getBuildingCanonicalPath } from '$lib/entity-urls';
-import { getBuildingPageData, resolveBuildingNameFromSlug } from '$lib/services/ssg-service';
+import { getBuildingPageData, resolveBuildingNameFromSlug } from '$lib/services/page-data/entity';
 import {
 	absoluteUrl,
 	breadcrumbSchema,

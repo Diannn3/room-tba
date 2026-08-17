@@ -39,12 +39,12 @@
     ProposalValidationError,
     validateBundledRooms,
   } from "$lib/proposals/create-proposal-validation";
-  import { PLACE_CATEGORIES, type PlaceCategory } from "$lib/constants/content/categories/place-categories";
+  import { PLACE_CATEGORIES, type PlaceCategory } from "$lib/constants/content/categories/place"
   import {
     ORG_CATEGORIES,
     type OrgCategory,
     orgCategoryLabel,
-  } from "$lib/constants/content/categories/org-categories";
+  } from "$lib/constants/content/categories/org"
   import { onMount } from "svelte";
   import {
     buildDraftPinPreview,

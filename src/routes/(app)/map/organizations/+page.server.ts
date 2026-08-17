@@ -1,4 +1,4 @@
-import { loadOrganizationIndexPage } from '$lib/services/organization-page-seo';
+import { loadOrganizationIndexPage } from '$lib/services/seo/organization-page';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => loadOrganizationIndexPage('organizations');

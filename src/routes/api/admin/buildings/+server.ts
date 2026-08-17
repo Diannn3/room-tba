@@ -1,8 +1,8 @@
 import { env } from '$env/dynamic/private';
 import { parseEntityPhotoUrls, reconcileEntityPhotos } from '$lib/entity-photos';
-import { resolvePhotoAttribution } from '$lib/services/entity-photo-service';
+import { resolvePhotoAttribution } from '$lib/services/contribution/entity-photo';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
-import { createBuilding } from '$lib/services/admin-service';
+import { createBuilding } from '$lib/services/admin/actions';
 import type { RequestHandler } from './$types';
 
 function json(data: unknown, status = 200) {

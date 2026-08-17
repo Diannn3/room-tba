@@ -3,7 +3,7 @@ import { getRoomRouteSlug } from '$lib/app-data';
 import type { SeoData } from '$lib/components/seo/seo-data';
 import { entityIndexPath, getRoomCanonicalPath } from '$lib/entity-urls';
 import { parseIdRouteSlug } from '$lib/route-slugs';
-import { getRoomPageData } from '$lib/services/ssg-service';
+import { getRoomPageData } from '$lib/services/page-data/entity';
 import {
 	absoluteUrl,
 	breadcrumbSchema,

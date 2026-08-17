@@ -1,9 +1,9 @@
-import type { ProposalCreateType, ProposalEntityType } from '$lib/services/proposal-service';
+import type { ProposalCreateType, ProposalEntityType } from '$lib/services/contribution/proposal-action';
 
 export type {
 	ProposalCreateType,
 	ProposalEntityType
-} from '$lib/services/proposal-service';
+} from '$lib/services/contribution/proposal-action';
 
 import { validateSubmitterName, validateSubmitterNote } from '$lib/constants/contribute/proposals';
 import type { RoomData } from '$lib/types';

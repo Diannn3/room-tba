@@ -6,7 +6,7 @@ import {
 	EditConflictError,
 	DuplicateNameError,
 	DuplicateSlugError
-} from '$lib/services/admin-service';
+} from '$lib/services/admin/actions';
 
 type ApplyResult<TInput> =
 	| { ok: true; input: TInput; version?: number }

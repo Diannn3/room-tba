@@ -1,7 +1,7 @@
 import { env } from '$env/dynamic/private';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
 import { parseEventImageUrl } from '$lib/r2-upload';
-import { createEvent, DuplicateSlugError, type EventWriteInput } from '$lib/services/admin-service';
+import { createEvent, DuplicateSlugError, type EventWriteInput } from '$lib/services/admin/actions';
 import { slugifySegment } from '$lib/site';
 import type { RequestHandler } from './$types';
 

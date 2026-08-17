@@ -4,7 +4,7 @@ import {
 	EditConflictError,
 	type EventLocationWriteInput,
 	updateEventLocations
-} from '$lib/services/admin-service';
+} from '$lib/services/admin/actions';
 import type { RequestHandler } from './$types';
 
 type LocationsPatchBody = {

@@ -1,9 +1,9 @@
 import { env } from '$env/dynamic/private';
 import { parseRequiredEditorVersion } from '$lib/admin/expected-version';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
-import { ORG_CATEGORIES, type OrgCategory } from '$lib/constants/content/categories/org-categories';
+import { ORG_CATEGORIES, type OrgCategory } from '$lib/constants/content/categories/org';
 import { parseImageUrl } from '$lib/r2-upload-core';
-import { EditConflictError, updateOrganization } from '$lib/services/admin-service';
+import { EditConflictError, updateOrganization } from '$lib/services/admin/actions';
 import type { RequestHandler } from './$types';
 
 type OrgPatchBody = {

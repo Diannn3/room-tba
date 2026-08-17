@@ -20,8 +20,8 @@ import { db } from '$lib/db';
 import { normalizeCourseCode } from '$lib/final-exams/normalize';
 import { normalizeAlias } from '$lib/site';
 import { normalizeDormListFields } from '$lib/string-lists';
-import { attachProbableLocations } from './probable-location';
-import { getBuildCache } from './ssg-cache';
+import { attachProbableLocations } from '../probable-location';
+import { getBuildCache } from '../page-data/ssg-cache';
 import type {
 	BuildingData,
 	ClassMapValue,

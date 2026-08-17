@@ -2,7 +2,7 @@ import { parseRequiredEditorVersion } from '$lib/admin/expected-version';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
 import { parseWallTimestamp } from '$lib/announcements';
 import { normalizeAnnouncementSeverity } from '$lib/constants/announcement-severities';
-import { EditConflictError } from '$lib/services/admin-service';
+import { EditConflictError } from '$lib/services/admin/actions';
 import {
 	type AnnouncementUpdateInput,
 	deleteAnnouncement,

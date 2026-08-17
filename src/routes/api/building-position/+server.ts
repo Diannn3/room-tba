@@ -5,7 +5,7 @@ import { getEditorSession } from '$lib/admin/require-editor';
 import { CAMPUS_BOUNDS } from '$lib/constants/map/terrain';
 import { db } from '$lib/db';
 import { buildingsTable } from '$lib/server/db/schema';
-import { refreshSyncKey } from '$lib/services/admin-service';
+import { refreshSyncKey } from '$lib/services/admin/actions';
 import type { RequestHandler } from './$types';
 
 function jsonError(status: number, error: string): Response {

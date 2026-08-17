@@ -28,7 +28,7 @@ import { sumRouteLegs } from "$lib/campus-route";
 import {
 	buildingMatchesTypeFilter,
 	dormMatchesTypeFilter,
-} from "$lib/constants/content/categories/building-types";
+} from "$lib/constants/content/categories/building"
 import jeepneyGeometries from "$lib/constants/map/jeepney-geometries.json";
 import {
 	type JeepneyRoute,
@@ -62,8 +62,8 @@ import {
 	TERRAIN_TILE_FAILURE_MESSAGE,
 	TERRAIN_UNAVAILABLE_OFFLINE_MESSAGE,
 } from "$lib/constants/map/terrain"
-import { isStudentOrganization } from "$lib/constants/content/categories/org-categories";
-import { isPlaceLandmark } from "$lib/constants/content/categories/place-categories";
+import { isStudentOrganization } from "$lib/constants/content/categories/org"
+import { isPlaceLandmark } from "$lib/constants/content/categories/place"
 import {
 	ISOCHRONE_CAP_MINUTES,
 	VIRIDIS_STOPS,

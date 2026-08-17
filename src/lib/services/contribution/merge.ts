@@ -32,7 +32,7 @@ import {
 	type CollegeAdmin,
 	type DivisionAdmin,
 	type DormAdmin
-} from './admin-service';
+} from '../admin/actions';
 
 export type RoomMergeInput = {
 	sourceId: number;

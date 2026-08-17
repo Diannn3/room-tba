@@ -1,5 +1,5 @@
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
-import { getPlannerData, savePlannerData } from '$lib/services/planner-service';
+import { getPlannerData, savePlannerData } from '$lib/services/planner';
 import type { RequestHandler } from './$types';
 
 // Return the signed-in user's saved planner blob (any logged-in role).

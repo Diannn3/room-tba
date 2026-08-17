@@ -4,7 +4,7 @@ import { canPublishDirectly } from '$lib/admin/auth';
 import { getEditorSession } from '$lib/admin/require-editor';
 import { db } from '$lib/db';
 import { buildingsTable, roomPositionsTable, roomsTable } from '$lib/server/db/schema';
-import { refreshSyncKey } from '$lib/services/admin-service';
+import { refreshSyncKey } from '$lib/services/admin/actions';
 import type { RequestHandler } from './$types';
 
 type PositionDTO = {

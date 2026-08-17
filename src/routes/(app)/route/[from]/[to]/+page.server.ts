@@ -5,7 +5,7 @@ import type { SeoData } from '$lib/components/seo/seo-data';
 import { getBuildingCanonicalPath } from '$lib/entity-urls';
 import { describeRoute, generateRouteDescription } from '$lib/route-description';
 import { getRoutePath } from '$lib/route-links';
-import { findBySlug, getRoutablePlaces } from '$lib/services/route-service';
+import { findBySlug, getRoutablePlaces } from '$lib/services/route';
 import { breadcrumbSchema, jsonLd, webpageSchema } from '$lib/site';
 import type { PageServerLoad } from './$types';
 

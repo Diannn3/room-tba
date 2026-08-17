@@ -3,7 +3,7 @@ import LoadingIndicator from "$lib/components/LoadingIndicator.svelte";
 import {
 	buildingMatchesTypeFilter,
 	dormMatchesTypeFilter,
-} from "$lib/constants/content/categories/building-types";
+} from "$lib/constants/content/categories/building"
 import { getAppData } from "$lib/context";
 import {
 	getJSONFetch,

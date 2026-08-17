@@ -2,7 +2,7 @@ import { error } from '@sveltejs/kit';
 import { getDivisionSlug } from '$lib/app-data';
 import type { SeoData } from '$lib/components/seo/seo-data';
 import { entityIndexPath, getDivisionCanonicalPath } from '$lib/entity-urls';
-import { getDivisionPageData, resolveDivisionNameFromSlug } from '$lib/services/ssg-service';
+import { getDivisionPageData, resolveDivisionNameFromSlug } from '$lib/services/page-data/entity';
 import {
 	absoluteUrl,
 	breadcrumbSchema,

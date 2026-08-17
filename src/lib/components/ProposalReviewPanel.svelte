@@ -7,7 +7,7 @@
 	import { afterProposalPublished } from '$lib/proposals/apply-published-entity';
 	import { syncOpenEntityQueryAfterPublish } from '$lib/proposals/sync-open-entity-query';
 	import { getAppActions, getAppData } from '$lib/context';
-	import type { ProposalEntityType } from '$lib/services/proposal-service';
+	import type { ProposalEntityType } from '$lib/services/contribution/proposal-action';
 	import { parseBundledRooms } from '$lib/proposals/create-proposal-validation';
 	import EntityEditorFormField from '$lib/components/editor/EntityEditorFormField.svelte';
 	import EntityReviewActions from '$lib/components/editor/EntityReviewActions.svelte';

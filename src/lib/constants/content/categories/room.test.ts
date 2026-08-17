@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { ROOM_CATEGORIES, normalizeRoomCategory, roomCategoryLabel } from './room-categories.js';
+import { ROOM_CATEGORIES, normalizeRoomCategory, roomCategoryLabel } from './room.js';
 
 describe('normalizeRoomCategory', () => {
 	test('accepts known categories, case/space-insensitively', () => {

@@ -3,7 +3,7 @@ import {
 	emitProposalReviewed,
 	logNotificationEmitFailure
 } from '$lib/notifications/proposal-events';
-import { approveProposal, ProposalActionError } from '$lib/services/proposal-service';
+import { approveProposal, ProposalActionError } from '$lib/services/contribution/proposal-action';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ cookies, params }) => {

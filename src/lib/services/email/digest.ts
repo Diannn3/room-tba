@@ -3,7 +3,7 @@ import { adminUsersTable } from '$lib/server/db/schema';
 import { db } from '$lib/db';
 import { buildProposalDigest } from '$lib/email/digest-core';
 import { isResendConfigured, sendEmail } from '$lib/email/resend';
-import { listPendingProposals } from '$lib/services/proposal-service';
+import { listPendingProposals } from '$lib/services/contribution/proposal-action';
 import { SITE_URL } from '$lib/site';
 
 export async function listDigestRecipients(): Promise<string[]> {

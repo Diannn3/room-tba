@@ -1,5 +1,5 @@
 import { createEntityMergeRoute } from '$lib/admin/entity-merge-route';
-import { mergeDorms } from '$lib/services/merge-service';
+import { mergeDorms } from '$lib/services/contribution/merge';
 
 export const POST = createEntityMergeRoute({
 	entityLabel: 'dorm',

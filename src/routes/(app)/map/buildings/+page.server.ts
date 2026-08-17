@@ -1,7 +1,7 @@
 import type { EntityIndexItem, SeoData } from '$lib/components/seo/seo-data';
 import { entityIndexPath, getBuildingCanonicalPath } from '$lib/entity-urls';
-import { getAllBuildings, getRoomCountsByParent } from '$lib/services/map-data-service';
-import { getDefaultTerm } from '$lib/services/term-service';
+import { getAllBuildings, getRoomCountsByParent } from '$lib/services/entity/map-data';
+import { getDefaultTerm } from '$lib/services/term';
 import { absoluteUrl, breadcrumbSchema, jsonLd, webpageSchema } from '$lib/site';
 import type { PageServerLoad } from './$types';
 

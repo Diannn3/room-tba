@@ -1,6 +1,6 @@
 import { createEntityPatchRoute } from '$lib/admin/entity-patch-route';
 import { errorResponse } from '$lib/api/json';
-import { type CollegeAdmin, updateCollege } from '$lib/services/admin-service';
+import { type CollegeAdmin, updateCollege } from '$lib/services/admin/actions';
 import type { RequestHandler } from './$types';
 
 type CollegePatchBody = {

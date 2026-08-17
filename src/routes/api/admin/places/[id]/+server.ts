@@ -1,7 +1,7 @@
 import { parseRequiredEditorVersion } from '$lib/admin/expected-version';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
-import { normalizePlaceCategory } from '$lib/constants/content/categories/place-categories';
-import { EditConflictError, updatePlace } from '$lib/services/admin-service';
+import { normalizePlaceCategory } from '$lib/constants/content/categories/place';
+import { EditConflictError, updatePlace } from '$lib/services/admin/actions';
 import type { RequestHandler } from './$types';
 
 type PlacePatchBody = {

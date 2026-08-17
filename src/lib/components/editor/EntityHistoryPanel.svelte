@@ -4,7 +4,7 @@
 	import { appEntityNameResolver } from '$lib/proposals/entity-names';
 	import { afterProposalPublished } from '$lib/proposals/apply-published-entity';
 	import { syncOpenEntityQueryAfterPublish } from '$lib/proposals/sync-open-entity-query';
-	import type { ProposalEntityType } from '$lib/services/proposal-service';
+	import type { ProposalEntityType } from '$lib/services/contribution/proposal-action';
 	import { getAppActions, getAppData } from '$lib/context';
 	import { toastStore } from '$lib/store.svelte';
 	import EntityEditorSubmitButton from './EntityEditorSubmitButton.svelte';

@@ -9,7 +9,7 @@ import {
 	emitProposalSubmitted,
 	logNotificationEmitFailure
 } from '$lib/notifications/proposal-events';
-import { ProposalValidationError, submitProposal } from '$lib/services/proposal-service';
+import { ProposalValidationError, submitProposal } from '$lib/services/contribution/proposal-action';
 import type { RequestHandler } from './$types';
 
 type ProposalBody = {

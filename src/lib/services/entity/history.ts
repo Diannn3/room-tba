@@ -13,7 +13,7 @@ import {
 	type DormUpdateInput,
 	type EventWriteInput,
 	type RoomUpdateInput
-} from './admin-service';
+} from '../admin/actions';
 
 export type HistoryEntry = typeof editorHistoryTable.$inferSelect;
 

@@ -1,5 +1,5 @@
 import { createEntityMergeRoute } from '$lib/admin/entity-merge-route';
-import { mergeDivisions } from '$lib/services/merge-service';
+import { mergeDivisions } from '$lib/services/contribution/merge';
 
 export const POST = createEntityMergeRoute({
 	entityLabel: 'division',

@@ -1,9 +1,9 @@
 import { error } from '@sveltejs/kit';
 import type { EntityIndexItem, SeoData } from '$lib/components/seo/seo-data';
-import { isStudentOrganization, orgCategoryLabel } from '$lib/constants/content/categories/org-categories';
+import { isStudentOrganization, orgCategoryLabel } from '$lib/constants/content/categories/org';
 import { entityIndexPath, getOrganizationCanonicalPath, parseRouteSlug } from '$lib/entity-urls';
-import { getAllOrganizations } from '$lib/services/map-data-service';
-import { getOrganizationPageData } from '$lib/services/ssg-service';
+import { getAllOrganizations } from '$lib/services/entity/map-data';
+import { getOrganizationPageData } from '$lib/services/page-data/entity';
 import {
 	absoluteUrl,
 	breadcrumbSchema,

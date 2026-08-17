@@ -2,7 +2,7 @@ import { env } from '$env/dynamic/private';
 import { parseRequiredEditorVersion } from '$lib/admin/expected-version';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
 import { parseEntityPhotoUrls, reconcileEntityPhotos } from '$lib/entity-photos';
-import { resolvePhotoAttribution } from '$lib/services/entity-photo-service';
+import { resolvePhotoAttribution } from '$lib/services/contribution/entity-photo';
 import {
 	DuplicateNameError,
 	EditConflictError,
@@ -10,7 +10,7 @@ import {
 	getRoomById,
 	updateRoom,
 	updateRoomPosition
-} from '$lib/services/admin-service';
+} from '$lib/services/admin/actions';
 import type { RequestHandler } from './$types';
 
 type RoomPatchBody = {

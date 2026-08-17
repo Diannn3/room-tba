@@ -1,7 +1,7 @@
 // src/lib/store.svelte.ts
 
 import { campusTransit } from '$lib/campus.config';
-import type { BuildingTypeFilter } from '$lib/constants/content/categories/building-types.js';
+import type { BuildingTypeFilter } from '$lib/constants/content/categories/building.js';
 import { CAMPUS_BOUNDS } from '$lib/constants/map/terrain.js';
 import { describeLocationFix } from '$lib/geolocation';
 import type { RouteTotals } from '../campus-route.js';

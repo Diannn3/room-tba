@@ -1,8 +1,8 @@
 // src/lib/store.svelte.ts
 
 import { campusTransit } from '$lib/campus.config';
-import type { BuildingTypeFilter } from '$lib/constants/building-types';
-import { CAMPUS_BOUNDS } from '$lib/constants/map-terrain';
+import type { BuildingTypeFilter } from '$lib/constants/content/categories/building-types.js';
+import { CAMPUS_BOUNDS } from '$lib/constants/map/terrain.js';
 import { describeLocationFix } from '$lib/geolocation';
 import type { RouteTotals } from '../campus-route.js';
 import { getJSONFetch, getLocalRoomByCode } from '../local/data/utils.js';

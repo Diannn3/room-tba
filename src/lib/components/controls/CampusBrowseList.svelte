@@ -10,11 +10,11 @@
   import {
     isStudentOrganization,
     orgCategoryLabel,
-  } from "$lib/constants/org-categories";
+  } from "$lib/constants/content/categories/org-categories";
   import {
     isPlaceLandmark,
     placeDirectoryLabel,
-  } from "$lib/constants/place-categories";
+  } from "$lib/constants/content/categories/place-categories";
   import {
     jeepneyStore,
     queryStore,

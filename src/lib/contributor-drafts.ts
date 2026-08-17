@@ -37,7 +37,7 @@ export type SuggestAdditionDraft = {
 	placeDescription?: string;
 	placeHours?: string;
 	organizationName?: string;
-	organizationCategory?: import('$lib/constants/org-categories').OrgCategory;
+	organizationCategory?: import('$lib/constants/content/categories/org-categories').OrgCategory;
 	organizationDescription?: string;
 	organizationBuildingDraft?: string;
 	roomCode: string;

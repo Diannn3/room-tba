@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { FACEBOOK_URL, INSTAGRAM_URL } from "$lib/constants/community-links";
+  import { FACEBOOK_URL, INSTAGRAM_URL } from "$lib/constants/content/links/community"
   import CommunityPlatformLink from "./CommunityPlatformLink.svelte";
 
   type Props = {

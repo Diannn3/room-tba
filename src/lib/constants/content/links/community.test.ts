@@ -10,7 +10,7 @@ import {
 	MESSENGER_MAINTAIN_URL,
 	MESSENGER_SHORT_CONTRIBUTE_URL,
 	MESSENGER_URL
-} from './community-links.ts';
+} from './community.ts';
 
 describe('community-links', () => {
 	test('volunteer Messenger defaults to contribute short link', () => {

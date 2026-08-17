@@ -1,5 +1,5 @@
 import type { EntityIndexItem, SeoData } from '$lib/components/seo/seo-data';
-import { placeDirectoryLabel } from '$lib/constants/place-categories';
+import { placeDirectoryLabel } from '$lib/constants/content/categories/place-categories';
 import { getPlaceCanonicalPath } from '$lib/entity-urls';
 import { getAllPlaces } from '$lib/services/map-data-service';
 import { breadcrumbSchema, jsonLd, webpageSchema } from '$lib/site';

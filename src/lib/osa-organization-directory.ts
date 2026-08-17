@@ -1,4 +1,4 @@
-import { UPLB_OSA_ORGANIZATIONS_URL } from '$lib/constants/community-links';
+import { UPLB_OSA_ORGANIZATIONS_URL } from '$lib/constants/content/links/community';
 
 export type OsaOrganization = {
 	name: string;

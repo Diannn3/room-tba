@@ -4,7 +4,7 @@ import {
 	isProposalHoneypotTripped
 } from '$lib/api/proposal-rate-limit';
 import { clientIp, rateLimitResponse } from '$lib/api/rate-limit';
-import { validateSubmitterName } from '$lib/constants/proposals';
+import { validateSubmitterName } from '$lib/constants/contribute/proposals';
 import {
 	emitProposalSubmitted,
 	logNotificationEmitFailure

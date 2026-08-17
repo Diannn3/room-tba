@@ -1,5 +1,5 @@
-import { isStudentOrganization, type OrgCategory } from '$lib/constants/org-categories';
-import { isPlaceLandmark, type PlaceCategory } from '$lib/constants/place-categories';
+import { isStudentOrganization, type OrgCategory } from '$lib/constants/content/categories/org-categories';
+import { isPlaceLandmark, type PlaceCategory } from '$lib/constants/content/categories/place-categories';
 import { formatCampusDateShort } from '$lib/event-time';
 import type { ProposalCreateType } from '$lib/proposals/client';
 

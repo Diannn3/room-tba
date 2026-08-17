@@ -17,7 +17,7 @@
   import MapViewControls from "$lib/components/MapViewControls.svelte";
   import MapLegend from "$lib/components/MapLegend.svelte";
   import TerrainControl from "$lib/components/TerrainControl.svelte";
-  import { TERRAIN_ENABLED } from "$lib/constants/map-terrain";
+  import { TERRAIN_ENABLED } from "$lib/constants/map/terrain"
   import TrailControl from "$lib/components/TrailControl.svelte";
   import JeepneyMenu from "$lib/components/JeepneyMenu.svelte";
   import ScheduleImportPanel from "$lib/components/ScheduleImportPanel.svelte";

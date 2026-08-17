@@ -1,5 +1,5 @@
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
-import { normalizePlaceCategory } from '$lib/constants/place-categories';
+import { normalizePlaceCategory } from '$lib/constants/content/categories/place-categories';
 import { createPlace } from '$lib/services/admin-service';
 import type { RequestHandler } from './$types';
 

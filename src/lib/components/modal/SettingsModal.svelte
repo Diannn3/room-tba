@@ -3,7 +3,7 @@
   import TerrainControl from "$lib/components/TerrainControl.svelte";
   import ScheduleImportPanel from "$lib/components/ScheduleImportPanel.svelte";
   import FeedbackPanel from "./FeedbackPanel.svelte";
-  import { TERRAIN_ENABLED } from "$lib/constants/map-terrain";
+  import { TERRAIN_ENABLED } from "$lib/constants/map/terrain"
   import { clearCachedData } from "$lib/local/clear-cached-data";
   import {
     resyncCampusData,

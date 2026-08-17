@@ -5,7 +5,7 @@ export type {
 	ProposalEntityType
 } from '$lib/services/proposal-service';
 
-import { validateSubmitterName, validateSubmitterNote } from '$lib/constants/proposals';
+import { validateSubmitterName, validateSubmitterNote } from '$lib/constants/contribute/proposals';
 import type { RoomData } from '$lib/types';
 import { FIELD_LABELS } from './diff';
 import { isOpenProposalStatus, type PendingProposalRow } from './pending-proposals';

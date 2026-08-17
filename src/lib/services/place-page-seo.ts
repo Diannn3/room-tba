@@ -4,7 +4,7 @@ import {
 	isPlaceLandmark,
 	placeCategoryLabel,
 	placeDirectoryLabel
-} from '$lib/constants/place-categories';
+} from '$lib/constants/content/categories/place-categories';
 import { entityIndexPath, getPlaceCanonicalPath, parseRouteSlug } from '$lib/entity-urls';
 import { getAllPlaces } from '$lib/services/map-data-service';
 import { getPlacePageData } from '$lib/services/ssg-service';

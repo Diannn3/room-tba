@@ -1,5 +1,5 @@
 import type { Results } from '@electric-sql/pglite';
-import type { JeepneyRoute, JeepneyStop } from '$lib/constants/jeepney-routes';
+import type { JeepneyRoute, JeepneyStop } from '$lib/constants/map/jeepney-routes';
 import type { DBData } from '$lib/context';
 import { refreshStoredEventTiming, sortStoredEvents } from '$lib/event-time';
 import { escapeLikePattern } from '$lib/like-escape';

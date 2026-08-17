@@ -16,7 +16,7 @@ import {
 import { normalizeAlias } from '$lib/site';
 import type { SessionUser } from '$lib/admin/auth';
 import { db } from '$lib/db';
-import { validateSubmitterName, validateSubmitterNote } from '$lib/constants/proposals';
+import { validateSubmitterName, validateSubmitterNote } from '$lib/constants/contribute/proposals';
 import { recordProposalContribution } from './contribution-service';
 import { parseImageUrl } from '$lib/r2-upload';
 import { env } from '$env/dynamic/private';

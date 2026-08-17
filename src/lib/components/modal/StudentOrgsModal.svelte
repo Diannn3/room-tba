@@ -9,7 +9,7 @@
     sidePanelStore,
   } from "$lib/store.svelte";
   import { openCampusBrowse } from "$lib/browse-campus";
-  import { UPLB_OSA_ORGANIZATIONS_URL } from "$lib/constants/community-links";
+  import { UPLB_OSA_ORGANIZATIONS_URL } from "$lib/constants/content/links/community"
 
   function browseOrganizations() {
     openCampusBrowse(queryStore, sidePanelStore, "organizations");

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { JeepneyStop } from "$lib/constants/jeepney-routes";
+  import type { JeepneyStop } from "$lib/constants/map/jeepney-routes";
   import {
     additionProposalStore,
     adminAuthStore,

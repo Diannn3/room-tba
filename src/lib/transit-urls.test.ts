@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { JEEPNEY_ROUTES } from '$lib/constants/jeepney-routes';
+import { JEEPNEY_ROUTES } from '$lib/constants/map/jeepney-routes';
 import { getTransitStopIndex, getTransitStopPath, parseTransitPathname } from './transit-urls';
 
 describe('transit URLs', () => {

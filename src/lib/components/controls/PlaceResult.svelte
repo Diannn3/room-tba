@@ -13,7 +13,7 @@
     PLACE_CATEGORY_LABELS,
     isPlaceLandmark,
     placeDirectoryLabel,
-  } from "$lib/constants/place-categories";
+  } from "$lib/constants/content/categories/place-categories";
   import type { PlaceData } from "$lib/types";
   import EntityEditorPinRow from "$lib/components/editor/EntityEditorPinRow.svelte";
   import EntityEditorToggle from "$lib/components/editor/EntityEditorToggle.svelte";

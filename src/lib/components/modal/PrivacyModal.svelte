@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { DISCORD_URL, MESSENGER_CONTRIBUTE_TARGET } from "$lib/constants/community-links";
+  import { DISCORD_URL, MESSENGER_CONTRIBUTE_TARGET } from "$lib/constants/content/links/community"
 </script>
 
 <section class="privacy-modal">

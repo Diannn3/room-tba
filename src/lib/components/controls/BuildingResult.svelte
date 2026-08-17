@@ -16,7 +16,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     CR_FACILITIES,
     crFacilityLabel,
     sanitizeCrFacilities,
-  } from "$lib/constants/cr-facilities";
+  } from "$lib/constants/map/cr-facilities";
   import { getAppActions, getAppData } from "$lib/context";
   import {
     clearEntityContributorDraft,

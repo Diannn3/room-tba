@@ -10,8 +10,8 @@
     MESSENGER_CONTRIBUTE_TARGET,
     MESSENGER_MAINTAIN_TARGET,
     UPLB_TOOLS_URL
-  } from "$lib/constants/community-links";
-  import { designers } from "$lib/constants/contributors";
+  } from "$lib/constants/content/links/community"
+  import { designers } from "$lib/constants/contribute/contributors";
   import {
     fetchGithubContributors,
     type GithubContributor,

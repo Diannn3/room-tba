@@ -1,7 +1,7 @@
 import { getEditorSession } from '$lib/admin/require-editor';
 import { enforceProposalWithdrawLimits } from '$lib/api/proposal-rate-limit';
 import { clientIp, rateLimitResponse } from '$lib/api/rate-limit';
-import { validateSubmitterName } from '$lib/constants/proposals';
+import { validateSubmitterName } from '$lib/constants/contribute/proposals';
 import {
 	ProposalActionError,
 	ProposalValidationError,

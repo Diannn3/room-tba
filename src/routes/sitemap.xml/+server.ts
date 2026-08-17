@@ -1,6 +1,6 @@
 import { getEventSlug } from '$lib/app-data';
 import { campusTransit } from '$lib/campus.config';
-import { JEEPNEY_ROUTES } from '$lib/constants/jeepney-routes';
+import { JEEPNEY_ROUTES } from '$lib/constants/map/jeepney-routes';
 import {
 	entityIndexPath,
 	getBuildingCanonicalPath,

@@ -1,5 +1,5 @@
 import type { Results } from '@electric-sql/pglite';
-import type { JeepneyRoute } from '$lib/constants/jeepney-routes';
+import type { JeepneyRoute } from '$lib/constants/map/jeepney-routes';
 import { syncToastStore } from '$lib/store.svelte';
 import type {
 	AnnouncementData,

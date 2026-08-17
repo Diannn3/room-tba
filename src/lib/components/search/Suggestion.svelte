@@ -12,7 +12,7 @@ import Users from "@lucide/svelte/icons/users";
 import X from "@lucide/svelte/icons/x";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
-import { isPlaceLandmark } from "$lib/constants/place-categories";
+import { isPlaceLandmark } from "$lib/constants/content/categories/place-categories";
 import { getAppData } from "$lib/context";
 import {
 	buildingPreviewFromRow,

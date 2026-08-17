@@ -1,4 +1,4 @@
-import { JEEPNEY_ROUTES, type JeepneyRoute } from '$lib/constants/jeepney-routes';
+import { JEEPNEY_ROUTES, type JeepneyRoute } from '$lib/constants/map/jeepney-routes';
 import { getLocalJeepneyRoutes } from '$lib/local/data/utils';
 import { localTableSyncCheck, syncJeepneyRoutes } from '$lib/local/data/sync';
 import { fetchJsonWithRetry, ENTITY_FETCH_OPTIONS } from '$lib/local/data/fetch-json';

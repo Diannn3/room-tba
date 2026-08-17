@@ -1,9 +1,9 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq, ne, sql } from 'drizzle-orm';
 import { parsePublishingActor } from '$lib/admin/auth';
-import { sanitizeCrFacilities } from '$lib/constants/cr-facilities';
-import { normalizePlaceCategory } from '$lib/constants/place-categories';
-import { normalizeRoomCategory } from '$lib/constants/room-categories';
+import { sanitizeCrFacilities } from '$lib/constants/map/cr-facilities';
+import { normalizePlaceCategory } from '$lib/constants/content/categories/place-categories';
+import { normalizeRoomCategory } from '$lib/constants/content/categories/room-categories';
 import { db } from '$lib/db';
 import { normalizeEntityName } from '$lib/entity-names';
 import { entityIndexPath } from '$lib/entity-urls';

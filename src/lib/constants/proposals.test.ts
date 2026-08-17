@@ -5,7 +5,7 @@ import {
 	MIN_SUBMITTER_NAME_LENGTH,
 	validateSubmitterName,
 	validateSubmitterNote
-} from './proposals';
+} from './contribute/proposals';
 
 describe('validateSubmitterName', () => {
 	test('accepts a normal name', () => {

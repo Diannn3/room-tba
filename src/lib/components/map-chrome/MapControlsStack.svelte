@@ -5,7 +5,7 @@
     enterFlatMapDimension,
     enterTiltedMapDimension,
   } from "$lib/map-dimension-layers";
-  import { THREE_D_PITCH, isMap2DPitch } from "$lib/constants/map-dimension";
+  import { THREE_D_PITCH, isMap2DPitch } from "$lib/constants/map/dimension";
   import {
     locationStore,
     mapStore,

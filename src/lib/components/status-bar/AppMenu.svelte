@@ -10,9 +10,9 @@
   import CalendarClock from "@lucide/svelte/icons/calendar-clock";
   import UserRound from "@lucide/svelte/icons/user-round";
   import { onMount } from "svelte";
-  import { formatCatalogUpdatedDate } from "$lib/constants/data-catalog";
-  import { APP_VERSION_LABEL } from "$lib/constants/version";
-  import { statusBarNavGroups } from "$lib/constants/status-bar-links";
+  import { formatCatalogUpdatedDate } from "$lib/constants/versioning/data-catalog";
+  import { APP_VERSION_LABEL } from "$lib/constants/versioning/version";
+  import { statusBarNavGroups } from "$lib/constants/content/links/status-bar"
   import { trapFocus } from "$lib/focus-trap";
   import { openShortcutsHelp } from "$lib/keyboard-shortcuts";
   import { portal } from "$lib/portal";

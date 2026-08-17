@@ -1,5 +1,5 @@
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
-import { ORG_CATEGORIES, type OrgCategory } from '$lib/constants/org-categories';
+import { ORG_CATEGORIES, type OrgCategory } from '$lib/constants/content/categories/org-categories';
 import { createOrganization } from '$lib/services/admin-service';
 import type { RequestHandler } from './$types';
 

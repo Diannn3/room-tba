@@ -1,4 +1,4 @@
-import type { JeepneyRoute } from '$lib/constants/jeepney-routes';
+import type { JeepneyRoute } from '$lib/constants/map/jeepney-routes';
 import type { AppContextData } from './context';
 import {
 	getEntityCanonicalPath,

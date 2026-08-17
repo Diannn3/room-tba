@@ -14,7 +14,7 @@
   import EntityEditorMessage from "$lib/components/editor/EntityEditorMessage.svelte";
   import CommunityBrandIcon from "$lib/components/community/CommunityBrandIcon.svelte";
   import TurnstileWidget from "$lib/components/TurnstileWidget.svelte";
-  import { MESSENGER_MAINTAIN_TARGET } from "$lib/constants/community-links";
+  import { MESSENGER_MAINTAIN_TARGET } from "$lib/constants/content/links/community"
   import "./editor/entity-editor.css";
   import { MediaQuery } from "svelte/reactivity";
 

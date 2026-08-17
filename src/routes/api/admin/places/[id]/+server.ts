@@ -1,6 +1,6 @@
 import { parseRequiredEditorVersion } from '$lib/admin/expected-version';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
-import { normalizePlaceCategory } from '$lib/constants/place-categories';
+import { normalizePlaceCategory } from '$lib/constants/content/categories/place-categories';
 import { EditConflictError, updatePlace } from '$lib/services/admin-service';
 import type { RequestHandler } from './$types';
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import MapBrowseList from "$lib/components/map/MapBrowseList.svelte";
-	import { placeCategoryLabel } from "$lib/constants/place-categories";
+	import { placeCategoryLabel } from "$lib/constants/content/categories/place-categories";
 	import { getAppData } from "$lib/context";
 	import { getPlaceCanonicalPath } from "$lib/entity-urls";
 	import type { PageData } from "./$types";

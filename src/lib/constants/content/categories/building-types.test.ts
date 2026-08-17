@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	buildingMatchesTypeFilter,
 	getBuildingTypeFilterOptions
-} from '$lib/constants/building-types';
+} from '$lib/constants/content/categories/building-types';
 import type { BuildingData } from '$lib/types';
 
 function building(id: number, type: 'admin' | 'non-admin'): BuildingData {

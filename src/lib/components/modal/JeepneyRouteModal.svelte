@@ -6,8 +6,8 @@
     JEEPNEY_FARE_NOTE,
     resolveRouteGeometry,
     type StoredRouteGeometry,
-  } from "$lib/constants/jeepney-routes";
-  import jeepneyGeometries from "$lib/constants/jeepney-geometries.json";
+  } from "$lib/constants/map/jeepney-routes";
+  import jeepneyGeometries from "$lib/constants/map/jeepney-geometries.json";
   import { getJeepneyRouteShareUrl } from "$lib/share-links";
   import EntityShareCopyLink from "../controls/EntityShareCopyLink.svelte";
   import TransitStopEditor from "../controls/TransitStopEditor.svelte";

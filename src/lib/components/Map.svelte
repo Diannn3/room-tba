@@ -28,8 +28,8 @@ import { sumRouteLegs } from "$lib/campus-route";
 import {
 	buildingMatchesTypeFilter,
 	dormMatchesTypeFilter,
-} from "$lib/constants/building-types";
-import jeepneyGeometries from "$lib/constants/jeepney-geometries.json";
+} from "$lib/constants/content/categories/building-types";
+import jeepneyGeometries from "$lib/constants/map/jeepney-geometries.json";
 import {
 	type JeepneyRoute,
 	type JeepneyStop,
@@ -37,7 +37,7 @@ import {
 	type RouteGeometrySource,
 	resolveRouteGeometry,
 	type StoredRouteGeometry,
-} from "$lib/constants/jeepney-routes";
+} from "$lib/constants/map/jeepney-routes";
 import {
 	MAKILING_TRAIL_COLOR,
 	MAKILING_TRAIL_LAYER_CASING_ID,
@@ -47,8 +47,8 @@ import {
 	MAKILING_TRAIL_STATIONS,
 	MAKILING_TRAIL_STATIONS_LAYER_ID,
 	MAKILING_TRAIL_STATIONS_SOURCE_ID,
-} from "$lib/constants/makiling-trail";
-import { isMap2DPitch } from "$lib/constants/map-dimension";
+} from "$lib/constants/map/makiling-trail";
+import { isMap2DPitch } from "$lib/constants/map/dimension";
 import {
 	CAMPUS_DEFAULT_CAMERA,
 	CAMPUS_MAX_BOUNDS,
@@ -61,9 +61,9 @@ import {
 	TERRAIN_SOURCE_ID,
 	TERRAIN_TILE_FAILURE_MESSAGE,
 	TERRAIN_UNAVAILABLE_OFFLINE_MESSAGE,
-} from "$lib/constants/map-terrain";
-import { isStudentOrganization } from "$lib/constants/org-categories";
-import { isPlaceLandmark } from "$lib/constants/place-categories";
+} from "$lib/constants/map/terrain"
+import { isStudentOrganization } from "$lib/constants/content/categories/org-categories";
+import { isPlaceLandmark } from "$lib/constants/content/categories/place-categories";
 import {
 	ISOCHRONE_CAP_MINUTES,
 	VIRIDIS_STOPS,

@@ -12,12 +12,12 @@
   import {
     DISCORD_URL,
     MESSENGER_CONTRIBUTE_URL,
-  } from "$lib/constants/community-links";
+  } from "$lib/constants/content/links/community"
   import {
     FEEDBACK_CONTACT_MAX,
     FEEDBACK_MESSAGE_MAX,
   } from "$lib/constants/feedback";
-  import { APP_VERSION_LABEL } from "$lib/constants/version";
+  import { APP_VERSION_LABEL } from "$lib/constants/versioning/version";
 
   let message = $state("");
   let contact = $state("");

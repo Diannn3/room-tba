@@ -37,7 +37,7 @@ function write(key: string, value: unknown) {
 	}
 }
 
-export class AnnouncementsStore {
+export default class AnnouncementsStore {
 	items = $state.raw<AnnouncementData[]>([]);
 	loading = $state(false);
 	private lastSeenAt = $state(0);

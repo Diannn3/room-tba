@@ -18,7 +18,7 @@ function rowToPlannedSection(row: ClassMapValue): PlannedSection | null {
 	};
 }
 
-export class PlannerStore {
+export default class PlannerStore {
 	plans = $state<PlannerPlan[]>([]);
 	activePlanIdByTerm = $state<Record<string, string>>({});
 	private _hydrated = false;

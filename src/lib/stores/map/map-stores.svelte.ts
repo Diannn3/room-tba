@@ -1,8 +1,8 @@
 import type * as maplibre from 'maplibre-gl';
 import { DEFAULT_TERRAIN_EXAGGERATION, TERRAIN_ENABLED } from '$lib/constants/map/terrain.js';
-import { dismissEphemeralOverlays } from '../overlay-stack.js';
+import { dismissEphemeralOverlays } from '../../overlay-stack.js';
 import { deactivateMapModesExcept } from './map-modes.js';
-import type { MapToolsSection, TerrainStatus } from './store-types.js';
+import type { MapToolsSection, TerrainStatus } from '../store-types.js';
 
 export class MapStore {
 	mapInstance: maplibre.MapLibreMap | undefined = $state.raw();

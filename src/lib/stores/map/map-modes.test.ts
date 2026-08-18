@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { deactivateMapModesExcept, registerMapMode } from '$lib/stores/map-modes';
+import { deactivateMapModesExcept, registerMapMode } from '$lib/stores/map/map-modes';
 
 describe('map-modes', () => {
 	test('deactivateMapModesExcept calls other mode handles', () => {

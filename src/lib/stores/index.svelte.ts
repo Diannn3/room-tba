@@ -15,7 +15,7 @@ import type { ClassQueryPage } from '../classes-api.js';
 import { dismissEphemeralOverlays } from '../overlay-stack.js';
 import { matchImportedScheduleRows } from '../schedule-import/match-classes.js';
 import type { ImportedScheduleRow, ScheduleMatchResult } from '../schedule-import/types.js';
-import { deactivateMapModesExcept, type ExclusiveMapMode, registerMapMode } from './map-modes.js';
+import { deactivateMapModesExcept, type ExclusiveMapMode, registerMapMode } from './map/map-modes.js';
 import {
 	type AppBootstrapPhase,
 	type EventPlacementDraft,
@@ -33,8 +33,40 @@ import {
 	syncTableLabel,
 	type TerrainStatus
 } from './store-types.js';
+import AnnouncementsStore from './AnnouncementStore.svelte.js';
+import {
+	ClassVenuesStore,
+	PlannerBuildingsStore,
+	RoomClassesStore,
+	TermStore
+} from './data-stores.svelte';
+import {
+	AdditionProposalStore,
+	EditorChromeStore,
+	EventPlacementStore,
+	MapEditStore,
+	MapProposalStore
+} from './editor/editor-stores.svelte.js';
+import {
+	Building3DStore,
+	MapStore,
+	MapToolsStore,
+	MapViewStore,
+	MeasureRouteStore,
+	TerrainStore,
+	TrailStore,
+	TravelTimeStore
+} from './map/map-stores.svelte.js';
+import PlannerStore from './PlannerStore.svelte.js';
+import TransitStore from './TransitStore.svelte';
+import QueryStore from './QueryStore.svelte';
+import SidebarStore from './ui/SidebarStore.svelte.js';
+import SidePanelStore from './ui/SidePanelStore.svelte.js';
+import ModalStore from './ui/ModalStore.svelte.js';
+import ToastStore from './ui/ToastStore.svelte.js';
+import FloatingControlPanelStore from './ui/FloatingControlPanelStore.svelte.js';
 
-export type { MeasureLeg, MeasureSummaries } from './map-stores.svelte';
+export type { MeasureLeg, MeasureSummaries } from './map/map-stores.svelte.js';
 export type {
 	AppBootstrapPhase,
 	BuildingTypeFilter,
@@ -62,6 +94,9 @@ export {
 } from './filter-stores.svelte.js';
 
 import { buildingTypeFilter } from './filter-stores.svelte.js';
+import { OfflineStore } from './sync/OfflineStore.svelte.js';
+import SyncToastStore from './sync/SyncToastStore.svelte.js';
+import AppBootstrapStore from './sync/AppBootstrapStore.svelte.js';
 
 let _currentRoom = $state<RoomData | null>(null);
 let _currentRoomNotFound = $state(false);
@@ -117,42 +152,6 @@ export const currentRoom = {
 	}
 };
 
-import { AnnouncementsStore } from './announcements-store.svelte';
-import {
-	ClassVenuesStore,
-	PlannerBuildingsStore,
-	RoomClassesStore,
-	TermStore
-} from './data-stores.svelte';
-import {
-	AdditionProposalStore,
-	EditorChromeStore,
-	EventPlacementStore,
-	MapEditStore,
-	MapProposalStore
-} from './editor-stores.svelte';
-import {
-	Building3DStore,
-	MapStore,
-	MapToolsStore,
-	MapViewStore,
-	MeasureRouteStore,
-	TerrainStore,
-	TrailStore,
-	TravelTimeStore
-} from './map-stores.svelte';
-import { PlannerStore } from './planner-store.svelte';
-import { AppBootstrapStore, OfflineStore, SyncToastStore } from './sync-stores.svelte';
-import { TransitStore } from './transit-store.svelte';
-// Domain store modules
-import {
-	FloatingControlPanelStore,
-	ModalStore,
-	QueryStore,
-	SidebarStore,
-	SidePanelStore,
-	ToastStore
-} from './ui-stores.svelte';
 
 export { plannerRoomCodes } from './data-stores.svelte';
 

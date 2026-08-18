@@ -14,7 +14,8 @@ vi.mock('../local/data/class-schedules-offline-sync.js', () => ({
 }));
 
 import { describe, expect, test } from 'vitest';
-import { AppBootstrapStore, SyncToastStore } from './sync-stores.svelte';
+import AppBootstrapStore from './AppBootstrapStore.svelte';
+import SyncToastStore from './SyncToastStore.svelte';
 
 describe('AppBootstrapStore', () => {
 	test('phase transitions remote → sync → ready', () => {

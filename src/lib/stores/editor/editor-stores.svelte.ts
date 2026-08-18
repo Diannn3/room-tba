@@ -1,7 +1,7 @@
-import { clearProposeEventDraft } from '../contributor-drafts.js';
-import type { DraftPinPreview } from '../editor/draft-pin-preview.js';
-import { deactivateMapModesExcept } from './map-modes.js';
-import type { EventPlacementDraft, MapProposalTarget } from './store-types.js';
+import { clearProposeEventDraft } from '../../contributor-drafts.js';
+import type { DraftPinPreview } from '../../editor/draft-pin-preview.js';
+import { deactivateMapModesExcept } from '../map/map-modes.js';
+import type { EventPlacementDraft, MapProposalTarget } from '../store-types.js';
 
 export class EditorChromeStore {
 	additionModalOpen = $state(false);

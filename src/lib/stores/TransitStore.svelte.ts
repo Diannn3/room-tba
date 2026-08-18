@@ -3,7 +3,7 @@ import { getLocalJeepneyRoutes } from '$lib/local/data/utils';
 import { localTableSyncCheck, syncJeepneyRoutes } from '$lib/local/data/sync';
 import { fetchJsonWithRetry, ENTITY_FETCH_OPTIONS } from '$lib/local/data/fetch-json';
 
-export class TransitStore {
+export default class TransitStore {
 	routes = $state<JeepneyRoute[]>(JEEPNEY_ROUTES);
 	loaded = $state(false);
 	private loading: Promise<void> | null = null;

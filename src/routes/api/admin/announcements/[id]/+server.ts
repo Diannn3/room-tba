@@ -7,7 +7,7 @@ import {
 	type AnnouncementUpdateInput,
 	deleteAnnouncement,
 	updateAnnouncement
-} from '$lib/services/announcement-service';
+} from '$lib/services/announcement';
 import type { RequestHandler } from './$types';
 
 type AnnouncementPatchBody = {

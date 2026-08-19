@@ -2,7 +2,7 @@ import { sessionEditedBy } from '$lib/admin/auth';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
 import { parseWallTimestamp } from '$lib/announcements';
 import { normalizeAnnouncementSeverity } from '$lib/constants/announcement-severities';
-import { createAnnouncement, listAnnouncements } from '$lib/services/announcement-service';
+import { createAnnouncement, listAnnouncements } from '$lib/services/announcement';
 import type { RequestHandler } from './$types';
 
 function json(data: unknown, status = 200) {

@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
-import { getCollegeSlug } from '$lib/app-data';
+import { getCollegeSlug } from '$lib/utils/app-data';
 import type { SeoData } from '$lib/components/seo/seo-data';
-import { entityIndexPath, getCollegeCanonicalPath } from '$lib/entity-urls';
+import { entityIndexPath, getCollegeCanonicalPath } from '$lib/utils/entity-urls';
 import { getCollegePageData, resolveCollegeNameFromSlug } from '$lib/services/page-data/entity';
 import {
 	absoluteUrl,
@@ -10,7 +10,7 @@ import {
 	ogCardPath,
 	ogImageUrl,
 	webpageSchema
-} from '$lib/site';
+} from '$lib/utils/site';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {

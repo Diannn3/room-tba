@@ -4,18 +4,18 @@ import {
 	buildingMatchesTypeFilter,
 	dormMatchesTypeFilter,
 } from "$lib/constants/content/categories/building"
-import { getAppData } from "$lib/context";
+import { getAppData } from "$lib/utils/context";
 import {
 	getJSONFetch,
 	searchLocalAliases,
 	searchLocalRooms,
-} from "$lib/local/data/utils";
-import { buildEntitySuggestions } from "$lib/search-suggestions";
+} from "$lib/utils/local/data/utils";
+import { buildEntitySuggestions } from "$lib/utils/search-suggestions";
 import {
 	buildingTypeFilter,
 	classVenuesStore,
 	queryStore,
-} from "$lib/store.svelte";
+} from "$lib/utils/store.svelte";
 import FinalExamSuggestion from "./FinalExamSuggestion.svelte";
 import SearchQuerySuggestion from "./SearchQuerySuggestion.svelte";
 import Suggestion from "./Suggestion.svelte";

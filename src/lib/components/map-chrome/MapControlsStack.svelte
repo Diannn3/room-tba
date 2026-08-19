@@ -4,14 +4,14 @@
   import {
     enterFlatMapDimension,
     enterTiltedMapDimension,
-  } from "$lib/map-dimension-layers";
+  } from "$lib/utils/map-dimension-layers";
   import { THREE_D_PITCH, isMap2DPitch } from "$lib/constants/map/dimension";
   import {
     locationStore,
     mapStore,
     terrainStore,
     toastStore,
-  } from "$lib/store.svelte";
+  } from "$lib/utils/store.svelte";
   import compassIcon from "../../../assets/icons/compass.svg?url";
 
   type Props = {

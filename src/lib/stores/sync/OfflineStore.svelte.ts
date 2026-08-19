@@ -6,15 +6,15 @@ import {
     getTileTemplate,
     MIN_ZOOM,
     tileUrl
-} from '../../local/offline-maps.js';
+} from '../../utils/local/offline-maps.js';
 import {
     OFFLINE_DIRECTORY_SYNCED_AT_KEY,
     syncCampusDirectoryForOffline
-} from '../../local/data/campus-directory-sync.js';
+} from '../../utils/local/data/campus-directory-sync.js';
 import {
     OFFLINE_CLASSES_SYNCED_AT_KEY,
     syncClassSchedulesForOffline
-} from '../../local/data/class-schedules-offline-sync.js';
+} from '../../utils/local/data/class-schedules-offline-sync.js';
 import type {
     OfflineStatus,
 } from './../store-types.js';

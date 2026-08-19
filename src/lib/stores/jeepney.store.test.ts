@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from 'vitest';
-import { buildingTypeFilter, jeepneyStore, mapToolsStore, modalStore } from '$lib/store.svelte';
+import { buildingTypeFilter, jeepneyStore, mapToolsStore, modalStore } from '$lib/utils/store.svelte';
 
 describe('JeepneyStore', () => {
 	beforeEach(() => {

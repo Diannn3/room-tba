@@ -1,7 +1,7 @@
 <script lang="ts">
 	import MapPin from '@lucide/svelte/icons/map-pin';
 	import MapChromeActionLink from '$lib/components/map-chrome/MapChromeActionLink.svelte';
-	import { getGoogleMapsPinUrl } from '$lib/google-maps-links';
+	import { getGoogleMapsPinUrl } from '$lib/utils/google-maps-links';
 
 	type Props = {
 		lat: number;

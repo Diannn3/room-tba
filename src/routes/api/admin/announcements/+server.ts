@@ -1,6 +1,6 @@
 import { sessionEditedBy } from '$lib/admin/auth';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
-import { parseWallTimestamp } from '$lib/announcements';
+import { parseWallTimestamp } from '$lib/utils/announcements';
 import { normalizeAnnouncementSeverity } from '$lib/constants/announcement-severities';
 import { createAnnouncement, listAnnouncements } from '$lib/services/announcement';
 import type { RequestHandler } from './$types';

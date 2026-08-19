@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { queryStore, termStore } from "$lib/store.svelte";
-  import { fetchFinalExams, looksLikeCourseCode } from "$lib/final-exams";
-  import { normalizeCourseCode } from "$lib/final-exams/normalize";
+  import { queryStore, termStore } from "$lib/utils/store.svelte";
+  import { fetchFinalExams, looksLikeCourseCode } from "$lib/utils/final-exams";
+  import { normalizeCourseCode } from "$lib/utils/final-exams/normalize";
 
   interface Props {
     onSelect: () => void;

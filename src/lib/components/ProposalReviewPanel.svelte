@@ -1,23 +1,23 @@
 <script lang="ts">
 	import LoadingIndicator from '$lib/components/LoadingIndicator.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
-	import { adminAuthStore, proposalsStore, toastStore } from '$lib/store.svelte';
-	import { buildFieldDiffs } from '$lib/proposals/diff';
-	import { appEntityNameResolver } from '$lib/proposals/entity-names';
-	import { afterProposalPublished } from '$lib/proposals/apply-published-entity';
-	import { syncOpenEntityQueryAfterPublish } from '$lib/proposals/sync-open-entity-query';
-	import { getAppActions, getAppData } from '$lib/context';
+	import { adminAuthStore, proposalsStore, toastStore } from '$lib/utils/store.svelte';
+	import { buildFieldDiffs } from '$lib/utils/proposals/diff';
+	import { appEntityNameResolver } from '$lib/utils/proposals/entity-names';
+	import { afterProposalPublished } from '$lib/utils/proposals/apply-published-entity';
+	import { syncOpenEntityQueryAfterPublish } from '$lib/utils/proposals/sync-open-entity-query';
+	import { getAppActions, getAppData } from '$lib/utils/context';
 	import type { ProposalEntityType } from '$lib/services/contribution/proposal-action';
-	import { parseBundledRooms } from '$lib/proposals/create-proposal-validation';
+	import { parseBundledRooms } from '$lib/utils/proposals/create-proposal-validation';
 	import EntityEditorFormField from '$lib/components/editor/EntityEditorFormField.svelte';
 	import EntityReviewActions from '$lib/components/editor/EntityReviewActions.svelte';
 	import Avatar from '$lib/components/Avatar.svelte';
-	import { proposalPinChange } from '$lib/proposals/proposal-pin';
+	import { proposalPinChange } from '$lib/utils/proposals/proposal-pin';
 	import {
 		getReviewShortcutAction,
 		stepIndex,
 		REVIEW_SHORTCUT_HINTS
-	} from '$lib/proposals/review-shortcuts';
+	} from '$lib/utils/proposals/review-shortcuts';
 
 	const appActions = getAppActions();
 	const appData = getAppData();

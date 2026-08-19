@@ -4,12 +4,12 @@
     plannerStore,
     scheduleRouteStore,
     type Weekday,
-  } from "$lib/store.svelte";
+  } from "$lib/utils/store.svelte";
   import { onMount, untrack } from "svelte";
   import { flip } from "svelte/animate";
-  import { formatDistance, formatDuration } from "$lib/campus-route";
-  import { formatMinutes } from "$lib/schedule-import/day-stops";
-  import { WEEKDAY_LABELS, WEEKDAYS } from "$lib/schedule-import/types";
+  import { formatDistance, formatDuration } from "$lib/utils/campus-route";
+  import { formatMinutes } from "$lib/utils/schedule-import/day-stops";
+  import { WEEKDAY_LABELS, WEEKDAYS } from "$lib/utils/schedule-import/types";
 
   type Props = {
     embedded?: boolean;

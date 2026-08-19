@@ -13,15 +13,15 @@ import X from "@lucide/svelte/icons/x";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
 import { isPlaceLandmark } from "$lib/constants/content/categories/place"
-import { getAppData } from "$lib/context";
+import { getAppData } from "$lib/utils/context";
 import {
 	buildingPreviewFromRow,
 	entityHoverPreviewStore,
 	eventPreviewFromRow,
-} from "$lib/entity-hover-preview.svelte";
-import { slugifySegment } from "$lib/site";
-import { type QueryStoreState, queryStore } from "$lib/store.svelte";
-import type { BuildingData, EventData } from "$lib/types";
+} from "$lib/utils/entity-hover-preview.svelte";
+import { slugifySegment } from "$lib/utils/site";
+import { type QueryStoreState, queryStore } from "$lib/utils/store.svelte";
+import type { BuildingData, EventData } from "$lib/utils/types";
 
 let {
 	value,

@@ -13,8 +13,8 @@ import {
 	type RoomProgressInput,
 	summarizeFieldCounts,
 	topBuildingsByGap
-} from '$lib/contributor-progress';
-import { db } from '$lib/db';
+} from '$lib/utils/contributor-progress';
+import { db } from '$lib/utils/db';
 import {
 	buildingsTable,
 	classesTable,

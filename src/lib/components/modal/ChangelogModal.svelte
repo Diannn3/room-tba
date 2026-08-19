@@ -1,9 +1,9 @@
 <script lang="ts">
   import { RefreshCw } from "@lucide/svelte";
-  import { syncToastStore, modalStore } from "$lib/store.svelte";
+  import { syncToastStore, modalStore } from "$lib/utils/store.svelte";
   import { APP_VERSION_LABEL } from "$lib/constants/versioning/version";
-  import { parseChangelogEntries } from "$lib/changelog-highlights";
-  import { releaseTimestampLabel } from "$lib/release-timestamps";
+  import { parseChangelogEntries } from "$lib/utils/changelog-highlights";
+  import { releaseTimestampLabel } from "$lib/utils/release-timestamps";
   import changelogRaw from "../../../../CHANGELOG.md?raw";
   import FollowUpdates from "$lib/components/community/FollowUpdates.svelte";
 

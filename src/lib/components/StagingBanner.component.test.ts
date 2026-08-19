@@ -6,7 +6,7 @@ vi.mock('$lib/app-env', () => ({
 	isStagingApp: vi.fn(() => false)
 }));
 
-import { isStagingApp } from '$lib/app-env';
+import { isStagingApp } from '$lib/utils/app-env';
 import StagingBanner from '$lib/components/StagingBanner.svelte';
 
 const mockedIsStaging = vi.mocked(isStagingApp);

@@ -1,6 +1,6 @@
 import { and, desc, eq } from 'drizzle-orm';
 import { editorHistoryTable } from '$lib/server/db/schema';
-import { db } from '$lib/db';
+import { db } from '$lib/utils/db';
 import {
 	updateBuilding,
 	updateCollege,

@@ -24,7 +24,7 @@ import { MediaQuery } from "svelte/reactivity";
 import { fade } from "svelte/transition";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
-import { sumRouteLegs } from "$lib/campus-route";
+import { sumRouteLegs } from "$lib/utils/campus-route";
 import {
 	buildingMatchesTypeFilter,
 	dormMatchesTypeFilter,
@@ -68,7 +68,7 @@ import {
 	ISOCHRONE_CAP_MINUTES,
 	VIRIDIS_STOPS,
 } from "$lib/constants/travel-modes";
-import { getAppActions, getAppData } from "$lib/context";
+import { getAppActions, getAppData } from "$lib/utils/context";
 import {
 	buildingPreviewFromRow,
 	dormPreviewFromRow,
@@ -82,25 +82,25 @@ import {
 	isPlaceHoverPreview,
 	organizationPreviewFromRow,
 	placePreviewFromRow,
-} from "$lib/entity-hover-preview.svelte";
-import { getEventImage } from "$lib/event-images";
-import { formatCampusDateShort, formatCampusTime } from "$lib/event-time";
-import { metersToLngLatCircle } from "$lib/geolocation";
-import { observeBlockHeight } from "$lib/layout-css-vars";
-import { applyBasemapPalette } from "$lib/map-basemap-palette";
-import { syncBuildingLayersForDimension } from "$lib/map-dimension-layers";
+} from "$lib/utils/entity-hover-preview.svelte";
+import { getEventImage } from "$lib/utils/event-images";
+import { formatCampusDateShort, formatCampusTime } from "$lib/utils/event-time";
+import { metersToLngLatCircle } from "$lib/utils/geolocation";
+import { observeBlockHeight } from "$lib/utils/layout-css-vars";
+import { applyBasemapPalette } from "$lib/utils/map-basemap-palette";
+import { syncBuildingLayersForDimension } from "$lib/utils/map-dimension-layers";
 import {
 	ClientEditConflictError,
 	ClientEventConflictError,
 	editErrorMessage,
-} from "$lib/map-edit/errors";
-import { patchEventLocations, patchPosition } from "$lib/map-edit/patch-api";
+} from "$lib/utils/map-edit/errors";
+import { patchEventLocations, patchPosition } from "$lib/utils/map-edit/patch-api";
 import type {
 	EditableCoords,
 	EditableEntityType,
 	EditableVersionedPosition,
 	EventLocationWriteValue,
-} from "$lib/map-edit/types";
+} from "$lib/utils/map-edit/types";
 import {
 	completeMapMoveRedo,
 	completeMapMoveUndo,
@@ -108,20 +108,20 @@ import {
 	type MapMoveCoordinates,
 	recordMapMove,
 	type VersionedMapMove,
-} from "$lib/map-move-history";
-import { loadCampusMapStyle } from "$lib/maptiler-key";
+} from "$lib/utils/map-move-history";
+import { loadCampusMapStyle } from "$lib/utils/maptiler-key";
 import {
 	resolveSubmitterName,
 	submitCreateProposal,
 	submitPinPositionProposal,
-} from "$lib/proposals/client";
-import { formatMinutes } from "$lib/schedule-import/day-stops";
-import { slugifySegment } from "$lib/site";
+} from "$lib/utils/proposals/client";
+import { formatMinutes } from "$lib/utils/schedule-import/day-stops";
+import { slugifySegment } from "$lib/utils/site";
 import {
 	trackSponsorClick,
 	trackSponsorImpression,
-} from "$lib/sponsor-tracking";
-import { getSponsoredPlacePins, loadSponsors } from "$lib/sponsors";
+} from "$lib/utils/sponsor-tracking";
+import { getSponsoredPlacePins, loadSponsors } from "$lib/utils/sponsors";
 import {
 	additionProposalStore,
 	adminAuthStore,
@@ -149,22 +149,22 @@ import {
 	trailStore,
 	transitStore,
 	travelTimeStore,
-} from "$lib/store.svelte";
+} from "$lib/utils/store.svelte";
 import {
 	dijkstra,
 	isochroneFeatures,
 	nearestNodeIndex,
 	shortestPath,
 	type TravelMode,
-} from "$lib/travel-graph/engine";
-import { loadTravelGraph } from "$lib/travel-graph/load";
+} from "$lib/utils/travel-graph/engine";
+import { loadTravelGraph } from "$lib/utils/travel-graph/load";
 import type {
 	BuildingData,
 	DormData,
 	EventData,
 	OrgData,
 	PlaceData,
-} from "$lib/types";
+} from "$lib/utils/types";
 import BuildingResult from "./controls/BuildingResult.svelte";
 import DormResult from "./controls/DormResult.svelte";
 import EventResult from "./controls/EventResult.svelte";

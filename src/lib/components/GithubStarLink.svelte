@@ -1,7 +1,7 @@
 <script lang="ts">
   import Star from "@lucide/svelte/icons/star";
   import { GITHUB_ROOM_TBA_URL } from "$lib/constants/content/links/community"
-  import { fetchGithubStarCountCached } from "$lib/github-stars";
+  import { fetchGithubStarCountCached } from "$lib/utils/github-stars";
 
   let stars = $state<number | null>(null);
   let failed = $state(false);

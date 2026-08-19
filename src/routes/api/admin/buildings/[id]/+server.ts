@@ -2,7 +2,7 @@ import { env } from '$env/dynamic/private';
 import { parseRequiredEditorVersion } from '$lib/admin/expected-version';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
 import { errorResponse, json } from '$lib/api/json';
-import { parseEntityPhotoUrls, reconcileEntityPhotos } from '$lib/entity-photos';
+import { parseEntityPhotoUrls, reconcileEntityPhotos } from '$lib/utils/entity-photos';
 import { resolvePhotoAttribution } from '$lib/services/contribution/entity-photo';
 import { DuplicateNameError, EditConflictError, getBuildingById, updateBuilding } from '$lib/services/admin/actions';
 import type { RequestHandler } from './$types';

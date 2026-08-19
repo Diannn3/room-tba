@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
-import { getBuildingSlug } from '$lib/app-data';
+import { getBuildingSlug } from '$lib/utils/app-data';
 import type { SeoData } from '$lib/components/seo/seo-data';
-import { entityIndexPath, getBuildingCanonicalPath } from '$lib/entity-urls';
+import { entityIndexPath, getBuildingCanonicalPath } from '$lib/utils/entity-urls';
 import { getBuildingPageData, resolveBuildingNameFromSlug } from '$lib/services/page-data/entity';
 import {
 	absoluteUrl,
@@ -10,7 +10,7 @@ import {
 	ogCardPath,
 	ogImageUrl,
 	webpageSchema
-} from '$lib/site';
+} from '$lib/utils/site';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {

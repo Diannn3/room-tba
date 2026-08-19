@@ -1,11 +1,11 @@
 import { ROOM_SCHEDULE_SCOPE_NOTE } from "$lib/amis/room-scheduled-types";
-import type { RouteTotals } from "$lib/campus-route";
-import type { ClassQueryPage } from "$lib/classes-api";
-import { getJSONFetch, getLocalRoomByCode } from "$lib/local/data/utils";
-import { orderDayStops } from "$lib/schedule-import/day-stops";
-import { matchImportedScheduleRows } from "$lib/schedule-import/match-classes";
-import type { ImportedScheduleRow, ScheduleMatchResult, Weekday } from "$lib/schedule-import/types";
-import type { ClassMapValue, RoomData } from "$lib/types";
+import type { RouteTotals } from "$lib/utils/campus-route";
+import type { ClassQueryPage } from "$lib/utils/classes-api";
+import { getJSONFetch, getLocalRoomByCode } from "$lib/utils/local/data/utils";
+import { orderDayStops } from "$lib/utils/schedule-import/day-stops";
+import { matchImportedScheduleRows } from "$lib/utils/schedule-import/match-classes";
+import type { ImportedScheduleRow, ScheduleMatchResult, Weekday } from "$lib/utils/schedule-import/types";
+import type { ClassMapValue, RoomData } from "$lib/utils/types";
 import { locationStore, plannerStore, termStore, toastStore } from "../index.svelte";
 import { SCHEDULE_IMPORT_SS_KEY, type ScheduleImportPersisted } from "../store-types";
 

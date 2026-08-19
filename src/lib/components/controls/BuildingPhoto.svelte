@@ -2,8 +2,8 @@
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import ChevronRight from "@lucide/svelte/icons/chevron-right";
   import { env } from '$env/dynamic/public';
-  import type { EntityPhoto } from '$lib/entity-photos';
-  import { buildingLandmarkImages } from '$lib/landmark-images';
+  import type { EntityPhoto } from '$lib/utils/entity-photos';
+  import { buildingLandmarkImages } from '$lib/utils/landmark-images';
 
   type Props = {
     /** Contributor-uploaded photos, stored in R2. Always shown first. */

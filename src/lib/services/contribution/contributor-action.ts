@@ -1,4 +1,4 @@
-import { db } from '$lib/db';
+import { db } from '$lib/utils/db';
 import { contributionsTable, adminUsersTable } from '$lib/server/db/schema';
 import { and, count, desc, eq, gte, sql } from 'drizzle-orm';
 import type { EditProposalSummary } from './proposal-action';

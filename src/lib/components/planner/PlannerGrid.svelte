@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { getPlannerBlockColor } from "$lib/schedule-renderer";
-  import { sectionBlocks } from "$lib/planner/conflicts";
-  import { alternativeOfferings } from "$lib/planner/alternatives";
-  import type { Conflict, ScheduleBlock } from "$lib/planner/conflicts";
-  import type { PlannedSection } from "$lib/planner/types";
-  import type { ClassMapValue } from "$lib/types";
+  import { getPlannerBlockColor } from "$lib/utils/schedule-renderer";
+  import { sectionBlocks } from "$lib/utils/planner/conflicts";
+  import { alternativeOfferings } from "$lib/utils/planner/alternatives";
+  import type { Conflict, ScheduleBlock } from "$lib/utils/planner/conflicts";
+  import type { PlannedSection } from "$lib/utils/planner/types";
+  import type { ClassMapValue } from "$lib/utils/types";
 
   interface Props {
     sections: PlannedSection[];

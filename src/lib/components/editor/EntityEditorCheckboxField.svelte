@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { fieldSaveActionLabel } from "$lib/editor/field-action-label";
+  import { fieldSaveActionLabel } from "$lib/utils/editor/field-action-label";
   import "./entity-editor.css";
 
   type Props = {

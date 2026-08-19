@@ -1,6 +1,6 @@
 <script lang="ts">
 	import CopyLinkButton from '$lib/components/CopyLinkButton.svelte';
-	import { toastStore } from '$lib/store.svelte';
+	import { toastStore } from '$lib/utils/store.svelte';
 
 	type Props = {
 		url: string;

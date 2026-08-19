@@ -1,40 +1,40 @@
 <script lang="ts">
 	import EntitySkeleton from '$lib/components/EntitySkeleton.svelte';
-	import { adminAuthStore, queryStore, toastStore, termStore } from '$lib/store.svelte';
+	import { adminAuthStore, queryStore, toastStore, termStore } from '$lib/utils/store.svelte';
 	import {
 		getStoredProposalForEntity,
 		persistEntityChange,
 		mergeEntityRecord
-	} from '$lib/proposals/client';
-	import { handlePersistEntityResult } from '$lib/editor/handle-persist-result';
+	} from '$lib/utils/proposals/client';
+	import { handlePersistEntityResult } from '$lib/utils/editor/handle-persist-result';
 	import MergeEntityPrompt from '$lib/components/editor/MergeEntityPrompt.svelte';
 	import {
 		clearEntityContributorDraft,
 		readEntityContributorDraft,
 		scheduleEntityContributorDraftSave
-	} from '$lib/contributor-drafts';
-	import { getAppActions, getAppData } from '$lib/context';
-	import type { DivisionData, RoomData } from '$lib/types';
+	} from '$lib/utils/contributor-drafts';
+	import { getAppActions, getAppData } from '$lib/utils/context';
+	import type { DivisionData, RoomData } from '$lib/utils/types';
 	import {
 		getDivisionRooms,
 		fetchRoomClassCounts,
 		fetchEntityRoomsRemote
-	} from '$lib/local/data/utils';
+	} from '$lib/utils/local/data/utils';
 	import ResultDisplay from './ResultDisplay.svelte';
 	import EntityShareCopyLink from './EntityShareCopyLink.svelte';
 	import EntityBackToList from './EntityBackToList.svelte';
 	import EntityExternalLink from './EntityExternalLink.svelte';
 	import EntityLastUpdated from '../EntityLastUpdated.svelte';
-	import { getDivisionShareUrl } from '$lib/share-links';
+	import { getDivisionShareUrl } from '$lib/utils/share-links';
 	import EntityEditorToggle from '$lib/components/editor/EntityEditorToggle.svelte';
 	import EntityEditorPanel from '$lib/components/editor/EntityEditorPanel.svelte';
 	import EntityEditorField from '$lib/components/editor/EntityEditorField.svelte';
-	import { entityEditorSavedMessage } from '$lib/editor/field-action-label';
+	import { entityEditorSavedMessage } from '$lib/utils/editor/field-action-label';
 	import {
 		checkLocalDivisionRoom,
 		getLocalDivisionRooms,
 		syncDivisionRooms
-	} from '$lib/local/data/sync';
+	} from '$lib/utils/local/data/sync';
 
 	type DivisionPatchResponse = {
 		success?: boolean;

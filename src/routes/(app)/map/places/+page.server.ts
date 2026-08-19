@@ -1,8 +1,8 @@
 import type { EntityIndexItem, SeoData } from '$lib/components/seo/seo-data';
 import { placeDirectoryLabel } from '$lib/constants/content/categories/place';
-import { getPlaceCanonicalPath } from '$lib/entity-urls';
+import { getPlaceCanonicalPath } from '$lib/utils/entity-urls';
 import { getAllPlaces } from '$lib/services/entity/map-data';
-import { breadcrumbSchema, jsonLd, webpageSchema } from '$lib/site';
+import { breadcrumbSchema, jsonLd, webpageSchema } from '$lib/utils/site';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {

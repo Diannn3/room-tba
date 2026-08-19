@@ -3,9 +3,9 @@
     getPlannerBlockColor,
     parseScheduleTime,
     ScheduleRenderer,
-  } from "$lib/schedule-renderer";
-  import { offeringGroupKey } from "$lib/class-offering-groups";
-  import type { ClassMapValue } from "$lib/types";
+  } from "$lib/utils/schedule-renderer";
+  import { offeringGroupKey } from "$lib/utils/class-offering-groups";
+  import type { ClassMapValue } from "$lib/utils/types";
 
   interface Props {
     roomCode: string;

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { modalStore } from '$lib/store.svelte';
+	import { modalStore } from '$lib/utils/store.svelte';
 	import { fade, fly } from 'svelte/transition';
-	import { modalContentDismiss, modalContentReveal, overlayFade } from '$lib/motion';
-	import { trapFocus } from '$lib/focus-trap';
+	import { modalContentDismiss, modalContentReveal, overlayFade } from '$lib/utils/motion';
+	import { trapFocus } from '$lib/utils/focus-trap';
 	import { MediaQuery } from 'svelte/reactivity';
 	import LandingModal from './LandingModal.svelte';
 	import ScheduleModal from './ScheduleModal.svelte';

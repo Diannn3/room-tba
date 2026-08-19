@@ -16,8 +16,8 @@
     proposalsStore,
     sidePanelStore,
     toastStore,
-  } from "$lib/store.svelte";
-  import { beginEventPlacement } from "$lib/event-placement";
+  } from "$lib/utils/store.svelte";
+  import { beginEventPlacement } from "$lib/utils/event-placement";
 
   type Props = {
     onclose?: () => void;

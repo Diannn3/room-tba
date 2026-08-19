@@ -1,16 +1,16 @@
 <script lang="ts">
   import EntityShareCopyLink from "$lib/components/controls/EntityShareCopyLink.svelte";
   import EventShelfToolbar from "$lib/components/map-chrome/EventShelfToolbar.svelte";
-  import { getAppData } from "$lib/context";
-  import { getEventImage } from "$lib/event-images";
-  import { formatCampusDateShort, formatCampusTime } from "$lib/event-time";
-  import { getEventShareUrl } from "$lib/share-links";
-  import { beginEventPlacement } from "$lib/event-placement";
+  import { getAppData } from "$lib/utils/context";
+  import { getEventImage } from "$lib/utils/event-images";
+  import { formatCampusDateShort, formatCampusTime } from "$lib/utils/event-time";
+  import { getEventShareUrl } from "$lib/utils/share-links";
+  import { beginEventPlacement } from "$lib/utils/event-placement";
   import { validateSubmitterName } from "$lib/constants/contribute/proposals";
   import {
     readProposeEventDraft,
     scheduleProposeEventDraftSave,
-  } from "$lib/contributor-drafts";
+  } from "$lib/utils/contributor-drafts";
   import {
     adminAuthStore,
     eventPlacementStore,
@@ -18,8 +18,8 @@
     sidePanelStore,
     syncToastStore,
     toastStore,
-  } from "$lib/store.svelte";
-  import type { EventData } from "$lib/types";
+  } from "$lib/utils/store.svelte";
+  import type { EventData } from "$lib/utils/types";
   import { onMount } from "svelte";
 
   let {

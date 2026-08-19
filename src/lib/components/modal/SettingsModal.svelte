@@ -4,12 +4,12 @@
   import ScheduleImportPanel from "$lib/components/ScheduleImportPanel.svelte";
   import FeedbackPanel from "./FeedbackPanel.svelte";
   import { TERRAIN_ENABLED } from "$lib/constants/map/terrain"
-  import { clearCachedData } from "$lib/local/clear-cached-data";
+  import { clearCachedData } from "$lib/utils/local/clear-cached-data";
   import {
     resyncCampusData,
     type ResyncOutcome,
-  } from "$lib/local/resync-campus-data";
-  import { syncToastStore } from "$lib/store.svelte";
+  } from "$lib/utils/local/resync-campus-data";
+  import { syncToastStore } from "$lib/utils/store.svelte";
   import "../map-chrome/map-chrome.css";
 
   let confirming = $state(false);

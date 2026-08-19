@@ -10,12 +10,12 @@ import { fade } from "svelte/transition";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
 import MapFilterChips from "$lib/components/map-chrome/MapFilterChips.svelte";
-import { getAppData } from "$lib/context";
-import { observeBlockHeight } from "$lib/layout-css-vars";
-import { getMapChromeVisibility } from "$lib/map-chrome";
-import { dropdownFadeIn, dropdownFadeOut } from "$lib/motion";
-import { registerEphemeralOverlayDismisser } from "$lib/overlay-stack";
-import { registerSearchFocus } from "$lib/search-focus";
+import { getAppData } from "$lib/utils/context";
+import { observeBlockHeight } from "$lib/utils/layout-css-vars";
+import { getMapChromeVisibility } from "$lib/utils/map-chrome";
+import { dropdownFadeIn, dropdownFadeOut } from "$lib/utils/motion";
+import { registerEphemeralOverlayDismisser } from "$lib/utils/overlay-stack";
+import { registerSearchFocus } from "$lib/utils/search-focus";
 import {
 	adminAuthStore,
 	editorChromeStore,
@@ -24,7 +24,7 @@ import {
 	proposalsStore,
 	queryStore,
 	sidePanelStore,
-} from "$lib/store.svelte";
+} from "$lib/utils/store.svelte";
 import Suggestions from "./Suggestions.svelte";
 
 let searchElement = $state<HTMLInputElement | null>(null);

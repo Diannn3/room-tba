@@ -1,7 +1,7 @@
 import { env } from '$env/dynamic/private';
 import { parseRequiredEditorVersion } from '$lib/admin/expected-version';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
-import { parseEventImageUrl } from '$lib/r2-upload';
+import { parseEventImageUrl } from '$lib/utils/r2-upload';
 import {
 	DuplicateSlugError,
 	deactivateEvent,
@@ -9,7 +9,7 @@ import {
 	type EventWriteInput,
 	updateEvent
 } from '$lib/services/admin/actions';
-import { slugifySegment } from '$lib/site';
+import { slugifySegment } from '$lib/utils/site';
 import type { RequestHandler } from './$types';
 
 type EventPatchBody = EventWriteInput & {

@@ -5,7 +5,7 @@ import {
 	placeCategoryLabel,
 	placeDirectoryLabel
 } from '$lib/constants/content/categories/place';
-import { entityIndexPath, getPlaceCanonicalPath, parseRouteSlug } from '$lib/entity-urls';
+import { entityIndexPath, getPlaceCanonicalPath, parseRouteSlug } from '$lib/utils/entity-urls';
 import { getAllPlaces } from '$lib/services/entity/map-data';
 import { getPlacePageData } from '$lib/services/page-data/entity';
 import {
@@ -15,7 +15,7 @@ import {
 	ogCardPath,
 	ogImageUrl,
 	webpageSchema
-} from '$lib/site';
+} from '$lib/utils/site';
 
 /** PlaceEntityPage.astro, shared by /establishment/[slug] and /landmark/[slug]. */
 export async function loadPlacePage(slug: string) {

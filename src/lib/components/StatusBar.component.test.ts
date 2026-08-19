@@ -1,19 +1,19 @@
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { afterEach, describe, expect, test, vi } from 'vitest';
-import type { SponsorsData } from '$lib/sponsors';
+import type { SponsorsData } from '$lib/utils/sponsors';
 import { expectSingleLineButton, mountAtWidth } from '@test/layout-assertions';
 
 const loadSponsorsMock = vi.hoisted(() =>
 	vi.fn<() => Promise<SponsorsData | null>>(async () => null)
 );
 vi.mock('$lib/sponsors', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/sponsors')>()),
+	...(await importOriginal<typeof import('$lib/utils/sponsors')>()),
 	loadSponsors: loadSponsorsMock
 }));
 
 import StatusBar from '$lib/components/StatusBar.svelte';
-import { syncToastStore } from '$lib/store.svelte';
+import { syncToastStore } from '$lib/utils/store.svelte';
 
 afterEach(() => {
 	syncToastStore.clearSyncError();

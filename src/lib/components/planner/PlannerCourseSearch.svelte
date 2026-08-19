@@ -1,14 +1,14 @@
 <script lang="ts">
   import Search from "@lucide/svelte/icons/search";
   import { SvelteSet } from "svelte/reactivity";
-  import { fetchClassPage, fetchAllClasses } from "$lib/classes-api";
+  import { fetchClassPage, fetchAllClasses } from "$lib/utils/classes-api";
   import {
     groupClassesByOffering,
     offeringGroupKey,
     type ClassOfferingGroup,
-  } from "$lib/class-offering-groups";
-  import { plannerStore, termStore, toastStore } from "$lib/store.svelte";
-  import type { ClassMapValue } from "$lib/types";
+  } from "$lib/utils/class-offering-groups";
+  import { plannerStore, termStore, toastStore } from "$lib/utils/store.svelte";
+  import type { ClassMapValue } from "$lib/utils/types";
 
   const termId = $derived(
     plannerStore.activePlan?.termId ?? termStore.activeTermId,

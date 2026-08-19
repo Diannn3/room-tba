@@ -7,8 +7,8 @@
 	import Plus from '@lucide/svelte/icons/plus';
 	import X from '@lucide/svelte/icons/x';
 	import { fly } from 'svelte/transition';
-	import { trapFocus } from '$lib/focus-trap';
-	import { fullScreenDismiss, fullScreenReveal } from '$lib/motion';
+	import { trapFocus } from '$lib/utils/focus-trap';
+	import { fullScreenDismiss, fullScreenReveal } from '$lib/utils/motion';
 	import {
 		adminAuthStore,
 		plannerStore,
@@ -16,21 +16,21 @@
 		sidebarStore,
 		termStore,
 		toastStore
-	} from '$lib/store.svelte';
-	import { fetchAllClasses } from '$lib/classes-api';
+	} from '$lib/utils/store.svelte';
+	import { fetchAllClasses } from '$lib/utils/classes-api';
 	import { COURSE_CHANGE_DISCLAIMER } from '$lib/amis/room-scheduled-types';
-	import { changeOfMatriculationLabel } from '$lib/term-calendar';
-	import { fetchFinalExams, FINALS_SCOPE_NOTE } from '$lib/final-exams';
-	import { isUnscheduled } from '$lib/planner/conflicts';
-	import { buildPlanIcs } from '$lib/planner/ics';
-	import { renderPlanToPng } from '$lib/planner/plan-image';
-	import { encodeSharePlan } from '$lib/planner/share-codec';
+	import { changeOfMatriculationLabel } from '$lib/utils/term-calendar';
+	import { fetchFinalExams, FINALS_SCOPE_NOTE } from '$lib/utils/final-exams';
+	import { isUnscheduled } from '$lib/utils/planner/conflicts';
+	import { buildPlanIcs } from '$lib/utils/planner/ics';
+	import { renderPlanToPng } from '$lib/utils/planner/plan-image';
+	import { encodeSharePlan } from '$lib/utils/planner/share-codec';
 	import FinalExamsList from '$lib/components/room/FinalExamsList.svelte';
 	import TermSelector from '$lib/components/TermSelector.svelte';
 	import GoogleCalendarIcon from '$lib/components/icons/GoogleCalendarIcon.svelte';
 	import PlannerCourseSearch from './PlannerCourseSearch.svelte';
 	import PlannerGrid from './PlannerGrid.svelte';
-	import type { ClassMapValue, FinalExamRow } from '$lib/types';
+	import type { ClassMapValue, FinalExamRow } from '$lib/utils/types';
 	import { tick } from 'svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 

@@ -13,19 +13,19 @@ import {
 	organizationsTable,
 	roomsTable
 } from '$lib/server/db/schema';
-import { normalizeAlias } from '$lib/site';
+import { normalizeAlias } from '$lib/utils/site';
 import type { SessionUser } from '$lib/admin/auth';
-import { db } from '$lib/db';
+import { db } from '$lib/utils/db';
 import { validateSubmitterName, validateSubmitterNote } from '$lib/constants/contribute/proposals';
 import { recordProposalContribution } from './contributor-action';
-import { parseImageUrl } from '$lib/r2-upload';
+import { parseImageUrl } from '$lib/utils/r2-upload';
 import { env } from '$env/dynamic/private';
 const { R2_PUBLIC_URL } = env;
 import {
 	parseEntityPhotoUrls,
 	reconcileEntityPhotos,
 	type ParsedEntityPhotoUrls
-} from '$lib/entity-photos';
+} from '$lib/utils/entity-photos';
 import { resolvePhotoAttribution } from './entity-photo';
 import { canWithdrawProposal } from './proposal-access';
 export {
@@ -74,12 +74,12 @@ import {
 	type JeepneyStopCreateInput,
 	type JeepneyStopWriteInput
 } from '../transit';
-import { allowEntityScopedProposalMerge } from '$lib/proposals/proposal-merge-policy';
+import { allowEntityScopedProposalMerge } from '$lib/utils/proposals/proposal-merge-policy';
 import {
 	ProposalValidationError,
 	parseBundledRooms,
 	validateCreateProposalPatch
-} from '$lib/proposals/create-proposal-validation';
+} from '$lib/utils/proposals/create-proposal-validation';
 
 export const PROPOSAL_UPDATE_TYPES = [
 	'building',
@@ -733,7 +733,7 @@ export {
 	parseBundledRooms,
 	validateBundledRooms,
 	type BundledRoomDraft
-} from '$lib/proposals/create-proposal-validation';
+} from '$lib/utils/proposals/create-proposal-validation';
 
 export class ProposalActionError extends Error {
 	status: number;

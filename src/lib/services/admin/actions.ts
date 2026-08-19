@@ -4,10 +4,10 @@ import { parsePublishingActor } from '$lib/admin/auth';
 import { sanitizeCrFacilities } from '$lib/constants/map/cr-facilities';
 import { normalizePlaceCategory } from '$lib/constants/content/categories/place';
 import { normalizeRoomCategory } from '$lib/constants/content/categories/room';
-import { db } from '$lib/db';
-import { normalizeEntityName } from '$lib/entity-names';
-import { entityIndexPath } from '$lib/entity-urls';
-import { normalizeEntityPhotos, type EntityPhoto } from '$lib/entity-photos';
+import { db } from '$lib/utils/db';
+import { normalizeEntityName } from '$lib/utils/entity-names';
+import { entityIndexPath } from '$lib/utils/entity-urls';
+import { normalizeEntityPhotos, type EntityPhoto } from '$lib/utils/entity-photos';
 import {
 	buildingIsrPath,
 	collegeIsrPath,
@@ -18,7 +18,7 @@ import {
 	placeIsrPaths,
 	revalidateIsrPaths,
 	roomIsrPath
-} from '$lib/isr-revalidate';
+} from '$lib/utils/isr-revalidate';
 import {
 	buildingsTable,
 	collegesTable,
@@ -35,7 +35,7 @@ import {
 	roomsTable,
 	updateTable
 } from '$lib/server/db/schema';
-import type { EventData, PlaceData, RoomData } from '$lib/types';
+import type { EventData, PlaceData, RoomData } from '$lib/utils/types';
 import { recordEditorContribution } from '../contribution/contributor-action';
 import { EditConflictError } from '../contribution/edit-conflict-error';
 import { getEventById } from '../entity/event';

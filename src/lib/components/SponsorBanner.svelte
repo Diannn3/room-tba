@@ -6,11 +6,11 @@
     loadSponsors,
     rotateSponsor,
     type Sponsor,
-  } from "$lib/sponsors";
+  } from "$lib/utils/sponsors";
   import {
     trackSponsorClick,
     trackSponsorImpression,
-  } from "$lib/sponsor-tracking";
+  } from "$lib/utils/sponsor-tracking";
 
   const DISMISS_KEY = "rtba-sponsor-dismissed";
 

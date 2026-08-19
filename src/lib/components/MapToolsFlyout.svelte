@@ -12,8 +12,8 @@
     measureRouteStore,
     travelTimeStore,
     type MapToolsSection,
-  } from "$lib/store.svelte";
-  import { panelFadeIn, panelFadeOut } from "$lib/motion";
+  } from "$lib/utils/store.svelte";
+  import { panelFadeIn, panelFadeOut } from "$lib/utils/motion";
   import MapViewControls from "$lib/components/MapViewControls.svelte";
   import MapLegend from "$lib/components/MapLegend.svelte";
   import TerrainControl from "$lib/components/TerrainControl.svelte";
@@ -21,7 +21,7 @@
   import TrailControl from "$lib/components/TrailControl.svelte";
   import JeepneyMenu from "$lib/components/JeepneyMenu.svelte";
   import ScheduleImportPanel from "$lib/components/ScheduleImportPanel.svelte";
-  import { trapFocus } from "$lib/focus-trap";
+  import { trapFocus } from "$lib/utils/focus-trap";
   import MapChromeFabTrigger from "$lib/components/map-chrome/MapChromeFabTrigger.svelte";
   import MapChromePanel from "$lib/components/map-chrome/MapChromePanel.svelte";
   import "./map-chrome/map-chrome.css";

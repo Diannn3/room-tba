@@ -1,12 +1,12 @@
 <script lang="ts">
 	import LoadingIndicator from '$lib/components/LoadingIndicator.svelte';
-	import { buildFieldDiffs } from '$lib/proposals/diff';
-	import { appEntityNameResolver } from '$lib/proposals/entity-names';
-	import { afterProposalPublished } from '$lib/proposals/apply-published-entity';
-	import { syncOpenEntityQueryAfterPublish } from '$lib/proposals/sync-open-entity-query';
+	import { buildFieldDiffs } from '$lib/utils/proposals/diff';
+	import { appEntityNameResolver } from '$lib/utils/proposals/entity-names';
+	import { afterProposalPublished } from '$lib/utils/proposals/apply-published-entity';
+	import { syncOpenEntityQueryAfterPublish } from '$lib/utils/proposals/sync-open-entity-query';
 	import type { ProposalEntityType } from '$lib/services/contribution/proposal-action';
-	import { getAppActions, getAppData } from '$lib/context';
-	import { toastStore } from '$lib/store.svelte';
+	import { getAppActions, getAppData } from '$lib/utils/context';
+	import { toastStore } from '$lib/utils/store.svelte';
 	import EntityEditorSubmitButton from './EntityEditorSubmitButton.svelte';
 
 	type HistoryEntry = {

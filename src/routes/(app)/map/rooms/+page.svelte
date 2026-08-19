@@ -1,6 +1,6 @@
 <script lang="ts">
 	import MapBrowseList from "$lib/components/map/MapBrowseList.svelte";
-	import { getAppData } from "$lib/context";
+	import { getAppData } from "$lib/utils/context";
 	import type { PageData } from "./$types";
 
 	const { data }: { data: PageData } = $props();

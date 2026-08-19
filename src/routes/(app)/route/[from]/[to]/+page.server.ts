@@ -1,12 +1,12 @@
 import { error } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
-import { fetchCampusRoute, formatDistance, formatDuration } from '$lib/campus-route';
+import { fetchCampusRoute, formatDistance, formatDuration } from '$lib/utils/campus-route';
 import type { SeoData } from '$lib/components/seo/seo-data';
-import { getBuildingCanonicalPath } from '$lib/entity-urls';
-import { describeRoute, generateRouteDescription } from '$lib/route-description';
-import { getRoutePath } from '$lib/route-links';
+import { getBuildingCanonicalPath } from '$lib/utils/entity-urls';
+import { describeRoute, generateRouteDescription } from '$lib/utils/route-description';
+import { getRoutePath } from '$lib/utils/route-links';
 import { findBySlug, getRoutablePlaces } from '$lib/services/route';
-import { breadcrumbSchema, jsonLd, webpageSchema } from '$lib/site';
+import { breadcrumbSchema, jsonLd, webpageSchema } from '$lib/utils/site';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {

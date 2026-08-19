@@ -4,7 +4,7 @@
     setAppActions,
     setAppData,
     type AppContextData,
-  } from "$lib/context";
+  } from "$lib/utils/context";
 
   type Props = {
     data: AppContextData;

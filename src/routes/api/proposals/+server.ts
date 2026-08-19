@@ -8,7 +8,7 @@ import { validateSubmitterName } from '$lib/constants/contribute/proposals';
 import {
 	emitProposalSubmitted,
 	logNotificationEmitFailure
-} from '$lib/notifications/proposal-events';
+} from '$lib/utils/notifications/proposal-events';
 import { ProposalValidationError, submitProposal } from '$lib/services/contribution/proposal-action';
 import type { RequestHandler } from './$types';
 

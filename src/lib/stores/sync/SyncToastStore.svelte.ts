@@ -1,5 +1,5 @@
 
-import { recordSyncTelemetry } from '../../telemetry.js';
+import { recordSyncTelemetry } from '../../utils/telemetry.js';
 import type {
     SyncActivity,
     SyncInfo,

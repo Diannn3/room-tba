@@ -3,14 +3,14 @@
   import maplibregl from "maplibre-gl";
   import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-csp-worker.js?url";
   import "maplibre-gl/dist/maplibre-gl.css";
-  import { campusMap } from "$lib/campus.config";
+  import { campusMap } from "$lib/utils/campus.config";
   import {
     campusSlug,
     generateCampusConfig,
     vercelDeployUrl,
     type ForkConfig,
-  } from "$lib/fork/campus-config-template";
-  import { copyTextToClipboard } from "$lib/clipboard";
+  } from "$lib/utils/fork/campus-config-template";
+  import { copyTextToClipboard } from "$lib/utils/clipboard";
 
   // Same prod trap as Map.svelte: Vite inlines maplibre into the app chunk and
   // the GeoJSON path dies inside the worker ("f is not defined") on production

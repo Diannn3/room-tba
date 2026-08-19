@@ -2,9 +2,9 @@ import { render, screen } from '@testing-library/svelte';
 import { beforeEach, describe, expect, test } from 'vitest';
 import AcademicCalendarScreen from '$lib/components/calendar/AcademicCalendarScreen.svelte';
 import { expectNoHorizontalOverflow, mountAtWidth } from '@test/layout-assertions';
-import { EVENT_MARKER_STEP_PCT } from '$lib/academic-calendar';
-import { termStore } from '$lib/store.svelte';
-import type { TermWithCount } from '$lib/types';
+import { EVENT_MARKER_STEP_PCT } from '$lib/utils/academic-calendar';
+import { termStore } from '$lib/utils/store.svelte';
+import type { TermWithCount } from '$lib/utils/types';
 
 // Windows are placed around the real clock so the screen's "today" snapshot
 // lands inside term B without mocking Date.

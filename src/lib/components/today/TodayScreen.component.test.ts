@@ -7,9 +7,9 @@ import {
 	scheduleRouteStore,
 	sidebarStore,
 	termStore
-} from '$lib/store.svelte';
+} from '$lib/utils/store.svelte';
 import { mountAtWidth } from '@test/layout-assertions';
-import type { ClassMapValue } from '$lib/types';
+import type { ClassMapValue } from '$lib/utils/types';
 
 const row = (overrides: Partial<ClassMapValue> = {}): ClassMapValue => ({
 	id: 1,

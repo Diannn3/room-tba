@@ -1,9 +1,9 @@
-import type { ClassMapValue } from '$lib/types';
-import { offeringGroupKey, parentLectureSection } from '../class-offering-groups.js';
-import { findConflicts } from '../planner/conflicts.js';
-import { mergePlannerState, parsePlanner, serializePlanner } from '../planner/persist.js';
-import type { PlannedSection, PlannerPlan } from '../planner/types.js';
-import { sectionNaturalKey } from '../planner/types.js';
+import type { ClassMapValue } from '$lib/utils/types.js';
+import { offeringGroupKey, parentLectureSection } from '../utils/class-offering-groups.js';
+import { findConflicts } from '../utils/planner/conflicts.js';
+import { mergePlannerState, parsePlanner, serializePlanner } from '../utils/planner/persist.js';
+import type { PlannedSection, PlannerPlan } from '../utils/planner/types.js';
+import { sectionNaturalKey } from '../utils/planner/types.js';
 import { PLANNER_LS_KEY } from './store-types.js';
 
 function rowToPlannedSection(row: ClassMapValue): PlannedSection | null {

@@ -1,17 +1,17 @@
 <script lang="ts">
 import { onMount, type Snippet } from "svelte";
 import { page } from "$app/state";
-import { campusCommunity } from "$lib/campus.config";
+import { campusCommunity } from "$lib/utils/campus.config";
 import Entry from "$lib/components/Entry.svelte";
 import {
 	type AppContextData,
 	type DBData,
 	setAppActions,
 	setAppData,
-} from "$lib/context";
-import { jitteredBackoffDelay, sleep } from "$lib/local/data/fetch-json";
-import { CAMPUS_DATA_REFRESH_EVENT } from "$lib/local/data/invalidate-sync-key";
-import { getDB } from "$lib/local/data/pgliteDB";
+} from "$lib/utils/context";
+import { jitteredBackoffDelay, sleep } from "$lib/utils/local/data/fetch-json";
+import { CAMPUS_DATA_REFRESH_EVENT } from "$lib/utils/local/data/invalidate-sync-key";
+import { getDB } from "$lib/utils/local/data/pgliteDB";
 import {
 	getSyncKeysFromLs,
 	localTableSyncCheck,
@@ -24,7 +24,7 @@ import {
 	syncEvents,
 	syncOrganizations,
 	syncPlaces,
-} from "$lib/local/data/sync";
+} from "$lib/utils/local/data/sync";
 import {
 	fetchRemoteEvents,
 	getBuildings,
@@ -37,15 +37,15 @@ import {
 	getPlaces,
 	getRoomsData,
 	loadCachedAppData,
-} from "$lib/local/data/utils";
+} from "$lib/utils/local/data/utils";
 import {
 	appBootstrapStore,
 	queryStore,
 	syncToastStore,
 	toastStore,
 	transitStore,
-} from "$lib/store.svelte";
-import { normalizeDormListFields } from "$lib/string-lists";
+} from "$lib/utils/store.svelte";
+import { normalizeDormListFields } from "$lib/utils/string-lists";
 import type {
 	BuildingData,
 	CollegeData,
@@ -55,7 +55,7 @@ import type {
 	OrgData,
 	PlaceData,
 	TableSyncInfo,
-} from "$lib/types";
+} from "$lib/utils/types";
 
 const { children }: { children: Snippet } = $props();
 

@@ -25,8 +25,8 @@
     openBrowseClasses,
     openCampusBrowse,
     type CampusBrowseTab,
-  } from "$lib/browse-campus";
-  import { campusTransit } from "$lib/campus.config";
+  } from "$lib/utils/browse-campus";
+  import { campusTransit } from "$lib/utils/campus.config";
   import {
     adminAuthStore,
     announcementsStore,
@@ -35,7 +35,7 @@
     queryStore,
     sidebarStore,
     sidePanelStore,
-  } from "$lib/store.svelte";
+  } from "$lib/utils/store.svelte";
   import Map from "@lucide/svelte/icons/map";
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import ChevronRight from "@lucide/svelte/icons/chevron-right";

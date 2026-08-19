@@ -1,4 +1,4 @@
-import { dismissEphemeralOverlays } from '$lib/overlay-stack';
+import { dismissEphemeralOverlays } from '$lib/utils/overlay-stack';
 import { modalStore, plannerStore, proposalsStore } from './index.svelte';
 
 export default class AdminAuthStore {

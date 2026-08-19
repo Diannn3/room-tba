@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import type { Sponsor, SponsorsData } from '$lib/sponsors';
+import type { Sponsor, SponsorsData } from '$lib/utils/sponsors';
 
 vi.mock('$lib/sponsor-tracking', () => ({
 	trackSponsorImpression: vi.fn(),
@@ -10,7 +10,7 @@ vi.mock('$lib/sponsor-tracking', () => ({
 
 const loadSponsorsMock = vi.hoisted(() => vi.fn<() => Promise<SponsorsData | null>>());
 vi.mock('$lib/sponsors', async (importOriginal) => ({
-	...(await importOriginal<typeof import('$lib/sponsors')>()),
+	...(await importOriginal<typeof import('$lib/utils/sponsors')>()),
 	loadSponsors: loadSponsorsMock
 }));
 

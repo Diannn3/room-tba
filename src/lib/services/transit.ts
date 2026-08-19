@@ -1,6 +1,6 @@
 import { and, asc, eq, max, sql } from 'drizzle-orm';
 import { jeepneyRoutesTable, jeepneyStopsTable } from '$lib/server/db/schema';
-import { db } from '$lib/db';
+import { db } from '$lib/utils/db';
 import type { JeepneyRoute, JeepneyStop } from '$lib/constants/map/jeepney-routes';
 import { refreshSyncKey, recordEditorHistory } from './admin/actions';
 import { EditConflictError } from './contribution/edit-conflict-error';

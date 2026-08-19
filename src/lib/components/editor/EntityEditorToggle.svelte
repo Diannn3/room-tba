@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { editorToggleLabel } from "$lib/editor/field-action-label";
+  import { editorToggleLabel } from "$lib/utils/editor/field-action-label";
   import "./entity-editor.css";
 
   type Props = {

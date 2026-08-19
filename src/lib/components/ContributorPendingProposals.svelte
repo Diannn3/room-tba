@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { loadOpenPendingProposals, withdrawEntityProposal } from '$lib/proposals/client';
-	import type { PendingProposalRow } from '$lib/proposals/pending-proposals';
-	import { formatProposalStatusLabel } from '$lib/proposals/pending-proposals';
-	import { adminAuthStore, toastStore } from '$lib/store.svelte';
+	import { loadOpenPendingProposals, withdrawEntityProposal } from '$lib/utils/proposals/client';
+	import type { PendingProposalRow } from '$lib/utils/proposals/pending-proposals';
+	import { formatProposalStatusLabel } from '$lib/utils/proposals/pending-proposals';
+	import { adminAuthStore, toastStore } from '$lib/utils/store.svelte';
 	import EntityEditorMessage from '$lib/components/editor/EntityEditorMessage.svelte';
 	import EntityEditorSubmitButton from '$lib/components/editor/EntityEditorSubmitButton.svelte';
 	import { onMount } from 'svelte';

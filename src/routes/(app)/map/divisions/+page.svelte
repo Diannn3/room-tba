@@ -1,7 +1,7 @@
 <script lang="ts">
 	import MapBrowseList from "$lib/components/map/MapBrowseList.svelte";
-	import { getAppData } from "$lib/context";
-	import { getDivisionCanonicalPath } from "$lib/entity-urls";
+	import { getAppData } from "$lib/utils/context";
+	import { getDivisionCanonicalPath } from "$lib/utils/entity-urls";
 	import type { PageData } from "./$types";
 
 	const { data }: { data: PageData } = $props();

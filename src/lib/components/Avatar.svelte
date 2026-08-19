@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { nameInitials, nameColor } from "$lib/avatar";
+  import { nameInitials, nameColor } from "$lib/utils/avatar";
 
   type Props = {
     name: string;

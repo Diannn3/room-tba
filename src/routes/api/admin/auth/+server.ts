@@ -13,7 +13,7 @@ import {
 	getAdminUserBySupabaseId
 } from '$lib/services/admin/user';
 import { createServerSupabaseClient } from '$lib/supabase/server';
-import { verifyTurnstileToken } from '$lib/turnstile';
+import { verifyTurnstileToken } from '$lib/utils/turnstile';
 import type { RequestHandler } from './$types';
 
 const LOGIN_RATE_LIMIT_WINDOW_MS = 30 * 1000;

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { modalStore } from '$lib/store.svelte';
+import { modalStore } from '$lib/utils/store.svelte';
 
 vi.mock('$lib/github-contributors', () => ({
 	fetchGithubContributors: vi.fn().mockResolvedValue([])

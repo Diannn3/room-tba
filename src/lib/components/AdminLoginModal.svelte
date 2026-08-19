@@ -2,13 +2,13 @@
   import { fade, fly } from "svelte/transition";
   import { X, Lock } from "@lucide/svelte";
   import IconButton from "$lib/components/IconButton.svelte";
-  import { adminAuthStore, toastStore } from "$lib/store.svelte";
+  import { adminAuthStore, toastStore } from "$lib/utils/store.svelte";
   import {
     modalContentDismiss,
     modalContentReveal,
     overlayFade,
-  } from "$lib/motion";
-  import { trapFocus } from "$lib/focus-trap";
+  } from "$lib/utils/motion";
+  import { trapFocus } from "$lib/utils/focus-trap";
   import EntityEditorFormField from "$lib/components/editor/EntityEditorFormField.svelte";
   import EntityEditorSubmitButton from "$lib/components/editor/EntityEditorSubmitButton.svelte";
   import EntityEditorMessage from "$lib/components/editor/EntityEditorMessage.svelte";
@@ -22,7 +22,7 @@
   import {
     getTurnstileSiteKey,
     isTurnstileWidgetConfigured,
-  } from "$lib/turnstile-client";
+  } from "$lib/utils/turnstile-client";
   import { MIN_CONTRIBUTOR_PASSWORD_LENGTH } from "$lib/auth/contributor-signup";
 
   const reducedMotion = new MediaQuery("(prefers-reduced-motion: reduce)");

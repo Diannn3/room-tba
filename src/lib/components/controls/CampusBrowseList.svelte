@@ -5,8 +5,8 @@
   import EntityEmptyState from "./EntityEmptyState.svelte";
   import EntityPanelFilter from "./EntityPanelFilter.svelte";
   import EntityPanelHeader from "./EntityPanelHeader.svelte";
-  import { getAppData } from "$lib/context";
-  import type { CampusBrowseTab } from "$lib/browse-campus";
+  import { getAppData } from "$lib/utils/context";
+  import type { CampusBrowseTab } from "$lib/utils/browse-campus";
   import {
     isStudentOrganization,
     orgCategoryLabel,
@@ -20,17 +20,17 @@
     queryStore,
     sidePanelStore,
     transitStore,
-  } from "$lib/store.svelte";
+  } from "$lib/utils/store.svelte";
   import CollegeResult from "./CollegeResult.svelte";
   import BuildingResult from "./BuildingResult.svelte";
   import DivisionResult from "./DivisionResult.svelte";
   import OrgResult from "./OrgResult.svelte";
   import DormResult from "./DormResult.svelte";
   import PlaceResult from "./PlaceResult.svelte";
-  import { campusTransit } from "$lib/campus.config";
+  import { campusTransit } from "$lib/utils/campus.config";
 	import { resolve } from "$app/paths";
 	import { goto } from "$app/navigation";
-	import { slugifySegment } from "$lib/site";
+	import { slugifySegment } from "$lib/utils/site";
 
   // Derived from campusTransit.label so a fork edits one place:
   // label Jeepney routes → title Jeepney Routes, plural jeepney routes,

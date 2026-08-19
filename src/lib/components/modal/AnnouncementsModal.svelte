@@ -5,7 +5,7 @@
     adminAuthStore,
     announcementsStore,
     modalStore,
-  } from "$lib/store.svelte";
+  } from "$lib/utils/store.svelte";
   import {
     ANNOUNCEMENT_SEVERITIES,
     ANNOUNCEMENT_SEVERITY_LABELS,
@@ -15,14 +15,14 @@
     isPublished,
     relativeDateLabel,
     sortNewestFirst,
-  } from "$lib/announcements";
+  } from "$lib/utils/announcements";
   import {
     campusInputToWallString,
     campusWallTimeToInstant,
     formatCampusDateTime,
     instantToCampusInput,
-  } from "$lib/event-time";
-  import type { AnnouncementData } from "$lib/types";
+  } from "$lib/utils/event-time";
+  import type { AnnouncementData } from "$lib/utils/types";
 
   const canPublish = $derived(adminAuthStore.canPublish);
 

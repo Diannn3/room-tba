@@ -3,7 +3,7 @@
   import {
     draftPinMapProps,
     type DraftPinPreview,
-  } from "$lib/editor/draft-pin-preview";
+  } from "$lib/utils/editor/draft-pin-preview";
   import EventMapPin from "./EventMapPin.svelte";
   import MapEntityPin from "./MapEntityPin.svelte";
 

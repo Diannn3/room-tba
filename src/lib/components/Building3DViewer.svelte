@@ -3,16 +3,16 @@
 	import IconButton from '$lib/components/IconButton.svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { X, Building2, Loader, RotateCcw, Pencil } from '@lucide/svelte';
-	import { building3DStore, adminAuthStore } from '$lib/store.svelte';
-	import { modalContentDismiss, modalContentReveal, overlayFade } from '$lib/motion';
+	import { building3DStore, adminAuthStore } from '$lib/utils/store.svelte';
+	import { modalContentDismiss, modalContentReveal, overlayFade } from '$lib/utils/motion';
 	import { MediaQuery } from 'svelte/reactivity';
-	import { getAppData } from '$lib/context';
-	import type { RoomData } from '$lib/types';
-	import { getBuildingRooms } from '$lib/local/data/utils';
-	import { checkLocalBuildingRoom, syncBuildingRooms } from '$lib/local/data/sync';
-	import { fetchBuildingFootprint } from '$lib/overpass';
-	import { fetchBasemap } from '$lib/osm-basemap';
-	import { trapFocus } from '$lib/focus-trap';
+	import { getAppData } from '$lib/utils/context';
+	import type { RoomData } from '$lib/utils/types';
+	import { getBuildingRooms } from '$lib/utils/local/data/utils';
+	import { checkLocalBuildingRoom, syncBuildingRooms } from '$lib/utils/local/data/sync';
+	import { fetchBuildingFootprint } from '$lib/utils/overpass';
+	import { fetchBasemap } from '$lib/utils/osm-basemap';
+	import { trapFocus } from '$lib/utils/focus-trap';
 	import {
 		footprintToLocalPolygon,
 		placeRooms,
@@ -23,12 +23,12 @@
 		type LabelBox,
 		type LocalPolygonData,
 		type RoomPlacement
-	} from '$lib/building-3d';
+	} from '$lib/utils/building-3d';
 	import {
 		inferBuildingPlacements,
 		type InferredPlacement,
 		type RoomPlacementInput
-	} from '$lib/room-placement';
+	} from '$lib/utils/room-placement';
 
 	const appData = getAppData();
 	const buildings = $derived(appData().loaded ? appData().buildings : []);

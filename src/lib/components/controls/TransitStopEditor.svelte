@@ -5,17 +5,17 @@
     adminAuthStore,
     sidePanelStore,
     transitStore,
-  } from "$lib/store.svelte";
+  } from "$lib/utils/store.svelte";
   import {
     persistEntityChange,
     publishEntityCreate,
     resolveSubmitterName,
     submitEntityProposal,
-  } from "$lib/proposals/client";
+  } from "$lib/utils/proposals/client";
   import {
     ProposalValidationError,
     validateCreateProposalPatch,
-  } from "$lib/proposals/create-proposal-validation";
+  } from "$lib/utils/proposals/create-proposal-validation";
   import EntityEditorFormField from "$lib/components/editor/EntityEditorFormField.svelte";
   import EntityEditorPanel from "$lib/components/editor/EntityEditorPanel.svelte";
   import EntityEditorPinRow from "$lib/components/editor/EntityEditorPinRow.svelte";

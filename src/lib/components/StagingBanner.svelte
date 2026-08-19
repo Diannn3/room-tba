@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { isStagingApp } from "$lib/app-env";
-  import { observeBlockHeight } from "$lib/layout-css-vars";
+  import { isStagingApp } from "$lib/utils/app-env";
+  import { observeBlockHeight } from "$lib/utils/layout-css-vars";
 
   let bannerEl = $state<HTMLElement | null>(null);
   const visible = $derived(isStagingApp());

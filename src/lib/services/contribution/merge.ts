@@ -9,9 +9,9 @@ import {
 	roomsTable,
 	roomPositionsTable
 } from '$lib/server/db/schema';
-import { normalizeEntityName } from '$lib/entity-names';
-import { db } from '$lib/db';
-import type { RoomData } from '$lib/types';
+import { normalizeEntityName } from '$lib/utils/entity-names';
+import { db } from '$lib/utils/db';
+import type { RoomData } from '$lib/utils/types';
 import {
 	EditConflictError,
 	DuplicateNameError,

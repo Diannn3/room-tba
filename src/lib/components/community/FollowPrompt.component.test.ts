@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeEach, describe, expect, test } from 'vitest';
 import FollowPrompt from './FollowPrompt.svelte';
-import { FOLLOW_PROMPT_KEY } from '$lib/social-follow';
+import { FOLLOW_PROMPT_KEY } from '$lib/utils/social-follow';
 
 const note = 'Fixes and new features get posted on Facebook and Instagram.';
 

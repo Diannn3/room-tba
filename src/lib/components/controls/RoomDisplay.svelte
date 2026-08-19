@@ -2,9 +2,9 @@
 	import { goto } from "$app/navigation";
 	import { resolve } from "$app/paths";
 import RoomResult from "$lib/components/room/RoomResult.svelte";
-import { slugifySegment } from "$lib/site";
-import { queryStore, sidePanelStore } from "$lib/store.svelte";
-import type { RoomData } from "$lib/types";
+import { slugifySegment } from "$lib/utils/site";
+import { queryStore, sidePanelStore } from "$lib/utils/store.svelte";
+import type { RoomData } from "$lib/utils/types";
 
 type Props = {
 	room: RoomData;

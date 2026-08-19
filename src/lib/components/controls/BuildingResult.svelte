@@ -17,31 +17,31 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     crFacilityLabel,
     sanitizeCrFacilities,
   } from "$lib/constants/map/cr-facilities";
-  import { getAppActions, getAppData } from "$lib/context";
+  import { getAppActions, getAppData } from "$lib/utils/context";
   import {
     clearEntityContributorDraft,
     readEntityContributorDraft,
     scheduleEntityContributorDraftSave,
-  } from "$lib/contributor-drafts";
-  import { entityEditorSavedMessage, fieldSaveActionLabel } from "$lib/editor/field-action-label";
-  import { handlePersistEntityResult } from "$lib/editor/handle-persist-result";
+  } from "$lib/utils/contributor-drafts";
+  import { entityEditorSavedMessage, fieldSaveActionLabel } from "$lib/utils/editor/field-action-label";
+  import { handlePersistEntityResult } from "$lib/utils/editor/handle-persist-result";
   import {
     checkLocalBuildingRoom,
     getLocalBuildingRooms,
     syncBuildingRooms,
-  } from "$lib/local/data/sync";
+  } from "$lib/utils/local/data/sync";
   import {
     fetchEntityRoomsRemote,
     fetchRoomClassCounts,
     getBuildingRooms,
-  } from "$lib/local/data/utils";
+  } from "$lib/utils/local/data/utils";
   import {
     getStoredProposalForEntity,
     mergeEntityRecord,
     persistEntityChange,
-  } from "$lib/proposals/client";
-  import { getBuildingShareUrl } from "$lib/share-links";
-  import { normalizeEntityPhotos, type EntityPhoto } from "$lib/entity-photos";
+  } from "$lib/utils/proposals/client";
+  import { getBuildingShareUrl } from "$lib/utils/share-links";
+  import { normalizeEntityPhotos, type EntityPhoto } from "$lib/utils/entity-photos";
   import {
     adminAuthStore,
     building3DStore,
@@ -50,8 +50,8 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     queryStore,
     termStore,
     toastStore,
-  } from "$lib/store.svelte";
-  import type { BuildingData, RoomData } from "$lib/types";
+  } from "$lib/utils/store.svelte";
+  import type { BuildingData, RoomData } from "$lib/utils/types";
   import EntityLastUpdated from "../EntityLastUpdated.svelte";
   import EntityBackToList from "./EntityBackToList.svelte";
   import EntityDirectionsChip from "./EntityDirectionsChip.svelte";

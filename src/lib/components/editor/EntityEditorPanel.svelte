@@ -10,9 +10,9 @@
   import {
     canShowWithdrawProposal,
     proposalStatusMessage,
-  } from "$lib/editor/field-action-label";
-  import { withdrawEntityProposal } from "$lib/proposals/client";
-  import { toastStore } from "$lib/store.svelte";
+  } from "$lib/utils/editor/field-action-label";
+  import { withdrawEntityProposal } from "$lib/utils/proposals/client";
+  import { toastStore } from "$lib/utils/store.svelte";
   import "./entity-editor.css";
 
   type Props = {

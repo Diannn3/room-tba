@@ -1,6 +1,6 @@
 <script lang="ts">
   import Users from "@lucide/svelte/icons/users";
-  import { fetchVisitorCount } from "$lib/visitor-count";
+  import { fetchVisitorCount } from "$lib/utils/visitor-count";
 
   let { digits = 6, label = "Visitor #" }: {
     digits?: number;

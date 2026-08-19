@@ -1,7 +1,7 @@
 <script lang="ts">
 import { onMount, type Snippet } from "svelte";
-import type { InitialSearchState } from "$lib/app-data";
-import { campusTransit } from "$lib/campus.config";
+import type { InitialSearchState } from "$lib/utils/app-data";
+import { campusTransit } from "$lib/utils/campus.config";
 import AccountSettingsModal from "$lib/components/AccountSettingsModal.svelte";
 import AdminLoginModal from "$lib/components/AdminLoginModal.svelte";
 import Building3DViewer from "$lib/components/Building3DViewer.svelte";
@@ -20,10 +20,10 @@ import PlannerScreen from "$lib/components/planner/PlannerScreen.svelte";
 import Toast from "$lib/components/Toast.svelte";
 import TravelTimeLegend from "$lib/components/TravelTimeLegend.svelte";
 import TodayScreen from "$lib/components/today/TodayScreen.svelte";
-import { getAppData } from "$lib/context";
-import { resolveSharedPlan } from "$lib/planner/import-shared";
-import { decodeSharePlan } from "$lib/planner/share-codec";
-import { findCampusPointBySlug } from "$lib/route-links";
+import { getAppData } from "$lib/utils/context";
+import { resolveSharedPlan } from "$lib/utils/planner/import-shared";
+import { decodeSharePlan } from "$lib/utils/planner/share-codec";
+import { findCampusPointBySlug } from "$lib/utils/route-links";
 import {
 	adminAuthStore,
 	announcementsStore,
@@ -44,22 +44,22 @@ import {
 	termStore,
 	toastStore,
 	travelTimeStore,
-} from "$lib/store.svelte";
+} from "$lib/utils/store.svelte";
 import "./map-chrome/map-chrome.css";
 import { MediaQuery } from "svelte/reactivity";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
-import { openCampusBrowse } from "$lib/browse-campus";
+import { openCampusBrowse } from "$lib/utils/browse-campus";
 import {
 	dispatchGlobalShortcut,
 	getGlobalShortcutAction,
-} from "$lib/keyboard-shortcuts";
-import { shouldAutoOpenLandingModal } from "$lib/landing-modal-auto-open";
-import { observeBlockHeight } from "$lib/layout-css-vars";
-import { isRecentSearch } from "$lib/locStorage";
-import { dismissEphemeralOverlays } from "$lib/overlay-stack";
-import { getTransitRoutePath, getTransitStopPath } from "$lib/transit-urls";
-import type { RecentSearch } from "$lib/types";
+} from "$lib/utils/keyboard-shortcuts";
+import { shouldAutoOpenLandingModal } from "$lib/utils/landing-modal-auto-open";
+import { observeBlockHeight } from "$lib/utils/layout-css-vars";
+import { isRecentSearch } from "$lib/utils/locStorage";
+import { dismissEphemeralOverlays } from "$lib/utils/overlay-stack";
+import { getTransitRoutePath, getTransitStopPath } from "$lib/utils/transit-urls";
+import type { RecentSearch } from "$lib/utils/types";
 import AnnouncementBar from "./AnnouncementBar.svelte";
 import DesktopTopBar from "./map-chrome/DesktopTopBar.svelte";
 import KeyboardShortcutsPopup from "./map-chrome/KeyboardShortcutsPopup.svelte";

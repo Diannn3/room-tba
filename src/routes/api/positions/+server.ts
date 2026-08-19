@@ -2,7 +2,7 @@ import type { Cookies } from '@sveltejs/kit';
 import { eq, inArray } from 'drizzle-orm';
 import { canPublishDirectly } from '$lib/admin/auth';
 import { getEditorSession } from '$lib/admin/require-editor';
-import { db } from '$lib/db';
+import { db } from '$lib/utils/db';
 import { buildingsTable, roomPositionsTable, roomsTable } from '$lib/server/db/schema';
 import { refreshSyncKey } from '$lib/services/admin/actions';
 import type { RequestHandler } from './$types';

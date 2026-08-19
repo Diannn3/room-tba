@@ -7,15 +7,15 @@ const { ADMIN_PASSWORD } = env;
 
 import type { SessionUser } from '$lib/admin/auth';
 import { createSignedToken, verifySignedToken } from '$lib/admin/signed-token';
-import { db } from '$lib/db';
-import { sendEmail } from '$lib/email/resend';
+import { db } from '$lib/utils/db';
+import { sendEmail } from '$lib/utils/email/resend';
 import {
 	adminUsersTable,
 	contributionsTable,
 	editProposalsTable,
 	plannerPlansTable
 } from '$lib/server/db/schema';
-import { SITE_URL } from '$lib/site';
+import { SITE_URL } from '$lib/utils/site';
 
 export class AccountActionError extends Error {
 	status: number;

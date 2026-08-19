@@ -6,7 +6,7 @@
 		OG_IMAGE_HEIGHT,
 		OG_IMAGE_WIDTH,
 		SITE_URL,
-	} from "$lib/site";
+	} from "$lib/utils/site";
 	import type { SeoData } from "./seo-data";
 
 	const { seo }: { seo: SeoData } = $props();

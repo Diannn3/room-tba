@@ -5,12 +5,12 @@
 	import type { Snippet } from 'svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { page } from '$app/state';
-	import type { BottomSheetSnap } from '$lib/bottom-sheet-snap';
+	import type { BottomSheetSnap } from '$lib/utils/bottom-sheet-snap';
 	import BottomSheet from '$lib/components/BottomSheet.svelte';
 	import JeepneyRouteModal from '$lib/components/modal/JeepneyRouteModal.svelte';
 	import SponsorBanner from '$lib/components/SponsorBanner.svelte';
-	import { resolvePanelContent } from '$lib/side-panel-content';
-	import { jeepneyStore, queryStore, sidePanelStore } from '$lib/store.svelte';
+	import { resolvePanelContent } from '$lib/utils/side-panel-content';
+	import { jeepneyStore, queryStore, sidePanelStore } from '$lib/utils/store.svelte';
 	import JeepneyStopPanel from './JeepneyStopPanel.svelte';
 
 	// The route always renders into the panel, but only a browse route replaces

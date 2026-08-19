@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeEntityName } from '$lib/entity-names';
+import { normalizeEntityName } from '$lib/utils/entity-names';
 
 describe('entity merge duplicate detection', () => {
 	it('treats spacing and punctuation variants as the same name', () => {

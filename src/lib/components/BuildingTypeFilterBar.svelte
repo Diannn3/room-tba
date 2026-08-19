@@ -8,13 +8,13 @@
     getBuildingTypeFilterOptions,
     type BuildingTypeFilter,
   } from "$lib/constants/content/categories/building"
-  import { getAppData } from "$lib/context";
+  import { getAppData } from "$lib/utils/context";
   import {
     buildingTypeFilter,
     jeepneyStore,
     queryStore,
     classVenuesStore,
-  } from "$lib/store.svelte";
+  } from "$lib/utils/store.svelte";
   import "./map-chrome/map-chrome.css";
 
   const appData = getAppData();

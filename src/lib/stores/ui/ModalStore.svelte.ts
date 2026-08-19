@@ -1,4 +1,4 @@
-import { dismissEphemeralOverlays } from "$lib/overlay-stack";
+import { dismissEphemeralOverlays } from "$lib/utils/overlay-stack";
 import type { LandingModalTab, ModalStoreState } from "../store-types";
 
 export default class ModalStore {

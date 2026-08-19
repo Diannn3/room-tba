@@ -2,7 +2,7 @@ import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
 import {
 	emitProposalReviewed,
 	logNotificationEmitFailure
-} from '$lib/notifications/proposal-events';
+} from '$lib/utils/notifications/proposal-events';
 import { approveProposal, ProposalActionError } from '$lib/services/contribution/proposal-action';
 import type { RequestHandler } from './$types';
 

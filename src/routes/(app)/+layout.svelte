@@ -17,7 +17,7 @@ import {
 	jsonLd,
 	webpageSchema,
 	websiteSchema,
-} from "$lib/site";
+} from "$lib/utils/site";
 
 const {children}: {children: Snippet} = $props()
 

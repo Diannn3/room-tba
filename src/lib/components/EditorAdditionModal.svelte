@@ -3,9 +3,9 @@
 	import MapPinPlus from '@lucide/svelte/icons/map-pin-plus';
 	import X from '@lucide/svelte/icons/x';
 	import IconButton from '$lib/components/IconButton.svelte';
-	import { adminAuthStore, editorChromeStore } from '$lib/store.svelte';
-	import { trapFocus } from '$lib/focus-trap';
-	import { modalContentDismiss, modalContentReveal, overlayFade } from '$lib/motion';
+	import { adminAuthStore, editorChromeStore } from '$lib/utils/store.svelte';
+	import { trapFocus } from '$lib/utils/focus-trap';
+	import { modalContentDismiss, modalContentReveal, overlayFade } from '$lib/utils/motion';
 	import SuggestAdditionPanel from '$lib/components/SuggestAdditionPanel.svelte';
 	import { MediaQuery } from 'svelte/reactivity';
 

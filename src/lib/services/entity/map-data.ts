@@ -15,11 +15,11 @@ import {
 } from '$lib/server/db/schema';
 import { encodeClassCursor, type ClassCursor } from '$lib/api/class-cursor';
 import { clampLimitValue } from '$lib/api/pagination';
-import { escapeLikePattern } from '$lib/like-escape';
-import { db } from '$lib/db';
-import { normalizeCourseCode } from '$lib/final-exams/normalize';
-import { normalizeAlias } from '$lib/site';
-import { normalizeDormListFields } from '$lib/string-lists';
+import { escapeLikePattern } from '$lib/utils/like-escape';
+import { db } from '$lib/utils/db';
+import { normalizeCourseCode } from '$lib/utils/final-exams/normalize';
+import { normalizeAlias } from '$lib/utils/site';
+import { normalizeDormListFields } from '$lib/utils/string-lists';
 import { attachProbableLocations } from '../probable-location';
 import { getBuildCache } from '../page-data/ssg-cache';
 import type {
@@ -32,7 +32,7 @@ import type {
 	PlaceData,
 	FinalExamRow,
 	RoomData
-} from '$lib/types';
+} from '$lib/utils/types';
 
 // Cached getters for SSG (#331)
 export async function getAllBuildingsCached(): Promise<BuildingData[]> {

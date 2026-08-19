@@ -1,5 +1,5 @@
-import { clearProposeEventDraft } from '../../contributor-drafts.js';
-import type { DraftPinPreview } from '../../editor/draft-pin-preview.js';
+import { clearProposeEventDraft } from '../../utils/contributor-drafts.js';
+import type { DraftPinPreview } from '../../utils/editor/draft-pin-preview.js';
 import { deactivateMapModesExcept } from '../map/map-modes.js';
 import type { EventPlacementDraft, MapProposalTarget } from '../store-types.js';
 

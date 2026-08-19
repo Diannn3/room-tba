@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { queryStore, sidebarStore } from "$lib/store.svelte";
-  import { formatExamDate, formatExamTimeRange } from "$lib/final-exams";
-  import type { FinalExamRow } from "$lib/types";
+  import { queryStore, sidebarStore } from "$lib/utils/store.svelte";
+  import { formatExamDate, formatExamTimeRange } from "$lib/utils/final-exams";
+  import type { FinalExamRow } from "$lib/utils/types";
 
   interface Props {
     exams: FinalExamRow[];

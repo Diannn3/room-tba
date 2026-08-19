@@ -1,5 +1,5 @@
-import { getEventSlug } from '$lib/app-data';
-import { campusTransit } from '$lib/campus.config';
+import { getEventSlug } from '$lib/utils/app-data';
+import { campusTransit } from '$lib/utils/campus.config';
 import { JEEPNEY_ROUTES } from '$lib/constants/map/jeepney-routes';
 import {
 	entityIndexPath,
@@ -11,7 +11,7 @@ import {
 	getOrganizationCanonicalPath,
 	getPlaceCanonicalPath,
 	getRoomCanonicalPath
-} from '$lib/entity-urls';
+} from '$lib/utils/entity-urls';
 import {
 	getAllBuildings,
 	getAllColleges,
@@ -22,8 +22,8 @@ import {
 	getAllRooms
 } from '$lib/services/entity/map-data';
 import { getSeoEvents } from '$lib/services/entity/event';
-import { absoluteUrl } from '$lib/site';
-import { getTransitRoutePath, getTransitStopPath, TRANSIT_INDEX_PATH } from '$lib/transit-urls';
+import { absoluteUrl } from '$lib/utils/site';
+import { getTransitRoutePath, getTransitStopPath, TRANSIT_INDEX_PATH } from '$lib/utils/transit-urls';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async () => {

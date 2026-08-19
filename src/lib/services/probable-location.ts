@@ -14,14 +14,14 @@ import {
 	roomsTable
 } from '$lib/server/db/schema';
 import { isRoomScheduledClassType } from '$lib/amis/room-scheduled-types';
-import { db } from '$lib/db';
+import { db } from '$lib/utils/db';
 import {
 	type HistoryRow,
 	type ProbableLocation,
 	rankBuildingsByHistory,
 	resolveProbableLocation
-} from '$lib/probable-location';
-import type { ClassMapValue } from '$lib/types';
+} from '$lib/utils/probable-location';
+import type { ClassMapValue } from '$lib/utils/types';
 
 const historySelect = {
 	buildingId: buildingsTable.id,

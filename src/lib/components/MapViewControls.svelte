@@ -13,13 +13,13 @@
     mapViewStore,
     plannerStore,
     terrainStore,
-  } from "$lib/store.svelte";
+  } from "$lib/utils/store.svelte";
   import { onMount } from "svelte";
   import { THREE_D_PITCH, isMap2DPitch } from "$lib/constants/map/dimension";
   import {
     enterFlatMapDimension,
     enterTiltedMapDimension,
-  } from "$lib/map-dimension-layers";
+  } from "$lib/utils/map-dimension-layers";
   import type { MapLibreMap } from "maplibre-gl";
 
   type Props = {

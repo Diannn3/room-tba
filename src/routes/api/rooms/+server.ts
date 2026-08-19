@@ -1,5 +1,5 @@
 import { error, json, type RequestHandler } from '@sveltejs/kit';
-import type { RoomData } from '$lib/types';
+import type { RoomData } from '$lib/utils/types';
 import {
 	getBuildingRooms,
 	getCollegeRooms,

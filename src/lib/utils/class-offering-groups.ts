@@ -1,0 +1,114 @@
+import type { ClassMapValue } from '$lib/utils/types';
+
+export type ClassOfferingGroup = {
+	key: string;
+	courseCode: string;
+	courseTitle: string | null;
+	section: string;
+	sections: ClassMapValue[];
+};
+
+const TYPE_ORDER: Record<string, number> = {
+	LEC: 0,
+	LAB: 1,
+	RCT: 2,
+	REC: 2,
+	SEM: 3
+};
+
+function classType(row: ClassMapValue): string {
+	return (row.type ?? '').trim().toUpperCase();
+}
+
+export function parentLectureSection(row: Pick<ClassMapValue, 'section'>): string | null {
+	if (!row.section) return null;
+	const section = row.section.trim().toUpperCase();
+	// Hyphenated child slot: "G-1L", "UV-1R", "B-1R" → parent before "-<n>".
+	const hyphenated = section.match(/^(.+)-\d+[A-Z]+$/);
+	if (hyphenated?.[1]) return hyphenated[1];
+	// Compact lab slot: "ST11L" → "ST1".
+	const compactLab = section.match(/^(.+)\dL$/);
+	if (compactLab?.[1]) return compactLab[1];
+	// Recit suffix on the lecture section: "AB1R", "ST2R" → drop trailing R.
+	if (section.endsWith('R') && section.length > 1) {
+		return section.slice(0, -1);
+	}
+	return null;
+}
+
+export function offeringGroupKey(
+	courseCode: string | null | undefined,
+	section: string | null | undefined
+): string | null {
+	if (!courseCode || !section) return null;
+	return `${courseCode}::${section}`;
+}
+
+/** Group LEC/LAB/SEM rows that share course code + section (#301). */
+export function groupClassesByOffering(classes: ClassMapValue[]): ClassOfferingGroup[] {
+	const groups = new Map<string, ClassOfferingGroup>();
+
+	for (const row of classes) {
+		const key = offeringGroupKey(row.courseCode, row.section);
+		if (!key) {
+			groups.set(`__solo__${row.id}`, {
+				key: `__solo__${row.id}`,
+				courseCode: row.courseCode ?? 'Class',
+				courseTitle: row.courseTitle,
+				section: row.section ?? '',
+				sections: [row]
+			});
+			continue;
+		}
+
+		const existing = groups.get(key);
+		if (existing) {
+			existing.sections.push(row);
+			if (!existing.courseTitle && row.courseTitle) {
+				existing.courseTitle = row.courseTitle;
+			}
+		} else {
+			groups.set(key, {
+				key,
+				courseCode: row.courseCode!,
+				courseTitle: row.courseTitle,
+				section: row.section!,
+				sections: [row]
+			});
+		}
+	}
+
+	const linkedLectureKeys = new Set<string>();
+	for (const group of groups.values()) {
+		const linkedLectures = new Map<number, ClassMapValue>();
+		for (const row of group.sections) {
+			const parentSection = parentLectureSection(row);
+			const parentKey = offeringGroupKey(row.courseCode, parentSection);
+			const parent = parentKey ? groups.get(parentKey) : null;
+			if (!parent || parent === group) continue;
+			for (const parentRow of parent.sections) {
+				if (classType(parentRow) === 'LEC') {
+					linkedLectures.set(parentRow.id, parentRow);
+				}
+			}
+			if (linkedLectures.size > 0) linkedLectureKeys.add(parent.key);
+		}
+		group.sections.unshift(...linkedLectures.values());
+	}
+
+	for (const group of groups.values()) {
+		group.sections.sort((a, b) => {
+			const ta = TYPE_ORDER[classType(a)] ?? 9;
+			const tb = TYPE_ORDER[classType(b)] ?? 9;
+			if (ta !== tb) return ta - tb;
+			return (a.roomCode ?? '').localeCompare(b.roomCode ?? '');
+		});
+	}
+
+	return [...groups.values()]
+		.filter(
+			(group) =>
+				!linkedLectureKeys.has(group.key) || group.sections.some((row) => classType(row) !== 'LEC')
+		)
+		.sort((a, b) => a.courseCode.localeCompare(b.courseCode));
+}

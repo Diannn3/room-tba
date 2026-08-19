@@ -1,5 +1,5 @@
 import { CAMPUS_BOUNDS } from "$lib/constants/map/terrain";
-import { describeLocationFix } from "$lib/geolocation";
+import { describeLocationFix } from "$lib/utils/geolocation";
 import { toastStore } from "../index.svelte";
 
 export default class LocationStore {

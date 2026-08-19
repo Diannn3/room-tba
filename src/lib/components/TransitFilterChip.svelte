@@ -1,6 +1,6 @@
 <script lang="ts">
   import Bus from "@lucide/svelte/icons/bus";
-  import { jeepneyStore, transitStore } from "$lib/store.svelte";
+  import { jeepneyStore, transitStore } from "$lib/utils/store.svelte";
   import "./map-chrome/map-chrome.css";
 
   const routeCount = $derived(transitStore.routes.length);

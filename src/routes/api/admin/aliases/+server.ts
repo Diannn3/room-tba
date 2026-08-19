@@ -1,9 +1,9 @@
 import { ilike, sql } from 'drizzle-orm';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
 import { clampLimitParam, paginationErrorResponse } from '$lib/api/pagination';
-import { db } from '$lib/db';
+import { db } from '$lib/utils/db';
 import { aliasesTable } from '$lib/server/db/schema';
-import { normalizeAlias } from '$lib/site';
+import { normalizeAlias } from '$lib/utils/site';
 import type { RequestHandler } from './$types';
 
 function json(data: unknown, status = 200) {

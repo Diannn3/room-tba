@@ -18,21 +18,21 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     ROOM_CATEGORY_LABELS,
     roomCategoryLabel,
   } from "$lib/constants/content/categories/room"
-  import { getAppData } from "$lib/context";
+  import { getAppData } from "$lib/utils/context";
   import {
     clearEntityContributorDraft,
     readEntityContributorDraft,
     scheduleEntityContributorDraftSave,
-  } from "$lib/contributor-drafts";
-  import { entityEditorSavedMessage, fieldSaveActionLabel } from "$lib/editor/field-action-label";
-  import { handlePersistEntityResult } from "$lib/editor/handle-persist-result";
-  import { FINALS_SCOPE_NOTE, fetchFinalExams } from "$lib/final-exams";
+  } from "$lib/utils/contributor-drafts";
+  import { entityEditorSavedMessage, fieldSaveActionLabel } from "$lib/utils/editor/field-action-label";
+  import { handlePersistEntityResult } from "$lib/utils/editor/handle-persist-result";
+  import { FINALS_SCOPE_NOTE, fetchFinalExams } from "$lib/utils/final-exams";
   import {
     getStoredProposalForEntity,
     mergeEntityRooms,
     persistEntityChange,
-  } from "$lib/proposals/client";
-  import { getRoomShareUrl } from "$lib/share-links";
+  } from "$lib/utils/proposals/client";
+  import { getRoomShareUrl } from "$lib/utils/share-links";
   import {
     adminAuthStore,
     building3DStore,
@@ -43,9 +43,9 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     sidePanelStore,
     termStore,
     toastStore,
-  } from "$lib/store.svelte";
-  import type { FinalExamRow, RoomData } from "$lib/types";
-  import { normalizeEntityPhotos, type EntityPhoto } from "$lib/entity-photos";
+  } from "$lib/utils/store.svelte";
+  import type { FinalExamRow, RoomData } from "$lib/utils/types";
+  import { normalizeEntityPhotos, type EntityPhoto } from "$lib/utils/entity-photos";
   import EntityDirectionsChip from "../controls/EntityDirectionsChip.svelte";
   import EntityGoogleMapsLink from "../controls/EntityGoogleMapsLink.svelte";
   import EntityShareCopyLink from "../controls/EntityShareCopyLink.svelte";

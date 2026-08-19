@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { toastStore } from '$lib/store.svelte';
+	import { toastStore } from '$lib/utils/store.svelte';
 	import Download from '@lucide/svelte/icons/download';
 	import X from '@lucide/svelte/icons/x';
 	import IconButton from '$lib/components/IconButton.svelte';

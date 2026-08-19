@@ -14,8 +14,8 @@
   import EntityEditorPinRow from "$lib/components/editor/EntityEditorPinRow.svelte";
   import EntityEditorSubmitButton from "$lib/components/editor/EntityEditorSubmitButton.svelte";
   import ImageUpload from "$lib/components/editor/ImageUpload.svelte";
-  import { fieldSaveActionLabel } from "$lib/editor/field-action-label";
-  import { getAppActions, getAppData } from "$lib/context";
+  import { fieldSaveActionLabel } from "$lib/utils/editor/field-action-label";
+  import { getAppActions, getAppData } from "$lib/utils/context";
   import {
     adminAuthStore,
     eventPlacementStore,
@@ -24,25 +24,25 @@
     mapStore,
     queryStore,
     toastStore,
-  } from "$lib/store.svelte";
+  } from "$lib/utils/store.svelte";
   import {
     getStoredProposalForEntity,
     persistEntityChange,
-  } from "$lib/proposals/client";
+  } from "$lib/utils/proposals/client";
   import { CAMPUS_DEFAULT_CAMERA } from "$lib/constants/map/terrain"
-  import { getEventImage } from "$lib/event-images";
+  import { getEventImage } from "$lib/utils/event-images";
   import {
     campusInputToWallString,
     formatCampusDateTime,
     instantToCampusInput,
-  } from "$lib/event-time";
-  import { getEventShareUrl } from "$lib/share-links";
-  import type { EventData } from "$lib/types";
+  } from "$lib/utils/event-time";
+  import { getEventShareUrl } from "$lib/utils/share-links";
+  import type { EventData } from "$lib/utils/types";
   import {
     clearEntityContributorDraft,
     readEntityContributorDraft,
     scheduleEntityContributorDraftSave,
-  } from "$lib/contributor-drafts";
+  } from "$lib/utils/contributor-drafts";
 
   const STATUS_LABELS: Record<EventData["status"], string> = {
     active: "Happening now",

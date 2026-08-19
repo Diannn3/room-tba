@@ -5,12 +5,12 @@
     MAPTILER_COPYRIGHT_URL,
     OSM_COPYRIGHT_URL,
   } from "$lib/constants/data-license";
-  import { terrainStore } from "$lib/store.svelte";
+  import { terrainStore } from "$lib/utils/store.svelte";
   import { onMount } from "svelte";
   import {
     getBasemapProvider,
     onBasemapProviderChange,
-  } from "$lib/basemap-provider";
+  } from "$lib/utils/basemap-provider";
   import "./map-chrome/map-chrome.css";
 
   let expanded = $state(false);

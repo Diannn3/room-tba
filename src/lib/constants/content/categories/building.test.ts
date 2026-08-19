@@ -3,7 +3,7 @@ import {
 	buildingMatchesTypeFilter,
 	getBuildingTypeFilterOptions
 } from '$lib/constants/content/categories/building';
-import type { BuildingData } from '$lib/types';
+import type { BuildingData } from '$lib/utils/types';
 
 function building(id: number, type: 'admin' | 'non-admin'): BuildingData {
 	// Only the fields the filter reads matter here.

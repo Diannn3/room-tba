@@ -2,11 +2,11 @@
   import { onMount } from "svelte";
   import DownloadCloud from "@lucide/svelte/icons/download-cloud";
   import Download from "@lucide/svelte/icons/download";
-  import { mapToolsStore, offlineStore } from "$lib/store.svelte";
-  import { registerEphemeralOverlayDismisser } from "$lib/overlay-stack";
-  import { rafThrottle } from "$lib/layout-css-vars";
-  import { trapFocus } from "$lib/focus-trap";
-  import { portal } from "$lib/portal";
+  import { mapToolsStore, offlineStore } from "$lib/utils/store.svelte";
+  import { registerEphemeralOverlayDismisser } from "$lib/utils/overlay-stack";
+  import { rafThrottle } from "$lib/utils/layout-css-vars";
+  import { trapFocus } from "$lib/utils/focus-trap";
+  import { portal } from "$lib/utils/portal";
   import "./map-chrome/map-chrome.css";
 
   type Props = {

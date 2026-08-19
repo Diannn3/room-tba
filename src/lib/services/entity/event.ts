@@ -1,5 +1,5 @@
 import { asc, eq, inArray } from 'drizzle-orm';
-import { getStoredEventOccurrence, getStoredEventStatus } from '$lib/event-time';
+import { getStoredEventOccurrence, getStoredEventStatus } from '$lib/utils/event-time';
 import {
 	buildingsTable,
 	dormsTable,
@@ -8,7 +8,7 @@ import {
 	eventRoutesTable,
 	eventsTable
 } from '$lib/server/db/schema';
-import { db } from '$lib/db';
+import { db } from '$lib/utils/db';
 import { getBuildCache } from '../page-data/ssg-cache';
 import type {
 	BuildingData,
@@ -17,7 +17,7 @@ import type {
 	EventLocationData,
 	EventRouteData,
 	EventRouteStopData
-} from '$lib/types';
+} from '$lib/utils/types';
 
 type EventRow = typeof eventsTable.$inferSelect;
 type EventLocationRow = typeof eventLocationsTable.$inferSelect;

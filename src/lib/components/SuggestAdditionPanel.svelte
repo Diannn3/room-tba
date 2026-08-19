@@ -3,8 +3,8 @@
     adminAuthStore,
     additionProposalStore,
     toastStore,
-  } from "$lib/store.svelte";
-  import { getAppData } from "$lib/context";
+  } from "$lib/utils/store.svelte";
+  import { getAppData } from "$lib/utils/context";
   import SubmitterNameField from "./SubmitterNameField.svelte";
   import {
     resolveSubmitterName,
@@ -13,18 +13,18 @@
     getStoredPendingCreateProposal,
     fetchPublicProposalSummary,
     type ProposalCreateType,
-  } from "$lib/proposals/client";
+  } from "$lib/utils/proposals/client";
   import {
     MAX_SUBMITTER_NOTE_LENGTH,
     validateSubmitterName,
   } from "$lib/constants/contribute/proposals";
-  import { instantToCampusWallString } from "$lib/event-time";
-  import { slugifySegment } from "$lib/site";
+  import { instantToCampusWallString } from "$lib/utils/event-time";
+  import { slugifySegment } from "$lib/utils/site";
   import {
     clearSuggestAdditionDraft,
     readSuggestAdditionDraft,
     scheduleSuggestAdditionDraftSave,
-  } from "$lib/contributor-drafts";
+  } from "$lib/utils/contributor-drafts";
   import EntityEditorFormField from "$lib/components/editor/EntityEditorFormField.svelte";
   import EntityEditorSubmitButton from "$lib/components/editor/EntityEditorSubmitButton.svelte";
   import ProposalLicenseNote from "$lib/components/editor/ProposalLicenseNote.svelte";
@@ -33,12 +33,12 @@
   import ImageUpload from "$lib/components/editor/ImageUpload.svelte";
   import PhotoCollectionUpload from "$lib/components/editor/PhotoCollectionUpload.svelte";
   import ContributorPendingProposals from "./ContributorPendingProposals.svelte";
-  import type { BundledRoomDraft } from "$lib/proposals/create-proposal-validation";
+  import type { BundledRoomDraft } from "$lib/utils/proposals/create-proposal-validation";
   import {
     parseBundledRooms,
     ProposalValidationError,
     validateBundledRooms,
-  } from "$lib/proposals/create-proposal-validation";
+  } from "$lib/utils/proposals/create-proposal-validation";
   import { PLACE_CATEGORIES, type PlaceCategory } from "$lib/constants/content/categories/place"
   import {
     ORG_CATEGORIES,
@@ -49,7 +49,7 @@
   import {
     buildDraftPinPreview,
     draftPinRowLabel,
-  } from "$lib/editor/draft-pin-preview";
+  } from "$lib/utils/editor/draft-pin-preview";
 
   type AdditionOption = {
     value: ProposalCreateType;

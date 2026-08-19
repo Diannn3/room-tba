@@ -1,0 +1,155 @@
+import { entityPhotoUrls } from '$lib/utils/entity-photos';
+
+export const FIELD_LABELS: Record<string, string> = {
+	buildingName: 'Building name',
+	directions: 'Directions',
+	buildingType: 'Building type',
+	lat: 'Latitude',
+	lon: 'Longitude',
+	buildingId: 'Building',
+	dormName: 'Dorm name',
+	shortName: 'Short name',
+	gender: 'Gender',
+	capacity: 'Capacity',
+	roomCode: 'Room code',
+	collegeName: 'College name',
+	collegeId: 'Parent college',
+	divisionId: 'Division',
+	divisionName: 'Division name',
+	description: 'Description',
+	managingOffice: 'Managing office',
+	contactEmail: 'Contact email',
+	isUpManaged: 'UP managed',
+	title: 'Title',
+	category: 'Category',
+	startsAt: 'Starts',
+	endsAt: 'Ends',
+	sourceUrl: 'Source URL',
+	imageUrl: 'Image',
+	crFacilities: 'CR facilities',
+	recurrence: 'Recurrence',
+	rooms: 'Bundled rooms',
+	locations: 'Locations',
+	routeId: 'Jeepney route',
+	isActive: 'Listed'
+};
+
+export type FieldDiff = {
+	field: string;
+	label: string;
+	/** null = empty / not set (render as em dash) */
+	before: string | null;
+	after: string | null;
+	/**
+	 * Raw row ids, set only when `before`/`after` above were replaced by a
+	 * resolved entity name. Reviewers see the name; the id stays available as
+	 * secondary text (#873).
+	 */
+	beforeId?: number;
+	afterId?: number;
+};
+
+/**
+ * Maps a foreign-key field and row id to that entity's display name, or null
+ * when it cannot be resolved. Without one, `*Id` fields render as raw row ids
+ * and an approver cannot judge the edit (#873).
+ */
+export type EntityNameResolver = (field: string, id: number) => string | null;
+
+// Keys with their own review summary (create_building bundled rooms).
+const SKIPPED_KEYS = new Set(['rooms']);
+
+/** One-line summary per event location so reviewers see what changes. */
+function formatLocations(value: unknown): string | null {
+	if (!Array.isArray(value) || value.length === 0) return null;
+	return value
+		.map((item) => {
+			const loc = item as {
+				label?: unknown;
+				lat?: unknown;
+				lon?: unknown;
+			};
+			const name = typeof loc.label === 'string' && loc.label.trim() ? loc.label.trim() : 'Unnamed';
+			return typeof loc.lat === 'number' && typeof loc.lon === 'number'
+				? `${name} (${loc.lat.toFixed(5)}, ${loc.lon.toFixed(5)})`
+				: name;
+		})
+		.join('; ');
+}
+
+function currentPhotoValue(current: Record<string, unknown>): unknown {
+  if ("photos" in current) return current.photos;
+  if ("photoUrls" in current) return current.photoUrls;
+  return typeof current.imageUrl === "string" && current.imageUrl.trim()
+    ? [current.imageUrl]
+    : [];
+}
+
+function formatPhotos(value: unknown): string | null {
+  const count = entityPhotoUrls(value).length;
+  return count === 0 ? null : `${count} photo${count === 1 ? "" : "s"}`;
+}
+
+function formatValue(value: unknown): string | null {
+	if (value === null || value === undefined) return null;
+	if (typeof value === 'string') return value.trim() === '' ? null : value;
+	if (typeof value === 'number') return String(value);
+	if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+	if (Array.isArray(value)) {
+		const items = value.filter((item) => item !== null && item !== undefined);
+		return items.length === 0 ? null : items.map(String).join(', ');
+	}
+	return JSON.stringify(value);
+}
+
+/**
+ * Before/after rows for a proposal patch against the currently published
+ * entity. `current` is null for create_* proposals (before renders as new).
+ * Unchanged fields are omitted so reviewers only see real differences.
+ *
+ * Pass `resolveName` to turn foreign keys into entity names. Change detection
+ * always runs on the raw ids, so two buildings that happen to share a name
+ * still register as a change.
+ */
+export function buildFieldDiffs(
+	current: Record<string, unknown> | null,
+	patch: Record<string, unknown>,
+	resolveName?: EntityNameResolver
+): FieldDiff[] {
+	const diffs: FieldDiff[] = [];
+	for (const [field, proposed] of Object.entries(patch)) {
+		if (SKIPPED_KEYS.has(field)) continue;
+		const format = field === 'locations' ? formatLocations : formatValue;
+		const beforeRaw = current ? current[field] : null;
+		const before = current ? format(beforeRaw) : null;
+		const after = format(proposed);
+		if (current && before === after) continue;
+
+		const diff: FieldDiff = {
+			field,
+			label: FIELD_LABELS[field] ?? field,
+			before,
+			after
+		};
+
+		if (resolveName && field.endsWith('Id')) {
+			if (typeof beforeRaw === 'number') {
+				const name = resolveName(field, beforeRaw);
+				if (name) {
+					diff.before = name;
+					diff.beforeId = beforeRaw;
+				}
+			}
+			if (typeof proposed === 'number') {
+				const name = resolveName(field, proposed);
+				if (name) {
+					diff.after = name;
+					diff.afterId = proposed;
+				}
+			}
+		}
+
+		diffs.push(diff);
+	}
+	return diffs;
+}

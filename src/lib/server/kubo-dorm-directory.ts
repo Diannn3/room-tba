@@ -1,4 +1,4 @@
-import { parseKuboDormDirectory, type KuboDormDirectoryResponse } from '../kubo-dorms';
+import { parseKuboDormDirectory, type KuboDormDirectoryResponse } from '../utils/kubo-dorms';
 
 export const DEFAULT_KUBO_DIRECTORY_URL =
 	'https://kubo.community/api/public/integrations/room-tba/dorms';

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { portal } from "$lib/portal";
-  import { entityHoverPreviewStore } from "$lib/entity-hover-preview.svelte";
+  import { portal } from "$lib/utils/portal";
+  import { entityHoverPreviewStore } from "$lib/utils/entity-hover-preview.svelte";
 
   const preview = $derived(entityHoverPreviewStore.entity);
   const anchor = $derived(entityHoverPreviewStore.anchor);

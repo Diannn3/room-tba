@@ -11,13 +11,13 @@
     syncToastStore,
     appBootstrapStore,
     modalStore,
-  } from "$lib/store.svelte";
+  } from "$lib/utils/store.svelte";
   import { getSyncLadderState } from "$lib/stores/sync-ladder.svelte";
   import { APP_VERSION, APP_VERSION_LABEL } from "$lib/constants/versioning/version";
   import {
     parseChangelogHighlights,
     isChangelogCurrent,
-  } from "$lib/changelog-highlights";
+  } from "$lib/utils/changelog-highlights";
   import changelogRaw from "../../../CHANGELOG.md?raw";
 
   type Props = {

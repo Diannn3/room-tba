@@ -13,14 +13,14 @@
   import { formatCatalogUpdatedDate } from "$lib/constants/versioning/data-catalog";
   import { APP_VERSION_LABEL } from "$lib/constants/versioning/version";
   import { statusBarNavGroups } from "$lib/constants/content/links/status-bar"
-  import { trapFocus } from "$lib/focus-trap";
-  import { openShortcutsHelp } from "$lib/keyboard-shortcuts";
-  import { portal } from "$lib/portal";
+  import { trapFocus } from "$lib/utils/focus-trap";
+  import { openShortcutsHelp } from "$lib/utils/keyboard-shortcuts";
+  import { portal } from "$lib/utils/portal";
   import {
     registerEphemeralOverlayDismisser,
     openEphemeralOverlay,
-  } from "$lib/overlay-stack";
-  import { rafThrottle } from "$lib/layout-css-vars";
+  } from "$lib/utils/overlay-stack";
+  import { rafThrottle } from "$lib/utils/layout-css-vars";
   import {
     adminAuthStore,
     mapToolsStore,
@@ -28,7 +28,7 @@
     proposalsStore,
     sidebarStore,
     toastStore,
-  } from "$lib/store.svelte";
+  } from "$lib/utils/store.svelte";
   import OfflineMaps from "$lib/components/OfflineMaps.svelte";
   import PWAInstallPrompt from "$lib/components/PWAInstallPrompt.svelte";
   import MapChromeSession from "$lib/components/map-chrome/MapChromeSession.svelte";

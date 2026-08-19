@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Snippet } from "svelte";
-  import { fieldSaveActionLabel } from "$lib/editor/field-action-label";
+  import { fieldSaveActionLabel } from "$lib/utils/editor/field-action-label";
   import "./entity-editor.css";
 
   type Props = {

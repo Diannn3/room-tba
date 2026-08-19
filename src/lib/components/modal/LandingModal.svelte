@@ -15,9 +15,9 @@
   import {
     fetchGithubContributors,
     type GithubContributor,
-  } from "$lib/github-contributors";
-  import { fetchGithubStarCountCached } from "$lib/github-stars";
-import { modalStore } from "$lib/store.svelte";
+  } from "$lib/utils/github-contributors";
+  import { fetchGithubStarCountCached } from "$lib/utils/github-stars";
+import { modalStore } from "$lib/utils/store.svelte";
   import GithubContributorsSection from "./GithubContributorsSection.svelte";
   import LandingGuideSteps from "./LandingGuideSteps.svelte";
   import PeopleAvatarGrid from "./PeopleAvatarGrid.svelte";

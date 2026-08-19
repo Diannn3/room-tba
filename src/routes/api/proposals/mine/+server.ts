@@ -1,6 +1,6 @@
 import { and, desc, eq, inArray } from 'drizzle-orm';
 import { getEditorSession } from '$lib/admin/require-editor';
-import { db } from '$lib/db';
+import { db } from '$lib/utils/db';
 import { editProposalsTable } from '$lib/server/db/schema';
 import { withEntityLabel } from '$lib/services/contribution/proposal-action';
 import type { RequestHandler } from './$types';

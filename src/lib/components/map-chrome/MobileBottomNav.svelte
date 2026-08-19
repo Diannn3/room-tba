@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { editorChromeStore, sidebarStore } from "$lib/store.svelte";
+  import { editorChromeStore, sidebarStore } from "$lib/utils/store.svelte";
   import AppMenu from "../status-bar/AppMenu.svelte";
 
   import mapIcon from "../../../assets/icons/map.svg?url";

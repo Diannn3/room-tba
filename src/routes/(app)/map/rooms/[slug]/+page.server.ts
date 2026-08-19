@@ -1,8 +1,8 @@
 import { error } from '@sveltejs/kit';
-import { getRoomRouteSlug } from '$lib/app-data';
+import { getRoomRouteSlug } from '$lib/utils/app-data';
 import type { SeoData } from '$lib/components/seo/seo-data';
-import { entityIndexPath, getRoomCanonicalPath } from '$lib/entity-urls';
-import { parseIdRouteSlug } from '$lib/route-slugs';
+import { entityIndexPath, getRoomCanonicalPath } from '$lib/utils/entity-urls';
+import { parseIdRouteSlug } from '$lib/utils/route-slugs';
 import { getRoomPageData } from '$lib/services/page-data/entity';
 import {
 	absoluteUrl,
@@ -11,7 +11,7 @@ import {
 	ogCardPath,
 	ogImageUrl,
 	webpageSchema
-} from '$lib/site';
+} from '$lib/utils/site';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {

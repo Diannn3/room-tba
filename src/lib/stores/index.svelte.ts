@@ -1,7 +1,7 @@
 // src/lib/store.svelte.ts
 
 import type { BuildingTypeFilter } from '$lib/constants/content/categories/building.js';
-import { getJSONFetch, getLocalRoomByCode } from '../local/data/utils.js';
+import { getJSONFetch, getLocalRoomByCode } from '../utils/local/data/utils.js';
 import { deactivateMapModesExcept, type ExclusiveMapMode, registerMapMode } from './map/map-modes.js';
 import {
 	type AppBootstrapPhase,
@@ -70,7 +70,7 @@ export type {
 };
 export { deactivateMapModesExcept, syncTableLabel };
 
-import type { RoomData } from '$lib/types';
+import type { RoomData } from '$lib/utils/types.js';
 
 export {
 	buildingTypeFilter,

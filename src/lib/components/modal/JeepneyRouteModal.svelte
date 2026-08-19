@@ -1,14 +1,14 @@
 <script lang="ts">
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import MapPinned from "@lucide/svelte/icons/map-pinned";
-  import { jeepneyStore, modalStore, transitStore } from "$lib/store.svelte";
+  import { jeepneyStore, modalStore, transitStore } from "$lib/utils/store.svelte";
   import {
     JEEPNEY_FARE_NOTE,
     resolveRouteGeometry,
     type StoredRouteGeometry,
   } from "$lib/constants/map/jeepney-routes";
   import jeepneyGeometries from "$lib/constants/map/jeepney-geometries.json";
-  import { getJeepneyRouteShareUrl } from "$lib/share-links";
+  import { getJeepneyRouteShareUrl } from "$lib/utils/share-links";
   import EntityShareCopyLink from "../controls/EntityShareCopyLink.svelte";
   import TransitStopEditor from "../controls/TransitStopEditor.svelte";
 

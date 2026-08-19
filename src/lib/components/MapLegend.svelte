@@ -5,10 +5,10 @@
 	import X from '@lucide/svelte/icons/x';
 	import IconButton from '$lib/components/IconButton.svelte';
 	import './map-chrome/map-chrome.css';
-	import { getAppData } from '$lib/context';
-	import { floatingControlPanelStore, mapViewStore, queryStore } from '$lib/store.svelte';
-	import { openEphemeralOverlay, registerEphemeralOverlayDismisser } from '$lib/overlay-stack';
-	import { campusTransit } from '$lib/campus.config';
+	import { getAppData } from '$lib/utils/context';
+	import { floatingControlPanelStore, mapViewStore, queryStore } from '$lib/utils/store.svelte';
+	import { openEphemeralOverlay, registerEphemeralOverlayDismisser } from '$lib/utils/overlay-stack';
+	import { campusTransit } from '$lib/utils/campus.config';
 
 	type Props = {
 		embedded?: boolean;

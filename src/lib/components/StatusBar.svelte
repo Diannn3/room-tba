@@ -7,11 +7,11 @@
     adminAuthStore,
     toastStore,
     modalStore,
-  } from "$lib/store.svelte";
+  } from "$lib/utils/store.svelte";
   import "./status-bar/status-bar.css";
   import SyncStatus from "./SyncStatus.svelte";
   import SponsorBadge from "./SponsorBadge.svelte";
-  import { getGoldSponsor, loadSponsors, type Sponsor } from "$lib/sponsors";
+  import { getGoldSponsor, loadSponsors, type Sponsor } from "$lib/utils/sponsors";
 
   let isOnline = $state(true);
   let goldSponsor = $state<Sponsor | null>(null);

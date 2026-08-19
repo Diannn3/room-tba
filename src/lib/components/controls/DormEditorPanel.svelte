@@ -5,9 +5,9 @@
 	import EntityEditorPanel from '$lib/components/editor/EntityEditorPanel.svelte';
 	import EntityEditorPinRow from '$lib/components/editor/EntityEditorPinRow.svelte';
 	import EntityPhotoUpload from '$lib/components/editor/EntityPhotoUpload.svelte';
-	import { entityEditorSavedMessage, fieldSaveActionLabel } from '$lib/editor/field-action-label';
-	import { adminAuthStore, mapEditStore, mapProposalStore } from '$lib/store.svelte';
-	import type { DormData } from '$lib/types';
+	import { entityEditorSavedMessage, fieldSaveActionLabel } from '$lib/utils/editor/field-action-label';
+	import { adminAuthStore, mapEditStore, mapProposalStore } from '$lib/utils/store.svelte';
+	import type { DormData } from '$lib/utils/types';
 	import '../editor/entity-editor.css';
 
 	type DormEditableField =
@@ -52,7 +52,7 @@
 		amenitiesDraft: string;
 		facebookLinkDraft: string;
 		osmLinkDraft: string;
-		photosDraft: import('$lib/entity-photos').EntityPhoto[];
+		photosDraft: import('$lib/utils/entity-photos').EntityPhoto[];
 		fieldLabel: (field: DormEditableField) => string;
 		fieldIsUnchanged: (field: DormEditableField, current: DormData) => boolean;
 		saveField: (field: DormEditableField) => void;

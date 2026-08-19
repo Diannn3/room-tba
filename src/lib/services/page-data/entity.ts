@@ -1,6 +1,6 @@
 import { and, count, eq } from 'drizzle-orm';
-import { getBuildingSlug, getCollegeSlug, getDivisionSlug } from '$lib/app-data';
-import { db } from '$lib/db';
+import { getBuildingSlug, getCollegeSlug, getDivisionSlug } from '$lib/utils/app-data';
+import { db } from '$lib/utils/db';
 import {
 	buildingsTable,
 	classesTable,

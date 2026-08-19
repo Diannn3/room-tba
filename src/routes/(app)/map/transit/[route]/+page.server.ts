@@ -1,6 +1,6 @@
 import type { SeoData } from '$lib/components/seo/seo-data';
 import { JEEPNEY_ROUTES } from '$lib/constants/map/jeepney-routes';
-import { breadcrumbSchema, jsonLd, ogCardPath, webpageSchema } from '$lib/site';
+import { breadcrumbSchema, jsonLd, ogCardPath, webpageSchema } from '$lib/utils/site';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params }) => {

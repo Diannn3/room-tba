@@ -3,10 +3,10 @@ import {
 	getBuildingIdsWithClasses,
 	getLocalClassesForRoom,
 	getLocalRoomByCode
-} from '../local/data/utils.js';
-import { parseTermIdFromSearch, syncTermQueryParam } from '../term-url.js';
-import { resolveDefaultTermFromList, resolveInitialTermId } from '../term-calendar.js';
-import type { ClassMapValue, TermWithCount } from '$lib/types';
+} from '../utils/local/data/utils.js';
+import { parseTermIdFromSearch, syncTermQueryParam } from '../utils/term-url.js';
+import { resolveDefaultTermFromList, resolveInitialTermId } from '../utils/term-calendar.js';
+import type { ClassMapValue, TermWithCount } from '$lib/utils/types.js';
 import { ACTIVE_TERM_LS_KEY } from './store-types.js';
 
 export class TermStore {

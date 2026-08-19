@@ -2,9 +2,9 @@
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import { fly } from "svelte/transition";
   import { MediaQuery } from "svelte/reactivity";
-  import { trapFocus } from "$lib/focus-trap";
-  import { fullScreenReveal } from "$lib/motion";
-  import { sidebarStore, termStore } from "$lib/store.svelte";
+  import { trapFocus } from "$lib/utils/focus-trap";
+  import { fullScreenReveal } from "$lib/utils/motion";
+  import { sidebarStore, termStore } from "$lib/utils/store.svelte";
   import {
     buildEventTimeline,
     buildYearTimeline,
@@ -12,19 +12,19 @@
     resolveTermWindow,
     termWindowStatus,
     type TermStatus,
-  } from "$lib/academic-calendar";
+  } from "$lib/utils/academic-calendar";
   import {
     holidaysWithin,
     milestonesForTerms,
     type CalendarMilestone,
     type MilestoneKind,
-  } from "$lib/academic-milestones";
+  } from "$lib/utils/academic-milestones";
   import {
     formatShortDate,
     formatTermDateRange,
     toManilaDateKey,
-  } from "$lib/term-calendar";
-  import { termChipLabel, termFullLabel } from "$lib/term-label";
+  } from "$lib/utils/term-calendar";
+  import { termChipLabel, termFullLabel } from "$lib/utils/term-label";
 
   const reducedMotion = new MediaQuery("(prefers-reduced-motion: reduce)");
 

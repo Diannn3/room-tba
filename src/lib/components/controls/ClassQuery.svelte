@@ -4,12 +4,12 @@
 	import EntityPagination from './EntityPagination.svelte';
 	import Classes from '$lib/components/room/Classes.svelte';
 	import FinalExamsList from '$lib/components/room/FinalExamsList.svelte';
-	import { fetchClassPage } from '$lib/classes-api';
+	import { fetchClassPage } from '$lib/utils/classes-api';
 	import { CLASS_BROWSE_SCOPE_NOTE } from '$lib/amis/room-scheduled-types';
-	import { fetchFinalExams, FINALS_SCOPE_NOTE, looksLikeCourseCode } from '$lib/final-exams';
-	import { normalizeCourseCode } from '$lib/final-exams/normalize';
-	import { queryStore, sidePanelStore, termStore } from '$lib/store.svelte';
-	import type { ClassMapValue, FinalExamRow } from '$lib/types';
+	import { fetchFinalExams, FINALS_SCOPE_NOTE, looksLikeCourseCode } from '$lib/utils/final-exams';
+	import { normalizeCourseCode } from '$lib/utils/final-exams/normalize';
+	import { queryStore, sidePanelStore, termStore } from '$lib/utils/store.svelte';
+	import type { ClassMapValue, FinalExamRow } from '$lib/utils/types';
 
 	const PAGE_SIZE = 25;
 

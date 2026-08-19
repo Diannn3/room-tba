@@ -1,6 +1,6 @@
 <script lang="ts">
   import "./entity-editor.css";
-  import { UPLOAD_MAX_BYTES } from "$lib/r2-upload-core";
+  import { UPLOAD_MAX_BYTES } from "$lib/utils/r2-upload-core";
 
   type Props = {
     value?: string | null;

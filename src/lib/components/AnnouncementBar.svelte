@@ -1,7 +1,7 @@
 <script lang="ts">
   import TriangleAlert from "@lucide/svelte/icons/triangle-alert";
   import X from "@lucide/svelte/icons/x";
-  import { announcementsStore, modalStore } from "$lib/store.svelte";
+  import { announcementsStore, modalStore } from "$lib/utils/store.svelte";
 
   // Critical only (#777): an outage notice must not depend on opening a panel,
   // but info/warning notices stay inside the panel so chrome does not nag.

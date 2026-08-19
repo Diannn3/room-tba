@@ -1,8 +1,8 @@
 import { env } from '$env/dynamic/private';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
-import { parseEventImageUrl } from '$lib/r2-upload';
+import { parseEventImageUrl } from '$lib/utils/r2-upload';
 import { createEvent, DuplicateSlugError, type EventWriteInput } from '$lib/services/admin/actions';
-import { slugifySegment } from '$lib/site';
+import { slugifySegment } from '$lib/utils/site';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ cookies, request }) => {

@@ -4,20 +4,20 @@
   import {
     getKeyboardShortcutGroups,
     modifierLabel,
-  } from "$lib/keyboard-shortcuts";
-  import { trapFocus } from "$lib/focus-trap";
-  import { rafThrottle } from "$lib/layout-css-vars";
-  import { portal } from "$lib/portal";
+  } from "$lib/utils/keyboard-shortcuts";
+  import { trapFocus } from "$lib/utils/focus-trap";
+  import { rafThrottle } from "$lib/utils/layout-css-vars";
+  import { portal } from "$lib/utils/portal";
   import {
     computeShortcutsPanelLayout,
     formatShortcutsPanelStyle,
     measureOpenSidePanelBounds,
-  } from "$lib/shortcuts-panel-position";
-  import { mapToolsStore } from "$lib/store.svelte";
+  } from "$lib/utils/shortcuts-panel-position";
+  import { mapToolsStore } from "$lib/utils/store.svelte";
   import {
     registerEphemeralOverlayDismisser,
     openEphemeralOverlay,
-  } from "$lib/overlay-stack";
+  } from "$lib/utils/overlay-stack";
   import "./map-chrome.css";
 
   type Props = {

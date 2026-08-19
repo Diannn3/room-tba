@@ -9,7 +9,7 @@
     locationStore,
     mapStore,
     toastStore,
-  } from "$lib/store.svelte";
+  } from "$lib/utils/store.svelte";
 
   type Props = {
     /** When true, render as inline actions inside the bottom chrome tray. */

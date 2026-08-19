@@ -4,10 +4,10 @@
   import Route from "@lucide/svelte/icons/route";
   import { fly } from "svelte/transition";
   import { MediaQuery } from "svelte/reactivity";
-  import { formatDistance, formatDuration } from "$lib/campus-route";
-  import { trapFocus } from "$lib/focus-trap";
-  import { fullScreenReveal } from "$lib/motion";
-  import { WEEKDAYS } from "$lib/schedule-import/types";
+  import { formatDistance, formatDuration } from "$lib/utils/campus-route";
+  import { trapFocus } from "$lib/utils/focus-trap";
+  import { fullScreenReveal } from "$lib/utils/motion";
+  import { WEEKDAYS } from "$lib/utils/schedule-import/types";
   import {
     locationStore,
     plannerStore,
@@ -15,10 +15,10 @@
     scheduleRouteStore,
     sidebarStore,
     termStore,
-  } from "$lib/store.svelte";
-  import { buildAgenda } from "$lib/today-agenda";
-  import { routableTodayWeekday, routeToday } from "$lib/today-route";
-  import { formatTermDateRange, isDateWithinTerm } from "$lib/term-calendar";
+  } from "$lib/utils/store.svelte";
+  import { buildAgenda } from "$lib/utils/today-agenda";
+  import { routableTodayWeekday, routeToday } from "$lib/utils/today-route";
+  import { formatTermDateRange, isDateWithinTerm } from "$lib/utils/term-calendar";
 
   const reducedMotion = new MediaQuery("(prefers-reduced-motion: reduce)");
 

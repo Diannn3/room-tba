@@ -5,7 +5,7 @@
     resolveBottomSheetRelease,
     sheetTranslateY,
     type BottomSheetSnap,
-  } from "$lib/bottom-sheet-snap";
+  } from "$lib/utils/bottom-sheet-snap";
 
   let {
     open = false,

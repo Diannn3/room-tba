@@ -1,22 +1,22 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { getAppData } from "$lib/context";
-  import { createEntityUrlSync, isScreenId } from "$lib/entity-url-sync";
-  import { openCampusBrowse } from "$lib/browse-campus";
-  import { getTransitStopIndex } from "$lib/transit-urls";
-  import { campusTransit } from "$lib/campus.config";
+  import { getAppData } from "$lib/utils/context";
+  import { createEntityUrlSync, isScreenId } from "$lib/utils/entity-url-sync";
+  import { openCampusBrowse } from "$lib/utils/browse-campus";
+  import { getTransitStopIndex } from "$lib/utils/transit-urls";
+  import { campusTransit } from "$lib/utils/campus.config";
   import {
     getBuildingCanonicalPath,
     getOrganizationCanonicalPath,
     getPlaceCanonicalPath,
     getRoomCanonicalPath,
-  } from "$lib/entity-urls";
+  } from "$lib/utils/entity-urls";
   import { orgCategoryLabel } from "$lib/constants/content/categories/org"
   import { placeCategoryLabel } from "$lib/constants/content/categories/place"
   import {
     resetDocumentMeta,
     updateTermAwareDocumentMeta,
-  } from "$lib/term-document-meta";
+  } from "$lib/utils/term-document-meta";
   import {
     currentRoom,
     jeepneyStore,
@@ -26,7 +26,7 @@
     sidebarStore,
     termStore,
     transitStore,
-  } from "$lib/store.svelte";
+  } from "$lib/utils/store.svelte";
 
   const appData = getAppData();
   let sync = $state<ReturnType<typeof createEntityUrlSync> | null>(null);

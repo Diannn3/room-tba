@@ -1,7 +1,7 @@
 <script lang="ts">
 	import LoadingIndicator from '$lib/components/LoadingIndicator.svelte';
 	import { onMount } from 'svelte';
-	import { getAppData } from '$lib/context';
+	import { getAppData } from '$lib/utils/context';
 	import {
 		ROOM_FIELD_CATEGORIES,
 		ROOM_FIELD_LABELS,
@@ -12,8 +12,8 @@
 		type CampusContributorProgress,
 		type MineContributorProgress,
 		type RoomFieldCategory
-	} from '$lib/contributor-progress';
-	import { adminAuthStore } from '$lib/store.svelte';
+	} from '$lib/utils/contributor-progress';
+	import { adminAuthStore } from '$lib/utils/store.svelte';
 	import MapChromeGhostButton from '$lib/components/map-chrome/MapChromeGhostButton.svelte';
 
 	type ScopeTab = 'campus' | 'building' | 'mine';

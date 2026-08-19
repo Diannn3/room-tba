@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/private';
-import { parseEntityPhotoUrls, reconcileEntityPhotos } from '$lib/entity-photos';
+import { parseEntityPhotoUrls, reconcileEntityPhotos } from '$lib/utils/entity-photos';
 import { resolvePhotoAttribution } from '$lib/services/contribution/entity-photo';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
 import { createDorm } from '$lib/services/admin/actions';

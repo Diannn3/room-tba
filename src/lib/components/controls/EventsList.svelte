@@ -6,12 +6,12 @@
 	import EntityPanelHeader from './EntityPanelHeader.svelte';
 	import EntityPagination from './EntityPagination.svelte';
 	import EntityShareCopyLink from './EntityShareCopyLink.svelte';
-	import { getAppData } from '$lib/context';
-	import { getEventImage } from '$lib/event-images';
-	import { formatCampusRange } from '$lib/event-time';
-	import { getEventShareUrl } from '$lib/share-links';
-	import { queryStore, sidePanelStore } from '$lib/store.svelte';
-	import type { EventData } from '$lib/types';
+	import { getAppData } from '$lib/utils/context';
+	import { getEventImage } from '$lib/utils/event-images';
+	import { formatCampusRange } from '$lib/utils/event-time';
+	import { getEventShareUrl } from '$lib/utils/share-links';
+	import { queryStore, sidePanelStore } from '$lib/utils/store.svelte';
+	import type { EventData } from '$lib/utils/types';
 	import EventResult from './EventResult.svelte';
 
 	type EventTab = 'upcoming' | 'past';

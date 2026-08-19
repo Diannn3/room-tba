@@ -3,14 +3,14 @@
 	import Search from '@lucide/svelte/icons/search';
 	import { fly } from 'svelte/transition';
 	import { MediaQuery } from 'svelte/reactivity';
-	import { trapFocus } from '$lib/focus-trap';
-	import { fullScreenReveal } from '$lib/motion';
-	import { sidebarStore, termStore } from '$lib/store.svelte';
-	import { fetchFinalExams, FINALS_SCOPE_NOTE, formatExamDate } from '$lib/final-exams';
-	import { finalsWindowLabel } from '$lib/term-calendar';
+	import { trapFocus } from '$lib/utils/focus-trap';
+	import { fullScreenReveal } from '$lib/utils/motion';
+	import { sidebarStore, termStore } from '$lib/utils/store.svelte';
+	import { fetchFinalExams, FINALS_SCOPE_NOTE, formatExamDate } from '$lib/utils/final-exams';
+	import { finalsWindowLabel } from '$lib/utils/term-calendar';
 	import FinalExamsList from '$lib/components/room/FinalExamsList.svelte';
 	import TermSelector from '$lib/components/TermSelector.svelte';
-	import type { FinalExamRow } from '$lib/types';
+	import type { FinalExamRow } from '$lib/utils/types';
 
 	const reducedMotion = new MediaQuery('(prefers-reduced-motion: reduce)');
 

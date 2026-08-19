@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/svelte';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { measureRouteStore } from '$lib/store.svelte';
+import { measureRouteStore } from '$lib/utils/store.svelte';
 import { expectNoHorizontalOverflow, mountAtWidth } from '@test/layout-assertions';
 import MeasureRoutePanel from './MeasureRoutePanel.svelte';
 

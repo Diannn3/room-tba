@@ -5,16 +5,16 @@
     adminAuthStore,
     sidePanelStore,
     toastStore,
-  } from "$lib/store.svelte";
-  import { getAppActions, getAppData } from "$lib/context";
-  import { persistEntityChange } from "$lib/proposals/client";
+  } from "$lib/utils/store.svelte";
+  import { getAppActions, getAppData } from "$lib/utils/context";
+  import { persistEntityChange } from "$lib/utils/proposals/client";
   import {
     PLACE_CATEGORIES,
     PLACE_CATEGORY_LABELS,
     isPlaceLandmark,
     placeDirectoryLabel,
   } from "$lib/constants/content/categories/place"
-  import type { PlaceData } from "$lib/types";
+  import type { PlaceData } from "$lib/utils/types";
   import EntityEditorPinRow from "$lib/components/editor/EntityEditorPinRow.svelte";
   import EntityEditorToggle from "$lib/components/editor/EntityEditorToggle.svelte";
   import EntityDirectionsChip from "./EntityDirectionsChip.svelte";
@@ -23,7 +23,7 @@
   import EntityShareCopyLink from "./EntityShareCopyLink.svelte";
   import EntityExternalLink from "./EntityExternalLink.svelte";
   import EntityBackToList from "./EntityBackToList.svelte";
-  import { getPlaceShareUrl } from "$lib/share-links";
+  import { getPlaceShareUrl } from "$lib/utils/share-links";
 
   const appData = getAppData();
   const appActions = getAppActions();

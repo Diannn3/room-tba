@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import type { Sponsor } from "$lib/sponsors";
+  import type { Sponsor } from "$lib/utils/sponsors";
   import {
     trackSponsorClick,
     trackSponsorImpression,
-  } from "$lib/sponsor-tracking";
+  } from "$lib/utils/sponsor-tracking";
 
   const { sponsor }: { sponsor: Sponsor } = $props();
 

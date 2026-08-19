@@ -1,10 +1,10 @@
 /** Announcements CRUD + public read (#777). */
 import { and, eq, sql } from 'drizzle-orm';
-import { db } from '$lib/db';
+import { db } from '$lib/utils/db';
 import { announcementsTable } from '$lib/server/db/schema';
 import { normalizeAnnouncementSeverity } from '$lib/constants/announcement-severities';
-import { filterPublished } from '$lib/announcements';
-import type { AnnouncementData } from '$lib/types';
+import { filterPublished } from '$lib/utils/announcements';
+import type { AnnouncementData } from '$lib/utils/types';
 import { EditConflictError, refreshSyncKey } from './admin/actions';
 
 export type AnnouncementUpdateInput = Partial<{

@@ -1,8 +1,8 @@
 import type { EntityIndexItem, SeoData } from '$lib/components/seo/seo-data';
-import { entityIndexPath, getBuildingCanonicalPath } from '$lib/entity-urls';
+import { entityIndexPath, getBuildingCanonicalPath } from '$lib/utils/entity-urls';
 import { getAllBuildings, getRoomCountsByParent } from '$lib/services/entity/map-data';
 import { getDefaultTerm } from '$lib/services/term';
-import { absoluteUrl, breadcrumbSchema, jsonLd, webpageSchema } from '$lib/site';
+import { absoluteUrl, breadcrumbSchema, jsonLd, webpageSchema } from '$lib/utils/site';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {

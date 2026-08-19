@@ -5,8 +5,8 @@
 		mapProposalStore,
 		queryStore,
 		toastStore
-	} from '$lib/store.svelte';
-	import { getAppActions, getAppData } from '$lib/context';
+	} from '$lib/utils/store.svelte';
+	import { getAppActions, getAppData } from '$lib/utils/context';
 	import Users from '@lucide/svelte/icons/users';
 	import Mail from '@lucide/svelte/icons/mail';
 	import Phone from '@lucide/svelte/icons/phone';
@@ -18,20 +18,20 @@
 	import KeyRound from '@lucide/svelte/icons/key-round';
 	import CircleDollarSign from '@lucide/svelte/icons/circle-dollar-sign';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
-	import type { DormData } from '$lib/types';
-	import { normalizeEntityPhotos, type EntityPhoto } from '$lib/entity-photos';
+	import type { DormData } from '$lib/utils/types';
+	import { normalizeEntityPhotos, type EntityPhoto } from '$lib/utils/entity-photos';
 	import {
 		getStoredProposalForEntity,
 		mergeEntityRecord,
 		persistEntityChange
-	} from '$lib/proposals/client';
-	import { handlePersistEntityResult } from '$lib/editor/handle-persist-result';
+	} from '$lib/utils/proposals/client';
+	import { handlePersistEntityResult } from '$lib/utils/editor/handle-persist-result';
 	import MergeEntityPrompt from '$lib/components/editor/MergeEntityPrompt.svelte';
 	import {
 		clearEntityContributorDraft,
 		readEntityContributorDraft,
 		scheduleEntityContributorDraftSave
-	} from '$lib/contributor-drafts';
+	} from '$lib/utils/contributor-drafts';
 	import DormEditorPanel from '$lib/components/controls/DormEditorPanel.svelte';
 	import EntityEditorToggle from '$lib/components/editor/EntityEditorToggle.svelte';
 	import EntityPhotoGallery from './EntityPhotoGallery.svelte';
@@ -39,8 +39,8 @@
 	import EntityShareCopyLink from './EntityShareCopyLink.svelte';
 	import EntityBackToList from './EntityBackToList.svelte';
 	import EntityExternalLink from './EntityExternalLink.svelte';
-	import { getDormShareUrl } from '$lib/share-links';
-	import { getKuboDormCta, kuboDormDirectory, loadKuboDormDirectory } from '$lib/kubo-dorms';
+	import { getDormShareUrl } from '$lib/utils/share-links';
+	import { getKuboDormCta, kuboDormDirectory, loadKuboDormDirectory } from '$lib/utils/kubo-dorms';
 	type DormEditableField =
 		| 'dormName'
 		| 'shortName'

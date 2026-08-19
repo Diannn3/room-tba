@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { canPublishDirectly } from '$lib/admin/auth';
 import { getEditorSession } from '$lib/admin/require-editor';
 import { CAMPUS_BOUNDS } from '$lib/constants/map/terrain';
-import { db } from '$lib/db';
+import { db } from '$lib/utils/db';
 import { buildingsTable } from '$lib/server/db/schema';
 import { refreshSyncKey } from '$lib/services/admin/actions';
 import type { RequestHandler } from './$types';

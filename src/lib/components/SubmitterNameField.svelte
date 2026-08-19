@@ -7,7 +7,7 @@
   import {
     readSubmitterName,
     scheduleSubmitterNameSave,
-  } from "$lib/contributor-drafts";
+  } from "$lib/utils/contributor-drafts";
   import "./map-chrome/map-chrome.css";
 
   type Props = {

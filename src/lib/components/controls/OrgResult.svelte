@@ -6,8 +6,8 @@
     queryStore,
     sidePanelStore,
     toastStore,
-  } from "$lib/store.svelte";
-  import { getAppActions, getAppData } from "$lib/context";
+  } from "$lib/utils/store.svelte";
+  import { getAppActions, getAppData } from "$lib/utils/context";
   import Users from "@lucide/svelte/icons/users";
   import Mail from "@lucide/svelte/icons/mail";
   import Info from "@lucide/svelte/icons/info";
@@ -21,15 +21,15 @@
   import EntityBackToList from "./EntityBackToList.svelte";
   import EntityEditorToggle from "$lib/components/editor/EntityEditorToggle.svelte";
   import EntityEditorPinRow from "$lib/components/editor/EntityEditorPinRow.svelte";
-  import type { OrgData } from "$lib/types";
+  import type { OrgData } from "$lib/utils/types";
   import {
     isStudentOrganization,
     orgCategoryLabel,
     ORG_CATEGORIES,
   } from "$lib/constants/content/categories/org"
-  import { persistEntityChange } from "$lib/proposals/client";
-  import { handlePersistEntityResult } from "$lib/editor/handle-persist-result";
-  import { getOrganizationShareUrl } from "$lib/share-links";
+  import { persistEntityChange } from "$lib/utils/proposals/client";
+  import { handlePersistEntityResult } from "$lib/utils/editor/handle-persist-result";
+  import { getOrganizationShareUrl } from "$lib/utils/share-links";
 
   const appData = getAppData();
   const appActions = getAppActions();

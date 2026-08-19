@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { EntityPhoto } from '$lib/entity-photos';
+  import type { EntityPhoto } from '$lib/utils/entity-photos';
   import EntityPhotoUpload from './EntityPhotoUpload.svelte';
 
   type Props = {

@@ -18,7 +18,7 @@
     sidePanelStore,
     syncToastStore,
     toastStore,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
   import type { EventData } from "$lib/utils/types";
   import { onMount } from "svelte";
 

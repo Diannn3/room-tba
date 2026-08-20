@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import DownloadCloud from "@lucide/svelte/icons/download-cloud";
   import Download from "@lucide/svelte/icons/download";
-  import { mapToolsStore, offlineStore } from "$lib/utils/store.svelte";
+  import { mapToolsStore, offlineStore } from "$lib/stores.svelte";
   import { registerEphemeralOverlayDismisser } from "$lib/utils/overlay-stack";
   import { rafThrottle } from "$lib/utils/layout-css-vars";
   import { trapFocus } from "$lib/utils/focus-trap";

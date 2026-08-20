@@ -9,7 +9,7 @@ import {
 	resolveQueryFromEntityPath
 } from './entity-urls';
 import { getLocalRoomById } from './local/data/utils';
-import { currentRoom, termStore } from './store.svelte';
+import { currentRoom, termStore } from '$lib/stores.svelte';
 import { parseTermIdFromSearch, withTermQuery } from './term-url';
 import {
 	getTransitRoutePath,

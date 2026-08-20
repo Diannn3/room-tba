@@ -15,7 +15,7 @@
     scheduleRouteStore,
     sidebarStore,
     termStore,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
   import { buildAgenda } from "$lib/utils/today-agenda";
   import { routableTodayWeekday, routeToday } from "$lib/utils/today-route";
   import { formatTermDateRange, isDateWithinTerm } from "$lib/utils/term-calendar";

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import CornerRightUp from '@lucide/svelte/icons/corner-right-up';
 	import MapChromeActionChip from '$lib/components/map-chrome/MapChromeActionChip.svelte';
-	import { locationStore } from '$lib/utils/store.svelte';
+	import { locationStore } from '$lib/stores.svelte';
 
 	type Props = {
 		lat: number;

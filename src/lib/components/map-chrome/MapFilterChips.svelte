@@ -3,7 +3,7 @@
   import { openBrowseClasses, openCampusBrowse } from "$lib/utils/browse-campus";
   import type { CampusBrowseTab } from "$lib/utils/browse-campus";
   import { campusTransit } from "$lib/utils/campus.config";
-  import { jeepneyStore, queryStore, sidePanelStore } from "$lib/utils/store.svelte";
+  import { jeepneyStore, queryStore, sidePanelStore } from "$lib/stores.svelte";
 
   import classBuildingsIcon from "../../../assets/icons/class-buildings.svg?url";
   import dormsIcon from "../../../assets/icons/dorms.svg?url";

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/svelte';
 import { beforeEach, describe, expect, test } from 'vitest';
 import AnnouncementBar from './AnnouncementBar.svelte';
-import { announcementsStore } from '$lib/utils/store.svelte';
+import { announcementsStore } from '$lib/stores.svelte';
 import type { AnnouncementData } from '$lib/utils/types';
 
 const row = (id: number, severity: string, title: string): AnnouncementData =>

@@ -16,7 +16,7 @@
 		sidebarStore,
 		termStore,
 		toastStore
-	} from '$lib/utils/store.svelte';
+	} from '$lib/stores.svelte';
 	import { fetchAllClasses } from '$lib/utils/classes-api';
 	import { COURSE_CHANGE_DISCLAIMER } from '$lib/amis/room-scheduled-types';
 	import { changeOfMatriculationLabel } from '$lib/utils/term-calendar';

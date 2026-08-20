@@ -1,6 +1,6 @@
 <script lang="ts">
   import { RefreshCw } from "@lucide/svelte";
-  import { syncToastStore, modalStore } from "$lib/utils/store.svelte";
+  import { syncToastStore, modalStore } from "$lib/stores.svelte";
   import { APP_VERSION_LABEL } from "$lib/constants/versioning/version";
   import { parseChangelogEntries } from "$lib/utils/changelog-highlights";
   import { releaseTimestampLabel } from "$lib/utils/release-timestamps";

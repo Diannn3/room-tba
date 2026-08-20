@@ -8,7 +8,7 @@
 	import { CLASS_BROWSE_SCOPE_NOTE } from '$lib/amis/room-scheduled-types';
 	import { fetchFinalExams, FINALS_SCOPE_NOTE, looksLikeCourseCode } from '$lib/utils/final-exams';
 	import { normalizeCourseCode } from '$lib/utils/final-exams/normalize';
-	import { queryStore, sidePanelStore, termStore } from '$lib/utils/store.svelte';
+	import { queryStore, sidePanelStore, termStore } from '$lib/stores.svelte';
 	import type { ClassMapValue, FinalExamRow } from '$lib/utils/types';
 
 	const PAGE_SIZE = 25;

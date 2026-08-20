@@ -14,7 +14,7 @@
     jeepneyStore,
     queryStore,
     classVenuesStore,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
   import "./map-chrome/map-chrome.css";
 
   const appData = getAppData();

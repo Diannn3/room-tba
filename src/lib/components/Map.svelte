@@ -148,7 +148,7 @@ import {
 	trailStore,
 	transitStore,
 	travelTimeStore,
-} from "$lib/utils/store.svelte";
+} from "$lib/stores.svelte";
 import {
 	dijkstra,
 	isochroneFeatures,

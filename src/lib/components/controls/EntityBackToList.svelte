@@ -1,7 +1,7 @@
 <script lang="ts">
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import { openCampusBrowse, type CampusBrowseTab } from "$lib/utils/browse-campus";
-  import { queryStore, sidePanelStore } from "$lib/utils/store.svelte";
+  import { queryStore, sidePanelStore } from "$lib/stores.svelte";
 
   type Props = {
     /** Which campus browse list to reopen. */

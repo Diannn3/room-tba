@@ -11,7 +11,7 @@
     mapStore,
     terrainStore,
     toastStore,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
   import compassIcon from "../../../assets/icons/compass.svg?url";
 
   type Props = {

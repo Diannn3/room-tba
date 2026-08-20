@@ -5,7 +5,7 @@
 		mapProposalStore,
 		queryStore,
 		toastStore
-	} from '$lib/utils/store.svelte';
+	} from '$lib/stores.svelte';
 	import { getAppActions, getAppData } from '$lib/utils/context';
 	import Users from '@lucide/svelte/icons/users';
 	import Mail from '@lucide/svelte/icons/mail';

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import EntitySkeleton from '$lib/components/EntitySkeleton.svelte';
-	import { adminAuthStore, queryStore, toastStore, termStore } from '$lib/utils/store.svelte';
+	import { adminAuthStore, queryStore, toastStore, termStore } from '$lib/stores.svelte';
 	import {
 		getStoredProposalForEntity,
 		persistEntityChange,

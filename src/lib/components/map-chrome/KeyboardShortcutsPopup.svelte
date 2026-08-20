@@ -13,7 +13,7 @@
     formatShortcutsPanelStyle,
     measureOpenSidePanelBounds,
   } from "$lib/utils/shortcuts-panel-position";
-  import { mapToolsStore } from "$lib/utils/store.svelte";
+  import { mapToolsStore } from "$lib/stores.svelte";
   import {
     registerEphemeralOverlayDismisser,
     openEphemeralOverlay,

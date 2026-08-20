@@ -1,6 +1,6 @@
 <script lang="ts">
   import Route from "@lucide/svelte/icons/route";
-  import { sidebarStore } from "$lib/utils/store.svelte";
+  import { sidebarStore } from "$lib/stores.svelte";
   import { routableTodayWeekday, routeToday } from "$lib/utils/today-route";
   import MapChromeActionChip from "./map-chrome/MapChromeActionChip.svelte";
 

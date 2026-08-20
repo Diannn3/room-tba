@@ -8,7 +8,7 @@
     TERRAIN_EXAGGERATION_OPTIONS,
     TERRAIN_UNAVAILABLE_OFFLINE_MESSAGE,
   } from "$lib/constants/map/terrain"
-  import { floatingControlPanelStore, terrainStore } from "$lib/utils/store.svelte";
+  import { floatingControlPanelStore, terrainStore } from "$lib/stores.svelte";
   import "./map-chrome/map-chrome.css";
 
   type Props = {

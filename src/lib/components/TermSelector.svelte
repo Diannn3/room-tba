@@ -7,7 +7,7 @@
   import { formatTermDateRange } from "$lib/utils/term-calendar";
   import { trapFocus } from "$lib/utils/focus-trap";
   import { portal } from "$lib/utils/portal";
-  import { mapToolsStore, sidebarStore, termStore } from "$lib/utils/store.svelte";
+  import { mapToolsStore, sidebarStore, termStore } from "$lib/stores.svelte";
   import {
     registerEphemeralOverlayDismisser,
     openEphemeralOverlay,

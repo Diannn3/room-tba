@@ -8,7 +8,7 @@
 	import EntityShareCopyLink from './EntityShareCopyLink.svelte';
 	import TransitStopEditor from './TransitStopEditor.svelte';
 	import { getJeepneyRouteShareUrl } from '$lib/utils/share-links';
-	import { jeepneyStore, transitStore } from '$lib/utils/store.svelte';
+	import { jeepneyStore, transitStore } from '$lib/stores.svelte';
 	import MapChromeActionChip from '$lib/components/map-chrome/MapChromeActionChip.svelte';
 	import '$lib/components/map-chrome/map-chrome.css';
 

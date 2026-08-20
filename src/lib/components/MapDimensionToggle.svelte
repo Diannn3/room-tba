@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { mapStore, terrainStore } from "$lib/utils/store.svelte";
+  import { mapStore, terrainStore } from "$lib/stores.svelte";
   import { THREE_D_PITCH, isMap2DPitch } from "$lib/constants/map/dimension";
   import {
     enterFlatMapDimension,

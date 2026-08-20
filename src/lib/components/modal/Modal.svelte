@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { modalStore } from '$lib/utils/store.svelte';
+	import { modalStore } from '$lib/stores.svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { modalContentDismiss, modalContentReveal, overlayFade } from '$lib/utils/motion';
 	import { trapFocus } from '$lib/utils/focus-trap';

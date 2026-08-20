@@ -5,7 +5,7 @@
     adminAuthStore,
     announcementsStore,
     modalStore,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
   import {
     ANNOUNCEMENT_SEVERITIES,
     ANNOUNCEMENT_SEVERITY_LABELS,

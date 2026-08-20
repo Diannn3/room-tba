@@ -2,7 +2,7 @@
   import { fade, fly } from "svelte/transition";
   import { X, Lock } from "@lucide/svelte";
   import IconButton from "$lib/components/IconButton.svelte";
-  import { adminAuthStore, toastStore } from "$lib/utils/store.svelte";
+  import { adminAuthStore, toastStore } from "$lib/stores.svelte";
   import {
     modalContentDismiss,
     modalContentReveal,

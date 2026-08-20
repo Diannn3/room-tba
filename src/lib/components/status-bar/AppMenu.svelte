@@ -28,7 +28,7 @@
     proposalsStore,
     sidebarStore,
     toastStore,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
   import OfflineMaps from "$lib/components/OfflineMaps.svelte";
   import PWAInstallPrompt from "$lib/components/PWAInstallPrompt.svelte";
   import MapChromeSession from "$lib/components/map-chrome/MapChromeSession.svelte";

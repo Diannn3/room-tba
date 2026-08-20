@@ -20,7 +20,7 @@
     queryStore,
     sidePanelStore,
     transitStore,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
   import CollegeResult from "./CollegeResult.svelte";
   import BuildingResult from "./BuildingResult.svelte";
   import DivisionResult from "./DivisionResult.svelte";

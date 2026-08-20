@@ -7,7 +7,7 @@
     offeringGroupKey,
     type ClassOfferingGroup,
   } from "$lib/utils/class-offering-groups";
-  import { plannerStore, termStore, toastStore } from "$lib/utils/store.svelte";
+  import { plannerStore, termStore, toastStore } from "$lib/stores.svelte";
   import type { ClassMapValue } from "$lib/utils/types";
 
   const termId = $derived(

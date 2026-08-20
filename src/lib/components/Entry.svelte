@@ -44,7 +44,7 @@ import {
 	termStore,
 	toastStore,
 	travelTimeStore,
-} from "$lib/utils/store.svelte";
+} from "$lib/stores.svelte";
 import "./map-chrome/map-chrome.css";
 import { MediaQuery } from "svelte/reactivity";
 import { goto } from "$app/navigation";
@@ -635,158 +635,6 @@ function handleKeydown(e: KeyboardEvent) {
 		pointer-events: none;
 	}
 
-	.bottom-chrome {
-		position: relative;
-		z-index: var(--z-status-bar, 3);
-		display: flex;
-		flex-direction: row;
-		/* The row carries a fixed-width credits block plus a fixed-width action
-       column; below ~430px their sum exceeds the viewport and the trailing
-       controls used to be clipped away entirely. Wrapping drops the action
-       column onto its own line instead of pushing it off-screen. */
-		flex-wrap: wrap;
-		align-items: flex-end;
-		justify-content: space-between;
-		gap: 0.5rem;
-		row-gap: 0.375rem;
-		width: 100%;
-		/* vw, not %: see .bottom-band. A percentage here resolves against an
-       ancestor that has already been inflated past the screen. */
-		max-width: 100vw;
-		min-width: 0;
-		min-height: 2rem;
-		box-sizing: border-box;
-		/* Transparent shell so the bar hugs its content on the left and the
-       location controls sit on the right — no full-width empty stretch. */
-		pointer-events: none;
-	}
-
-	/* The bordered pill only wraps the left cluster (attribution + menu +
-     status), so it no longer sprawls across the whole viewport. */
-	.bottom-chrome__bar {
-		display: flex;
-		flex-direction: row;
-		/* Wraps, but the status is never what wraps. The regression this fixes was
-       the status dropping onto a row of its own and reading as a second status
-       bar stacked against the attribution. The cure for that is making the
-       status shrinkable (it ellipsises, see .bottom-chrome__status), not
-       forbidding the wrap: with nowrap, credits (a hard floor under basemap
-       terms) plus a sync-error Retry could not both fit at 320px and the row
-       overflowed the viewport by about a pixel instead. Wrapping lets an
-       oversized action drop a line while the status stays beside the credits. */
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 0.375rem;
-		flex: 0 1 auto;
-		min-width: 0;
-		max-width: 100%;
-		min-height: 2rem;
-		background-color: var(--map-chrome-surface, hsl(5 20% 97%));
-		backdrop-filter: blur(10px);
-		border: 1px solid var(--map-chrome-border, hsl(5 10% 68%));
-		border-radius: var(--map-chrome-radius, 1rem);
-		padding: 0.125rem 0.375rem;
-		box-shadow: var(
-			--map-chrome-panel-shadow,
-			0 0 0 1px hsla(15, 8%, 20%, 0.16),
-			0 2px 8px hsla(0, 0%, 0%, 0.14),
-			0 8px 20px hsla(0, 0%, 0%, 0.18)
-		);
-		box-sizing: border-box;
-		pointer-events: auto;
-	}
-
-	.bottom-chrome__leading {
-		display: flex;
-		flex: 0 0 auto;
-		align-items: center;
-		align-self: center;
-		min-width: 0;
-	}
-
-	.bottom-chrome__status {
-		display: flex;
-		/* basis 0, not auto. With flex-wrap on the pill, line breaks are decided
-       from flex *base* sizes before any shrinking happens, so a content-sized
-       status does not compress, it gets pushed onto its own row. That is the
-       regression #905 fixed and #935 reintroduced by restoring the wrap while
-       leaving the basis at auto. At basis 0 the status never forces a break:
-       it grows into whatever is left beside the credits and ellipsises past
-       that, so only an oversized sync action can take a second row. */
-		flex: 1 1 0;
-		align-items: center;
-		min-width: 0;
-		overflow: hidden;
-	}
-
-	/* The pill is one line, so the status text is what yields when the viewport
-     cannot fit credits + status: it ellipsises instead of wrapping the pill
-     onto a second row. Any sync action button beside it keeps its full width,
-     so a Retry stays tappable at 320px. */
-	.bottom-chrome__status :global(.sync-status),
-	.bottom-chrome__status :global(.sync-status-copy) {
-		min-width: 0;
-	}
-
-	.bottom-chrome__status :global(.sync-status-label),
-	.bottom-chrome__status :global(.sync-status-detail) {
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.bottom-chrome__status :global(.status-bar) {
-		width: 100%;
-		max-width: 100%;
-		margin: 0;
-		align-self: stretch;
-		border: none;
-		background: transparent;
-		box-shadow: none;
-		backdrop-filter: none;
-		border-radius: 0;
-		padding: 0;
-		min-height: 1.25rem;
-	}
-
-	.bottom-chrome__actions {
-		display: flex;
-		flex: 0 0 auto;
-		flex-direction: column;
-		/* Bottom-align controls so an open legend panel grows upward without
-       floating +/locate over the panel body. */
-		align-items: flex-end;
-		gap: 0.375rem;
-		padding: 0;
-		/* Stay hard right once the row wraps this column onto its own line. */
-		margin-left: auto;
-		max-width: 100%;
-		pointer-events: auto;
-	}
-
-	.bottom-chrome__actions :global(.map-legend--open) {
-		position: relative;
-		z-index: 2;
-	}
-
-	.bottom-chrome__actions :global(.map-control-stack.embedded) {
-		position: relative;
-		z-index: 1;
-	}
-
-	.bottom-chrome__actions :global(.map-chrome-control-btn--compact) {
-		flex-shrink: 0;
-	}
-	.bottom-chrome__triggers {
-		display: flex;
-		/* A sixth chip must wrap, not clip (same failure the browse-chip row hit). */
-		flex-wrap: wrap;
-		justify-content: flex-end;
-		gap: 0.375rem;
-		align-items: flex-end;
-		max-width: 100%;
-	}
-
 	.bottom-band::before {
 		content: '';
 		position: absolute;
@@ -1033,7 +881,186 @@ function handleKeydown(e: KeyboardEvent) {
 		display: none;
 	}
 
-	.top-right-map-stack {
+	@media (prefers-reduced-motion: reduce) {
+		.app-layout {
+			--motion-duration-fast: 0ms;
+			--motion-duration-micro: 0ms;
+			--motion-duration-panel: 0ms;
+			--motion-duration-shelf: 0ms;
+		}
+	}
+
+	@media (max-width: 48rem) {
+		.app-layout {
+			--map-ui-padding: 0.375rem;
+			--map-search-inline-pad: 0.625rem;
+			--bottom-fab-gap: 0.375rem;
+			--bottom-chrome-gap: var(--bottom-fab-gap);
+			--map-tools-block-height: 0px;
+			/* search-block-height is the fixed mobile search shell (includes its
+         top padding); do not add --staging-banner-gap again. */
+			--mobile-detail-sheet-top-inset: calc(
+				var(--staging-banner-height, 0px) + var(--search-block-height) +
+					var(--mobile-detail-sheet-gap, 0.375rem)
+			);
+			--bottom-fab-inset: 3.25rem;
+		}
+
+		.inner-layer {
+			padding: 0;
+			gap: 0;
+		}
+	}
+</style>
+
+<!-- 
+	.bottom-chrome {
+		position: relative;
+		z-index: var(--z-status-bar, 3);
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		justify-content: space-between;
+		gap: 0.5rem;
+		row-gap: 0.375rem;
+		width: 100%;
+		max-width: 100vw;
+		min-width: 0;
+		min-height: 2rem;
+		box-sizing: border-box;
+		/* Transparent shell so the bar hugs its content on the left and the
+       location controls sit on the right — no full-width empty stretch. */
+		pointer-events: none;
+	}
+
+	/* The bordered pill only wraps the left cluster (attribution + menu +
+     status), so it no longer sprawls across the whole viewport. */
+	.bottom-chrome__bar {
+		display: flex;
+		flex-direction: row;
+		/* Wraps, but the status is never what wraps. The regression this fixes was
+       the status dropping onto a row of its own and reading as a second status
+       bar stacked against the attribution. The cure for that is making the
+       status shrinkable (it ellipsises, see .bottom-chrome__status), not
+       forbidding the wrap: with nowrap, credits (a hard floor under basemap
+       terms) plus a sync-error Retry could not both fit at 320px and the row
+       overflowed the viewport by about a pixel instead. Wrapping lets an
+       oversized action drop a line while the status stays beside the credits. */
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.375rem;
+		flex: 0 1 auto;
+		min-width: 0;
+		max-width: 100%;
+		min-height: 2rem;
+		background-color: var(--map-chrome-surface, hsl(5 20% 97%));
+		backdrop-filter: blur(10px);
+		border: 1px solid var(--map-chrome-border, hsl(5 10% 68%));
+		border-radius: var(--map-chrome-radius, 1rem);
+		padding: 0.125rem 0.375rem;
+		box-shadow: var(
+			--map-chrome-panel-shadow,
+			0 0 0 1px hsla(15, 8%, 20%, 0.16),
+			0 2px 8px hsla(0, 0%, 0%, 0.14),
+			0 8px 20px hsla(0, 0%, 0%, 0.18)
+		);
+		box-sizing: border-box;
+		pointer-events: auto;
+	}
+
+	.bottom-chrome__leading {
+		display: flex;
+		flex: 0 0 auto;
+		align-items: center;
+		align-self: center;
+		min-width: 0;
+	}
+
+	.bottom-chrome__status {
+		display: flex;
+		/* basis 0, not auto. With flex-wrap on the pill, line breaks are decided
+       from flex *base* sizes before any shrinking happens, so a content-sized
+       status does not compress, it gets pushed onto its own row. That is the
+       regression #905 fixed and #935 reintroduced by restoring the wrap while
+       leaving the basis at auto. At basis 0 the status never forces a break:
+       it grows into whatever is left beside the credits and ellipsises past
+       that, so only an oversized sync action can take a second row. */
+		flex: 1 1 0;
+		align-items: center;
+		min-width: 0;
+		overflow: hidden;
+	}
+
+	/* The pill is one line, so the status text is what yields when the viewport
+     cannot fit credits + status: it ellipsises instead of wrapping the pill
+     onto a second row. Any sync action button beside it keeps its full width,
+     so a Retry stays tappable at 320px. */
+	.bottom-chrome__status :global(.sync-status),
+	.bottom-chrome__status :global(.sync-status-copy) {
+		min-width: 0;
+	}
+
+	.bottom-chrome__status :global(.sync-status-label),
+	.bottom-chrome__status :global(.sync-status-detail) {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.bottom-chrome__status :global(.status-bar) {
+		width: 100%;
+		max-width: 100%;
+		margin: 0;
+		align-self: stretch;
+		border: none;
+		background: transparent;
+		box-shadow: none;
+		backdrop-filter: none;
+		border-radius: 0;
+		padding: 0;
+		min-height: 1.25rem;
+	}
+
+	.bottom-chrome__actions {
+		display: flex;
+		flex: 0 0 auto;
+		flex-direction: column;
+		/* Bottom-align controls so an open legend panel grows upward without
+       floating +/locate over the panel body. */
+		align-items: flex-end;
+		gap: 0.375rem;
+		padding: 0;
+		/* Stay hard right once the row wraps this column onto its own line. */
+		margin-left: auto;
+		max-width: 100%;
+		pointer-events: auto;
+	}
+
+	.bottom-chrome__actions :global(.map-legend--open) {
+		position: relative;
+		z-index: 2;
+	}
+
+	.bottom-chrome__actions :global(.map-control-stack.embedded) {
+		position: relative;
+		z-index: 1;
+	}
+
+	.bottom-chrome__actions :global(.map-chrome-control-btn--compact) {
+		flex-shrink: 0;
+	}
+	.bottom-chrome__triggers {
+		display: flex;
+		/* A sixth chip must wrap, not clip (same failure the browse-chip row hit). */
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: 0.375rem;
+		align-items: flex-end;
+		max-width: 100%;
+	}
+		
+		.top-right-map-stack {
 		position: absolute;
 		top: calc(var(--map-ui-padding) + 2px);
 		right: calc(var(--map-ui-padding) + 2px);
@@ -1088,38 +1115,9 @@ function handleKeydown(e: KeyboardEvent) {
 		margin: 0.5rem 0.125rem;
 		background-color: var(--map-chrome-divider, hsl(5 12% 70%));
 	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.app-layout {
-			--motion-duration-fast: 0ms;
-			--motion-duration-micro: 0ms;
-			--motion-duration-panel: 0ms;
-			--motion-duration-shelf: 0ms;
-		}
-	}
-
-	@media (max-width: 48rem) {
-		.app-layout {
-			--map-ui-padding: 0.375rem;
-			--map-search-inline-pad: 0.625rem;
-			--bottom-fab-gap: 0.375rem;
-			--bottom-chrome-gap: var(--bottom-fab-gap);
-			--map-tools-block-height: 0px;
-			/* search-block-height is the fixed mobile search shell (includes its
-         top padding); do not add --staging-banner-gap again. */
-			--mobile-detail-sheet-top-inset: calc(
-				var(--staging-banner-height, 0px) + var(--search-block-height) +
-					var(--mobile-detail-sheet-gap, 0.375rem)
-			);
-			--bottom-fab-inset: 3.25rem;
-		}
-
-		.inner-layer {
-			padding: 0;
-			gap: 0;
-		}
-
-		.bottom-chrome {
+	
+	@media type shi {
+			.bottom-chrome {
 			gap: 0.25rem;
 			min-height: 2rem;
 			padding: 0.125rem max(0.375rem, env(safe-area-inset-left, 0px))
@@ -1220,4 +1218,4 @@ function handleKeydown(e: KeyboardEvent) {
 			padding: 0.125rem 0 0.3125rem;
 		}
 	}
-</style>
+-->

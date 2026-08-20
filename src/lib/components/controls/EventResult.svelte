@@ -24,7 +24,7 @@
     mapStore,
     queryStore,
     toastStore,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
   import {
     getStoredProposalForEntity,
     persistEntityChange,

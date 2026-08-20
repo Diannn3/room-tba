@@ -6,7 +6,7 @@
 	import { syncOpenEntityQueryAfterPublish } from '$lib/utils/proposals/sync-open-entity-query';
 	import type { ProposalEntityType } from '$lib/services/contribution/proposal-action';
 	import { getAppActions, getAppData } from '$lib/utils/context';
-	import { toastStore } from '$lib/utils/store.svelte';
+	import { toastStore } from '$lib/stores.svelte';
 	import EntityEditorSubmitButton from './EntityEditorSubmitButton.svelte';
 
 	type HistoryEntry = {

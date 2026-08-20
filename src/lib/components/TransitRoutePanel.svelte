@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { jeepneyStore, transitStore } from "$lib/utils/store.svelte";
+  import { jeepneyStore, transitStore } from "$lib/stores.svelte";
   import { campusTransit } from "$lib/utils/campus.config";
 
   type Props = {

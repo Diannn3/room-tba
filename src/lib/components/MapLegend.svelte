@@ -6,7 +6,7 @@
 	import IconButton from '$lib/components/IconButton.svelte';
 	import './map-chrome/map-chrome.css';
 	import { getAppData } from '$lib/utils/context';
-	import { floatingControlPanelStore, mapViewStore, queryStore } from '$lib/utils/store.svelte';
+	import { floatingControlPanelStore, mapViewStore, queryStore } from '$lib/stores.svelte';
 	import { openEphemeralOverlay, registerEphemeralOverlayDismisser } from '$lib/utils/overlay-stack';
 	import { campusTransit } from '$lib/utils/campus.config';
 

@@ -5,7 +5,7 @@
     adminAuthStore,
     sidePanelStore,
     transitStore,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
   import {
     persistEntityChange,
     publishEntityCreate,

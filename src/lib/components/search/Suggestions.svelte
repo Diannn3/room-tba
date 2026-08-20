@@ -15,7 +15,7 @@ import {
 	buildingTypeFilter,
 	classVenuesStore,
 	queryStore,
-} from "$lib/utils/store.svelte";
+} from "$lib/stores.svelte";
 import FinalExamSuggestion from "./FinalExamSuggestion.svelte";
 import SearchQuerySuggestion from "./SearchQuerySuggestion.svelte";
 import Suggestion from "./Suggestion.svelte";

@@ -43,7 +43,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     sidePanelStore,
     termStore,
     toastStore,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
   import type { FinalExamRow, RoomData } from "$lib/utils/types";
   import { normalizeEntityPhotos, type EntityPhoto } from "$lib/utils/entity-photos";
   import EntityDirectionsChip from "../controls/EntityDirectionsChip.svelte";

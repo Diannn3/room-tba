@@ -1,7 +1,7 @@
 <script lang="ts">
   import Route from "@lucide/svelte/icons/route";
   import MapPin from "@lucide/svelte/icons/map-pin";
-  import { trailStore, mapStore } from "$lib/utils/store.svelte";
+  import { trailStore, mapStore } from "$lib/stores.svelte";
   import {
     MAKILING_TRAIL_STATIONS,
     MAKILING_TRAIL_CAMERA,

@@ -10,7 +10,7 @@
 	import { getEventImage } from '$lib/utils/event-images';
 	import { formatCampusRange } from '$lib/utils/event-time';
 	import { getEventShareUrl } from '$lib/utils/share-links';
-	import { queryStore, sidePanelStore } from '$lib/utils/store.svelte';
+	import { queryStore, sidePanelStore } from '$lib/stores.svelte';
 	import type { EventData } from '$lib/utils/types';
 	import EventResult from './EventResult.svelte';
 

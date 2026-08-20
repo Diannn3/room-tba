@@ -50,7 +50,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     queryStore,
     termStore,
     toastStore,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
   import type { BuildingData, RoomData } from "$lib/utils/types";
   import EntityLastUpdated from "../EntityLastUpdated.svelte";
   import EntityBackToList from "./EntityBackToList.svelte";

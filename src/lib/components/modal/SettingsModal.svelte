@@ -9,7 +9,7 @@
     resyncCampusData,
     type ResyncOutcome,
   } from "$lib/utils/local/resync-campus-data";
-  import { syncToastStore } from "$lib/utils/store.svelte";
+  import { syncToastStore } from "$lib/stores.svelte";
   import "../map-chrome/map-chrome.css";
 
   let confirming = $state(false);

@@ -4,7 +4,7 @@
     plannerStore,
     scheduleRouteStore,
     type Weekday,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
   import { onMount, untrack } from "svelte";
   import { flip } from "svelte/animate";
   import { formatDistance, formatDuration } from "$lib/utils/campus-route";

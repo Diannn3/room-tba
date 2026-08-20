@@ -20,8 +20,9 @@ import {
 	eventPreviewFromRow,
 } from "$lib/utils/entity-hover-preview.svelte";
 import { slugifySegment } from "$lib/utils/site";
-import { type QueryStoreState, queryStore } from "$lib/utils/store.svelte";
+import { queryStore } from "$lib/stores.svelte";
 import type { BuildingData, EventData } from "$lib/utils/types";
+	import type { QueryStoreState } from "$lib/stores/store-types";
 
 let {
 	value,

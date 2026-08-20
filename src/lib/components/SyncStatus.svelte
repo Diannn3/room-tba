@@ -11,7 +11,7 @@
     syncToastStore,
     appBootstrapStore,
     modalStore,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
   import { getSyncLadderState } from "$lib/stores/sync-ladder.svelte";
   import { APP_VERSION, APP_VERSION_LABEL } from "$lib/constants/versioning/version";
   import {

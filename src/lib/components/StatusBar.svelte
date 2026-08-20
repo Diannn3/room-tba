@@ -7,7 +7,7 @@
     adminAuthStore,
     toastStore,
     modalStore,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
   import "./status-bar/status-bar.css";
   import SyncStatus from "./SyncStatus.svelte";
   import SponsorBadge from "./SponsorBadge.svelte";

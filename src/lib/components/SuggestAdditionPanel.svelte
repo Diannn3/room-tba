@@ -3,7 +3,7 @@
     adminAuthStore,
     additionProposalStore,
     toastStore,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
   import { getAppData } from "$lib/utils/context";
   import SubmitterNameField from "./SubmitterNameField.svelte";
   import {

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from 'vitest';
-import { buildingTypeFilter, queryStore, sidebarStore } from '$lib/utils/store.svelte';
+import { buildingTypeFilter, queryStore, sidebarStore } from '$lib/stores.svelte';
 
 describe('QueryStore pin filter reset (#chip mislabel)', () => {
 	beforeEach(() => {

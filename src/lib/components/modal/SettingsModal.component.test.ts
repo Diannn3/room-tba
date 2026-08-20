@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SettingsModalHost from '@test/components/SettingsModalHost.svelte';
 import { expectNoHorizontalOverflow, mountAtWidth } from '@test/layout-assertions';
 import { SYNC_TABLE_NAMES } from '$lib/utils/local/data/sync-keys';
-import { syncToastStore } from '$lib/utils/store.svelte';
+import { syncToastStore } from '$lib/stores.svelte';
 
 const clearCachedData = vi.hoisted(() => vi.fn(async () => {}));
 vi.mock('$lib/local/clear-cached-data', () => ({ clearCachedData }));

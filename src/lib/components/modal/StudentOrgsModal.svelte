@@ -7,7 +7,7 @@
     modalStore,
     queryStore,
     sidePanelStore,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
   import { openCampusBrowse } from "$lib/utils/browse-campus";
   import { UPLB_OSA_ORGANIZATIONS_URL } from "$lib/constants/content/links/community"
 

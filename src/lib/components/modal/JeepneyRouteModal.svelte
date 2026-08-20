@@ -1,7 +1,7 @@
 <script lang="ts">
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import MapPinned from "@lucide/svelte/icons/map-pinned";
-  import { jeepneyStore, modalStore, transitStore } from "$lib/utils/store.svelte";
+  import { jeepneyStore, modalStore, transitStore } from "$lib/stores.svelte";
   import {
     JEEPNEY_FARE_NOTE,
     resolveRouteGeometry,

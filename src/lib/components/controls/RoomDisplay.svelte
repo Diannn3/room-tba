@@ -3,7 +3,7 @@
 	import { resolve } from "$app/paths";
 import RoomResult from "$lib/components/room/RoomResult.svelte";
 import { slugifySegment } from "$lib/utils/site";
-import { queryStore, sidePanelStore } from "$lib/utils/store.svelte";
+import { queryStore, sidePanelStore } from "$lib/stores.svelte";
 import type { RoomData } from "$lib/utils/types";
 
 type Props = {

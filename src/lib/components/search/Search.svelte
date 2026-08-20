@@ -24,7 +24,7 @@ import {
 	proposalsStore,
 	queryStore,
 	sidePanelStore,
-} from "$lib/utils/store.svelte";
+} from "$lib/stores.svelte";
 import Suggestions from "./Suggestions.svelte";
 
 let searchElement = $state<HTMLInputElement | null>(null);

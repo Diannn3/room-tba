@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import RoomResultHost from '@test/components/RoomResultHost.svelte';
 import type { RoomData } from '$lib/utils/types';
-import { currentRoom, queryStore } from '$lib/utils/store.svelte';
+import { currentRoom, queryStore } from '$lib/stores.svelte';
 import { expectNoHorizontalOverflow, mountAtWidth } from '@test/layout-assertions';
 
 function room(overrides: Partial<RoomData> = {}): RoomData {

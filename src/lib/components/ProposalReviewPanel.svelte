@@ -1,7 +1,7 @@
 <script lang="ts">
 	import LoadingIndicator from '$lib/components/LoadingIndicator.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
-	import { adminAuthStore, proposalsStore, toastStore } from '$lib/utils/store.svelte';
+	import { adminAuthStore, proposalsStore, toastStore } from '$lib/stores.svelte';
 	import { buildFieldDiffs } from '$lib/utils/proposals/diff';
 	import { appEntityNameResolver } from '$lib/utils/proposals/entity-names';
 	import { afterProposalPublished } from '$lib/utils/proposals/apply-published-entity';

@@ -44,7 +44,7 @@ import {
 	syncToastStore,
 	toastStore,
 	transitStore,
-} from "$lib/utils/store.svelte";
+} from "$lib/stores.svelte";
 import { normalizeDormListFields } from "$lib/utils/string-lists";
 import type {
 	BuildingData,

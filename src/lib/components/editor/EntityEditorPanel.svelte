@@ -12,7 +12,7 @@
     proposalStatusMessage,
   } from "$lib/utils/editor/field-action-label";
   import { withdrawEntityProposal } from "$lib/utils/proposals/client";
-  import { toastStore } from "$lib/utils/store.svelte";
+  import { toastStore } from "$lib/stores.svelte";
   import "./entity-editor.css";
 
   type Props = {

@@ -13,7 +13,7 @@
     mapViewStore,
     plannerStore,
     terrainStore,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
   import { onMount } from "svelte";
   import { THREE_D_PITCH, isMap2DPitch } from "$lib/constants/map/dimension";
   import {

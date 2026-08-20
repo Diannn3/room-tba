@@ -35,7 +35,7 @@
     queryStore,
     sidebarStore,
     sidePanelStore,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
   import Map from "@lucide/svelte/icons/map";
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import ChevronRight from "@lucide/svelte/icons/chevron-right";

@@ -5,7 +5,7 @@
     adminAuthStore,
     sidePanelStore,
     toastStore,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
   import { getAppActions, getAppData } from "$lib/utils/context";
   import { persistEntityChange } from "$lib/utils/proposals/client";
   import {

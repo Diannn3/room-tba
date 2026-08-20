@@ -10,7 +10,7 @@
   import type { ClassOfferingGroup } from "$lib/utils/class-offering-groups";
   import type { ProbableLocation } from "$lib/utils/probable-location";
   import type { ClassMapValue } from "$lib/utils/types";
-  import { plannerStore, queryStore, toastStore } from "$lib/utils/store.svelte";
+  import { plannerStore, queryStore, toastStore } from "$lib/stores.svelte";
 
   interface Props {
     classes: ClassMapValue[];

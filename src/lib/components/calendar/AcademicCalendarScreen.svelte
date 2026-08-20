@@ -4,7 +4,7 @@
   import { MediaQuery } from "svelte/reactivity";
   import { trapFocus } from "$lib/utils/focus-trap";
   import { fullScreenReveal } from "$lib/utils/motion";
-  import { sidebarStore, termStore } from "$lib/utils/store.svelte";
+  import { sidebarStore, termStore } from "$lib/stores.svelte";
   import {
     buildEventTimeline,
     buildYearTimeline,

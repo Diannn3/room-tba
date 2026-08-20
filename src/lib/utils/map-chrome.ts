@@ -1,4 +1,5 @@
-import { eventPlacementStore, mapEditStore, mapToolsStore } from './store.svelte';
+import type { MapToolsSection } from '$lib/stores/store-types';
+import { eventPlacementStore, mapEditStore, mapToolsStore } from '$lib/stores.svelte';
 
 /** Single source of truth for which map chrome surfaces are visible. */
 export function getMapChromeVisibility() {
@@ -18,6 +19,6 @@ export function getMapChromeVisibility() {
 	};
 }
 
-export function openMapToolsSection(section: import('./store.svelte').MapToolsSection) {
+export function openMapToolsSection(section: MapToolsSection) {
 	mapToolsStore.openSection(section);
 }

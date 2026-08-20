@@ -1,22 +1,8 @@
 // src/lib/store.svelte.ts
 
-import type { BuildingTypeFilter } from '$lib/constants/content/categories/building.js';
-import { getJSONFetch, getLocalRoomByCode } from '../utils/local/data/utils.js';
-import { deactivateMapModesExcept, type ExclusiveMapMode, registerMapMode } from './map/map-modes.js';
+import { deactivateMapModesExcept, registerMapMode } from './map/map-modes.js';
 import {
-	type AppBootstrapPhase,
-	type EventPlacementDraft,
-	type FloatingControlPanel,
-	type LandingModalTab,
-	type MapProposalTarget,
-	type MapToolsSection,
-	type OfflineStatus,
-	type QueryStoreState,
-	type SyncActivity,
-	type SyncInfo,
-	type SyncTableKey,
 	syncTableLabel,
-	type TerrainStatus
 } from './store-types.js';
 import AnnouncementsStore from './AnnouncementStore.svelte';
 import RoomClassesStore from './data/RoomClassesStore.svelte.js';
@@ -40,7 +26,7 @@ import {
 	TravelTimeStore
 } from './map/map-stores.svelte';
 import PlannerStore from './PlannerStore.svelte';
-import TransitStore from './TransitStore.svelte';
+import TransitStore from './map/TransitStore.svelte.js';
 import QueryStore from './QueryStore.svelte';
 import SidebarStore from './ui/SidebarStore.svelte';
 import SidePanelStore from './ui/SidePanelStore.svelte';
@@ -49,25 +35,9 @@ import ToastStore from './ui/ToastStore.svelte';
 import FloatingControlPanelStore from './ui/FloatingControlPanelStore.svelte';
 
 export type { MeasureLeg, MeasureSummaries } from './map/map-stores.svelte';
-export type {
-	AppBootstrapPhase,
-	BuildingTypeFilter,
-	EventPlacementDraft,
-	ExclusiveMapMode,
-	FloatingControlPanel,
-	LandingModalTab,
-	MapProposalTarget,
-	MapToolsSection,
-	OfflineStatus,
-	QueryStoreState,
-	SyncActivity,
-	SyncInfo,
-	SyncTableKey,
-	TerrainStatus
-};
+
 export { deactivateMapModesExcept, syncTableLabel };
 
-import type { RoomData } from '$lib/utils/types.js';
 
 export {
 	buildingTypeFilter,
@@ -84,62 +54,10 @@ import AdminAuthStore from './AdminAuthStore.svelte';
 import JeepneyStore from './map/JeepneyStores.svelte';
 import ScheduleRouteStore from './map/ScheduleRouteStore.svelte';
 import PlannerBuildingsStore from './data/PlannerBuildingsStore.svelte.js';
-
-let _currentRoom = $state<RoomData | null>(null);
-let _currentRoomNotFound = $state(false);
-let roomLoadGeneration = 0;
-export const currentRoom = {
-	get value() {
-		return _currentRoom;
-	},
-	/** True only after a lookup completed without a match. While null and not
-	 * notFound, the room is still being fetched (or a fetch is about to start),
-	 * so panels should show a loading state rather than "not found". */
-	get notFound() {
-		return _currentRoomNotFound;
-	},
-	async getRoomByCode(code: string) {
-		// Overlapping lookups: only the newest may write. Otherwise a slow
-		// earlier fetch lands last and stamps notFound from a stale result.
-		const generation = ++roomLoadGeneration;
-		_currentRoom = null;
-		_currentRoomNotFound = false;
-		try {
-			const localRoom = await getLocalRoomByCode(code);
-			if (localRoom === null) {
-				const codeParam = encodeURI(code.toUpperCase());
-				const remoteRoomReq = await getJSONFetch<{ data: RoomData }>(
-					`/api/rooms?code=${codeParam}`
-				);
-				if (generation !== roomLoadGeneration) return;
-				_currentRoom = remoteRoomReq.data;
-				return;
-			}
-			if (generation !== roomLoadGeneration) return;
-			_currentRoom = localRoom;
-		} catch (e) {
-			console.error(e);
-			if (generation !== roomLoadGeneration) return;
-			_currentRoom = null;
-		} finally {
-			if (generation === roomLoadGeneration) {
-				_currentRoomNotFound = _currentRoom === null;
-			}
-		}
-	},
-	async getRoomFromSearch(room: RoomData) {
-		roomLoadGeneration++;
-		_currentRoom = room;
-		_currentRoomNotFound = false;
-	},
-	setRoom(room: RoomData) {
-		roomLoadGeneration++;
-		_currentRoom = room;
-		_currentRoomNotFound = false;
-	}
-};
+import { currentRoom } from './current-room-store.svelte';
 
 
+export { currentRoom }
 export const queryStore = new QueryStore();
 export const termStore = new TermStore();
 export const roomClassesStore = new RoomClassesStore();

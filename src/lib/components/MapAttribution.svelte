@@ -5,7 +5,7 @@
     MAPTILER_COPYRIGHT_URL,
     OSM_COPYRIGHT_URL,
   } from "$lib/constants/data-license";
-  import { terrainStore } from "$lib/utils/store.svelte";
+  import { terrainStore } from "$lib/stores.svelte";
   import { onMount } from "svelte";
   import {
     getBasemapProvider,

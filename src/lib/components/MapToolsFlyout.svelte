@@ -11,8 +11,7 @@
     mapToolsStore,
     measureRouteStore,
     travelTimeStore,
-    type MapToolsSection,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
   import { panelFadeIn, panelFadeOut } from "$lib/utils/motion";
   import MapViewControls from "$lib/components/MapViewControls.svelte";
   import MapLegend from "$lib/components/MapLegend.svelte";
@@ -26,6 +25,7 @@
   import MapChromePanel from "$lib/components/map-chrome/MapChromePanel.svelte";
   import "./map-chrome/map-chrome.css";
   import { MediaQuery } from "svelte/reactivity";
+import type { MapToolsSection } from "$lib/stores/store-types";
 
   let panelEl = $state<HTMLDivElement | null>(null);
   const reducedMotion = new MediaQuery("(prefers-reduced-motion: reduce)");

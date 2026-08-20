@@ -13,7 +13,7 @@ vi.mock('$lib/sponsors', async (importOriginal) => ({
 }));
 
 import StatusBar from '$lib/components/StatusBar.svelte';
-import { syncToastStore } from '$lib/utils/store.svelte';
+import { syncToastStore } from '$lib/stores.svelte';
 
 afterEach(() => {
 	syncToastStore.clearSyncError();

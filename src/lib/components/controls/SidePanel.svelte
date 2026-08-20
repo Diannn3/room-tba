@@ -10,7 +10,7 @@
 	import JeepneyRouteModal from '$lib/components/modal/JeepneyRouteModal.svelte';
 	import SponsorBanner from '$lib/components/SponsorBanner.svelte';
 	import { resolvePanelContent } from '$lib/utils/side-panel-content';
-	import { jeepneyStore, queryStore, sidePanelStore } from '$lib/utils/store.svelte';
+	import { jeepneyStore, queryStore, sidePanelStore } from '$lib/stores.svelte';
 	import JeepneyStopPanel from './JeepneyStopPanel.svelte';
 
 	// The route always renders into the panel, but only a browse route replaces

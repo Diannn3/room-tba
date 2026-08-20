@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { adminAuthStore, sidebarStore } from "$lib/utils/store.svelte";
+  import { adminAuthStore, sidebarStore } from "$lib/stores.svelte";
   import AppMenu from "../status-bar/AppMenu.svelte";
 
   type NavId = "map" | "planner" | "finals";

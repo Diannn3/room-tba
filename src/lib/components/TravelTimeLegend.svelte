@@ -1,6 +1,6 @@
 <script lang="ts">
   import X from "@lucide/svelte/icons/x";
-  import { travelTimeStore } from "$lib/utils/store.svelte";
+  import { travelTimeStore } from "$lib/stores.svelte";
   import {
     ISOCHRONE_CAP_MINUTES,
     VIRIDIS_STOPS,

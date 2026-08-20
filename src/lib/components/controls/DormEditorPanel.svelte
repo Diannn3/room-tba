@@ -6,7 +6,7 @@
 	import EntityEditorPinRow from '$lib/components/editor/EntityEditorPinRow.svelte';
 	import EntityPhotoUpload from '$lib/components/editor/EntityPhotoUpload.svelte';
 	import { entityEditorSavedMessage, fieldSaveActionLabel } from '$lib/utils/editor/field-action-label';
-	import { adminAuthStore, mapEditStore, mapProposalStore } from '$lib/utils/store.svelte';
+	import { adminAuthStore, mapEditStore, mapProposalStore } from '$lib/stores.svelte';
 	import type { DormData } from '$lib/utils/types';
 	import '../editor/entity-editor.css';
 

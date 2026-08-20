@@ -26,7 +26,7 @@
     sidebarStore,
     termStore,
     transitStore,
-  } from "$lib/utils/store.svelte";
+  } from "$lib/stores.svelte";
 
   const appData = getAppData();
   let sync = $state<ReturnType<typeof createEntityUrlSync> | null>(null);

@@ -7,7 +7,7 @@ import {
 	scheduleRouteStore,
 	sidebarStore,
 	termStore
-} from '$lib/utils/store.svelte';
+} from '$lib/stores.svelte';
 import { mountAtWidth } from '@test/layout-assertions';
 import type { ClassMapValue } from '$lib/utils/types';
 

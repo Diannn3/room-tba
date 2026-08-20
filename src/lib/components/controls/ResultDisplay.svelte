@@ -1,7 +1,7 @@
 <script lang="ts">
 	import EntityEmptyState from './EntityEmptyState.svelte';
 	import EntityPagination from './EntityPagination.svelte';
-	import { queryStore } from '$lib/utils/store.svelte';
+	import { queryStore } from '$lib/stores.svelte';
 	import type { RoomData } from '$lib/utils/types';
 	import RoomDisplay from './RoomDisplay.svelte';
 	import TermSelector from '$lib/components/TermSelector.svelte';

@@ -1,4 +1,4 @@
-import { queryStore } from '$lib/utils/store.svelte';
+import { queryStore } from '$lib/stores.svelte';
 import type { AppContextData } from '$lib/utils/context';
 import type { ProposalEntityType } from '$lib/services/contribution/proposal-action';
 import type { BuildingData, CollegeData, DivisionData, DormData, EventData } from '$lib/utils/types';

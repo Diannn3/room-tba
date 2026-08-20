@@ -12,7 +12,7 @@ vi.mock('../local/data/utils.js', () => ({
 	getLocalClassesForRoom
 }));
 
-import { RoomClassesStore } from './data-stores.svelte.js';
+import RoomClassesStore from './data/RoomClassesStore.svelte.js';
 
 const sample = (id: number): ClassMapValue =>
 	({

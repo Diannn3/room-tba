@@ -137,7 +137,6 @@ import {
 	mapViewStore,
 	measureRouteStore,
 	plannerBuildingsStore,
-	plannerRoomCodes,
 	plannerStore,
 	queryStore,
 	scheduleRouteStore,
@@ -175,6 +174,7 @@ import EventMapPin from "./map/EventMapPin.svelte";
 import MapEntityPin from "./map/MapEntityPin.svelte";
 import PinGlyph from "./map/PinGlyph.svelte";
 import EventPlacementImageField from "./map-chrome/EventPlacementImageField.svelte";
+	import { plannerRoomCodes } from "$lib/utils/planner/normalize";
 
 const data = getAppData();
 const appActions = getAppActions();

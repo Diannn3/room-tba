@@ -18,20 +18,17 @@ import {
 	syncTableLabel,
 	type TerrainStatus
 } from './store-types.js';
-import AnnouncementsStore from './AnnouncementStore.svelte.js';
-import {
-	ClassVenuesStore,
-	PlannerBuildingsStore,
-	RoomClassesStore,
-	TermStore
-} from './data-stores.svelte';
+import AnnouncementsStore from './AnnouncementStore.svelte';
+import RoomClassesStore from './data/RoomClassesStore.svelte.js';
+import ClassVenuesStore from './data/ClassVenuesStore.svelte.js';
+import TermStore from './data/TermStore.svelte.js';
 import {
 	AdditionProposalStore,
 	EditorChromeStore,
 	EventPlacementStore,
 	MapEditStore,
 	MapProposalStore
-} from './editor/editor-stores.svelte.js';
+} from './editor/editor-stores.svelte';
 import {
 	Building3DStore,
 	MapStore,
@@ -41,17 +38,17 @@ import {
 	TerrainStore,
 	TrailStore,
 	TravelTimeStore
-} from './map/map-stores.svelte.js';
-import PlannerStore from './PlannerStore.svelte.js';
-import TransitStore from './TransitStore.svelte.js';
-import QueryStore from './QueryStore.svelte.js';
-import SidebarStore from './ui/SidebarStore.svelte.js';
-import SidePanelStore from './ui/SidePanelStore.svelte.js';
-import ModalStore from './ui/ModalStore.svelte.js';
-import ToastStore from './ui/ToastStore.svelte.js';
-import FloatingControlPanelStore from './ui/FloatingControlPanelStore.svelte.js';
+} from './map/map-stores.svelte';
+import PlannerStore from './PlannerStore.svelte';
+import TransitStore from './TransitStore.svelte';
+import QueryStore from './QueryStore.svelte';
+import SidebarStore from './ui/SidebarStore.svelte';
+import SidePanelStore from './ui/SidePanelStore.svelte';
+import ModalStore from './ui/ModalStore.svelte';
+import ToastStore from './ui/ToastStore.svelte';
+import FloatingControlPanelStore from './ui/FloatingControlPanelStore.svelte';
 
-export type { MeasureLeg, MeasureSummaries } from './map/map-stores.svelte.js';
+export type { MeasureLeg, MeasureSummaries } from './map/map-stores.svelte';
 export type {
 	AppBootstrapPhase,
 	BuildingTypeFilter,
@@ -76,16 +73,17 @@ export {
 	buildingTypeFilter,
 	type DormFilterType,
 	dormFilter
-} from './filter-stores.svelte.js';
+} from './filter-stores.svelte';
 
-import { OfflineStore } from './sync/OfflineStore.svelte.js';
-import SyncToastStore from './sync/SyncToastStore.svelte.js';
-import AppBootstrapStore from './sync/AppBootstrapStore.svelte.js';
-import LocationStore from './map/LocationStore.svelte.js';
-import ProposalsStore from './ProposalsStore.svelte.js';
-import AdminAuthStore from './AdminAuthStore.svelte.js';
-import JeepneyStore from './map/JeepneyStores.svelte.js';
-import ScheduleRouteStore from './map/ScheduleRouteStore.svelte.js';
+import { OfflineStore } from './sync/OfflineStore.svelte';
+import SyncToastStore from './sync/SyncToastStore.svelte';
+import AppBootstrapStore from './sync/AppBootstrapStore.svelte';
+import LocationStore from './map/LocationStore.svelte';
+import ProposalsStore from './ProposalsStore.svelte';
+import AdminAuthStore from './AdminAuthStore.svelte';
+import JeepneyStore from './map/JeepneyStores.svelte';
+import ScheduleRouteStore from './map/ScheduleRouteStore.svelte';
+import PlannerBuildingsStore from './data/PlannerBuildingsStore.svelte.js';
 
 let _currentRoom = $state<RoomData | null>(null);
 let _currentRoomNotFound = $state(false);
@@ -140,9 +138,6 @@ export const currentRoom = {
 		_currentRoomNotFound = false;
 	}
 };
-
-
-export { plannerRoomCodes } from './data-stores.svelte';
 
 
 export const queryStore = new QueryStore();

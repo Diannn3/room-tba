@@ -12,25 +12,8 @@ vi.mock('../local/data/utils.js', () => ({
 	getLocalClassesForRoom: vi.fn()
 }));
 
-import { PlannerBuildingsStore, plannerRoomCodes } from './data-stores.svelte.js';
+import PlannerBuildingsStore from './data/PlannerBuildingsStore.svelte.js';
 
-describe('plannerRoomCodes', () => {
-	test('normalizes, dedupes, and drops TBA (null) rooms', () => {
-		expect(
-			plannerRoomCodes([
-				{ roomCode: 'icb 12' },
-				{ roomCode: 'ICB 12' },
-				{ roomCode: ' PSLH-A ' },
-				{ roomCode: null },
-				{ roomCode: '' }
-			])
-		).toEqual(['ICB 12', 'PSLH-A']);
-	});
-
-	test('empty plan yields no codes', () => {
-		expect(plannerRoomCodes([])).toEqual([]);
-	});
-});
 
 describe('PlannerBuildingsStore', () => {
 	beforeEach(() => {

@@ -22,11 +22,11 @@
   import {
     getTurnstileSiteKey,
     isTurnstileWidgetConfigured,
-  } from "$lib/utils/turnstile-client";
+  } from "$lib/utils/turnstile/turnstile-client";
   import { MIN_CONTRIBUTOR_PASSWORD_LENGTH } from "$lib/auth/contributor-signup";
 
   const reducedMotion = new MediaQuery("(prefers-reduced-motion: reduce)");
-  const loginErrorId = "admin-login-error";
+  const loginErrorId = "admin-login-error"; 
   const googleEnabled = isSupabaseConfigured();
   const turnstileEnabled = isTurnstileWidgetConfigured();
   const turnstileSiteKey = turnstileEnabled ? getTurnstileSiteKey() : "";
@@ -405,7 +405,7 @@
 			<a
 				href={MESSENGER_MAINTAIN_TARGET}
 				target="_blank"
-				rel="noopener noreferrer"
+				rel="noopener noreferrer external"
 				class="login-footer-link"
 			>
 				<CommunityBrandIcon brand="messenger" size={14} />

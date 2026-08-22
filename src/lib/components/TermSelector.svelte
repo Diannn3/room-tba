@@ -305,11 +305,6 @@
     white-space: nowrap;
   }
 
-  .term-filter-chip__chevron {
-    flex: 0 0 auto;
-    opacity: 0.72;
-  }
-
   .term-inline {
     position: relative;
     display: flex;

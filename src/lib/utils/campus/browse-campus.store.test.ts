@@ -6,7 +6,7 @@ vi.mock('$lib/overlay-stack.js', () => ({
 }));
 
 import { openBrowseClasses, openCampusBrowse } from '$lib/utils/campus/browse-campus';
-import { SidePanelStore } from '$lib/stores/ui-stores.svelte';
+import SidePanelStore from '$lib/stores/ui/SidePanelStore.svelte';
 
 type MockQueryStore = {
 	category: string | null;

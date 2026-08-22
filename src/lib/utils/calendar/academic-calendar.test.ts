@@ -7,7 +7,7 @@ import {
 	resolveTermWindow,
 	termWindowStatus
 } from './academic-calendar';
-import type { Term } from './types';
+import type { Term } from '../types';
 
 function term(id: number, overrides: Partial<Term> = {}): Term {
 	return {

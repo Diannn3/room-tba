@@ -3,13 +3,13 @@
     locationStore,
     plannerStore,
     scheduleRouteStore,
-    type Weekday,
   } from "$lib/stores.svelte";
   import { onMount, untrack } from "svelte";
   import { flip } from "svelte/animate";
   import { formatDistance, formatDuration } from "$lib/utils/campus/campus-route";
   import { formatMinutes } from "$lib/utils/schedule-import/day-stops";
-  import { WEEKDAY_LABELS, WEEKDAYS } from "$lib/utils/schedule-import/types";
+  import { WEEKDAY_LABELS, WEEKDAYS, type Weekday } from "$lib/utils/schedule-import/types";
+	import { resolve } from "$app/paths";
 
   type Props = {
     embedded?: boolean;
@@ -95,8 +95,8 @@
     </p>
   {:else if !scheduleRouteStore.matching}
     <p class="schedule-import-panel__empty">
-      No plan for this term yet. Build one in the
-      <a class="schedule-import-panel__planner-link" href="/planner">Planner</a>
+      No plan for this term yet. Build one in the Planner
+      <!-- <a class="schedule-import-panel__planner-link" href={resolve("/planner")}>Planner</a> -->
       and your class stops will show up here.
     </p>
   {/if}

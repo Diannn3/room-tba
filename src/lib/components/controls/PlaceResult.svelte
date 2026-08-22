@@ -298,11 +298,6 @@
 		display: flex;
 		gap: 0.5rem;
 	}
-	.place-actions {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-	}
 	.place-edit-btn {
 		padding: 0.375rem 0.75rem;
 		border: none;

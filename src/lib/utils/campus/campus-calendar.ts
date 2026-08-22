@@ -1,4 +1,4 @@
-import type { EventRecurrence } from './event-time';
+import type { EventRecurrence } from '../event-time';
 
 export type SemesterRecurrence = Extract<EventRecurrence, 'every_1st_sem' | 'every_2nd_sem'>;
 

@@ -5,7 +5,7 @@ vi.mock('$lib/overlay-stack.js', () => ({
 	dismissEphemeralOverlays: vi.fn()
 }));
 
-import { openBrowseClasses, openCampusBrowse } from '$lib/utils/browse-campus';
+import { openBrowseClasses, openCampusBrowse } from '$lib/utils/campus/browse-campus';
 import { SidePanelStore } from '$lib/stores/ui-stores.svelte';
 
 type MockQueryStore = {

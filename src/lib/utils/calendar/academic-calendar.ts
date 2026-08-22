@@ -1,4 +1,4 @@
-import { TERM_CALENDAR_WINDOWS, termDateKey, toManilaDateKey } from './term-calendar';
+import { TERM_CALENDAR_WINDOWS, termDateKey, toManilaDateKey } from '../term/term-calendar';
 import type { Term } from '$lib/utils/types';
 
 /**

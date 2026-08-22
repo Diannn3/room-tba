@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import walkGraphJson from '../../../generated/walk-graph.json';
-import { distanceMeters } from '../campus-route';
+import { distanceMeters } from '../campus/campus-route';
 import {
 	buildTravelGraph,
 	dijkstra,

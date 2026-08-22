@@ -9,7 +9,7 @@
     openBrowseClasses,
     openCampusBrowse,
     type CampusBrowseTab,
-  } from "$lib/utils/browse-campus";
+  } from "$lib/utils/campus/browse-campus";
   import { queryStore, sidePanelStore } from "$lib/stores.svelte";
   import "../map-chrome/map-chrome.css";
 

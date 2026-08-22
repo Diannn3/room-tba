@@ -1,4 +1,4 @@
-import type { MapMoveCoordinates } from '../map-move-history';
+import type { MapMoveCoordinates } from '../map/map-move-history';
 import type { EventData } from '$lib/utils/types';
 
 export type EditableEntityType = 'building' | 'dorm';

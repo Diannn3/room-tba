@@ -1,7 +1,7 @@
 import { buildingsTable, dormsTable, placesTable } from '$lib/server/db/schema';
 import { db } from '$lib/utils/db';
 import { slugifySegment } from '$lib/utils/site';
-import type { RoutePlace } from '$lib/utils/campus-route';
+import type { RoutePlace } from '$lib/utils/campus/campus-route';
 
 export type RoutableKind = 'building' | 'dorm' | 'place';
 

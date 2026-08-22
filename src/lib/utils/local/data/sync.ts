@@ -13,7 +13,7 @@ import type {
 	RoomData,
 	TableSyncInfo
 } from '$lib/utils/types';
-import { normalizeEntityPhotos } from '$lib/utils/entity-photos';
+import { normalizeEntityPhotos } from '$lib/utils/entity/entity-photos';
 import { getDB } from './pgliteDB';
 import { getSyncKey, getSyncKeysFromLs } from './sync-keys';
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 import { onMount, type Snippet } from "svelte";
 import type { InitialSearchState } from "$lib/utils/app-data";
-import { campusTransit } from "$lib/utils/campus.config";
+import { campusTransit } from "$lib/utils/campus/campus.config";
 import AccountSettingsModal from "$lib/components/AccountSettingsModal.svelte";
 import AdminLoginModal from "$lib/components/AdminLoginModal.svelte";
 import Building3DViewer from "$lib/components/Building3DViewer.svelte";
@@ -23,7 +23,7 @@ import TodayScreen from "$lib/components/today/TodayScreen.svelte";
 import { getAppData } from "$lib/utils/context";
 import { resolveSharedPlan } from "$lib/utils/planner/import-shared";
 import { decodeSharePlan } from "$lib/utils/planner/share-codec";
-import { findCampusPointBySlug } from "$lib/utils/route-links";
+import { findCampusPointBySlug } from "$lib/utils/route/route-links";
 import {
 	adminAuthStore,
 	announcementsStore,
@@ -49,7 +49,7 @@ import "./map-chrome/map-chrome.css";
 import { MediaQuery } from "svelte/reactivity";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
-import { openCampusBrowse } from "$lib/utils/browse-campus";
+import { openCampusBrowse } from "$lib/utils/campus/browse-campus";
 import {
 	dispatchGlobalShortcut,
 	getGlobalShortcutAction,

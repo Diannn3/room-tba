@@ -8,8 +8,8 @@ import {
 	toCampusRoute,
 	type RoutePlace
 } from './campus-route';
-import { describeRoute, generateRouteDescription } from './route-description';
-import { findCampusPointBySlug, getRoutePath, parseRoutePathname } from './route-links';
+import { describeRoute, generateRouteDescription } from '../route/route-description';
+import { findCampusPointBySlug, getRoutePath, parseRoutePathname } from '../route/route-links';
 
 const baker: RoutePlace = { name: 'Baker Hall', lat: 14.165, lon: 121.2419 };
 const carabao: RoutePlace = {

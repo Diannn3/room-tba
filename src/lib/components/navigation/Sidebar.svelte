@@ -25,8 +25,8 @@
     openBrowseClasses,
     openCampusBrowse,
     type CampusBrowseTab,
-  } from "$lib/utils/browse-campus";
-  import { campusTransit } from "$lib/utils/campus.config";
+  } from "$lib/utils/campus/browse-campus"
+  import { campusTransit } from "$lib/utils/campus/campus.config";
   import {
     adminAuthStore,
     announcementsStore,

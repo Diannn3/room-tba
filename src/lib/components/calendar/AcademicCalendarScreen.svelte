@@ -12,21 +12,20 @@
     resolveTermWindow,
     termWindowStatus,
     type TermStatus,
-  } from "$lib/utils/academic-calendar";
+  } from "$lib/utils/calendar/academic-calendar";
   import {
     holidaysWithin,
     milestonesForTerms,
     type CalendarMilestone,
     type MilestoneKind,
-  } from "$lib/utils/academic-milestones";
+  } from "$lib/utils/calendar/academic-milestones";
   import {
     formatShortDate,
     formatTermDateRange,
     toManilaDateKey,
-  } from "$lib/utils/term-calendar";
-  import { termChipLabel, termFullLabel } from "$lib/utils/term-label";
-
-  const reducedMotion = new MediaQuery("(prefers-reduced-motion: reduce)");
+  } from "$lib/utils/term/term-calendar";
+  import { termChipLabel, termFullLabel } from "$lib/utils/term/term-label";
+ const reducedMotion = new MediaQuery("(prefers-reduced-motion: reduce)");
 
   // One snapshot per open keeps the screen calm and static.
   const today = new Date();

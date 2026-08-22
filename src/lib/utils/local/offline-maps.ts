@@ -3,7 +3,7 @@
 // service worker's `map-tiles` runtime cache stores them (see astro.config.mjs).
 
 import { CAMPUS_BOUNDS } from '$lib/constants/map/terrain';
-import { CAMPUS_MAP_STYLE_URL, injectMaptilerKey } from '$lib/utils/maptiler-key';
+import { CAMPUS_MAP_STYLE_URL, injectMaptilerKey } from '$lib/utils/map/maptiler-key';
 
 // Campus bounds — mirrors `CAMPUS_MAX_BOUNDS` in src/constants/map-terrain.ts.
 const CAMPUS_BOUNDS_LON_LAT = {

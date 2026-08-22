@@ -1,5 +1,5 @@
 import { type Handle, redirect } from '@sveltejs/kit';
-import { MAP_BASE_PATH } from '$lib/utils/entity-urls';
+import { MAP_BASE_PATH } from '$lib/utils/entity/entity-urls';
 
 // Astro served entity pages at the site root. They now live under the map, so
 // the old links — shared, bookmarked, and indexed — need to keep resolving.

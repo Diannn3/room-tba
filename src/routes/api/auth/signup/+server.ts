@@ -7,7 +7,7 @@ import {
 import { checkRateLimit, clientIp, rateLimitResponse } from '$lib/api/rate-limit';
 import { type SignupInput, validateContributorSignup } from '$lib/auth/contributor-signup';
 import { AccountActionError, createAdminUser } from '$lib/services/admin/user';
-import { verifyTurnstileToken } from '$lib/utils/turnstile';
+import { verifyTurnstileToken } from '$lib/utils/turnstile/turnstile';
 import type { RequestHandler } from './$types';
 
 const SIGNUP_IP_LIMIT = { max: 5, windowMs: 60 * 1000 };

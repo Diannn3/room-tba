@@ -16,7 +16,7 @@ import {
 	getPlaceCanonicalPath,
 	getPlaceIndexPath,
 	getRoomCanonicalPath
-} from '$lib/utils/entity-urls';
+} from '$lib/utils/entity/entity-urls';
 import { SITE_URL } from '$lib/utils/site';
 import type {
 	BuildingData,

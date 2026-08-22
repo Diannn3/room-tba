@@ -1,8 +1,8 @@
 import { error } from '@sveltejs/kit';
 import { getRoomRouteSlug } from '$lib/utils/app-data';
 import type { SeoData } from '$lib/components/seo/seo-data';
-import { entityIndexPath, getRoomCanonicalPath } from '$lib/utils/entity-urls';
-import { parseIdRouteSlug } from '$lib/utils/route-slugs';
+import { entityIndexPath, getRoomCanonicalPath } from '$lib/utils/entity/entity-urls';
+import { parseIdRouteSlug } from '$lib/utils/route/route-slugs';
 import { getRoomPageData } from '$lib/services/page-data/entity';
 import {
 	absoluteUrl,

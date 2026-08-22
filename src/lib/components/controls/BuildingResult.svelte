@@ -41,7 +41,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     persistEntityChange,
   } from "$lib/utils/proposals/client";
   import { getBuildingShareUrl } from "$lib/utils/share-links";
-  import { normalizeEntityPhotos, type EntityPhoto } from "$lib/utils/entity-photos";
+  import { normalizeEntityPhotos, type EntityPhoto } from "$lib/utils/entity/entity-photos";
   import {
     adminAuthStore,
     building3DStore,

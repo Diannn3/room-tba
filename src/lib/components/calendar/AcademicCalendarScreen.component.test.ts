@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/svelte';
 import { beforeEach, describe, expect, test } from 'vitest';
 import AcademicCalendarScreen from '$lib/components/calendar/AcademicCalendarScreen.svelte';
 import { expectNoHorizontalOverflow, mountAtWidth } from '@test/layout-assertions';
-import { EVENT_MARKER_STEP_PCT } from '$lib/utils/academic-calendar';
+import { EVENT_MARKER_STEP_PCT } from '$lib/utils/calendar/academic-calendar';
 import { termStore } from '$lib/stores.svelte';
 import type { TermWithCount } from '$lib/utils/types';
 

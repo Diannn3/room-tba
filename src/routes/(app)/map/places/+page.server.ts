@@ -1,6 +1,6 @@
 import type { EntityIndexItem, SeoData } from '$lib/components/seo/seo-data';
 import { placeDirectoryLabel } from '$lib/constants/content/categories/place';
-import { getPlaceCanonicalPath } from '$lib/utils/entity-urls';
+import { getPlaceCanonicalPath } from '$lib/utils/entity/entity-urls';
 import { getAllPlaces } from '$lib/services/entity/map-data';
 import { breadcrumbSchema, jsonLd, webpageSchema } from '$lib/utils/site';
 import type { PageServerLoad } from './$types';

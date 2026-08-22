@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { MAX_ENTITY_PHOTOS, type EntityPhoto } from '$lib/utils/entity-photos';
+  import { MAX_ENTITY_PHOTOS, type EntityPhoto } from '$lib/utils/entity/entity-photos'
   import ImageUpload from './ImageUpload.svelte';
 
   type Props = {

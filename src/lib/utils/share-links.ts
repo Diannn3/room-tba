@@ -7,8 +7,8 @@ import {
 	getOrganizationCanonicalPath,
 	getPlaceCanonicalPath,
 	getRoomCanonicalPath
-} from './entity-urls';
-import { withTermQuery } from './term-url';
+} from './entity/entity-urls';
+import { withTermQuery } from './term/term-url';
 import { absoluteUrl } from './site';
 import { getTransitRoutePath, getTransitStopPath } from './transit-urls';
 import type { DormData, OrgData, PlaceData, RoomData } from './types';

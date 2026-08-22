@@ -25,7 +25,7 @@ import {
 	parseEntityPhotoUrls,
 	reconcileEntityPhotos,
 	type ParsedEntityPhotoUrls
-} from '$lib/utils/entity-photos';
+} from '$lib/utils/entity/entity-photos';
 import { resolvePhotoAttribution } from './entity-photo';
 import { canWithdrawProposal } from './proposal-access';
 export {

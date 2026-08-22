@@ -1,5 +1,5 @@
 /** Placeholder in committed map assets — replaced at runtime with PUBLIC_MAPTILER_KEY. */
-import { setBasemapProvider } from './basemap-provider';
+import { setBasemapProvider } from '../basemap-provider';
 
 export const MAPTILER_KEY_PLACEHOLDER = '__MAPTILER_KEY__';
 

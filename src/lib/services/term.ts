@@ -1,7 +1,7 @@
 import { eq, desc, sql } from 'drizzle-orm';
 import { classesTable, termsTable } from '$lib/server/db/schema';
 import { db } from '$lib/utils/db';
-import { resolveDefaultTermFromList } from '$lib/utils/term-calendar';
+import { resolveDefaultTermFromList } from '$lib/utils/term/term-calendar';
 import type { Term, TermWithCount } from '$lib/utils/types';
 
 /**

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { MapLibre, Marker } from "svelte-maplibre";
   import type { StyleSpecification } from "maplibre-gl";
-  import { loadCampusMapStyle } from "$lib/utils/maptiler-key";
+  import { loadCampusMapStyle } from "$lib/utils/map/maptiler-key"
   import {
     pinChangeBounds,
     pinMoveDistanceMeters,

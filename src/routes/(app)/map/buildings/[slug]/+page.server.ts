@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { getBuildingSlug } from '$lib/utils/app-data';
 import type { SeoData } from '$lib/components/seo/seo-data';
-import { entityIndexPath, getBuildingCanonicalPath } from '$lib/utils/entity-urls';
+import { entityIndexPath, getBuildingCanonicalPath } from '$lib/utils/entity/entity-urls';
 import { getBuildingPageData, resolveBuildingNameFromSlug } from '$lib/services/page-data/entity';
 import {
 	absoluteUrl,

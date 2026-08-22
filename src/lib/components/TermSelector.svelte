@@ -3,8 +3,8 @@
   import CalendarDays from "@lucide/svelte/icons/calendar-days";
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
   import GraduationCap from "@lucide/svelte/icons/graduation-cap";
-  import { termFullLabel } from "$lib/utils/term-label";
-  import { formatTermDateRange } from "$lib/utils/term-calendar";
+  import { termFullLabel } from "$lib/utils/term/term-label";
+  import { formatTermDateRange } from "$lib/utils/term/term-calendar";
   import { trapFocus } from "$lib/utils/focus-trap";
   import { portal } from "$lib/utils/portal";
   import { mapToolsStore, sidebarStore, termStore } from "$lib/stores.svelte";

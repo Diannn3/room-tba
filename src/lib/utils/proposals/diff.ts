@@ -1,4 +1,4 @@
-import { entityPhotoUrls } from '$lib/utils/entity-photos';
+import { entityPhotoUrls } from '$lib/utils/entity/entity-photos';
 
 export const FIELD_LABELS: Record<string, string> = {
 	buildingName: 'Building name',

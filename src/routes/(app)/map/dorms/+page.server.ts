@@ -1,6 +1,6 @@
 import { getDormRouteSlug } from '$lib/utils/app-data';
 import type { EntityIndexItem, SeoData } from '$lib/components/seo/seo-data';
-import { entityIndexPath, getDormCanonicalPath } from '$lib/utils/entity-urls';
+import { entityIndexPath, getDormCanonicalPath } from '$lib/utils/entity/entity-urls';
 import { getAllDorms } from '$lib/services/entity/map-data';
 import { breadcrumbSchema, jsonLd, webpageSchema } from '$lib/utils/site';
 import type { PageServerLoad } from './$types';

@@ -1,6 +1,6 @@
 <script lang="ts">
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
-  import { openCampusBrowse, type CampusBrowseTab } from "$lib/utils/browse-campus";
+  import { openCampusBrowse, type CampusBrowseTab } from "$lib/utils/campus/browse-campus"
   import { queryStore, sidePanelStore } from "$lib/stores.svelte";
 
   type Props = {

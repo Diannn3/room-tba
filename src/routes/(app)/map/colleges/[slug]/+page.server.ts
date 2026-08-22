@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { getCollegeSlug } from '$lib/utils/app-data';
 import type { SeoData } from '$lib/components/seo/seo-data';
-import { entityIndexPath, getCollegeCanonicalPath } from '$lib/utils/entity-urls';
+import { entityIndexPath, getCollegeCanonicalPath } from '$lib/utils/entity/entity-urls';
 import { getCollegePageData, resolveCollegeNameFromSlug } from '$lib/services/page-data/entity';
 import {
 	absoluteUrl,

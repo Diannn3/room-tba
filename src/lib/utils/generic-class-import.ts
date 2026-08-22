@@ -11,7 +11,7 @@
  * `parseScheduleTime` in schedule-renderer.ts — the app-wide contract.
  */
 
-import { parseCsvRow } from './campus-gate-coordinates-template';
+import { parseCsvRow } from './campus/campus-gate-coordinates-template';
 
 export const GENERIC_CLASS_REQUIRED_HEADERS = [
 	'course_code',

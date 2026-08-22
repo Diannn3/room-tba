@@ -4,8 +4,8 @@
   import {
     enterFlatMapDimension,
     enterTiltedMapDimension,
-  } from "$lib/utils/map-dimension-layers";
-  import type { MapLibreMap } from "maplibre-gl";
+  } from "$lib/utils/map/map-dimension-layers"
+import type { MapLibreMap } from "maplibre-gl";
 
   type Props = {
     /** Inline chip-row size (~1.75rem); used on mobile search chrome. */

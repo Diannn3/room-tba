@@ -19,7 +19,7 @@ import type {
 	RoomData,
 	TableSyncInfo
 } from '$lib/utils/types';
-import { normalizeEntityPhotos } from '$lib/utils/entity-photos';
+import { normalizeEntityPhotos } from '$lib/utils/entity/entity-photos';
 import { getDB, isLocalCacheReady } from './pgliteDB';
 import { ENTITY_FETCH_OPTIONS, fetchJsonWithRetry } from './fetch-json';
 import { getLocalBuildingRooms, getLocalCollegeRooms, getLocalDivisionRooms } from './sync';

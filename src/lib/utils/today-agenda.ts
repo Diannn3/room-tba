@@ -4,7 +4,7 @@
 
 import { sectionBlocks } from './planner/conflicts.js';
 import type { PlannedSection } from './planner/types.js';
-import { toManilaDateKey } from './term-calendar.js';
+import { toManilaDateKey } from './term/term-calendar.js';
 
 export type AgendaEntry = {
 	courseCode: string;

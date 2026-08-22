@@ -38,7 +38,7 @@ import {
   placesTable,
   roomPositionsTable,
   roomsTable,
-} from "../drizzle/schema";
+} from "$lib/server/db/schema";
 
 type LocalColumn = {
   name: string;

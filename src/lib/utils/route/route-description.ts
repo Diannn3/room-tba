@@ -6,8 +6,8 @@
  * an error. That keeps local dev and forks working, and it means a crawler or
  * a burst of traffic can never turn into a surprise bill.
  */
-import type { CampusRoute, RoutePlace } from './campus-route';
-import { formatDistance, formatDuration } from './campus-route';
+import type { CampusRoute, RoutePlace } from '../campus/campus-route';
+import { formatDistance, formatDuration } from '../campus/campus-route';
 
 const MODEL = 'claude-haiku-4-5-20251001';
 

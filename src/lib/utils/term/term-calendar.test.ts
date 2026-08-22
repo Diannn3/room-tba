@@ -8,7 +8,7 @@ import {
 	resolveInitialTermId,
 	TERM_CALENDAR_WINDOWS
 } from './term-calendar';
-import type { Term } from './types';
+import type { Term } from '../types';
 
 function term(id: number, overrides: Partial<Term> = {}): Term {
 	const window = TERM_CALENDAR_WINDOWS[id];

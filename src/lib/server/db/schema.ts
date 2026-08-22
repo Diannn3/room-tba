@@ -18,7 +18,7 @@ import {
 	uuid,
 	varchar
 } from 'drizzle-orm/pg-core';
-import type { EntityPhoto } from '$lib/utils/entity-photos';
+import type { EntityPhoto } from '$lib/utils/entity/entity-photos';
 
 export const buildingEnum = pgEnum('building_type', ['admin', 'non-admin']);
 export const eventCategoryEnum = pgEnum('event_category', [

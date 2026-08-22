@@ -30,7 +30,7 @@ export function getRoomSlug(room: Pick<RoomData, 'code'>) {
 	return slugifySegment(room.code);
 }
 
-export { getRoomRouteSlug } from './route-slugs';
+export { getRoomRouteSlug } from './route/route-slugs';
 
 export function getBuildingSlug(building: Pick<BuildingData, 'buildingName'>) {
 	return slugifySegment(building.buildingName);
@@ -48,7 +48,7 @@ export function getDormSlug(dorm: Pick<DormData, 'dormName'>) {
 	return slugifySegment(dorm.dormName);
 }
 
-export { getDormRouteSlug } from './route-slugs';
+export { getDormRouteSlug } from './route/route-slugs';
 
 export function getEventSlug(event: Pick<EventData, 'slug'>) {
 	return event.slug;

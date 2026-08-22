@@ -1,5 +1,5 @@
 import type { JeepneyRoute } from '$lib/constants/map/jeepney-routes';
-import type { AppContextData } from './context';
+import type { AppContextData } from '../context';
 import {
 	getEntityCanonicalPath,
 	normalizePathname,
@@ -8,16 +8,16 @@ import {
 	type RoutableQueryState,
 	resolveQueryFromEntityPath
 } from './entity-urls';
-import { getLocalRoomById } from './local/data/utils';
+import { getLocalRoomById } from '../local/data/utils';
 import { currentRoom, termStore } from '$lib/stores.svelte';
-import { parseTermIdFromSearch, withTermQuery } from './term-url';
+import { parseTermIdFromSearch, withTermQuery } from '../term/term-url';
 import {
 	getTransitRoutePath,
 	getTransitStopPath,
 	parseTransitPathname,
 	TRANSIT_INDEX_PATH,
 	type TransitPath
-} from './transit-urls';
+} from '../transit-urls';
 
 type EntityHistoryState = {
 	rtbaEntity?: true;

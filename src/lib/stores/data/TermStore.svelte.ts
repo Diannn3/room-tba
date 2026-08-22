@@ -1,6 +1,6 @@
 import { getJSONFetch } from '$lib/utils/local/data/utils';
-import { resolveDefaultTermFromList, resolveInitialTermId } from '$lib/utils/term-calendar';
-import { parseTermIdFromSearch, syncTermQueryParam } from '$lib/utils/term-url';
+import { resolveDefaultTermFromList, resolveInitialTermId } from '$lib/utils/term/term-calendar';
+import { parseTermIdFromSearch, syncTermQueryParam } from '$lib/utils/term/term-url';
 import type { TermWithCount } from '$lib/utils/types';
 import { ACTIVE_TERM_LS_KEY } from '../store-types';
 

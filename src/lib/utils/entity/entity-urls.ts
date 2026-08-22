@@ -1,13 +1,13 @@
 import { isStudentOrganization } from '$lib/constants/content/categories/org';
 import { isPlaceLandmark } from '$lib/constants/content/categories/place';
-import type { SearchCategory } from './app-data';
+import type { SearchCategory } from '../app-data';
 import {
 	getDormRouteSlug,
 	getOrganizationRouteSlug,
 	getPlaceRouteSlug,
 	getRoomRouteSlug
-} from './route-slugs';
-import { slugifySegment } from './site';
+} from '../route/route-slugs';
+import { slugifySegment } from '../site';
 import type {
 	BuildingData,
 	CollegeData,
@@ -16,7 +16,7 @@ import type {
 	OrgData,
 	PlaceData,
 	RoomData
-} from './types';
+} from '../types';
 
 function getBuildingSlug(building: Pick<BuildingData, 'buildingName'>) {
 	return slugifySegment(building.buildingName);

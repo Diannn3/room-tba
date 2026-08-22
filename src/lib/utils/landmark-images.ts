@@ -7,7 +7,7 @@
  * builds URLs with its own key because Google's terms forbid storing imagery.
  */
 import manifest from '$lib/constants/map/landmark-images.json';
-import type { EntityPhoto } from "./entity-photos";
+import type { EntityPhoto } from "./entity/entity-photos";
 import {
   STREET_VIEW_ATTRIBUTION,
   hasStreetViewKey,

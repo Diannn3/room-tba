@@ -1,7 +1,7 @@
 import { env } from '$env/dynamic/private';
 import { parseRequiredEditorVersion } from '$lib/admin/expected-version';
 import { editorSessionOrUnauthorized } from '$lib/admin/require-editor';
-import { parseEntityPhotoUrls, reconcileEntityPhotos } from '$lib/utils/entity-photos';
+import { parseEntityPhotoUrls, reconcileEntityPhotos } from '$lib/utils/entity/entity-photos';
 import { resolvePhotoAttribution } from '$lib/services/contribution/entity-photo';
 import {
 	DuplicateNameError,

@@ -1,10 +1,10 @@
 import { error } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
-import { fetchCampusRoute, formatDistance, formatDuration } from '$lib/utils/campus-route';
+import { fetchCampusRoute, formatDistance, formatDuration } from '$lib/utils/campus/campus-route';
 import type { SeoData } from '$lib/components/seo/seo-data';
-import { getBuildingCanonicalPath } from '$lib/utils/entity-urls';
-import { describeRoute, generateRouteDescription } from '$lib/utils/route-description';
-import { getRoutePath } from '$lib/utils/route-links';
+import { getBuildingCanonicalPath } from '$lib/utils/entity/entity-urls';
+import { describeRoute, generateRouteDescription } from '$lib/utils/route/route-description';
+import { getRoutePath } from '$lib/utils/route/route-links';
 import { findBySlug, getRoutablePlaces } from '$lib/services/route';
 import { breadcrumbSchema, jsonLd, webpageSchema } from '$lib/utils/site';
 import type { PageServerLoad } from './$types';

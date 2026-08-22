@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { getDivisionSlug } from '$lib/utils/app-data';
 import type { SeoData } from '$lib/components/seo/seo-data';
-import { entityIndexPath, getDivisionCanonicalPath } from '$lib/utils/entity-urls';
+import { entityIndexPath, getDivisionCanonicalPath } from '$lib/utils/entity/entity-urls';
 import { getDivisionPageData, resolveDivisionNameFromSlug } from '$lib/services/page-data/entity';
 import {
 	absoluteUrl,

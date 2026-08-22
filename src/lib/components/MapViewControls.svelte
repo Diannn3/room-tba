@@ -18,8 +18,9 @@
   import { THREE_D_PITCH, isMap2DPitch } from "$lib/constants/map/dimension";
   import {
     enterFlatMapDimension,
-    enterTiltedMapDimension,
-  } from "$lib/utils/map-dimension-layers";
+	enterTiltedMapDimension
+
+  } from "$lib/utils/map/map-dimension-layers";
   import type { MapLibreMap } from "maplibre-gl";
 
   type Props = {

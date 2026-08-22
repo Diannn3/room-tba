@@ -1,4 +1,4 @@
-import { parseImageUrl } from "./r2-upload-core";
+import { parseImageUrl } from "../r2-upload-core";
 
 export const MAX_ENTITY_PHOTOS = 10;
 

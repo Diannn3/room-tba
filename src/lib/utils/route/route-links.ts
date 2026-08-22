@@ -1,4 +1,4 @@
-import { absoluteUrl, slugifySegment } from './site';
+import { absoluteUrl, slugifySegment } from '../site';
 
 /**
  * Shareable walking routes live at /route/<from>/<to>.

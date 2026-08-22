@@ -1,24 +1,23 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { getAppData } from "$lib/utils/context";
-  import { createEntityUrlSync, isScreenId } from "$lib/utils/entity-url-sync";
-  import { openCampusBrowse } from "$lib/utils/browse-campus";
+  import { createEntityUrlSync, isScreenId } from "$lib/utils/entity/entity-url-sync" 
+  import { openCampusBrowse } from "$lib/utils/campus/browse-campus";
   import { getTransitStopIndex } from "$lib/utils/transit-urls";
-  import { campusTransit } from "$lib/utils/campus.config";
-  import {
-    getBuildingCanonicalPath,
+  import { campusTransit } from "$lib/utils/campus/campus.config";
+  import { getBuildingCanonicalPath,
     getOrganizationCanonicalPath,
     getPlaceCanonicalPath,
     getRoomCanonicalPath,
-  } from "$lib/utils/entity-urls";
+  } from "$lib/utils/entity/entity-urls";
   import { orgCategoryLabel } from "$lib/constants/content/categories/org"
   import { placeCategoryLabel } from "$lib/constants/content/categories/place"
   import {
     resetDocumentMeta,
     updateTermAwareDocumentMeta,
-  } from "$lib/utils/term-document-meta";
+  } from "$lib/utils/term/term-document-meta";
   import {
-    currentRoom,
+	currentRoom,
     jeepneyStore,
     mapEditStore,
     queryStore,

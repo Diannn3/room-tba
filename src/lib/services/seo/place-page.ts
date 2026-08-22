@@ -5,7 +5,7 @@ import {
 	placeCategoryLabel,
 	placeDirectoryLabel
 } from '$lib/constants/content/categories/place';
-import { entityIndexPath, getPlaceCanonicalPath, parseRouteSlug } from '$lib/utils/entity-urls';
+import { entityIndexPath, getPlaceCanonicalPath, parseRouteSlug } from '$lib/utils/entity/entity-urls';
 import { getAllPlaces } from '$lib/services/entity/map-data';
 import { getPlacePageData } from '$lib/services/page-data/entity';
 import {

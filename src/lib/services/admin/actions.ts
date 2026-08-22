@@ -5,9 +5,9 @@ import { sanitizeCrFacilities } from '$lib/constants/map/cr-facilities';
 import { normalizePlaceCategory } from '$lib/constants/content/categories/place';
 import { normalizeRoomCategory } from '$lib/constants/content/categories/room';
 import { db } from '$lib/utils/db';
-import { normalizeEntityName } from '$lib/utils/entity-names';
-import { entityIndexPath } from '$lib/utils/entity-urls';
-import { normalizeEntityPhotos, type EntityPhoto } from '$lib/utils/entity-photos';
+import { normalizeEntityName } from '$lib/utils/entity/entity-names';
+import { entityIndexPath } from '$lib/utils/entity/entity-urls';
+import { normalizeEntityPhotos, type EntityPhoto } from '$lib/utils/entity/entity-photos';
 import {
 	buildingIsrPath,
 	collegeIsrPath,

@@ -6,7 +6,7 @@
   import EntityPanelFilter from "./EntityPanelFilter.svelte";
   import EntityPanelHeader from "./EntityPanelHeader.svelte";
   import { getAppData } from "$lib/utils/context";
-  import type { CampusBrowseTab } from "$lib/utils/browse-campus";
+  import type { CampusBrowseTab } from "$lib/utils/campus/browse-campus";
   import {
     isStudentOrganization,
     orgCategoryLabel,
@@ -27,10 +27,10 @@
   import OrgResult from "./OrgResult.svelte";
   import DormResult from "./DormResult.svelte";
   import PlaceResult from "./PlaceResult.svelte";
-  import { campusTransit } from "$lib/utils/campus.config";
 	import { resolve } from "$app/paths";
 	import { goto } from "$app/navigation";
 	import { slugifySegment } from "$lib/utils/site";
+	import { campusTransit } from "$lib/utils/campus/campus.config";
 
   // Derived from campusTransit.label so a fork edits one place:
   // label Jeepney routes → title Jeepney Routes, plural jeepney routes,
@@ -243,7 +243,7 @@
         id: row.id,
         label: row.divisionName,
         meta: null as string | null,
-        open: () => openDivision(row.divisionName, id),
+        open: () => openDivision(row.divisionName),
       }));
     }
     if (activeTab === "organizations" || activeTab === "offices") {

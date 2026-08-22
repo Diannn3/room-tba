@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { adminUsersTable } from '$lib/server/db/schema';
 import { db } from '$lib/utils/db';
-import type { PhotoAttribution } from '$lib/utils/entity-photos';
+import type { PhotoAttribution } from '$lib/utils/entity/entity-photos';
 
 function validatedProfileUrl(value: string | null): string | null {
   const trimmed = value?.trim() ?? "";

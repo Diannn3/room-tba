@@ -12,7 +12,7 @@ import {
 	termsTable
 } from '$lib/server/db/schema';
 import type { QueryStoreState } from '../stores/store-types';
-import type { EntityPhoto } from './entity-photos';
+import type { EntityPhoto } from './entity/entity-photos';
 
 export type AppData = {
 	buildings: {

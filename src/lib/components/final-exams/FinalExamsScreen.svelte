@@ -7,7 +7,7 @@
 	import { fullScreenReveal } from '$lib/utils/motion';
 	import { sidebarStore, termStore } from '$lib/stores.svelte';
 	import { fetchFinalExams, FINALS_SCOPE_NOTE, formatExamDate } from '$lib/utils/final-exams';
-	import { finalsWindowLabel } from '$lib/utils/term-calendar';
+	import { finalsWindowLabel } from '$lib/utils/term/term-calendar';
 	import FinalExamsList from '$lib/components/room/FinalExamsList.svelte';
 	import TermSelector from '$lib/components/TermSelector.svelte';
 	import type { FinalExamRow } from '$lib/utils/types';

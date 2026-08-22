@@ -9,6 +9,7 @@
 	import { adminAuthStore, mapEditStore, mapProposalStore } from '$lib/stores.svelte';
 	import type { DormData } from '$lib/utils/types';
 	import '../editor/entity-editor.css';
+	import type { EntityPhoto } from '$lib/utils/entity/entity-photos';
 
 	type DormEditableField =
 		| 'dormName'
@@ -52,7 +53,7 @@
 		amenitiesDraft: string;
 		facebookLinkDraft: string;
 		osmLinkDraft: string;
-		photosDraft: import('$lib/utils/entity-photos').EntityPhoto[];
+		photosDraft: EntityPhoto[];
 		fieldLabel: (field: DormEditableField) => string;
 		fieldIsUnchanged: (field: DormEditableField, current: DormData) => boolean;
 		saveField: (field: DormEditableField) => void;

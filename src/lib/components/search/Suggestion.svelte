@@ -18,7 +18,7 @@ import {
 	buildingPreviewFromRow,
 	entityHoverPreviewStore,
 	eventPreviewFromRow,
-} from "$lib/utils/entity-hover-preview.svelte";
+} from "$lib/utils/entity/entity-hover-preview.svelte";
 import { slugifySegment } from "$lib/utils/site";
 import { queryStore } from "$lib/stores.svelte";
 import type { BuildingData, EventData } from "$lib/utils/types";

@@ -12,7 +12,7 @@ import { resolve } from "$app/paths";
 import MapFilterChips from "$lib/components/map-chrome/MapFilterChips.svelte";
 import { getAppData } from "$lib/utils/context";
 import { observeBlockHeight } from "$lib/utils/layout-css-vars";
-import { getMapChromeVisibility } from "$lib/utils/map-chrome";
+import { getMapChromeVisibility } from "$lib/utils/map/map-chrome";
 import { dropdownFadeIn, dropdownFadeOut } from "$lib/utils/motion";
 import { registerEphemeralOverlayDismisser } from "$lib/utils/overlay-stack";
 import { registerSearchFocus } from "$lib/utils/search-focus";

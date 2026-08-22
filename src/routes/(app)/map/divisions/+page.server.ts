@@ -1,5 +1,5 @@
 import type { EntityIndexItem, SeoData } from '$lib/components/seo/seo-data';
-import { entityIndexPath, getDivisionCanonicalPath } from '$lib/utils/entity-urls';
+import { entityIndexPath, getDivisionCanonicalPath } from '$lib/utils/entity/entity-urls';
 import { getAllDivisions, getRoomCountsByParent } from '$lib/services/entity/map-data';
 import { breadcrumbSchema, jsonLd, webpageSchema } from '$lib/utils/site';
 import type { PageServerLoad } from './$types';

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import {
 		adminAuthStore,
-		mapEditStore,
 		mapProposalStore,
 		queryStore,
 		toastStore
@@ -19,7 +18,7 @@
 	import CircleDollarSign from '@lucide/svelte/icons/circle-dollar-sign';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import type { DormData } from '$lib/utils/types';
-	import { normalizeEntityPhotos, type EntityPhoto } from '$lib/utils/entity-photos';
+	import { normalizeEntityPhotos, type EntityPhoto} from '$lib/utils/entity/entity-photos';
 	import {
 		getStoredProposalForEntity,
 		mergeEntityRecord,

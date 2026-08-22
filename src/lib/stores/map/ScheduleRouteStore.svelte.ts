@@ -1,5 +1,5 @@
 import { ROOM_SCHEDULE_SCOPE_NOTE } from "$lib/amis/room-scheduled-types";
-import type { RouteTotals } from "$lib/utils/campus-route";
+import type { RouteTotals } from "$lib/utils/campus/campus-route";
 import type { ClassQueryPage } from "$lib/utils/classes-api";
 import { getJSONFetch, getLocalRoomByCode } from "$lib/utils/local/data/utils";
 import { orderDayStops } from "$lib/utils/schedule-import/day-stops";

@@ -2,8 +2,8 @@
 	import MapBrowseList from "$lib/components/map/MapBrowseList.svelte";
 	import { isPlaceLandmark, placeCategoryLabel } from "$lib/constants/content/categories/place"
 	import { getAppData } from "$lib/utils/context";
-	import { getPlaceCanonicalPath } from "$lib/utils/entity-urls";
-	import type { PageData } from "./$types";
+	import { getPlaceCanonicalPath } from "$lib/utils/entity/entity-urls"
+import type { PageData } from "./$types";
 
 	const { data }: { data: PageData } = $props();
 	const appData = getAppData();

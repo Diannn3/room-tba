@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseEntityPathname } from './entity-urls';
+import { parseEntityPathname } from './entity/entity-urls';
 import { resolveLegacyEntityPath } from './legacy-entity-redirects';
 
 describe('legacy entity redirects', () => {

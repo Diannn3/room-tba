@@ -1,4 +1,4 @@
-import { campusSite } from '$lib/utils/campus.config';
+import { campusSite } from '$lib/utils/campus/campus.config';
 
 export const SITE_URL = campusSite.url;
 export const SITE_NAME = campusSite.name;

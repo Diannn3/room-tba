@@ -45,7 +45,6 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
     toastStore,
   } from "$lib/stores.svelte";
   import type { FinalExamRow, RoomData } from "$lib/utils/types";
-  import { normalizeEntityPhotos, type EntityPhoto } from "$lib/utils/entity-photos";
   import EntityDirectionsChip from "../controls/EntityDirectionsChip.svelte";
   import EntityGoogleMapsLink from "../controls/EntityGoogleMapsLink.svelte";
   import EntityShareCopyLink from "../controls/EntityShareCopyLink.svelte";
@@ -53,6 +52,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
   import MapChromeActionChip from "../map-chrome/MapChromeActionChip.svelte";
   import Classes from "./Classes.svelte";
   import FinalExamsList from "./FinalExamsList.svelte";
+	import { normalizeEntityPhotos, type EntityPhoto } from "$lib/utils/entity/entity-photos";
 
   type RoomEditableField =
     | "roomCode"

@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { SeoData } from '$lib/components/seo/seo-data';
-import { entityIndexPath, getEventCanonicalPath } from '$lib/utils/entity-urls';
+import { entityIndexPath, getEventCanonicalPath } from '$lib/utils/entity/entity-urls';
 import { getEventImage } from '$lib/utils/event-images';
 import { formatCampusDateTime } from '$lib/utils/event-time';
 import { getEventPageData } from '$lib/services/page-data/entity';

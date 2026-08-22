@@ -329,16 +329,6 @@
 		font-size: 0.8125rem;
 		line-height: 1.35;
 	}
-	.event-skeleton-list {
-		display: grid;
-		gap: 0.5rem;
-	}
-	.event-skeleton-row {
-		height: 3.75rem;
-		border-radius: 0.875rem;
-		background: linear-gradient(90deg, #f4f4f5 25%, #ececee 50%, #f4f4f5 75%);
-		background-size: 200% 100%;
-	}
 	.event-card {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) auto;

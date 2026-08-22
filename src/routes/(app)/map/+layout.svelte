@@ -1,7 +1,7 @@
 <script lang="ts">
 import { onMount, type Snippet } from "svelte";
 import { page } from "$app/state";
-import { campusCommunity } from "$lib/utils/campus.config";
+import { campusCommunity } from "$lib/utils/campus/campus.config";
 import Entry from "$lib/components/Entry.svelte";
 import {
 	type AppContextData,

@@ -9,7 +9,7 @@ import {
 	roomsTable,
 	roomPositionsTable
 } from '$lib/server/db/schema';
-import { normalizeEntityName } from '$lib/utils/entity-names';
+import { normalizeEntityName } from '$lib/utils/entity/entity-names';
 import { db } from '$lib/utils/db';
 import type { RoomData } from '$lib/utils/types';
 import {

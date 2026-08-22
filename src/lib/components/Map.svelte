@@ -24,7 +24,7 @@ import { MediaQuery } from "svelte/reactivity";
 import { fade } from "svelte/transition";
 import { goto } from "$app/navigation";
 import { resolve } from "$app/paths";
-import { sumRouteLegs } from "$lib/utils/campus-route";
+import { sumRouteLegs } from "$lib/utils/campus/campus-route";
 import {
 	buildingMatchesTypeFilter,
 	dormMatchesTypeFilter,
@@ -63,11 +63,7 @@ import {
 	TERRAIN_UNAVAILABLE_OFFLINE_MESSAGE,
 } from "$lib/constants/map/terrain"
 import { isStudentOrganization } from "$lib/constants/content/categories/org"
-import { isPlaceLandmark } from "$lib/constants/content/categories/place"
-import {
-	ISOCHRONE_CAP_MINUTES,
-	VIRIDIS_STOPS,
-} from "$lib/constants/travel-modes";
+import { isPlaceLandmark } from "$lib/constants/content/categories/place";
 import { getAppActions, getAppData } from "$lib/utils/context";
 import {
 	buildingPreviewFromRow,
@@ -82,18 +78,11 @@ import {
 	isPlaceHoverPreview,
 	organizationPreviewFromRow,
 	placePreviewFromRow,
-} from "$lib/utils/entity-hover-preview.svelte";
+} from "$lib/utils/entity/entity-hover-preview.svelte";
 import { getEventImage } from "$lib/utils/event-images";
 import { formatCampusDateShort, formatCampusTime } from "$lib/utils/event-time";
 import { metersToLngLatCircle } from "$lib/utils/geolocation";
 import { observeBlockHeight } from "$lib/utils/layout-css-vars";
-import { applyBasemapPalette } from "$lib/utils/map-basemap-palette";
-import { syncBuildingLayersForDimension } from "$lib/utils/map-dimension-layers";
-import {
-	ClientEditConflictError,
-	ClientEventConflictError,
-	editErrorMessage,
-} from "$lib/utils/map-edit/errors";
 import { patchEventLocations, patchPosition } from "$lib/utils/map-edit/patch-api";
 import type {
 	EditableCoords,
@@ -101,20 +90,6 @@ import type {
 	EditableVersionedPosition,
 	EventLocationWriteValue,
 } from "$lib/utils/map-edit/types";
-import {
-	completeMapMoveRedo,
-	completeMapMoveUndo,
-	getMapEditShortcutAction,
-	type MapMoveCoordinates,
-	recordMapMove,
-	type VersionedMapMove,
-} from "$lib/utils/map-move-history";
-import { loadCampusMapStyle } from "$lib/utils/maptiler-key";
-import {
-	resolveSubmitterName,
-	submitCreateProposal,
-	submitPinPositionProposal,
-} from "$lib/utils/proposals/client";
 import { formatMinutes } from "$lib/utils/schedule-import/day-stops";
 import { slugifySegment } from "$lib/utils/site";
 import {
@@ -175,6 +150,13 @@ import MapEntityPin from "./map/MapEntityPin.svelte";
 import PinGlyph from "./map/PinGlyph.svelte";
 import EventPlacementImageField from "./map-chrome/EventPlacementImageField.svelte";
 	import { plannerRoomCodes } from "$lib/utils/planner/normalize";
+	import { ClientEditConflictError, ClientEventConflictError, editErrorMessage } from "$lib/utils/map-edit/errors";
+	import { syncBuildingLayersForDimension } from "$lib/utils/map/map-dimension-layers";
+	import { applyBasemapPalette } from "$lib/utils/map/map-basemap-palette";
+	import { completeMapMoveRedo, completeMapMoveUndo, getMapEditShortcutAction, recordMapMove, type VersionedMapMove } from "$lib/utils/map/map-move-history";
+	import { resolveSubmitterName, submitCreateProposal, submitPinPositionProposal } from "$lib/utils/proposals/client";
+	import { ISOCHRONE_CAP_MINUTES, VIRIDIS_STOPS } from "$lib/constants/travel-modes";
+	import { loadCampusMapStyle } from "$lib/utils/map/maptiler-key";
 
 const data = getAppData();
 const appActions = getAppActions();

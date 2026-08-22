@@ -2,8 +2,8 @@
 	import MapBrowseList from "$lib/components/map/MapBrowseList.svelte";
 	import { isStudentOrganization } from "$lib/constants/content/categories/org"
 	import { getAppData } from "$lib/utils/context";
-	import { getOrganizationCanonicalPath } from "$lib/utils/entity-urls";
-	import type { PageData } from "./$types";
+	import { getOrganizationCanonicalPath } from "$lib/utils/entity/entity-urls"
+import type { PageData } from "./$types";
 
 	const { data }: { data: PageData } = $props();
 	const appData = getAppData();

@@ -14,9 +14,9 @@
  *  - `datetime-local` inputs are treated as Asia/Manila wall-clock time.
  */
 
-import { CAMPUS_SEMESTER_MONTHS, type SemesterRecurrence } from './campus-calendar';
+import { CAMPUS_SEMESTER_MONTHS, type SemesterRecurrence } from './campus/campus-calendar';
 
-export type { SemesterRecurrence } from './campus-calendar';
+export type { SemesterRecurrence } from './campus/campus-calendar';
 
 export const CAMPUS_TIME_ZONE = 'Asia/Manila';
 const CAMPUS_UTC_OFFSET = '+08:00';

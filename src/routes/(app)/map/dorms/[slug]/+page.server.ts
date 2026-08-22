@@ -1,8 +1,8 @@
 import { error } from '@sveltejs/kit';
 import { getDormRouteSlug } from '$lib/utils/app-data';
 import type { SeoData } from '$lib/components/seo/seo-data';
-import { entityIndexPath, getDormCanonicalPath } from '$lib/utils/entity-urls';
-import { parseIdRouteSlug } from '$lib/utils/route-slugs';
+import { entityIndexPath, getDormCanonicalPath } from '$lib/utils/entity/entity-urls';
+import { parseIdRouteSlug } from '$lib/utils/route/route-slugs';
 import { getDormPageData } from '$lib/services/page-data/entity';
 import {
 	absoluteUrl,

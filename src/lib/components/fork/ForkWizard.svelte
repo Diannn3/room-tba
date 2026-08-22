@@ -3,8 +3,7 @@
   import maplibregl from "maplibre-gl";
   import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-csp-worker.js?url";
   import "maplibre-gl/dist/maplibre-gl.css";
-  import { campusMap } from "$lib/utils/campus/campus.config";
-  import {
+  import { campusMap } from "$lib/campus.configmport {
     campusSlug,
     generateCampusConfig,
     vercelDeployUrl,

@@ -30,7 +30,7 @@
 	import { resolve } from "$app/paths";
 	import { goto } from "$app/navigation";
 	import { slugifySegment } from "$lib/utils/site";
-	import { campusTransit } from "$lib/utils/campus/campus.config";
+	import { campusTransit } from "$lib/campus.config";
 
   // Derived from campusTransit.label so a fork edits one place:
   // label Jeepney routes → title Jeepney Routes, plural jeepney routes,

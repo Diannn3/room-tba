@@ -8,9 +8,7 @@
 	import { getAppData } from '$lib/utils/context';
 	import { floatingControlPanelStore, mapViewStore, queryStore } from '$lib/stores.svelte';
 	import { openEphemeralOverlay, registerEphemeralOverlayDismisser } from '$lib/utils/overlay-stack';
-	import { campusTransit } from '$lib/utils/campus/campus.config';
-
-	type Props = {
+	import { campusTransit } from '$lib/campus.configtype Props = {
 		embedded?: boolean;
 		trigger?: 'icon' | 'chip';
 	};

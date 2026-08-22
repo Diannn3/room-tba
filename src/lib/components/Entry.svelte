@@ -1,7 +1,7 @@
 <script lang="ts">
 import { onMount, type Snippet } from "svelte";
 import type { InitialSearchState } from "$lib/utils/app-data";
-import { campusTransit } from "$lib/utils/campus/campus.config";
+import { campusTransit } from "$lib/campus.config"
 import AccountSettingsModal from "$lib/components/AccountSettingsModal.svelte";
 import AdminLoginModal from "$lib/components/AdminLoginModal.svelte";
 import Building3DViewer from "$lib/components/Building3DViewer.svelte";

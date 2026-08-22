@@ -1,4 +1,4 @@
-import { campusTransit } from "$lib/utils/campus/campus.config";
+import { campusTransit } from "$lib/campus.config";
 import { buildingTypeFilter, mapToolsStore, modalStore, sidePanelStore } from "../index.svelte";
 import { deactivateMapModesExcept } from "./map-modes";
 

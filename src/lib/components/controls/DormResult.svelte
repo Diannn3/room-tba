@@ -39,7 +39,7 @@
 	import EntityBackToList from './EntityBackToList.svelte';
 	import EntityExternalLink from './EntityExternalLink.svelte';
 	import { getDormShareUrl } from '$lib/utils/share-links';
-	import { getKuboDormCta, kuboDormDirectory, loadKuboDormDirectory } from '$lib/utils/kubo-dorms';
+	import { getKuboDormCta, kuboDormDirectory, loadKuboDormDirectory } from '$lib/utils/integrations/kubo/kubo-dorms';
 	type DormEditableField =
 		| 'dormName'
 		| 'shortName'
@@ -822,7 +822,7 @@
 					<div class="entity-tag-block">
 						<span class="entity-detail-row__label">Amenities</span>
 						<div class="entity-tag-list">
-							{#each amenities as amenity}
+							{#each amenities as amenity (amenity)}
 								<span class="entity-tag-chip">{amenity}</span>
 							{/each}
 						</div>

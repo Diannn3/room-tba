@@ -1,5 +1,5 @@
 import { getEventSlug } from '$lib/utils/app-data';
-import { campusTransit } from '$lib/utils/campus/campus.config';
+import { campusTransit } from '$lib/campus.config';
 import { JEEPNEY_ROUTES } from '$lib/constants/map/jeepney-routes';
 import {
 	entityIndexPath,

@@ -2,7 +2,7 @@
   import ChevronRight from "@lucide/svelte/icons/chevron-right";
   import { openBrowseClasses, openCampusBrowse } from "$lib/utils/campus/browse-campus";
   import type { CampusBrowseTab } from "$lib/utils/campus/browse-campus";
-  import { campusTransit } from "$lib/utils/campus/campus.config"
+  import { campusTransit } from "$lib/campus.config"
   import { jeepneyStore, queryStore, sidePanelStore } from "$lib/stores.svelte";
 
   import classBuildingsIcon from "../../../assets/icons/class-buildings.svg?url";

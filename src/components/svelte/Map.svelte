@@ -383,7 +383,7 @@
   const EXTERNAL_CAMPUSES_MARKER_LAYER_ID = "external-campuses-markers";
   const EXTERNAL_CAMPUSES_LABELS_LAYER_ID = "external-campuses-labels";
   let activeRouteId = $state<string | null>(null);
-  let activeRouteStops = $state<DisplayJeepneyRoute["stops"]>([]);
+  let activeRouteStops = $state<JeepneyRoute["stops"]>([]);
   let activeRouteColor = $state<string>("#dc2626");
   let terrainModeWasEnabled = false;
   let selectedEditKey = $state<string | null>(null);

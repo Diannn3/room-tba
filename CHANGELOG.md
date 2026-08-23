@@ -1,3 +1,37 @@
+## [2.20.1](https://github.com/uplbtools/room-tba/compare/v2.20.0...v2.20.1) (2026-08-15)
+
+
+### Bug Fixes
+
+* **map:** import map view store ([973fc24](https://github.com/uplbtools/room-tba/commit/973fc24b84e66a0644c582f5424cbbd973ac8a34))
+
+# [2.20.0](https://github.com/uplbtools/room-tba/compare/v2.19.3...v2.20.0) (2026-08-13)
+
+
+### Bug Fixes
+
+* **planner:** auto-load more sections on scroll; count courses in the note ([71bb91a](https://github.com/uplbtools/room-tba/commit/71bb91a6ce0b60d2af225e13745164dcf463a721))
+
+
+### Features
+
+* **map:** camera debug mode via right-click menu ([#964](https://github.com/uplbtools/room-tba/issues/964)) ([405afa9](https://github.com/uplbtools/room-tba/commit/405afa9c136557f8ac9a2181507617d61db8a44c))
+
+## [2.19.3](https://github.com/uplbtools/room-tba/compare/v2.19.2...v2.19.3) (2026-08-13)
+
+
+### Bug Fixes
+
+* **map:** measure-route legibility, mode-aware snapping, visible route line ([a7893ad](https://github.com/uplbtools/room-tba/commit/a7893aded2dc8f371e613d62557f3b051d8ea6ec))
+
+## [2.19.2](https://github.com/uplbtools/room-tba/compare/v2.19.1...v2.19.2) (2026-08-13)
+
+
+### Bug Fixes
+
+* **map-chrome:** keep the map tools panel within the viewport ([37f2579](https://github.com/uplbtools/room-tba/commit/37f2579ef7cac64d54021a5d39c9ca7cd846937c))
+* **map:** restore vector basemap on MapLibre 6 (?worker&url) ([13e7cbc](https://github.com/uplbtools/room-tba/commit/13e7cbc8c5bd88e8793146fac6c8c97e72063555)), closes [#1003](https://github.com/uplbtools/room-tba/issues/1003)
+
 ## [2.19.1](https://github.com/uplbtools/room-tba/compare/v2.19.0...v2.19.1) (2026-08-12)
 
 

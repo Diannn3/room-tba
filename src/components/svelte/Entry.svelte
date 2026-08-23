@@ -26,6 +26,7 @@
     sidebarStore,
     announcementsStore,
   } from "@lib/store.svelte";
+  import { isRecentSearch } from "@lib/locStorage";
   import { decodeSharePlan } from "@lib/planner/share-codec";
   import { resolveSharedPlan } from "@lib/planner/import-shared";
   import Modal from "@ui/modal/Modal.svelte";

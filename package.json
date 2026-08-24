@@ -92,6 +92,7 @@
     "drizzle-orm": "^0.45.2",
     "es-toolkit": "^1.49.0",
     "maplibre-gl": "^6.2.0",
+    "pdf-lib": "^1.17.1",
     "pg": "^8.22.0",
     "svelte": "^5.56.6",
     "svelte-maplibre": "^2.0.0",

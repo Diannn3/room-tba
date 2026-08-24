@@ -243,7 +243,7 @@
         id: row.id,
         label: row.divisionName,
         meta: null as string | null,
-        open: () => openDivision(row.divisionName, id),
+        open: () => openDivision(row.divisionName),
       }));
     }
     if (activeTab === "organizations" || activeTab === "offices") {

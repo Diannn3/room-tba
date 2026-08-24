@@ -3,13 +3,13 @@ import { tick } from 'svelte';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import type { Sponsor, SponsorsData } from '$lib/utils/sponsors';
 
-vi.mock('$lib/sponsor-tracking', () => ({
+vi.mock('$lib/utils/sponsor-tracking', () => ({
 	trackSponsorImpression: vi.fn(),
 	trackSponsorClick: vi.fn()
 }));
 
 const loadSponsorsMock = vi.hoisted(() => vi.fn<() => Promise<SponsorsData | null>>());
-vi.mock('$lib/sponsors', async (importOriginal) => ({
+vi.mock('$lib/utils/sponsors', async (importOriginal) => ({
 	...(await importOriginal<typeof import('$lib/utils/sponsors')>()),
 	loadSponsors: loadSponsorsMock
 }));

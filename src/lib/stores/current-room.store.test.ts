@@ -6,7 +6,7 @@ const { getJSONFetch, getLocalRoomByCode } = vi.hoisted(() => ({
 	getLocalRoomByCode: vi.fn()
 }));
 
-vi.mock('../local/data/utils.js', () => ({
+vi.mock('../utils/local/data/utils.js', () => ({
 	getJSONFetch,
 	getLocalRoomByCode,
 	getBuildingIdsWithClasses: vi.fn(),

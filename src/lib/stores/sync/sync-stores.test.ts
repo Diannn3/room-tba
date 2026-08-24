@@ -1,11 +1,11 @@
 import { vi } from 'vitest';
 
-vi.mock('../local/data/campus-directory-sync.js', () => ({
+vi.mock('../../utils/local/data/campus-directory-sync.js', () => ({
 	OFFLINE_DIRECTORY_SYNCED_AT_KEY: 'room-tba-offline-directory-synced-at',
 	syncCampusDirectoryForOffline: vi.fn(async () => ({ ok: true as const }))
 }));
 
-vi.mock('../local/data/class-schedules-offline-sync.js', () => ({
+vi.mock('../../utils/local/data/class-schedules-offline-sync.js', () => ({
 	OFFLINE_CLASSES_SYNCED_AT_KEY: 'room-tba-offline-classes-synced-at',
 	syncClassSchedulesForOffline: vi.fn(async () => ({
 		ok: true as const,
@@ -14,8 +14,8 @@ vi.mock('../local/data/class-schedules-offline-sync.js', () => ({
 }));
 
 import { describe, expect, test } from 'vitest';
-import AppBootstrapStore from './AppBootstrapStore.svelte';
-import SyncToastStore from './SyncToastStore.svelte';
+import AppBootstrapStore from './AppBootstrapStore.svelte.js';
+import SyncToastStore from './SyncToastStore.svelte.js';
 
 describe('AppBootstrapStore', () => {
 	test('phase transitions remote → sync → ready', () => {

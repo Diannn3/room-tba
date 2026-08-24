@@ -22,6 +22,6 @@ describe('image upload endpoint boundaries', () => {
 	});
 
 	test('keeps proposal submissions on the proposals API', () => {
-		expect(readFileSync('src/lib/proposals/client.ts', 'utf8')).toContain('/api/proposals');
+		expect(readFileSync('src/lib/utils/proposals/client.ts', 'utf8')).toContain('/api/proposals');
 	});
 });

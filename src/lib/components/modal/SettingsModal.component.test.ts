@@ -6,13 +6,13 @@ import { SYNC_TABLE_NAMES } from '$lib/utils/local/data/sync-keys';
 import { syncToastStore } from '$lib/utils/store.svelte';
 
 const clearCachedData = vi.hoisted(() => vi.fn(async () => {}));
-vi.mock('$lib/local/clear-cached-data', () => ({ clearCachedData }));
+vi.mock('$lib/utils/local/clear-cached-data', () => ({ clearCachedData }));
 
 // Only the sync-key module is stubbed, so the real `resyncCampusData()` runs
 // and the table list it passes is actually asserted.
 const invalidateLocalSyncKeys = vi.hoisted(() => vi.fn());
 const requestCampusDataRefresh = vi.hoisted(() => vi.fn());
-vi.mock('$lib/local/data/invalidate-sync-key', () => ({
+vi.mock('$lib/utils/local/data/invalidate-sync-key', () => ({
 	invalidateLocalSyncKeys,
 	requestCampusDataRefresh,
 	CAMPUS_DATA_REFRESH_EVENT: 'room-tba:campus-data-refresh'

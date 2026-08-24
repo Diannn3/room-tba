@@ -1,4 +1,4 @@
-import type { QueryStoreState } from './store.svelte';
+import type { QueryStoreState } from './store.svelte.js';
 import type { BuildingData, DormData, EventData, OrgData, PlaceData } from './types';
 
 type Suggestion = {

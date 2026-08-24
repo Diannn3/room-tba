@@ -11,7 +11,7 @@ import {
 	roomPositionsTable,
 	termsTable
 } from '$lib/server/db/schema';
-import type { QueryStoreState } from './store.svelte';
+import type { QueryStoreState } from './store.svelte.js';
 import type { EntityPhoto } from './entity-photos';
 
 export type AppData = {

@@ -1,4 +1,4 @@
-import { adminAuthStore } from "./index.svelte";
+import { adminAuthStore } from "./index.svelte.js";
 
 export default class ProposalsStore {
     pendingCount = $state(0);

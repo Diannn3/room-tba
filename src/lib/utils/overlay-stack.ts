@@ -1,6 +1,6 @@
 /** Ephemeral chrome (flyouts, chip panels) dismissed when blocking UI opens (#302). */
 
-import { entityHoverPreviewStore } from './entity-hover-preview.svelte';
+import { entityHoverPreviewStore } from './entity-hover-preview.svelte.js';
 
 const dismissers = new Set<() => void>();
 

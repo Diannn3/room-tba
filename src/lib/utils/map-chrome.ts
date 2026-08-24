@@ -1,4 +1,4 @@
-import { eventPlacementStore, mapEditStore, mapToolsStore } from './store.svelte';
+import { eventPlacementStore, mapEditStore, mapToolsStore } from './store.svelte.js';
 
 /** Single source of truth for which map chrome surfaces are visible. */
 export function getMapChromeVisibility() {

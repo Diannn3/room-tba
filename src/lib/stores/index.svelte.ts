@@ -24,7 +24,7 @@ import {
 	PlannerBuildingsStore,
 	RoomClassesStore,
 	TermStore
-} from './data-stores.svelte';
+} from './data-stores.svelte.js';
 import {
 	AdditionProposalStore,
 	EditorChromeStore,
@@ -79,7 +79,6 @@ export {
 } from './filter-stores.svelte.js';
 
 import { OfflineStore } from './sync/OfflineStore.svelte.js';
-import SyncToastStore from './sync/SyncToastStore.svelte.js';
 import AppBootstrapStore from './sync/AppBootstrapStore.svelte.js';
 import LocationStore from './map/LocationStore.svelte.js';
 import ProposalsStore from './ProposalsStore.svelte.js';
@@ -142,7 +141,7 @@ export const currentRoom = {
 };
 
 
-export { plannerRoomCodes } from './data-stores.svelte';
+export { plannerRoomCodes } from './data-stores.svelte.js';
 
 
 export const queryStore = new QueryStore();
@@ -173,7 +172,7 @@ export const jeepneyStore = new JeepneyStore();
 export const transitStore = new TransitStore();
 export const announcementsStore = new AnnouncementsStore();
 export const appBootstrapStore = new AppBootstrapStore();
-export const syncToastStore = new SyncToastStore();
+export { syncToastStore } from './sync/SyncToastStore.svelte.js';
 export const building3DStore = new Building3DStore();
 export const adminAuthStore = new AdminAuthStore();
 export const proposalsStore = new ProposalsStore();

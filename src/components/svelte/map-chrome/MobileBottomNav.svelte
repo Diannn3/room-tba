@@ -1,12 +1,12 @@
 <script lang="ts">
   import { editorChromeStore, sidebarStore } from "@lib/store.svelte";
   import AppMenu from "../status-bar/AppMenu.svelte";
+  import CalendarClock from "@lucide/svelte/icons/calendar-clock";
 
   import mapIcon from "../../../assets/icons/map.svg?url";
   import plannerIcon from "../../../assets/icons/planner.svg?url";
-  import finalExamsIcon from "../../../assets/icons/final-exams.svg?url";
 
-  type TabId = "map" | "planner" | "finals";
+  type TabId = "map" | "planner" | "today";
 
   const active = $derived(sidebarStore.panelOpen);
 
@@ -66,17 +66,19 @@
   <button
     type="button"
     class="mobile-bottom-nav__item"
-    class:mobile-bottom-nav__item--active={active === "finals"}
-    aria-current={active === "finals" ? "page" : undefined}
-    onclick={() => go("finals")}
+    class:mobile-bottom-nav__item--active={active === "today"}
+    aria-current={active === "today" ? "page" : undefined}
+    onclick={() => go("today")}
   >
-    <img src={finalExamsIcon} alt="" width="24" height="24" decoding="async" />
-    <span>Final Exams</span>
+    <CalendarClock size={24} aria-hidden="true" />
+    <span>Today</span>
   </button>
 
-  <!-- Menu, not Account: this is the only mobile entry point to Today, the
-       academic calendar, the changelog, coverage, the leaderboard and the
-       review queue (#951). Sign in / account settings sits inside it. -->
+  <!-- Menu, not Account: this is the only mobile entry point to Final Exams,
+       the academic calendar, the changelog, coverage, the leaderboard and the
+       review queue (#951). Sign in / account settings sits inside it. Finals
+       lives here rather than the bar because it is seasonal (#951 follow-up:
+       daily-relevant Today earns the slot). -->
   <AppMenu />
 </nav>
 
@@ -118,7 +120,8 @@
     cursor: pointer;
   }
 
-  .mobile-bottom-nav__item img {
+  .mobile-bottom-nav__item img,
+  .mobile-bottom-nav__item svg {
     width: 1.5rem;
     height: 1.5rem;
     opacity: 0.92;

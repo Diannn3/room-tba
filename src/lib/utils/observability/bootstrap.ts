@@ -1,4 +1,4 @@
-import { register as registerOtel } from '../../../instrumentation';
+import { register as registerOtel } from '../../../../instrumentation';
 import { installServerLogForwarder } from './server-log';
 
 let bootstrapped = false;

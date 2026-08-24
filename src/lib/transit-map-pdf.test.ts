@@ -1,12 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import { PDFDocument } from "pdf-lib";
 import {
+  isCampusScopeRoute,
   makeProjector,
   metersPerDegreeLon,
   niceScaleBarMeters,
   renderTransitMapPdf,
   starPath,
   smoothPath,
+  toWinAnsi,
   type TransitMapRoute,
 } from "./transit-map-pdf";
 
@@ -112,6 +114,44 @@ describe("niceScaleBarMeters", () => {
   });
 });
 
+describe("toWinAnsi", () => {
+  test("maps arrows and typography the standard fonts cannot encode", () => {
+    expect(toWinAnsi("Buendia → Los Baños")).toBe("Buendia -> Los Baños");
+    expect(toWinAnsi("A ↔ B • C")).toBe("A <-> B - C");
+  });
+
+  test("drops unencodable codepoints instead of failing the render", () => {
+    expect(toWinAnsi("Route \u2192 \u2603")).toBe("Route -> ");
+    expect(toWinAnsi("Kaliwa / Kanan")).toBe("Kaliwa / Kanan");
+  });
+});
+
+describe("isCampusScopeRoute", () => {
+  test("campus loop is drawn, intercity service is legend-only", () => {
+    expect(
+      isCampusScopeRoute(
+        route({
+          stops: [
+            { name: "Gate", lat: 14.1685, lon: 121.2414 },
+            { name: "CEAT", lat: 14.1628, lon: 121.2497 },
+          ],
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      isCampusScopeRoute(
+        route({
+          name: "Buendia → Los Baños",
+          stops: [
+            { name: "Buendia", lat: 14.5586, lon: 121.0198 },
+            { name: "LB Terminal", lat: 14.1685, lon: 121.2414 },
+          ],
+        }),
+      ),
+    ).toBe(false);
+  });
+});
+
 describe("renderTransitMapPdf", () => {
   test("renders a valid PDF with metadata for two routes and a here marker", async () => {
     const bytes = await renderTransitMapPdf({
@@ -143,6 +183,25 @@ describe("renderTransitMapPdf", () => {
     const bytes = await renderTransitMapPdf({ routes: [] });
     const pdf = await PDFDocument.load(bytes);
     expect(pdf.getTitle()).toBeTruthy();
+  });
+
+  test("survives intercity routes with unencodable names", async () => {
+    const bytes = await renderTransitMapPdf({
+      routes: [
+        route(),
+        route({
+          id: "buendia",
+          name: "Buendia → Los Baños",
+          stops: [
+            { name: "Buendia", lat: 14.5586, lon: 121.0198 },
+            { name: "LB Terminal", lat: 14.1685, lon: 121.2414 },
+          ],
+        }),
+      ],
+      here: { name: "Riceworld Museum", lat: 14.1684, lon: 121.2545 },
+    });
+    const header = Buffer.from(bytes.slice(0, 5)).toString("latin1");
+    expect(header).toBe("%PDF-");
   });
 
   test("accepts the letter format", async () => {

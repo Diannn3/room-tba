@@ -43,7 +43,7 @@ const WHITE = rgb(1, 1, 1);
 const MARGIN = 40;
 const HEADER_H = 58;
 const FOOTER_H = 26;
-const LEGEND_H = 64;
+const LEGEND_H = 88;
 const FRAME_PAD = 14;
 
 /** Meters per degree of longitude at the campus latitude (~14.17 N). */
@@ -155,6 +155,54 @@ function hexToRgb(hex: string) {
   return rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255);
 }
 
+const WINANSI_REPLACEMENTS: [RegExp, string][] = [
+  [/\u2192/g, "->"], // → rightwards arrow
+  [/\u2190/g, "<-"], // ← leftwards arrow
+  [/\u2194/g, "<->"], // ↔ left-right arrow
+  [/\u21d2/g, "=>"], // ⇒ double arrow
+  [/\u2264/g, "<="],
+  [/\u2265/g, ">="],
+  [/\u2022/g, "-"],
+  [/\u00a0/g, " "],
+];
+
+/** Standard PDF fonts are WinAnsi; live data (route names like
+ *  "Buendia → Los Baños") carries characters it cannot encode. Map the
+ *  common typography and drop whatever is left rather than failing the print. */
+export function toWinAnsi(text: string): string {
+  let out = text;
+  for (const [pattern, replacement] of WINANSI_REPLACEMENTS) {
+    out = out.replace(pattern, replacement);
+  }
+  // biome-ignore lint/suspicious/noControlCharactersInRegex: stripping unencodable codepoints is the point
+  return out.replace(
+    /[^\t\n\r\x20-\x7E\u00A0-\u00FF\u2018\u2019\u201C\u201D\u2013\u2014\u2026]/g,
+    "",
+  );
+}
+
+/** Routes drawn on the diagram must live inside the campus frame; intercity
+ *  services (Manila, Calamba, Sta. Cruz…) stay in the legend as text. */
+const CAMPUS_FRAME = {
+  minLat: 14.1,
+  maxLat: 14.2,
+  minLon: 121.2,
+  maxLon: 121.28,
+};
+
+export function isCampusScopeRoute(route: TransitMapRoute): boolean {
+  return (
+    route.stops.length >= 2 &&
+    route.stops.every(
+      (s) =>
+        s.lat >= CAMPUS_FRAME.minLat &&
+        s.lat <= CAMPUS_FRAME.maxLat &&
+        s.lon >= CAMPUS_FRAME.minLon &&
+        s.lon <= CAMPUS_FRAME.maxLon,
+    )
+  );
+}
+
 /** White "halo" under dark text keeps labels readable over line work. */
 function haloText(
   page: PDFPage,
@@ -198,6 +246,30 @@ export async function renderTransitMapPdf(input: {
   const page = pdf.addPage([pageW, pageH]);
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+
+  // Sanitize once at the boundary: live data carries characters the standard
+  // PDF fonts cannot encode (route names like "Buendia → Los Baños").
+  const routes = input.routes.map((route) => ({
+    ...route,
+    name: toWinAnsi(route.name),
+    directionNote: route.directionNote ? toWinAnsi(route.directionNote) : null,
+    stops: route.stops.map((stop) => ({ ...stop, name: toWinAnsi(stop.name) })),
+  }));
+  const drawnRoutes = routes.filter(isCampusScopeRoute);
+  const intercityRoutes = routes.filter((r) => !isCampusScopeRoute(r));
+  const here = input.here
+    ? {
+        name: toWinAnsi(input.here.name),
+        lat: input.here.lat,
+        lon: input.here.lon,
+      }
+    : null;
+  const hereOnFrame =
+    here !== null &&
+    here.lat >= CAMPUS_FRAME.minLat &&
+    here.lat <= CAMPUS_FRAME.maxLat &&
+    here.lon >= CAMPUS_FRAME.minLon &&
+    here.lon <= CAMPUS_FRAME.maxLon;
 
   // ── Header ────────────────────────────────────────────────────────────
   page.drawRectangle({
@@ -251,8 +323,8 @@ export async function renderTransitMapPdf(input: {
     borderWidth: 1,
   });
 
-  const allStops = input.routes.flatMap((r) => r.stops);
-  const projInput = input.here ? [...allStops, input.here] : allStops;
+  const allStops = drawnRoutes.flatMap((r) => r.stops);
+  const projInput = here && hereOnFrame ? [...allStops, here] : allStops;
   const projector = makeProjector(projInput, {
     x: frame.x + FRAME_PAD,
     y: frame.y + FRAME_PAD,
@@ -278,7 +350,7 @@ export async function renderTransitMapPdf(input: {
     const { project, ptPerMeter } = projector;
 
     // Routes: white casing under colored line, both round-capped.
-    for (const route of input.routes) {
+    for (const route of drawnRoutes) {
       if (route.stops.length < 2) continue;
       const pts = route.stops.map((s) => project(s.lat, s.lon));
       const d = svgPathFrom(pts);
@@ -300,7 +372,7 @@ export async function renderTransitMapPdf(input: {
     }
 
     // Stops: white dot with route-color ring; labels alternate sides.
-    for (const route of input.routes) {
+    for (const route of drawnRoutes) {
       const color = hexToRgb(route.color);
       route.stops.forEach((stop, i) => {
         const p = project(stop.lat, stop.lon);
@@ -320,7 +392,7 @@ export async function renderTransitMapPdf(input: {
     // termini share a name (e.g. Kaliwa/Kanan starts and ends at the same
     // mall) gets one label, not two stacked copies.
     const labeledByText = new Map<string, ProjectedPoint>();
-    for (const route of input.routes) {
+    for (const route of drawnRoutes) {
       route.stops.forEach((stop, i) => {
         const p = project(stop.lat, stop.lon);
         const terminal = i === 0 || i === route.stops.length - 1;
@@ -406,8 +478,8 @@ export async function renderTransitMapPdf(input: {
   }
 
   // ── "You are here" (drawn last, on top of everything) ─────────────────
-  if (input.here && projector) {
-    const p = projector.project(input.here.lat, input.here.lon);
+  if (here && hereOnFrame && projector) {
+    const p = projector.project(here.lat, here.lon);
     page.drawSvgPath(
       `M ${p.x - 13} ${pageH - p.y} a 13 13 0 1 0 26 0 a 13 13 0 1 0 -26 0`,
       {
@@ -424,7 +496,7 @@ export async function renderTransitMapPdf(input: {
       borderColor: WHITE,
       borderWidth: 1.2,
     });
-    const label = `You are here: ${input.here.name}`;
+    const label = `You are here: ${here.name}`;
     const size = 10.5;
     const textW = bold.widthOfTextAtSize(label, size);
     const lx = Math.min(
@@ -437,9 +509,10 @@ export async function renderTransitMapPdf(input: {
   }
 
   // ── Legend ────────────────────────────────────────────────────────────
-  const legendY = FOOTER_H + 8;
-  const legendRowW = (pageW - MARGIN * 2) / Math.max(input.routes.length, 1);
-  input.routes.forEach((route, i) => {
+  const legendTop = FOOTER_H + LEGEND_H;
+  const legendY = legendTop - 58; // drawn-route rows sit in the top band
+  const legendRowW = (pageW - MARGIN * 2) / Math.max(drawnRoutes.length, 1);
+  drawnRoutes.forEach((route, i) => {
     const color = hexToRgb(route.color);
     const x0 = MARGIN + i * legendRowW;
     page.drawLine({
@@ -478,7 +551,54 @@ export async function renderTransitMapPdf(input: {
       });
     }
   });
-  if (input.here) {
+  if (here && !hereOnFrame) {
+    page.drawText(`You are here: ${here.name} (outside the campus frame)`, {
+      x: MARGIN,
+      y: legendY - 8,
+      size: 8,
+      font: bold,
+      color: BRAND,
+    });
+  }
+  // Intercity services stay legend-only: their stops span provinces and would
+  // collapse the campus diagram to a dot.
+  if (intercityRoutes.length > 0) {
+    const intercityTitle = "Also serving UPLB (intercity, not drawn):";
+    page.drawText(intercityTitle, {
+      x: MARGIN,
+      y: legendY - 22,
+      size: 8,
+      font: bold,
+      color: INK,
+    });
+    const titleW = bold.widthOfTextAtSize(intercityTitle, 8) + 8;
+    const maxW = pageW - MARGIN * 2 - titleW;
+    const items = intercityRoutes.map(
+      (r) => `${r.name} (PHP ${r.fareRegular}/${r.fareDiscounted})`,
+    );
+    let line = "";
+    const lines: string[] = [];
+    for (const item of items) {
+      const candidate = line ? `${line} · ${item}` : item;
+      if (font.widthOfTextAtSize(candidate, 7.5) > maxW && line) {
+        lines.push(line);
+        line = item;
+      } else {
+        line = candidate;
+      }
+    }
+    if (line) lines.push(line);
+    lines.slice(0, 2).forEach((text, i) => {
+      page.drawText(text, {
+        x: MARGIN + titleW,
+        y: legendY - 22 - i * 10,
+        size: 7.5,
+        font,
+        color: MUTED,
+      });
+    });
+  }
+  if (here && hereOnFrame) {
     const starX = pageW - MARGIN - 150;
     page.drawSvgPath(starAt(starX, legendY + 34, 6), {
       ...svgAnchor,

@@ -1,6 +1,7 @@
 import { dismissEphemeralOverlays } from './overlay-stack.js';
 import { campusBrowseQuery, type CampusBrowseTab } from './browse-campus-shared.js';
-import type { SidePanelStore, QueryStore } from './stores/ui-stores.svelte.js';
+import type QueryStore from '$lib/stores/QueryStore.svelte.js';
+import type SidePanelStore from '$lib/stores/ui/SidePanelStore.svelte.js';
 
 export type { CampusBrowseTab } from './browse-campus-shared.js';
 import CampusBrowseList from '$lib/components/controls/CampusBrowseList.svelte';

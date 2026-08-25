@@ -130,5 +130,8 @@
     "happy-dom": "^20.11.6",
     "semantic-release": "^25.0.9",
     "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "maplibre-gl": "^6.4.1"
   }
 }

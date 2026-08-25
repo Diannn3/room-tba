@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import "@lib/maplibre-worker";
   import type { InitialSearchState } from "@lib/app-data";
   import { getAppData } from "@lib/context";
   import { findCampusPointBySlug } from "@lib/route-links";

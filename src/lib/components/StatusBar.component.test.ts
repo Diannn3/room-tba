@@ -7,7 +7,7 @@ import { expectSingleLineButton, mountAtWidth } from '@test/layout-assertions';
 const loadSponsorsMock = vi.hoisted(() =>
 	vi.fn<() => Promise<SponsorsData | null>>(async () => null)
 );
-vi.mock('$lib/sponsors', async (importOriginal) => ({
+vi.mock('$lib/utils/sponsors', async (importOriginal) => ({
 	...(await importOriginal<typeof import('$lib/utils/sponsors')>()),
 	loadSponsors: loadSponsorsMock
 }));

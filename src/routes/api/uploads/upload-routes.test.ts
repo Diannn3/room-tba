@@ -18,7 +18,7 @@ vi.mock('$env/dynamic/private', () => ({
 	}
 }));
 vi.mock('$lib/admin/require-editor', () => ({ editorSessionOrUnauthorized }));
-vi.mock('$lib/r2-upload', () => ({
+vi.mock('$lib/utils/r2-upload', () => ({
 	UPLOAD_MAX_BYTES: 5 * 1024 * 1024,
 	buildUploadKey: (prefix: string) => `${prefix}/image.jpg`,
 	detectImageContentType: (bytes: Uint8Array) =>

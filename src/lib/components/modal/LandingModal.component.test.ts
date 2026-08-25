@@ -2,11 +2,11 @@ import { fireEvent, render, screen } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { modalStore } from '$lib/stores.svelte';
 
-vi.mock('$lib/github-contributors', () => ({
+vi.mock('$lib/utils/github-contributors', () => ({
 	fetchGithubContributors: vi.fn().mockResolvedValue([])
 }));
 
-vi.mock('$lib/github-stars', () => ({
+vi.mock('$lib/utils/github-stars', () => ({
 	fetchGithubStarCountCached: vi.fn().mockResolvedValue(0)
 }));
 

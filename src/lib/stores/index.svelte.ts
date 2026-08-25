@@ -86,7 +86,7 @@ export const jeepneyStore = new JeepneyStore();
 export const transitStore = new TransitStore();
 export const announcementsStore = new AnnouncementsStore();
 export const appBootstrapStore = new AppBootstrapStore();
-export const syncToastStore = new SyncToastStore();
+export { syncToastStore } from './sync/SyncToastStore.svelte.js';
 export const building3DStore = new Building3DStore();
 export const adminAuthStore = new AdminAuthStore();
 export const proposalsStore = new ProposalsStore();

@@ -1,6 +1,6 @@
 import { SvelteMap } from "svelte/reactivity";
 import type { QueryStoreState, RecentSearch } from "./store-types";
-import { buildingTypeFilter } from "./filter-stores.svelte";
+import { buildingTypeFilter } from "./filter-stores.svelte.js";
 
 export default class QueryStore {
     private _queryStore: QueryStoreState = $state({

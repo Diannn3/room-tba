@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/svelte';
 import { describe, expect, test, vi } from 'vitest';
 import { mountAtWidth } from '@test/layout-assertions';
 
-vi.mock('$lib/app-env', () => ({
+vi.mock('$lib/utils/app-env', () => ({
 	isStagingApp: vi.fn(() => false)
 }));
 

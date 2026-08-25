@@ -9,7 +9,6 @@
   import { formatDistance, formatDuration } from "$lib/utils/campus/campus-route";
   import { formatMinutes } from "$lib/utils/schedule-import/day-stops";
   import { WEEKDAY_LABELS, WEEKDAYS, type Weekday } from "$lib/utils/schedule-import/types";
-	import { resolve } from "$app/paths";
 
   type Props = {
     embedded?: boolean;

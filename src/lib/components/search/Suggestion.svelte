@@ -11,8 +11,7 @@ import University from "@lucide/svelte/icons/university";
 import Users from "@lucide/svelte/icons/users";
 import X from "@lucide/svelte/icons/x";
 import { goto } from "$app/navigation";
-import { resolve } from "$app/paths";
-import { isPlaceLandmark } from "$lib/constants/content/categories/place"
+import type { RouteId } from "$app/types";
 import { getAppData } from "$lib/utils/context";
 import {
 	buildingPreviewFromRow,
@@ -23,6 +22,7 @@ import { slugifySegment } from "$lib/utils/site";
 import { queryStore } from "$lib/stores.svelte";
 import type { BuildingData, EventData } from "$lib/utils/types";
 	import type { QueryStoreState } from "$lib/stores/store-types";
+	import { getEntityCanonicalPath } from "$lib/utils/entity/entity-urls";
 
 let {
 	value,
@@ -60,30 +60,29 @@ function handleSuggestionClick() {
 		id,
 	});
 	queryStore.inputValue = value;
-	if (category !== "place") {
-		goto(
-			resolve(
-				`/map/${category}s/${slugifySegment(value)}${id ? `-${id}` : ""}`,
-			),
-		);
-		return;
-	}
-	if (!places || typeof id === "undefined") return;
-	const place = places.find((place) => (place.id = id));
-	if (place && isPlaceLandmark(place.category)) {
-		goto(
-			resolve(`/map/landmarks/${slugifySegment(value)}-${id}`),
-		);
-	} else {
-		goto(
-			resolve(
-				`/map/establishments/${slugifySegment(value)}-${id}`,
-			),
-		);
-	}
+	// One source of truth for category → URL: class/classes/browse/events
+	// deliberately return null (they render side-panel content, no page),
+	// and room/dorm/organization/place slugs come from their canonical builders.
+	const path = getEntityCanonicalPath(
+		{ type: "result", category, value, eventSlug },
+		{
+			room: category === "room" && typeof id !== "undefined" ? { id, code: value } : undefined,
+			dorm:
+				category === "dorm" && typeof id !== "undefined" ? { id, dormName: value } : undefined,
+			organization:
+				category === "organization" && typeof id !== "undefined"
+					? { id, name: value }
+					: undefined,
+			place: places?.find((candidate) => candidate.id === id),
+		},
+	);
+	if (!path) return;
+	// entity paths are concrete /map/<segment>/<slug> pathnames; goto() types its
+	// argument as the route-id union, so retype at this single navigation site.
+	goto(path as RouteId);
 }
 
-function handleRemoveRecent(event: MouseEvent) {
+function handleRemoveRecent() {
 	if (typeof index === "undefined") return;
 	queryStore.removeRecentSearch(index);
 }

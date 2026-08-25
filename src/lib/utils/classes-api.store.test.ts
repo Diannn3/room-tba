@@ -7,7 +7,7 @@ import type { ClassQueryPage } from '$lib/utils/classes-api';
 // (.store.test.ts so it runs under vitest, where vi.mock is hoisted + file-scoped
 // — a bun mock.module here would leak into every other test in the run.)
 const { getJSONFetch } = vi.hoisted(() => ({ getJSONFetch: vi.fn() }));
-vi.mock('$lib/local/data/utils', () => ({ getJSONFetch }));
+vi.mock('$lib/utils/local/data/utils', () => ({ getJSONFetch }));
 
 import { fetchAllClasses, fetchClassPage } from '$lib/utils/classes-api';
 

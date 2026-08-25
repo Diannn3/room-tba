@@ -220,7 +220,7 @@ export function createEntityUrlSync(context: EntityUrlSyncContext) {
 		const initialTermAware =
 			pathname === HOME_PATH ||
 			SCREEN_BY_NORMALIZED_PATH.has(pathname) ||
-			pathname.startsWith('/room/');
+			pathname.startsWith('/room/              ');
 		const initialPath = initialTermAware
 			? withTermQuery(
 					pathname,

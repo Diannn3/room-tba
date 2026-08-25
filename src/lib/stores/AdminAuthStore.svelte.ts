@@ -1,5 +1,5 @@
 import { dismissEphemeralOverlays } from '$lib/utils/overlay-stack';
-import { modalStore, plannerStore, proposalsStore } from './index.svelte';
+import { modalStore, plannerStore, proposalsStore } from './index.svelte.js';
 
 export default class AdminAuthStore {
 	isLoggedIn: boolean = $state(false);

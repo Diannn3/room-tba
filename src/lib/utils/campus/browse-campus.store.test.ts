@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, test, vi } from 'vitest';
 
-vi.mock('$lib/overlay-stack.js', () => ({
+vi.mock('$lib/utils/overlay-stack.js', () => ({
 	dismissEphemeralOverlays: vi.fn()
 }));
 

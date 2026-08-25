@@ -1,4 +1,4 @@
-import adapter from '@sveltejs/adapter-auto';
+import adapter from '@sveltejs/adapter-vercel';
 import { sveltekit } from '@sveltejs/kit/vite';
 import tailwindcss from '@tailwindcss/vite';
 import { playwright } from '@vitest/browser-playwright';
@@ -15,10 +15,15 @@ export default defineConfig({
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
 
-			// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
-			// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
-			// See https://svelte.dev/docs/kit/adapters for more information about adapters.
+			// Production runs on Vercel (room-tba.uplb.tools). adapter-vercel is
+			// required for instrumentation.server.js, which adapter-auto rejects.
 			adapter: adapter(),
+
+			experimental: {
+				instrumentation: {
+					server: true
+				}
+			},
 
 			alias: {
 				'@test': 'src/test'

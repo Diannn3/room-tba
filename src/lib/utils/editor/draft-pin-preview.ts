@@ -1,6 +1,6 @@
 import { isStudentOrganization, type OrgCategory } from '$lib/constants/content/categories/org';
 import { isPlaceLandmark, type PlaceCategory } from '$lib/constants/content/categories/place';
-import { formatCampusDateShort } from '$lib/utils/event-time';
+import { formatCampusDateShort } from '$lib/utils/event/event-time';
 import type { ProposalCreateType } from '$lib/utils/proposals/client';
 
 export type DraftPinEntityKind = 'building' | 'dorm' | 'place' | 'organization' | 'event';

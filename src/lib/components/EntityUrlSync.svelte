@@ -5,7 +5,7 @@
   import { openCampusBrowse } from "$lib/utils/campus/browse-campus";
   import { getTransitStopIndex } from "$lib/utils/transit-urls";
   import { campusTransit } from "$lib/campus.config"
-  import { getOrganizationCanonicalPath,
+  import { getBuildingCanonicalPath, getOrganizationCanonicalPath,
     getPlaceCanonicalPath,
     getRoomCanonicalPath,
   } from "$lib/utils/entity/entity-urls";

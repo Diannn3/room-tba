@@ -4,7 +4,7 @@ import {
 	normalizeFinalExamRow,
 	parseExamDate,
 	parseExamTime
-} from './final-exams/normalize';
+} from './normalize';
 
 describe('final-exams normalize', () => {
 	it('parses ISO exam dates', () => {

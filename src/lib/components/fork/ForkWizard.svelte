@@ -3,7 +3,8 @@
   import maplibregl from "maplibre-gl";
   import maplibreWorkerUrl from "maplibre-gl/dist/maplibre-gl-csp-worker.js?url";
   import "maplibre-gl/dist/maplibre-gl.css";
-  import { campusMap } from "$lib/campus.configmport {
+  import { campusMap } from "$lib/campus.config";
+  import {
     campusSlug,
     generateCampusConfig,
     vercelDeployUrl,
@@ -16,6 +17,7 @@
   // builds. Point maplibre at its self-contained CSP worker bundle.
   maplibregl.setWorkerUrl(maplibreWorkerUrl);
 
+  
   /** Plain OSM raster style — works on any deployment, no MapTiler key. */
   const OSM_STYLE: maplibregl.StyleSpecification = {
     version: 8,

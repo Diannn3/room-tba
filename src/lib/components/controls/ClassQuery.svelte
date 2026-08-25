@@ -6,7 +6,7 @@
 	import FinalExamsList from '$lib/components/room/FinalExamsList.svelte';
 	import { fetchClassPage } from '$lib/utils/classes-api';
 	import { CLASS_BROWSE_SCOPE_NOTE } from '$lib/amis/room-scheduled-types';
-	import { fetchFinalExams, FINALS_SCOPE_NOTE, looksLikeCourseCode } from '$lib/utils/final-exams';
+	import { fetchFinalExams, FINALS_SCOPE_NOTE, looksLikeCourseCode } from '$lib/utils/final-exams/final-exams';
 	import { normalizeCourseCode } from '$lib/utils/final-exams/normalize';
 	import { queryStore, sidePanelStore, termStore } from '$lib/stores.svelte';
 	import type { ClassMapValue, FinalExamRow } from '$lib/utils/types';

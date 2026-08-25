@@ -20,7 +20,7 @@
 	import { fetchAllClasses } from '$lib/utils/classes-api';
 	import { COURSE_CHANGE_DISCLAIMER } from '$lib/amis/room-scheduled-types';
 	import { changeOfMatriculationLabel} from '$lib/utils/term/term-calendar';
-	import { fetchFinalExams, FINALS_SCOPE_NOTE } from '$lib/utils/final-exams';
+	import { fetchFinalExams, FINALS_SCOPE_NOTE } from '$lib/utils/final-exams/final-exams';
 	import { isUnscheduled } from '$lib/utils/planner/conflicts';
 	import { buildPlanIcs } from '$lib/utils/planner/ics';
 	import { renderPlanToPng } from '$lib/utils/planner/plan-image';

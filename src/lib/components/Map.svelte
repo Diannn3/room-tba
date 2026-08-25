@@ -79,8 +79,8 @@ import {
 	organizationPreviewFromRow,
 	placePreviewFromRow,
 } from "$lib/utils/entity/entity-hover-preview.svelte";
-import { getEventImage } from "$lib/utils/event-images";
-import { formatCampusDateShort, formatCampusTime } from "$lib/utils/event-time";
+import { getEventImage } from "$lib/utils/event/event-images";
+import { formatCampusDateShort, formatCampusTime } from "$lib/utils/event/event-time";
 import { metersToLngLatCircle } from "$lib/utils/geolocation";
 import { observeBlockHeight } from "$lib/utils/layout-css-vars";
 import { patchEventLocations, patchPosition } from "$lib/utils/map-edit/patch-api";

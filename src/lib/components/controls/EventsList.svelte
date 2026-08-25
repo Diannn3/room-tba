@@ -7,8 +7,8 @@
 	import EntityPagination from './EntityPagination.svelte';
 	import EntityShareCopyLink from './EntityShareCopyLink.svelte';
 	import { getAppData } from '$lib/utils/context';
-	import { getEventImage } from '$lib/utils/event-images';
-	import { formatCampusRange } from '$lib/utils/event-time';
+	import { getEventImage } from '$lib/utils/event/event-images';
+	import { formatCampusRange } from '$lib/utils/event/event-time';
 	import { getEventShareUrl } from '$lib/utils/share-links';
 	import { queryStore, sidePanelStore } from '$lib/stores.svelte';
 	import type { EventData } from '$lib/utils/types';

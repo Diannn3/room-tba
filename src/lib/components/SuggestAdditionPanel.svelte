@@ -18,7 +18,7 @@
     MAX_SUBMITTER_NOTE_LENGTH,
     validateSubmitterName,
   } from "$lib/constants/contribute/proposals";
-  import { instantToCampusWallString } from "$lib/utils/event-time";
+  import { instantToCampusWallString } from "$lib/utils/event/event-time";
   import { slugifySegment } from "$lib/utils/site";
   import {
     clearSuggestAdditionDraft,

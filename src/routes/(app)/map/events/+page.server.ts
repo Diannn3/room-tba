@@ -1,6 +1,6 @@
 import type { EntityIndexItem, SeoData } from '$lib/components/seo/seo-data';
 import { entityIndexPath, getEventCanonicalPath } from '$lib/utils/entity/entity-urls';
-import { formatCampusDateLong } from '$lib/utils/event-time';
+import { formatCampusDateLong } from '$lib/utils/event/event-time';
 import { getSeoEvents } from '$lib/services/entity/event';
 import { absoluteUrl, breadcrumbSchema, jsonLd, webpageSchema } from '$lib/utils/site';
 import type { PageServerLoad } from './$types';

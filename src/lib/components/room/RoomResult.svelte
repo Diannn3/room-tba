@@ -26,7 +26,7 @@ import EntitySkeleton from "$lib/components/EntitySkeleton.svelte";
   } from "$lib/utils/contributor-drafts";
   import { entityEditorSavedMessage, fieldSaveActionLabel } from "$lib/utils/editor/field-action-label";
   import { handlePersistEntityResult } from "$lib/utils/editor/handle-persist-result";
-  import { FINALS_SCOPE_NOTE, fetchFinalExams } from "$lib/utils/final-exams";
+  import { FINALS_SCOPE_NOTE, fetchFinalExams } from "$lib/utils/final-exams/final-exams";
   import {
     getStoredProposalForEntity,
     mergeEntityRooms,

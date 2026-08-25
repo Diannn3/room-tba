@@ -1,5 +1,5 @@
 import { asc, eq, inArray } from 'drizzle-orm';
-import { getStoredEventOccurrence, getStoredEventStatus } from '$lib/utils/event-time';
+import { getStoredEventOccurrence, getStoredEventStatus } from '$lib/utils/event/event-time';
 import {
 	buildingsTable,
 	dormsTable,

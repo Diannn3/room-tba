@@ -1,6 +1,6 @@
 <script lang="ts">
   import { queryStore, termStore } from "$lib/stores.svelte";
-  import { fetchFinalExams, looksLikeCourseCode } from "$lib/utils/final-exams";
+  import { fetchFinalExams, looksLikeCourseCode } from "$lib/utils/final-exams/final-exams";
   import { normalizeCourseCode } from "$lib/utils/final-exams/normalize";
 
   interface Props {

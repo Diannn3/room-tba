@@ -6,7 +6,7 @@
  *
  * `starts_on` / `ends_on` are campus wall-clock strings, like events.
  */
-import { campusWallTimeToInstant } from './event-time';
+import { campusWallTimeToInstant } from './event/event-time';
 
 /** Minimal shape the window/unread helpers need (row or draft). */
 export type AnnouncementWindow = {

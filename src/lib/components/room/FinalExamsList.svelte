@@ -1,6 +1,6 @@
 <script lang="ts">
   import { queryStore, sidebarStore } from "$lib/stores.svelte";
-  import { formatExamDate, formatExamTimeRange } from "$lib/utils/final-exams";
+  import { formatExamDate, formatExamTimeRange } from "$lib/utils/final-exams/final-exams";
   import type { FinalExamRow } from "$lib/utils/types";
 
   interface Props {

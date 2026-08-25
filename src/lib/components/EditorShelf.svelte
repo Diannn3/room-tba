@@ -17,7 +17,7 @@
     sidePanelStore,
     toastStore,
   } from "$lib/stores.svelte";
-  import { beginEventPlacement } from "$lib/utils/event-placement";
+  import { beginEventPlacement } from "$lib/utils/event/event-placement";
 
   type Props = {
     onclose?: () => void;

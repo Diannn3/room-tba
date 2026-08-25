@@ -30,12 +30,12 @@
     persistEntityChange,
   } from "$lib/utils/proposals/client";
   import { CAMPUS_DEFAULT_CAMERA } from "$lib/constants/map/terrain"
-  import { getEventImage } from "$lib/utils/event-images";
+  import { getEventImage } from "$lib/utils/event/event-images";
   import {
     campusInputToWallString,
     formatCampusDateTime,
     instantToCampusInput,
-  } from "$lib/utils/event-time";
+  } from "$lib/utils/event/event-time";
   import { getEventShareUrl } from "$lib/utils/share-links";
   import type { EventData } from "$lib/utils/types";
   import {

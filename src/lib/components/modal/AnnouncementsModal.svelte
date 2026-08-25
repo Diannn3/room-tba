@@ -21,7 +21,7 @@
     campusWallTimeToInstant,
     formatCampusDateTime,
     instantToCampusInput,
-  } from "$lib/utils/event-time";
+  } from "$lib/utils/event/event-time";
   import type { AnnouncementData } from "$lib/utils/types";
 
   const canPublish = $derived(adminAuthStore.canPublish);

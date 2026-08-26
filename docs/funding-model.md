@@ -51,6 +51,18 @@ Checkout Session (QR Ph). The API route (`/api/donate`) needs
 `PAYMONGO_SECRET_KEY` set on Vercel; without it the page shows a
 not-configured error. Donations follow the same 40/30/30 split.
 
+## Transparency
+
+- **Anonymous by default.** `/donate` stores only the amount and an optional
+  message. Donor identity never reaches the app; PayMongo processes the
+  payment. Donors who want public credit can ask via Discord or Messenger.
+- **Ledger over slips.** We publish a transparency report: totals received,
+  itemized expenses, payout status, running balance. Raw transaction slips
+  are not published; they carry donor and account details and reference IDs.
+- **Audit trail.** Original PayMongo and GCash records are retained
+  privately. Redacted copies are available on request. Expense receipts
+  (hosting, domain renewals) may be published with personal details cropped.
+
 ## Impression guarantee
 
 - **Gold:** minimum 3,000 impressions/month

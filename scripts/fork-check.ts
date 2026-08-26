@@ -21,12 +21,12 @@ const markers: Marker[] = [
   { pattern: /\buplb\b/gi, hint: "UPLB name — rebrand to your campus." },
   { pattern: /uplbtools/gi, hint: "UPLB Tools org/domain — your org/domain." },
   {
-    pattern: /room-tba\.uplbtools\.me/gi,
+    pattern: /room-tba\.uplb\.tools/gi,
     hint: "Production URL — set to your domain (also astro.config.mjs `site:`).",
   },
   {
-    pattern: /(discord|messenger)\.uplbtools\.me/gi,
-    hint: "UPLB community subdomains — your community links, or delete.",
+    pattern: /discord\.gg\/SrVDgfcrVt/gi,
+    hint: "UPLB Discord invite — your community link, or delete.",
   },
   {
     pattern: /m\.me\/j\/[A-Za-z0-9_-]+/gi,

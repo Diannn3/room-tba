@@ -57,7 +57,21 @@ export const GET: APIRoute = async ({ url }) => {
   }
 
   try {
-    const routes = await getAllJeepneyRoutes();
+    // The service returns fares nested (fare.regular/discounted); the PDF
+    // generator expects flat fields.
+    const routes = (await getAllJeepneyRoutes()).map((route) => ({
+      id: route.id,
+      name: route.name,
+      color: route.color,
+      fareRegular: route.fare?.regular ?? Number.NaN,
+      fareDiscounted: route.fare?.discounted ?? Number.NaN,
+      directionNote: route.directionNote ?? null,
+      stops: route.stops.map((stop) => ({
+        name: stop.name,
+        lat: stop.lat,
+        lon: stop.lon,
+      })),
+    }));
     const bytes = await renderTransitMapPdf({ routes, here, format });
     const slug = here
       ? `-from-${here.name

@@ -28,11 +28,22 @@ export const GET: APIRoute = async ({ url }) => {
   if (hereParam) {
     const asId = Number(hereParam);
     const places = await getAllPlaces().catch(() => []);
+    // "Riceworld Museum" should match "Riceworld Museum (IRRI)": compare the
+    // full name and the bare name with any parenthetical suffix stripped.
+    const bare = (name: string) =>
+      name
+        .replace(/\s*\([^)]*\)\s*$/, "")
+        .trim()
+        .toLowerCase();
+    const query = hereParam.toLowerCase();
     const match =
       Number.isInteger(asId) && asId > 0
         ? places.find((p) => p.id === asId)
         : places.find(
-            (p) => p.name.trim().toLowerCase() === hereParam.toLowerCase(),
+            (p) =>
+              p.name.trim().toLowerCase() === query ||
+              bare(p.name) === query ||
+              bare(p.name) === bare(hereParam),
           );
     if (!match || match.lat == null || match.lon == null) {
       return json(

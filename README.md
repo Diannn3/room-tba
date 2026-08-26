@@ -276,6 +276,13 @@ Room TBA is funded by curated campus-relevant sponsors and one-time donations. R
 
 **[Donate](https://room-tba.uplb.tools/donate)** · **[Become a sponsor](https://room-tba.uplb.tools/sponsors)** · [Funding model](docs/funding-model.md) · [Ad policy](docs/ad-policy.md)
 
+**Transparency policy:**
+
+- Donations are anonymous by default. The app stores only the amount and an optional message, never donor identity. Donors who want public credit can ask on Discord or Messenger.
+- We publish a transparency report (totals received, itemized expenses, payout status, running balance) instead of raw transaction slips, which carry donor and account details.
+- Original PayMongo and GCash records are retained privately as the audit trail. Redacted copies are available on request. Expense receipts (hosting, domain) may be published with personal details cropped.
+- Contributor payouts are made via GCash and QR Ph, points-based per the [funding model](docs/funding-model.md).
+
 ---
 
 ## Fork this for your campus

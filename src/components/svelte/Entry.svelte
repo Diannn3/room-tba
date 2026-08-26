@@ -988,6 +988,9 @@
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+    /* The tools FAB needs its own breathing room above the controls stack —
+       without a row gap it sat flush against the location button. */
+    row-gap: 0.5rem;
     pointer-events: none;
     opacity: 1;
     transition: opacity var(--motion-duration-micro, 200ms) ease;

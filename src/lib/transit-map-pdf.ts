@@ -499,13 +499,47 @@ export async function renderTransitMapPdf(input: {
     const label = `You are here: ${here.name}`;
     const size = 10.5;
     const textW = bold.widthOfTextAtSize(label, size);
-    const lx = Math.min(
-      Math.max(p.x - textW / 2, frame.x + 4),
-      frame.x + frame.w - textW - 4,
-    );
-    const ly = p.y + 17;
-    haloText(page, label, lx, ly, size, bold, BRAND);
-    grid.claim(lx, ly);
+    const clampX = (x: number) =>
+      Math.min(Math.max(x, frame.x + 4), frame.x + frame.w - textW - 4);
+    const candidates = [
+      { x: clampX(p.x - textW / 2), y: p.y + 17 },
+      { x: clampX(p.x - textW / 2), y: p.y - 21 },
+      { x: clampX(p.x + 15), y: p.y - 3.5 },
+      { x: clampX(p.x - textW - 15), y: p.y - 3.5 },
+    ];
+    // Dense core: every near spot may be taken. Walk outward ring by ring
+    // (8 angles per ring) so the label lands somewhere free, then tie it to
+    // the star with a short leader line.
+    for (let r = 30; r <= 78; r += 16) {
+      for (let a = 0; a < 8; a++) {
+        const rad = (Math.PI / 4) * a;
+        const lx = clampX(p.x + Math.cos(rad) * r - textW / 2);
+        const ly = p.y + Math.sin(rad) * r;
+        if (ly < frame.y + 8 || ly > frame.y + frame.h - 8) continue;
+        candidates.push({ x: lx, y: ly });
+      }
+    }
+    const spot =
+      candidates.find((c) => grid.free(c.x, c.y, textW)) ?? candidates[0];
+    const midX = spot.x + textW / 2;
+    const midY = spot.y - 3.5;
+    const dx = midX - p.x;
+    const dy = midY - p.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const leaderStart = 15;
+    if (len > leaderStart + 4) {
+      page.drawLine({
+        start: {
+          x: p.x + (dx / len) * leaderStart,
+          y: p.y + (dy / len) * leaderStart,
+        },
+        end: { x: midX - (dx / len) * 4, y: midY - (dy / len) * 4 },
+        thickness: 0.8,
+        color: BRAND,
+      });
+    }
+    haloText(page, label, spot.x, spot.y, size, bold, BRAND);
+    grid.claim(spot.x, spot.y, textW);
   }
 
   // ── Legend ────────────────────────────────────────────────────────────

@@ -2,9 +2,8 @@
   import { editorChromeStore, sidebarStore } from "@lib/store.svelte";
   import AppMenu from "../status-bar/AppMenu.svelte";
   import CalendarClock from "@lucide/svelte/icons/calendar-clock";
-
-  import mapIcon from "../../../assets/icons/map.svg?url";
-  import plannerIcon from "../../../assets/icons/planner.svg?url";
+  import ClipboardPen from "@lucide/svelte/icons/clipboard-pen";
+  import Map from "@lucide/svelte/icons/map";
 
   type TabId = "map" | "planner" | "today";
 
@@ -23,7 +22,7 @@
     aria-current={active === "map" ? "page" : undefined}
     onclick={() => go("map")}
   >
-    <img src={mapIcon} alt="" width="24" height="24" decoding="async" />
+    <Map size={24} aria-hidden="true" />
     <span>Map</span>
   </button>
 
@@ -34,7 +33,7 @@
     aria-current={active === "planner" ? "page" : undefined}
     onclick={() => go("planner")}
   >
-    <img src={plannerIcon} alt="" width="24" height="24" decoding="async" />
+    <ClipboardPen size={24} aria-hidden="true" />
     <span>Planner</span>
   </button>
 
@@ -137,11 +136,6 @@
   .mobile-bottom-nav__item--active {
     background: #feeaea;
     color: #8d1437;
-  }
-
-  .mobile-bottom-nav__item--active img {
-    filter: invert(14%) sepia(62%) saturate(2800%) hue-rotate(325deg)
-      brightness(85%) contrast(95%);
   }
 
   .mobile-bottom-nav__fab {

@@ -28,7 +28,7 @@ reports:
 
 Minimum **5 points/month** to receive a payout for that month.
 
-**Payment methods:** TBD — GCash, bank transfer.
+**Payment methods:** GCash and QR Ph.
 
 ## Sponsor tiers
 

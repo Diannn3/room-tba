@@ -49,10 +49,16 @@ Database (Supabase) runs on the free tier: ₱0. USD peso equivalents are estima
 
 Total expenses to date: **≈₱3,020**.
 
+### Unpaid invoices
+
+| Due date | Item | Amount |
+|------------|------|--------|
+| 2026-08-21 | Vercel invoice: Jul 21–Aug 20 usage overages ($23.98, mostly build CPU minutes) plus Pro renewal Aug 21–Sep 20 ($20.00) | $43.98 (≈₱2,780) |
+
 ## Balance
 
-Funds held: **₱1,790.35**. Outstanding reimbursable expenses: ≈₱3,020. Current funds are applied against reimbursement, leaving ≈₱1,230 still carried personally by the maintainer into next month.
+Funds held: **₱1,790.35**. Obligations: ≈₱3,020 reimbursable expenses already paid personally, plus the ≈₱2,780 unpaid Vercel invoice, ≈₱5,800 total. Current funds cover about a third of that; the rest is carried personally by the maintainer into next month.
 
-Recurring costs are Vercel Pro at $20.00/month (≈₱1,265) and OpenCode Go at $10.00/month (≈₱630), together ≈₱1,895/month, which exceeds current monthly donation income. Donations and sponsorships fund this going forward.
+Recurring costs are Vercel (Pro $20.00/month plus usage overages, $43.98 billed this cycle, ≈₱2,780) and OpenCode Go ($10.00/month, ≈₱630), together ≈₱3,400/month at current usage, well above current monthly donation income. Donations and sponsorships fund this going forward.
 
 No contributor payouts yet; the first points tally will appear in a future report once operational costs are covered. See [funding-model.md](funding-model.md) for how revenue is allocated.

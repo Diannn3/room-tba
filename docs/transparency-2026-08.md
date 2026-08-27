@@ -40,18 +40,19 @@ All paid from a maintainer's personal card, reimbursed retroactively from donati
 
 | Date | Item | Amount |
 |---------------------|-----------------------------------------------------------|--------|
-| 2026-07-13 | uplb.tools domain registration, 1 yr (Porkbun) | $9.78 (≈₱560) |
-| 2026-08-01 | Vercel Pro hosting, Jul 21–Aug 20 (monthly, recurring) | $20.00 (≈₱1,150) |
+| 2026-07-13 | uplb.tools domain registration, 1 yr (Porkbun) | $9.78 (≈₱620) |
+| 2026-08-01 | Vercel Pro hosting, Jul 21–Aug 20 (monthly, recurring) | $20.00 (≈₱1,265) |
 | 2026-08-03 to 08-17 | Meta Ads (Facebook/Instagram promotion), 5 payments, VAT included | ₱821.06 |
+| 2026-08-10 | OpenCode Go dev tooling, Aug 10–Sep 10 (monthly, recurring; first month 50% off) | $5.00 (₱316.03) |
 
-Database (Supabase) runs on the free tier: ₱0. USD peso equivalents are estimates; exact amounts follow the card statement.
+Database (Supabase) runs on the free tier: ₱0. USD peso equivalents are estimated at ₱63.21/$ (the rate on the OpenCode charge); exact amounts follow the card statement.
 
-Total expenses to date: **≈₱2,530**.
+Total expenses to date: **≈₱3,020**.
 
 ## Balance
 
-Funds held: **₱1,790.35**. Outstanding reimbursable expenses: ≈₱2,530. Current funds are applied against reimbursement, leaving ≈₱740 still carried personally by the maintainer into next month.
+Funds held: **₱1,790.35**. Outstanding reimbursable expenses: ≈₱3,020. Current funds are applied against reimbursement, leaving ≈₱1,230 still carried personally by the maintainer into next month.
 
-Vercel Pro recurs at $20.00/month (≈₱1,150), which exceeds current monthly donation income. Donations and sponsorships fund this going forward.
+Recurring costs are Vercel Pro at $20.00/month (≈₱1,265) and OpenCode Go at $10.00/month (≈₱630), together ≈₱1,895/month, which exceeds current monthly donation income. Donations and sponsorships fund this going forward.
 
 No contributor payouts yet; the first points tally will appear in a future report once operational costs are covered. See [funding-model.md](funding-model.md) for how revenue is allocated.

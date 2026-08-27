@@ -1,6 +1,7 @@
 <script lang="ts">
   import Move from "@lucide/svelte/icons/move";
   import type { Snippet } from "svelte";
+	import { fade } from "svelte/transition";
 
   type EntityPinTone =
     | "building"
@@ -95,7 +96,7 @@
   class:central-hover-preview={useCentralHoverPreview}
   class:editable={showExpandedPin}
   class:editing
-  class:dimmed
+  class:dimmed={dimmed && !active}
   class:event-linked={eventLinked}
   class:hovered
   class:preview-suppressed={previewSuppressed}
@@ -110,6 +111,7 @@
   onkeydown={handleKeydown}
   {onpointerenter}
   {onpointerleave}
+  transition:fade={{duration:125 }}
 >
   <span class="pin-icon" aria-hidden="true">
     {@render children()}

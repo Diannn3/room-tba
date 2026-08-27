@@ -358,6 +358,10 @@ let expandedEventGroupKey = $state<string | null>(null);
 let undoingEditKey = $state<string | null>(null);
 let undoShortcutLabel = $state("Ctrl+Z");
 let editStatusMessage = $state<string | null>(null);
+let debugMapData = $state<{center: [number, number], zoomLevel: number}>({
+	center: [0, 0],
+	zoomLevel: 0
+})
 type EntityEditMove = VersionedMapMove & {
 	kind: "entity";
 	entityType: EditableEntityType;
@@ -1110,7 +1114,7 @@ let zoomLevel = $state(0);
 // offices, landmarks, establishments) only appear once zoomed in enough.
 // Buildings and dorms always show. Active (searched) and sponsored pins
 // bypass the gate so deep links and paid placements never vanish.
-const POI_MIN_ZOOM = 15.5;
+const POI_MIN_ZOOM = 18;
 const poiPinsVisible = $derived(zoomLevel >= POI_MIN_ZOOM);
 $effect(() => {
 	mapViewStore.poiPinsZoomVisible = poiPinsVisible;
@@ -1155,6 +1159,7 @@ const calculatePadding = (md: boolean): mapGl.PaddingOptions => {
 function handleZoom() {
 	if (!mapStore.mapInstance) return;
 	zoomLevel = mapStore.mapInstance.getZoom();
+	debugMapData.zoomLevel = zoomLevel;
 }
 
 function buildingEditKey(id: number) {
@@ -1830,6 +1835,8 @@ $effect(() => {
 		: "Ctrl+Z";
 });
 
+$inspect([debugMapData.center, debugMapData.zoomLevel]);
+
 $effect(() => {
 	const map = mapStore.mapInstance;
 	if (!map) return;
@@ -1860,12 +1867,26 @@ $effect(() => {
 		handleZoom();
 		map.on("zoom", handleZoom);
 		map.on("error", handleMapError);
+		map.on("contextmenu", (ev) => {
+			ev.preventDefault();
+		})
 		return () => {
 			map.off("zoom", handleZoom);
 			map.off("error", handleMapError);
 		};
 	}
 });
+
+$effect(() => {
+	const map = mapStore.mapInstance;
+	if (!map) return;
+	untrack(() => {
+		map.on("move", (ev) => {
+			const center = map.getCenter();
+			debugMapData.center = [center.lng, center.lat];
+		})
+	})
+})
 
 $effect(() => {
 	const map = mapStore.mapInstance;
@@ -1941,7 +1962,6 @@ $effect(() => {
 
 	map.on("pitch", applyDimensionLayers);
 	map.on("moveend", applyDimensionLayers);
-
 	return () => {
 		cancelled = true;
 		map.off("pitch", applyDimensionLayers);
@@ -3101,6 +3121,13 @@ let activeOrgName = $derived.by(() => {
 	return null;
 });
 
+function isInactiveMarker(markerName: string): boolean {
+	return activeOrgName !== markerName && activeBuildingName !== markerName && activeDormName !== markerName
+}
+function hasActiveMarker():boolean {
+	return activeOrgName !== null || activeBuildingName !== null || activeDormName !== null;
+}
+
 let linkedActiveEventDormIds = $derived.by(() => {
 	if (!loaded) return new Set<number>();
 	return new Set(
@@ -3430,11 +3457,10 @@ let selectedEventRouteStops = $derived.by(() => {
 								>
    									<MapEntityPin
   										label={building.buildingName}
-  										active={activeBuildingName === building.buildingName}
+  										active={!isInactiveMarker(building.buildingName)}
   										editable={canDragPin(editKey)}
   										editing={selectedEditKey === editKey}
-  										dimmed={isBuildingDimmedForEventFocus(building.id) ||
- 											isBuildingDimmedForClassHighlight(building.id)}
+  										dimmed={hasActiveMarker()}
   										eventLinked={isBuildingEventLinked(building.id)}
   										hovered={hoveredEditKey === editKey}
   										saveState={savingEditKey === editKey
@@ -3444,7 +3470,7 @@ let selectedEventRouteStops = $derived.by(() => {
 												: failedEditKey === editKey
    													? 'failed'
    													: 'idle'}
-  										labelVisible={zoomLevel >= 17 ||
+  										labelVisible={zoomLevel >= 18 ||
  											activeBuildingName === building.buildingName ||
  											isMyClassBuilding(building.id)}
   										useCentralHoverPreview={centralHoverPreview}
@@ -3512,8 +3538,8 @@ let selectedEventRouteStops = $derived.by(() => {
 									<MapEntityPin
 										label={dorm.dormName}
 										tone={dorm.isUpManaged ? 'dorm' : 'privateDorm'}
-										active={activeDormName === dorm.dormName}
-										dimmed={isDormDimmedForEventFocus(dorm.id) || classHighlightActive}
+										active={!isInactiveMarker(dorm.dormName)}
+										dimmed={hasActiveMarker()}
 										eventLinked={isDormEventLinked(dorm.id)}
 										editable={canDragPin(editKey)}
 										editing={selectedEditKey === editKey}
@@ -3525,7 +3551,7 @@ let selectedEventRouteStops = $derived.by(() => {
 												: failedEditKey === editKey
 													? 'failed'
 													: 'idle'}
-										labelVisible={zoomLevel >= 17 || activeDormName === dorm.dormName}
+										labelVisible={zoomLevel >= 18 || activeDormName === dorm.dormName}
 										useCentralHoverPreview={centralHoverPreview}
 										{previewSuppressed}
 										onpointerenter={(event) => handleDormPinPointerEnter(dorm, editKey, event)}
@@ -3550,8 +3576,8 @@ let selectedEventRouteStops = $derived.by(() => {
 									label={place.name}
 									tone={isLandmarkPlace(place) ? 'landmark' : 'establishment'}
 									active={queryStore.category === 'place' && queryStore.inputValue === place.name}
-									dimmed={classHighlightActive && pinSponsorId === undefined}
-									labelVisible={zoomLevel >= 17 ||
+									dimmed={hasActiveMarker()}
+									labelVisible={zoomLevel >= 19 ||
 										(queryStore.category === 'place' && queryStore.inputValue === place.name)}
 									sponsored={pinSponsorId !== undefined}
 									useCentralHoverPreview={centralHoverPreview}
@@ -3585,9 +3611,9 @@ let selectedEventRouteStops = $derived.by(() => {
 								<MapEntityPin
 									label={org.name}
 									tone={isStudentOrganization(org.category) ? 'organization' : 'office'}
-									active={activeOrgName === org.name}
-									dimmed={classHighlightActive}
-									labelVisible={zoomLevel >= 17 || activeOrgName === org.name}
+									active={!isInactiveMarker(org.name)}
+									dimmed={hasActiveMarker()}
+									labelVisible={(isStudentOrganization(org.category) ? zoomLevel >= 19.5 : zoomLevel >= 18.5) || activeOrgName === org.name}
 									useCentralHoverPreview={centralHoverPreview}
 									{previewSuppressed}
 									onclick={() => handleOrgMarkerClick(org.name, org.id)}

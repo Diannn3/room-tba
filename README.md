@@ -272,7 +272,7 @@ Org: [uplbtools](https://github.com/uplbtools) · Campus tool, not an official U
 
 ## Sponsors
 
-Room TBA is funded by curated campus-relevant sponsors and one-time donations. Revenue supports core team incentives (40%), contributor payouts (30%), and operational expenses (30%).
+Room TBA is funded by curated campus-relevant sponsors and one-time donations. Revenue covers operational expenses first (hosting, database, domains, promotion), including retroactive reimbursement of costs maintainers paid personally; the remainder funds contributor payouts and core team incentives. Every peso is tracked in public transparency reports.
 
 **[Donate](https://room-tba.uplb.tools/donate)** · **[Become a sponsor](https://room-tba.uplb.tools/sponsors)** · [Funding model](docs/funding-model.md) · [Ad policy](docs/ad-policy.md)
 

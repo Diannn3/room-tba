@@ -1,0 +1,165 @@
+---
+export const prerender = true;
+
+import WikiLayout from "@layouts/WikiLayout.astro";
+import WikiProvenance from "../../components/wiki/WikiProvenance.astro";
+import { breadcrumbSchema, jsonLd, webpageSchema } from "@lib/site";
+
+const title = "Transparency reports | Room TBA Wiki";
+const description =
+  "Where donation and sponsor money goes: monthly ledgers of funds received, expenses, and reimbursements for Room TBA and UPLB Tools.";
+const structuredData = jsonLd(
+  webpageSchema({ title, description, path: "/wiki/transparency" }),
+  breadcrumbSchema([
+    { name: "Home", path: "/" },
+    { name: "Wiki", path: "/wiki" },
+    { name: "Transparency reports", path: "/wiki/transparency" },
+  ]),
+);
+---
+
+<WikiLayout
+  {title}
+  {description}
+  canonicalPath="/wiki/transparency"
+  {structuredData}
+  crumb="Transparency reports"
+>
+  <article class="wiki-article">
+    <header class="article-hero">
+      <p class="wiki-eyebrow">Money</p>
+      <h1 class="wiki-title">Transparency reports</h1>
+      <p class="wiki-lede">
+        Room TBA runs on donations and sponsorships. This page is the public
+        ledger: what came in, what it paid for, and what is still owed. We
+        publish these ledgers instead of raw transaction slips, which carry
+        donor and account details. Donations are anonymous by default; donors
+        are named only with consent. Original PayMongo and GCash records are
+        retained privately, and redacted copies are available on request.
+      </p>
+      <p class="article-meta">
+        How revenue is allocated: expenses first (hosting, database, domains,
+        promotion), then contributor payouts and core team incentives. See the
+        <a
+          class="wiki-link"
+          href="https://github.com/uplbtools/room-tba/blob/main/docs/funding-model.md"
+          >funding model</a
+        >.
+      </p>
+      <WikiProvenance sourcePath="src/pages/wiki/transparency.astro" />
+    </header>
+
+    <section>
+      <h2 id="2026-08">August 2026</h2>
+      <p>
+        First report. Covers all funds received since donations opened
+        (2026-07-18 to 2026-08-26) plus prior expenses.
+      </p>
+
+      <h3>Donations received</h3>
+      <p>Via <a class="wiki-link" href="/donate">/donate</a> (PayMongo QR Ph):</p>
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Gross</th><th>Fee</th><th>Net</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>2026-08-03</td><td>₱100.00</td><td>₱1.50</td><td>₱98.50</td></tr>
+          <tr><td>2026-08-03</td><td>₱500.00</td><td>₱7.50</td><td>₱492.50</td></tr>
+          <tr><td>2026-08-04</td><td>₱10.00</td><td>₱0.15</td><td>₱9.85</td></tr>
+          <tr><td>2026-08-04</td><td>₱40.00</td><td>₱0.60</td><td>₱39.40</td></tr>
+          <tr><td>2026-08-04</td><td>₱50.00</td><td>₱0.75</td><td>₱49.25</td></tr>
+          <tr><td>2026-08-04</td><td>₱150.00</td><td>₱2.25</td><td>₱147.75</td></tr>
+          <tr><td>2026-08-05</td><td>₱50.00</td><td>₱0.75</td><td>₱49.25</td></tr>
+          <tr><td>2026-08-06</td><td>₱20.00</td><td>₱0.30</td><td>₱19.70</td></tr>
+          <tr><td>2026-08-07</td><td>₱40.00</td><td>₱0.60</td><td>₱39.40</td></tr>
+          <tr><td>2026-08-07</td><td>₱50.00</td><td>₱0.75</td><td>₱49.25</td></tr>
+          <tr><td>2026-08-08</td><td>₱50.00</td><td>₱0.75</td><td>₱49.25</td></tr>
+          <tr><td>2026-08-08</td><td>₱200.00</td><td>₱3.00</td><td>₱197.00</td></tr>
+          <tr><td>2026-08-09</td><td>₱50.00</td><td>₱0.75</td><td>₱49.25</td></tr>
+        </tbody>
+      </table>
+      <p>
+        13 donations: gross <strong>₱1,310.00</strong>, PayMongo fees
+        <strong>₱19.65</strong>, net <strong>₱1,290.35</strong>.
+      </p>
+      <p>
+        Direct GCash: <strong>₱500.00</strong> from the UPLB Student Help Desk
+        (named with consent).
+      </p>
+      <p>
+        Total received, net of fees: <strong>₱1,790.35</strong>.
+      </p>
+
+      <h3>Expenses</h3>
+      <p>
+        All paid from a maintainer's personal card, reimbursed retroactively
+        from donations as funds allow.
+      </p>
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Item</th><th>Amount</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>2026-07-13</td>
+            <td>uplb.tools domain registration, 1 yr (Porkbun)</td>
+            <td>$9.78 (≈₱620)</td>
+          </tr>
+          <tr>
+            <td>2026-08-01</td>
+            <td>Vercel Pro hosting, Jul 21–Aug 20 (monthly, recurring)</td>
+            <td>$20.00 (≈₱1,265)</td>
+          </tr>
+          <tr>
+            <td>2026-08-03 to 08-17</td>
+            <td>Meta Ads (Facebook/Instagram promotion), 5 payments, VAT included</td>
+            <td>₱821.06</td>
+          </tr>
+          <tr>
+            <td>2026-08-10</td>
+            <td>OpenCode Go dev tooling, Aug 10–Sep 10 (monthly, recurring; first month 50% off)</td>
+            <td>$5.00 (₱316.03)</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Database (Supabase) runs on the free tier: ₱0. USD peso equivalents are
+        estimated at ₱63.21/$; exact amounts follow the card statement. Total
+        expenses to date: <strong>≈₱3,020</strong>.
+      </p>
+
+      <h3>Unpaid invoices</h3>
+      <table>
+        <thead>
+          <tr><th>Due date</th><th>Item</th><th>Amount</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>2026-08-21</td>
+            <td>Vercel invoice: Jul 21–Aug 20 usage overages ($23.98, mostly build CPU minutes) plus Pro renewal Aug 21–Sep 20 ($20.00)</td>
+            <td>$43.98 (≈₱2,780)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Balance</h3>
+      <p>
+        Funds held: <strong>₱1,790.35</strong>. Obligations: ≈₱3,020
+        reimbursable expenses already paid personally, plus the ≈₱2,780 unpaid
+        Vercel invoice, ≈₱5,800 total. Current funds cover about a third of
+        that; the rest is carried personally by the maintainer into next
+        month.
+      </p>
+      <p>
+        Recurring costs are Vercel (Pro $20.00/month plus usage overages,
+        $43.98 billed this cycle, ≈₱2,780) and OpenCode Go ($10.00/month,
+        ≈₱630), together ≈₱3,400/month at current usage, well above current
+        monthly donation income.
+        <a class="wiki-link" href="/donate">Donations</a> and
+        <a class="wiki-link" href="/sponsors">sponsorships</a> fund this going
+        forward. No contributor payouts yet; the first points tally will appear
+        in a future report once operational costs are covered.
+      </p>
+    </section>
+  </article>
+</WikiLayout>

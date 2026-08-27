@@ -237,7 +237,7 @@ See **[CONTRIBUTING.md](CONTRIBUTING.md)** for how to help:
 - **Write code:** branch off `staging`, PR to `staging` ([developer guide](docs/developer-guide.md))
 - **Maintainers / agents:** [AGENTS.md](AGENTS.md) · [agent tooling](docs/agent-tooling.md) (`bun run install:agent-tooling` + `install:agent-plugins` once per machine)
 
-[Good first issues](https://github.com/uplbtools/room-tba/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) · **Data:** label `data` · **QA:** label `qa` · **Chat with the team:** [Messenger](https://messenger.uplbtools.me/contribute)
+[Good first issues](https://github.com/uplbtools/room-tba/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) · **Data:** label `data` · **QA:** label `qa` · **Chat with the team:** [Messenger](https://room-tba.uplb.tools/messenger/contribute)
 
 Implementers: [issue hygiene](docs/issue-hygiene.md) · [PR QA process](docs/agentic-qa-process.md)
 

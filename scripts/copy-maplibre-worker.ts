@@ -27,6 +27,6 @@ const out = join(root, "public", "_astro");
 
 mkdirSync(out, { recursive: true });
 for (const file of ["maplibre-gl-worker.mjs", "maplibre-gl-shared.mjs"]) {
-	copyFileSync(join(dist, file), join(out, file));
-	console.log(`copied ${file} → public/_astro/`);
+  copyFileSync(join(dist, file), join(out, file));
+  console.log(`copied ${file} → public/_astro/`);
 }

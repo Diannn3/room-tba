@@ -4,13 +4,14 @@ Room TBA is funded by curated, campus-relevant sponsors (see
 [ad-policy.md](ad-policy.md) for what we do and don't accept). This document
 describes where the money goes and what sponsors get.
 
-## Revenue split
+## Where the money goes
 
-| Share | Goes to                                                            |
-| ----- | ------------------------------------------------------------------ |
-| 40%   | Core team incentives                                               |
-| 30%   | Top maintainers / contributor payouts                              |
-| 30%   | Operational expenses (hosting, database, domains, upgrades)        |
+Revenue (sponsorships and donations) covers operational expenses first:
+hosting, database, domains, and promotion, including retroactive
+reimbursement of costs maintainers paid personally. What remains funds
+contributor payouts (see below) and core team incentives. Every peso is
+tracked in public transparency reports (see
+[Transparency](#transparency)).
 
 ## Contributor payouts
 
@@ -49,9 +50,12 @@ registered as a `places` entity — see the map-pin rules in
 `/donate` accepts one-time donations (₱10–₱50,000) through a PayMongo
 Checkout Session (QR Ph). The API route (`/api/donate`) needs
 `PAYMONGO_SECRET_KEY` set on Vercel; without it the page shows a
-not-configured error. Donations follow the same 40/30/30 split.
+not-configured error. Donations follow the same expenses-first model
+above.
 
 ## Transparency
+
+Published reports: [August 2026](transparency-2026-08.md)
 
 - **Anonymous by default.** `/donate` stores only the amount and an optional
   message. Donor identity never reaches the app; PayMongo processes the

@@ -312,27 +312,135 @@
 									</small>
 								{/if}
 							</div>
-							<select
-								value={user.role}
-								disabled={savingUserId === user.id}
-								onchange={(e) =>
-									changeRole(
-										user,
-										(e.currentTarget as HTMLSelectElement).value as ManagedUser['role']
-									)}
-							>
-								<option value="admin">Admin</option>
-								<option value="editor">Editor</option>
-								<option value="contributor">Contributor</option>
-							</select>
-							<button
-								type="button"
-								class="settings-link-btn"
-								disabled={savingUserId === user.id}
-								onclick={() => toggleActive(user)}
-							>
-								{user.isActive ? 'Deactivate' : 'Reactivate'}
-							</button>
+							<div class="user-row-actions">
+								<select
+									value={user.role}
+									disabled={savingUserId === user.id || moderationSaving}
+									aria-label={`Role for ${user.displayName}`}
+									onchange={(e) =>
+										changeRole(
+											user,
+											(e.currentTarget as HTMLSelectElement).value as ManagedUser['role']
+										)}
+								>
+									<option value="admin">Admin</option>
+									<option value="editor">Editor</option>
+									<option value="contributor">Contributor</option>
+								</select>
+								<button
+									type="button"
+									class="settings-link-btn"
+									disabled={savingUserId === user.id || moderationSaving}
+									onclick={() => toggleActive(user)}
+								>
+									{user.isActive ? 'Deactivate' : 'Reactivate'}
+								</button>
+								{#if user.contributorProfile}
+									<button
+										type="button"
+										class="settings-link-btn"
+										aria-expanded={moderationUserId === user.id}
+										onclick={() => openModeration(user)}
+									>
+										Moderate profile
+									</button>
+								{/if}
+							</div>
+							{#if user.contributorProfile && moderationUserId === user.id}
+								<section class="moderation-panel" aria-label={`Moderate ${user.displayName}`}>
+									<label for={`moderation-reason-${user.id}`}>Reason for moderation</label>
+									<textarea
+										id={`moderation-reason-${user.id}`}
+										bind:value={moderationReason}
+										maxlength="1000"
+										rows="2"
+										placeholder="Required for hide or unsafe-content removal"
+										disabled={moderationSaving}
+									></textarea>
+									<p class="moderation-hint">
+										Reason is submitted with each action and retained with its audit context.
+									</p>
+									<div class="moderation-actions">
+										{#if user.contributorProfile.isModeratorHidden}
+											<button
+												type="button"
+												class="settings-link-btn"
+												disabled={moderationSaving}
+												onclick={() => moderate(user, 'restore')}
+											>
+												Restore profile
+											</button>
+										{:else}
+											<button
+												type="button"
+												class="settings-link-btn"
+												disabled={moderationSaving || !moderationReason.trim()}
+												onclick={() => moderate(user, 'hide')}
+											>
+												Hide profile
+											</button>
+										{/if}
+										{#if user.contributorProfile.avatarUrl}
+											<button
+												type="button"
+												class="settings-link-btn settings-link-btn--danger"
+												disabled={moderationSaving || !moderationReason.trim()}
+												onclick={() => moderate(user, 'avatar')}
+											>
+												Remove avatar reference
+											</button>
+										{/if}
+									</div>
+									{#if user.contributorProfile.socialLinks.length}
+										<div class="moderation-links">
+											<strong>Social links</strong>
+											{#each user.contributorProfile.socialLinks as link (link.id)}
+												<div class="moderation-link">
+													<a href={link.url} target="_blank" rel="noopener noreferrer">{link.label || link.kind}</a>
+													<button
+														type="button"
+														class="settings-link-btn settings-link-btn--danger"
+														disabled={moderationSaving || !moderationReason.trim()}
+														onclick={() => moderate(user, 'link', link.id)}
+													>
+														Remove
+													</button>
+												</div>
+											{/each}
+										</div>
+									{/if}
+									<button
+										type="button"
+										class="settings-link-btn"
+										disabled={moderationSaving || auditLoadingProfileId === user.contributorProfile?.id}
+										onclick={() => {
+											if (user.contributorProfile) toggleAudits(user.contributorProfile.id);
+										}}
+									>
+										{#if auditLoadingProfileId === user.contributorProfile.id}
+											Loading audit history…
+										{:else if auditsByProfileId[user.contributorProfile.id]}
+											Hide audit history
+										{:else}
+											Show audit history
+										{/if}
+									</button>
+									{#if auditsByProfileId[user.contributorProfile.id]}
+										<div class="audit-history" aria-label="Read-only audit history">
+											{#if auditsByProfileId[user.contributorProfile.id]?.rows.length}
+												{#each auditsByProfileId[user.contributorProfile.id]?.rows ?? [] as audit (audit.id)}
+													<div class="audit-entry">
+														<strong>{audit.action}</strong>
+														<span>v{audit.fromVersion ?? '—'} → v{audit.toVersion}</span>
+														<small>
+															{audit.actorDisplayName || 'Unknown actor'} · {new Date(audit.createdAt).toLocaleString()}
+														</small>
+														{#if audit.after?.moderationReason}<small>Reason: {audit.after.moderationReason}</small>{/if}
+													</div>
+												{/each}
+											{:else}
+												<small>No audit entries.</small>
+											{/if}
 						</li>
 					{/each}
 				</ul>

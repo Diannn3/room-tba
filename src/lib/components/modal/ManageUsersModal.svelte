@@ -14,6 +14,35 @@
 
 	const reducedMotion = new MediaQuery('(prefers-reduced-motion: reduce)');
 
+	type ContributorProfile = {
+		id: number;
+		isModeratorHidden: boolean;
+		avatarUrl: string | null;
+		socialLinks: Array<{
+			id: number;
+			kind: string;
+			label: string | null;
+			url: string;
+			isPublic: boolean;
+		}>;
+	};
+
+	type ContributorAudit = {
+		id: number;
+		action: string;
+		actorDisplayName: string | null;
+		fromVersion: number | null;
+		toVersion: number;
+		createdAt: string;
+		after?: { moderationReason?: string };
+	};
+
+	type ContributorAudits = {
+		rows: ContributorAudit[];
+		limit: number;
+		offset: number;
+	};
+
 	type ManagedUser = {
 		id: number;
 		username: string;
@@ -21,6 +50,7 @@
 		email: string | null;
 		role: 'admin' | 'editor' | 'contributor';
 		isActive: boolean;
+		contributorProfile?: ContributorProfile | null;
 	};
 
 	let frameEl = $state<HTMLDivElement | null>(null);

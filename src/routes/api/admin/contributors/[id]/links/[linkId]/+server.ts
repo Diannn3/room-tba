@@ -9,5 +9,23 @@ import {
 	serverError
 } from '../../route-utils';
 
-    style: improve Map UX by updating MapEntityPin and Map component
-    - used proper zoomlevels and dimmed states to properly convey emphasis on elements
+export const DELETE: RequestHandler = async ({ cookies, params, request }) => {
+	const auth = await editorSessionOrUnauthorized(cookies, { requireAdmin: true });
+	if (auth instanceof Response) return auth;
+
+	const profileId = parsePositiveId(params.id);
+	const linkId = parsePositiveId(params.linkId);
+	if (profileId === null || linkId === null) return json({ error: 'Invalid contributor or social link ID.' }, 400);
+
+	const parsed = await readReason(request);
+	if (!parsed.ok) return parsed.response;
+
+	try {
+		const profile = await removeContributorSocialLink(profileId, linkId, auth.session.id, parsed.reason);
+		return json({ success: true, profile });
+	} catch (error) {
+		const response = errorFromContributorProfile(error);
+		if (response) return response;
+		return serverError('Failed to remove social link.', error);
+	}
+};

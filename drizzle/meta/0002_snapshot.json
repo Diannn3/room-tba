@@ -3598,3 +3598,47 @@
         "rejected",
         "needs_changes",
         "withdrawn"
+      ]
+    },
+    "public.event_category": {
+      "name": "event_category",
+      "schema": "public",
+      "values": [
+        "tradition",
+        "fair",
+        "ceremony",
+        "sports",
+        "other"
+      ]
+    },
+    "public.event_location_anchor": {
+      "name": "event_location_anchor",
+      "schema": "public",
+      "values": [
+        "building",
+        "dorm",
+        "custom"
+      ]
+    },
+    "public.event_recurrence": {
+      "name": "event_recurrence",
+      "schema": "public",
+      "values": [
+        "none",
+        "annual",
+        "every_1st_sem",
+        "every_2nd_sem"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

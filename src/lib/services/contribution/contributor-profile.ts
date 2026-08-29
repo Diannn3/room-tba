@@ -148,3 +148,153 @@ export function normalizeContributorSlug(value: unknown): string {
 		.normalize('NFKD')
 		.trim()
 		.toLowerCase()
+		.replace(/[^a-z0-9]+/gu, '-')
+		.replace(/^-+|-+$/gu, '')
+		.slice(0, 120);
+	if (!slug) throw new ContributorProfileError('Contributor slug cannot be empty.');
+	return slug;
+}
+function legacyProfileUrl(value: string): string | null {
+	const trimmed = value.trim();
+	if (
+		!trimmed ||
+		trimmed.length > CONTRIBUTOR_LINK_URL_MAX_LENGTH ||
+		hasDisallowedControlCharacters(trimmed)
+	) {
+		return null;
+	}
+	try {
+		const parsed = new URL(trimmed);
+		if (parsed.protocol !== 'https:' || parsed.username || parsed.password || parsed.hash)
+			return null;
+		parsed.hostname = parsed.hostname.toLowerCase();
+		return parsed.toString();
+	} catch {
+		return null;
+	}
+}
+function roleLabel(role: ContributorRole): ContributorRoleLabel {
+	return role === 'admin' ? 'Admin' : role === 'editor' ? 'Editor' : 'Contributor';
+}
+function profileAvatar(value: unknown): string | null {
+	const parsed = parseImageUrl(value, env.R2_PUBLIC_URL, 'Avatar');
+	return parsed.ok ? parsed.imageUrl : null;
+}
+function validateBio(value: unknown): string {
+	if (typeof value !== 'string') throw new ContributorProfileError('Bio must be a string.');
+	const bio = value.trim();
+	if (bio.length > CONTRIBUTOR_BIO_MAX_LENGTH)
+		throw new ContributorProfileError(
+			`Bio cannot exceed ${CONTRIBUTOR_BIO_MAX_LENGTH} characters.`
+		);
+	if (hasDisallowedControlCharacters(bio, true))
+		throw new ContributorProfileError('Bio contains invalid control characters.');
+	return bio;
+}
+/** Parse and normalize the complete owner document before opening a transaction. */
+function moderationReason(value: string | undefined): string {
+	const reason = value?.trim() ?? '';
+	if (!reason) throw new ContributorProfileError('Moderation reason is required.');
+	if (reason.length > 500 || hasDisallowedControlCharacters(reason, true))
+		throw new ContributorProfileError('Moderation reason is invalid.');
+	return reason;
+}
+export function parseContributorProfileUpdate(
+	value: unknown,
+	options: { requireMessagingDisclosure?: boolean } = {}
+): ContributorProfileUpdate {
+	if (!isRecord(value))
+		throw new ContributorProfileError('Contributor profile update must be an object.');
+	assertExactKeys(
+		value,
+		[
+			'version',
+			'bio',
+			'isPublic',
+			'showInCredits',
+			'messagingDisclosureAcknowledged',
+			'socialLinks'
+		],
+		'Contributor profile update'
+	);
+	if (!Number.isSafeInteger(value.version) || (value.version as number) < 1)
+		throw new ContributorProfileError('Version must be a positive integer.');
+	if (typeof value.isPublic !== 'boolean' || typeof value.showInCredits !== 'boolean')
+		throw new ContributorProfileError('Profile visibility values must be booleans.');
+	if (typeof value.messagingDisclosureAcknowledged !== 'boolean')
+		throw new ContributorProfileError('Messaging disclosure must be a boolean.');
+	if (!Array.isArray(value.socialLinks))
+		throw new ContributorProfileError('Social links must be an array.');
+	if (value.socialLinks.length > MAX_SOCIAL_LINKS)
+		throw new ContributorProfileError(`No more than ${MAX_SOCIAL_LINKS} social links are allowed.`);
+	const socialLinks = value.socialLinks.map((link, index) => {
+		try {
+			return normalizeSocialLinkInput(link, index);
+		} catch (error) {
+			if (error instanceof Error) throw new ContributorProfileError(error.message);
+			throw error;
+		}
+	});
+	validateSocialLinkMultiplicity(socialLinks);
+	if (
+		options.requireMessagingDisclosure !== false &&
+		hasPublicMessagingLink(socialLinks) &&
+		!value.messagingDisclosureAcknowledged
+	)
+		throw new ContributorProfileError('Messaging links require explicit disclosure.');
+	return {
+		version: value.version as number,
+		bio: validateBio(value.bio),
+		isPublic: value.isPublic,
+		showInCredits: value.showInCredits,
+		messagingDisclosureAcknowledged: value.messagingDisclosureAcknowledged,
+		socialLinks
+	};
+}
+/** Alias for route packets that call the owner document a profile input. */
+export const parseContributorProfileInput = parseContributorProfileUpdate;
+
+function toEditable(
+	profile: typeof contributorProfilesTable.$inferSelect,
+	user: typeof adminUsersTable.$inferSelect,
+	links: (typeof contributorSocialLinksTable.$inferSelect)[]
+): ContributorEditableProfile {
+	return {
+		id: profile.id,
+		userId: profile.userId,
+		slug: profile.slug,
+		displayName: user.displayName ?? user.username,
+		role: roleLabel(user.role as ContributorRole),
+		bio: profile.bio,
+		isPublic: profile.isPublic,
+		isModeratorHidden: profile.isModeratorHidden,
+		showInCredits: user.showInCredits,
+		avatarUrl: profileAvatar(user.avatarUrl),
+		version: profile.version,
+		updatedAt: profile.updatedAt,
+		socialLinks: sortSocialLinks(links).map((link) => ({
+			id: link.id,
+			kind: link.kind as SocialKind,
+			label: link.label,
+			url: link.url,
+			isPublic: link.isPublic,
+			createdAt: link.createdAt,
+			updatedAt: link.updatedAt
+		}))
+	};
+}
+function toPublic(
+	profile: typeof contributorProfilesTable.$inferSelect,
+	user: typeof adminUsersTable.$inferSelect,
+	links: (typeof contributorSocialLinksTable.$inferSelect)[]
+): ContributorPublicProfile {
+	return {
+		slug: profile.slug,
+		displayName: user.displayName ?? user.username,
+		role: roleLabel(user.role as ContributorRole),
+		bio: profile.bio,
+		avatarUrl: profileAvatar(user.avatarUrl),
+		socialLinks: sortSocialLinks(links.filter((link) => link.isPublic)).map((link) => ({
+			kind: link.kind as SocialKind,
+			label: link.label,
+			url: link.url

@@ -15,8 +15,9 @@ import {
 	time,
 	timestamp,
 	uniqueIndex,
+	varchar,
 	uuid,
-	varchar
+	check
 } from 'drizzle-orm/pg-core';
 import type { EntityPhoto } from '$lib/utils/entity/entity-photos';
 
@@ -46,6 +47,22 @@ export const editProposalStatusEnum = pgEnum('edit_proposal_status', [
 	'rejected',
 	'needs_changes',
 	'withdrawn'
+]);
+export const contributorSocialKindEnum = pgEnum('contributor_social_kind', [
+	'github',
+	'website',
+	'discord',
+	'messenger',
+	'linkedin',
+	'custom'
+]);
+export const contributorProfileAuditActionEnum = pgEnum('contributor_profile_audit_action', [
+	'create',
+	'update',
+	'publish',
+	'hide',
+	'restore',
+	'remove_link'
 ]);
 
 // Academic terms. `id` mirrors the CRS/SAIS term_id (e.g. 1252) rather than

@@ -19,6 +19,7 @@
 		"apply:migrations": "bun run scripts/apply-migrations.ts",
 		"apply:migrations:prod": "bun run scripts/apply-migrations.ts --prod",
 		"check:migrations": "bun run scripts/check-migrations.ts",
+		"generate:pglite-schema": "bun scripts/generate-pglite-schema.ts",
 		"db:generate": "drizzle-kit generate",
 		"db:studio": "drizzle-kit studio"
 	},

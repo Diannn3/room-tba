@@ -298,3 +298,153 @@ function toPublic(
 			kind: link.kind as SocialKind,
 			label: link.label,
 			url: link.url
+		}))
+	};
+}
+export type QueryDb = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
+async function loadProfileById(queryDb: QueryDb, userId: number) {
+	const [row] = await queryDb
+		.select({ profile: contributorProfilesTable, user: adminUsersTable })
+		.from(contributorProfilesTable)
+		.innerJoin(adminUsersTable, eq(adminUsersTable.id, contributorProfilesTable.userId))
+		.where(eq(contributorProfilesTable.userId, userId))
+		.limit(1);
+	if (!row) return null;
+	const links = await queryDb
+		.select()
+		.from(contributorSocialLinksTable)
+		.where(eq(contributorSocialLinksTable.profileId, row.profile.id))
+		.orderBy(asc(contributorSocialLinksTable.createdAt));
+	return { ...row, links };
+}
+/** Return owner fields and all links, including private links. */
+export async function getContributorProfileForOwner(
+	userId: number
+): Promise<ContributorEditableProfile | null> {
+	const loaded = await loadProfileById(db, userId);
+	if (!loaded || !loaded.user.isActive || loaded.user.deletedAt) return null;
+	return toEditable(loaded.profile, loaded.user, loaded.links);
+}
+/** Return public profile, collapsing private, missing, inactive, deleted, and hidden states to null. */
+export async function getPublicContributorProfile(
+	slug: string
+): Promise<ContributorPublicProfile | null> {
+	const [row] = await db
+		.select({ profile: contributorProfilesTable, user: adminUsersTable })
+		.from(contributorProfilesTable)
+		.innerJoin(adminUsersTable, eq(adminUsersTable.id, contributorProfilesTable.userId))
+		.where(
+			and(
+				eq(contributorProfilesTable.slug, slug),
+				eq(contributorProfilesTable.isPublic, true),
+				eq(contributorProfilesTable.isModeratorHidden, false),
+				eq(adminUsersTable.isActive, true),
+				isNull(adminUsersTable.deletedAt)
+			)
+		)
+		.limit(1);
+	if (!row) return null;
+	const links = await db
+		.select()
+		.from(contributorSocialLinksTable)
+		.where(eq(contributorSocialLinksTable.profileId, row.profile.id))
+		.orderBy(asc(contributorSocialLinksTable.createdAt));
+	return toPublic(row.profile, row.user, links);
+}
+/** Read a profile by its database identifier for authorized moderation screens. */
+export async function getContributorProfileForAdmin(
+	profileId: number
+): Promise<ContributorEditableProfile | null> {
+	const [row] = await db
+		.select({ profile: contributorProfilesTable, user: adminUsersTable })
+		.from(contributorProfilesTable)
+		.innerJoin(adminUsersTable, eq(adminUsersTable.id, contributorProfilesTable.userId))
+		.where(eq(contributorProfilesTable.id, profileId))
+		.limit(1);
+	if (!row) return null;
+	const links = await db
+		.select()
+		.from(contributorSocialLinksTable)
+		.where(eq(contributorSocialLinksTable.profileId, profileId))
+		.orderBy(asc(contributorSocialLinksTable.createdAt));
+	return toEditable(row.profile, row.user, links);
+}
+/** Read profile state by account ID for the admin user roster. */
+export async function getContributorProfileForAdminByUserId(
+	userId: number
+): Promise<ContributorEditableProfile | null> {
+	const loaded = await loadProfileById(db, userId);
+	return loaded ? toEditable(loaded.profile, loaded.user, loaded.links) : null;
+}
+
+/** Alias useful to admin callers that identify accounts by admin_users.id. */
+export const getContributorProfileByUserId = getContributorProfileForOwner;
+function snapshot(
+	profile: typeof contributorProfilesTable.$inferSelect,
+	user: typeof adminUsersTable.$inferSelect,
+	links: (typeof contributorSocialLinksTable.$inferSelect)[],
+	reason?: string
+): ContributorProfileSnapshot {
+	const base = {
+		slug: profile.slug,
+		displayName: user.displayName ?? user.username,
+		role: roleLabel(user.role as ContributorRole),
+		bio: profile.bio,
+		isPublic: profile.isPublic,
+		isModeratorHidden: profile.isModeratorHidden,
+		showInCredits: user.showInCredits,
+		avatarUrl: profileAvatar(user.avatarUrl),
+		socialLinks: sortSocialLinks(links).map((link) => ({
+			kind: link.kind as SocialKind,
+			label: link.label,
+			url: link.url,
+			isPublic: link.isPublic
+		}))
+	};
+	return reason ? { ...base, moderationReason: reason } : base;
+}
+function sanitizedSnapshot(value: unknown): ContributorProfileSnapshot | null {
+	if (!isRecord(value)) return null;
+	const links = Array.isArray(value.socialLinks)
+		? value.socialLinks.filter(isRecord).flatMap((link) =>
+				typeof link.kind === 'string' &&
+				link.kind in SOCIAL_KIND_METADATA &&
+				typeof link.url === 'string' &&
+				typeof link.isPublic === 'boolean'
+					? [
+							{
+								kind: link.kind as SocialKind,
+								label: typeof link.label === 'string' ? link.label : null,
+								url: link.url,
+								isPublic: link.isPublic
+							}
+						]
+					: []
+			)
+		: [];
+	if (
+		typeof value.slug !== 'string' ||
+		typeof value.displayName !== 'string' ||
+		typeof value.role !== 'string' ||
+		typeof value.bio !== 'string' ||
+		typeof value.isPublic !== 'boolean' ||
+		typeof value.isModeratorHidden !== 'boolean' ||
+		typeof value.showInCredits !== 'boolean'
+	)
+		return null;
+	return {
+		slug: value.slug,
+		displayName: value.displayName,
+		role: value.role as ContributorRoleLabel,
+		bio: value.bio,
+		isPublic: value.isPublic,
+		isModeratorHidden: value.isModeratorHidden,
+		showInCredits: value.showInCredits,
+		avatarUrl: typeof value.avatarUrl === 'string' ? profileAvatar(value.avatarUrl) : null,
+		moderationReason:
+			typeof value.moderationReason === 'string' ? value.moderationReason.slice(0, 500) : undefined,
+		socialLinks: links
+	};
+}
+/** Strip unknown fields from persisted audit JSON before returning it. */
+export const sanitizeContributorProfileSnapshot = sanitizedSnapshot;

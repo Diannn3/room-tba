@@ -148,3 +148,116 @@ export function validateSocialUrl(kind: SocialKind, value: unknown): string {
 			}
 			break;
 		case 'linkedin':
+			if (
+				!APPROVED_LINKEDIN_HOSTS[host] ||
+				!supportedPath(path, /^\/in\/[A-Za-z0-9][A-Za-z0-9-_%]{0,99}$/u)
+			) {
+				throw new ContributorProfileValidationError(
+					'LinkedIn URL must point to a LinkedIn profile.'
+				);
+			}
+			break;
+		case 'discord':
+			if (
+				!(
+					(host === 'discord.gg' && supportedPath(path, /^\/[A-Za-z0-9_-]{2,100}$/u)) ||
+					(APPROVED_DISCORD_HOSTS[host] &&
+						supportedPath(path, /^\/invite\/[A-Za-z0-9_-]{2,100}$/u)) ||
+					(APPROVED_DISCORD_HOSTS[host] && supportedPath(path, /^\/users\/[0-9]{2,30}$/u))
+				)
+			) {
+				throw new ContributorProfileValidationError(
+					'Discord URL must point to an invite or profile.'
+				);
+			}
+			break;
+		case 'messenger':
+			if (
+				!(
+					(host === 'm.me' && supportedPath(path, /^\/[A-Za-z0-9._-]{1,100}$/u)) ||
+					(host === 'messenger.com' && supportedPath(path, /^\/t\/[A-Za-z0-9._-]{1,100}$/u)) ||
+					(host === 'facebook.com' &&
+						supportedPath(path, /^\/messages\/t\/[A-Za-z0-9._-]{1,100}$/u))
+				)
+			) {
+				throw new ContributorProfileValidationError(
+					'Messenger URL must point to a messaging profile or invite.'
+				);
+			}
+			break;
+		case 'website':
+		case 'custom':
+			break;
+	}
+
+	return normalized;
+}
+
+export function normalizeSocialLinkInput(
+	value: unknown,
+	index: number
+): ContributorSocialLinkInput {
+	if (!value || typeof value !== 'object' || Array.isArray(value)) {
+		throw new ContributorProfileValidationError(`Social link ${index + 1} must be an object.`);
+	}
+	const link = value as Record<string, unknown>;
+	for (const key of Object.keys(link)) {
+		if (!SOCIAL_LINK_KEYS[key]) {
+			throw new ContributorProfileValidationError(
+				`Social link ${index + 1} contains unknown field: ${key}.`
+			);
+		}
+	}
+	if (!isSocialKind(link.kind)) {
+		throw new ContributorProfileValidationError(
+			`Social link ${index + 1} has an unsupported kind.`
+		);
+	}
+	if (typeof link.isPublic !== 'boolean') {
+		throw new ContributorProfileValidationError(`Social link ${index + 1} visibility is invalid.`);
+	}
+	if (link.label !== null && link.label !== undefined && typeof link.label !== 'string') {
+		throw new ContributorProfileValidationError(`Social link ${index + 1} label is invalid.`);
+	}
+	const label = typeof link.label === 'string' ? link.label.trim() : null;
+	if (label && label.length > CONTRIBUTOR_LINK_LABEL_MAX_LENGTH) {
+		throw new ContributorProfileValidationError(`Social link ${index + 1} label is too long.`);
+	}
+	if (link.kind === 'custom' && !label) {
+		throw new ContributorProfileValidationError('Custom links need a label.');
+	}
+	return {
+		kind: link.kind,
+		label: label || null,
+		url: validateSocialUrl(link.kind, link.url),
+		isPublic: link.isPublic
+	};
+}
+
+export function sortSocialLinks<T extends Pick<ContributorSocialLink, 'kind' | 'createdAt'>>(
+	links: readonly T[]
+): T[] {
+	return [...links].sort((left, right) => {
+		const kindOrder = KIND_ORDER[left.kind] - KIND_ORDER[right.kind];
+		if (kindOrder !== 0) return kindOrder;
+		return left.createdAt.localeCompare(right.createdAt);
+	});
+}
+
+export function validateSocialLinkMultiplicity(links: readonly ContributorSocialLinkInput[]): void {
+	const counts = new Map<SocialKind, number>();
+	for (const link of links) counts.set(link.kind, (counts.get(link.kind) ?? 0) + 1);
+	for (const kind of ['github', 'discord', 'messenger', 'linkedin'] as const) {
+		if ((counts.get(kind) ?? 0) > 1) {
+			throw new ContributorProfileValidationError(
+				`Only one ${socialKindLabel(kind)} link is allowed.`
+			);
+		}
+	}
+}
+
+export function hasPublicMessagingLink(links: readonly ContributorSocialLinkInput[]): boolean {
+	return links.some(
+		(link) => (link.kind === 'messenger' || link.kind === 'discord') && link.isPublic
+	);
+}

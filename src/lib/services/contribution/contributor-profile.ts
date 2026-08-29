@@ -748,3 +748,117 @@ export async function removeContributorAvatarReference(
 		await assertAdmin(tx, actorUserId);
 		const [row] = await tx
 			.select({ profile: contributorProfilesTable, user: adminUsersTable })
+			.from(contributorProfilesTable)
+			.innerJoin(adminUsersTable, eq(adminUsersTable.id, contributorProfilesTable.userId))
+			.where(eq(contributorProfilesTable.id, profileId))
+			.limit(1);
+		if (!row) throw new ContributorProfileNotFoundError();
+		const links = await tx
+			.select()
+			.from(contributorSocialLinksTable)
+			.where(eq(contributorSocialLinksTable.profileId, profileId));
+		const before = snapshot(row.profile, row.user, links);
+		await tx
+			.update(adminUsersTable)
+			.set({ avatarUrl: null, updatedAt: sql`now()` })
+			.where(eq(adminUsersTable.id, row.user.id));
+		const [updated] = await tx
+			.update(contributorProfilesTable)
+			.set({ version: sql`${contributorProfilesTable.version} + 1`, updatedAt: sql`now()` })
+			.where(eq(contributorProfilesTable.id, profileId))
+			.returning();
+		if (!updated) throw new ContributorProfileNotFoundError();
+		const afterUser = { ...row.user, avatarUrl: null };
+		await appendAudit(
+			tx,
+			profileId,
+			actorUserId,
+			'update',
+			row.profile.version,
+			updated.version,
+			before,
+			snapshot(updated, afterUser, links, safeReason)
+		);
+		return toEditable(updated, afterUser, links);
+	});
+}
+export async function listContributorProfileAudits(
+	profileId: number,
+	options: { limit?: number; offset?: number } = {}
+): Promise<{ rows: ContributorProfileAudit[]; limit: number; offset: number }> {
+	const [profile] = await db
+		.select({ id: contributorProfilesTable.id })
+		.from(contributorProfilesTable)
+		.where(eq(contributorProfilesTable.id, profileId))
+		.limit(1);
+	if (!profile) throw new ContributorProfileNotFoundError();
+	const limit = Math.min(Math.max(Math.trunc(options.limit ?? AUDIT_PAGE_SIZE), 1), 100);
+	const offset = Math.max(Math.trunc(options.offset ?? 0), 0);
+	const rows = await db
+		.select({ audit: contributorProfileAuditsTable, actor: adminUsersTable })
+		.from(contributorProfileAuditsTable)
+		.leftJoin(adminUsersTable, eq(adminUsersTable.id, contributorProfileAuditsTable.actorUserId))
+		.where(eq(contributorProfileAuditsTable.profileId, profileId))
+		.orderBy(desc(contributorProfileAuditsTable.createdAt), desc(contributorProfileAuditsTable.id))
+		.limit(limit)
+		.offset(offset);
+	return {
+		limit,
+		offset,
+		rows: rows.map(({ audit, actor }) => ({
+			id: audit.id,
+			profileId: audit.profileId,
+			actorUserId: audit.actorUserId,
+			actorDisplayName: actor ? (actor.displayName ?? actor.username) : null,
+			actorRole: actor ? roleLabel(actor.role as ContributorRole) : null,
+			action: audit.action,
+			fromVersion: audit.fromVersion,
+			toVersion: audit.toVersion,
+			before: sanitizedSnapshot(audit.before),
+			after: sanitizedSnapshot(audit.after) ?? {
+				slug: '',
+				displayName: '',
+				role: 'Contributor',
+				bio: '',
+				isPublic: false,
+				isModeratorHidden: false,
+				showInCredits: false,
+				avatarUrl: null,
+				socialLinks: []
+			},
+			createdAt: audit.createdAt
+		}))
+	};
+}
+/** Resolve internal profile, then safe legacy URL, then plain text attribution. */
+export async function resolveContributorAttribution(
+	userId: number
+): Promise<ContributorAttribution | null> {
+	const [row] = await db
+		.select({ profile: contributorProfilesTable, user: adminUsersTable })
+		.from(adminUsersTable)
+		.leftJoin(contributorProfilesTable, eq(contributorProfilesTable.userId, adminUsersTable.id))
+		.where(eq(adminUsersTable.id, userId))
+		.limit(1);
+	if (!row) return null;
+	const name = row.user.displayName ?? row.user.username;
+	const managedAvatarUrl = profileAvatar(row.user.avatarUrl);
+	if (
+		row.profile &&
+		row.profile.isPublic &&
+		!row.profile.isModeratorHidden &&
+		row.user.isActive &&
+		row.user.deletedAt === null
+	) {
+		return { name, avatarUrl: managedAvatarUrl, href: `/contributor/${row.profile.slug}` };
+	}
+	let href: string | null = null;
+	if (row.user.profileUrl) href = legacyProfileUrl(row.user.profileUrl);
+	return { name, avatarUrl: null, href };
+}
+export {
+	normalizeHttpsUrl,
+	sortSocialLinks,
+	validateSocialLinkMultiplicity,
+	hasPublicMessagingLink
+};

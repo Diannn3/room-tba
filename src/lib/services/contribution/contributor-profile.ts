@@ -448,3 +448,153 @@ function sanitizedSnapshot(value: unknown): ContributorProfileSnapshot | null {
 }
 /** Strip unknown fields from persisted audit JSON before returning it. */
 export const sanitizeContributorProfileSnapshot = sanitizedSnapshot;
+async function assertAdmin(
+	tx: Parameters<Parameters<typeof db.transaction>[0]>[0],
+	actorUserId: number
+): Promise<void> {
+	const [actor] = await tx
+		.select({
+			role: adminUsersTable.role,
+			isActive: adminUsersTable.isActive,
+			deletedAt: adminUsersTable.deletedAt
+		})
+		.from(adminUsersTable)
+		.where(eq(adminUsersTable.id, actorUserId))
+		.limit(1);
+	if (!actor || !actor.isActive || actor.deletedAt || actor.role !== 'admin')
+		throw new ContributorProfileForbiddenError();
+}
+async function appendAudit(
+	tx: QueryDb,
+	profileId: number,
+	actorUserId: number | null,
+	action: 'create' | 'update' | 'publish' | 'hide' | 'restore' | 'remove_link',
+	fromVersion: number | null,
+	toVersion: number,
+	before: ContributorProfileSnapshot | null,
+	after: ContributorProfileSnapshot
+): Promise<void> {
+	await tx
+		.insert(contributorProfileAuditsTable)
+		.values({ profileId, actorUserId, action, fromVersion, toVersion, before, after });
+}
+
+/** Create the account-backed profile required for accounts created after migration. */
+export async function ensureContributorProfileForAccount(
+	tx: QueryDb,
+	userId: number,
+	username: string,
+	actorUserId: number | null = userId
+): Promise<void> {
+	const [existing] = await tx
+		.select({ id: contributorProfilesTable.id })
+		.from(contributorProfilesTable)
+		.where(eq(contributorProfilesTable.userId, userId))
+		.limit(1);
+	if (existing) return;
+
+	let base: string;
+	try {
+		base = normalizeContributorSlug(username);
+	} catch {
+		base = 'contributor';
+	}
+	let slug = base;
+	let suffixAttempt = 0;
+	while (true) {
+		const [slugRow] = await tx
+			.select({ id: contributorProfilesTable.id })
+			.from(contributorProfilesTable)
+			.where(eq(contributorProfilesTable.slug, slug))
+			.limit(1);
+		if (!slugRow) break;
+		suffixAttempt += 1;
+		const suffix = `-${userId.toString(36)}${suffixAttempt > 1 ? `-${suffixAttempt}` : ''}`;
+		slug = `${base.slice(0, 120 - suffix.length)}${suffix}`;
+	}
+
+	const [created] = await tx
+		.insert(contributorProfilesTable)
+		.values({ userId, slug, bio: '', isPublic: true, isModeratorHidden: false, version: 1 })
+		.returning();
+	const [user] = await tx
+		.select()
+		.from(adminUsersTable)
+		.where(eq(adminUsersTable.id, userId))
+		.limit(1);
+	if (!created || !user)
+		throw new ContributorProfileError('Could not create contributor profile.', 500);
+	await appendAudit(
+		tx,
+		created.id,
+		actorUserId,
+		'create',
+		null,
+		created.version,
+		null,
+		snapshot(created, user, [])
+	);
+}
+/** Replace complete owner state with optimistic version protection. */
+export async function replaceContributorProfile(
+	userId: number,
+	input: unknown
+): Promise<ContributorEditableProfile> {
+	const update = parseContributorProfileUpdate(input, { requireMessagingDisclosure: false });
+	return db.transaction(async (tx) => {
+		const loaded = await loadProfileById(tx, userId);
+		if (!loaded || !loaded.user.isActive || loaded.user.deletedAt)
+			throw new ContributorProfileNotFoundError();
+		if (loaded.profile.version !== update.version)
+			throw new ContributorProfileConflictError(
+				toEditable(loaded.profile, loaded.user, loaded.links)
+			);
+		const hadPublicMessaging = hasPublicMessagingLink(
+			loaded.links.map(({ kind, label, url, isPublic }) => ({
+				kind: kind as SocialKind,
+				label,
+				url,
+				isPublic
+			}))
+		);
+		if (
+			update.isPublic &&
+			hasPublicMessagingLink(update.socialLinks) &&
+			(!loaded.profile.isPublic || !hadPublicMessaging) &&
+			!update.messagingDisclosureAcknowledged
+		) {
+			throw new ContributorProfileError('Messaging links require explicit disclosure.');
+		}
+		const before = snapshot(loaded.profile, loaded.user, loaded.links);
+		const [updated] = await tx
+			.update(contributorProfilesTable)
+			.set({
+				bio: update.bio,
+				isPublic: update.isPublic,
+				version: sql`${contributorProfilesTable.version} + 1`,
+				updatedAt: sql`now()`
+			})
+			.where(
+				and(
+					eq(contributorProfilesTable.id, loaded.profile.id),
+					eq(contributorProfilesTable.version, update.version)
+				)
+			)
+			.returning();
+		if (!updated) {
+			const current = await loadProfileById(tx, userId);
+			if (!current) throw new ContributorProfileNotFoundError();
+			throw new ContributorProfileConflictError(
+				toEditable(current.profile, current.user, current.links)
+			);
+		}
+		await tx
+			.delete(contributorSocialLinksTable)
+			.where(eq(contributorSocialLinksTable.profileId, loaded.profile.id));
+		if (update.socialLinks.length)
+			await tx.insert(contributorSocialLinksTable).values(
+				update.socialLinks.map((link) => ({
+					profileId: loaded.profile.id,
+					kind: link.kind,
+					label: link.label,
+					url: link.url,

@@ -497,8 +497,108 @@
 						<input type="checkbox" bind:checked={showInCreditsDraft} disabled={savingProfile || !isOnline} />
 						Show my contributions in public credits
 					</label>
+
+					<div class="social-links" aria-labelledby="social-links-heading">
+						<h4 id="social-links-heading">Social links</h4>
+						<p class="field-hint">Only links marked public appear on your profile.</p>
+						{#each SOCIAL_KINDS as kind}
+							<div class="social-kind-group">
+								<h5>{SOCIAL_KIND_METADATA[kind].label}</h5>
+								{#each socialIndices(kind) as index (index)}
+									<div class="social-row">
+										{#if kind === 'custom'}
+											<input
+												aria-label="Custom link label"
+												placeholder="Label"
+												value={socialLinksDraft[index].label ?? ''}
+												oninput={(event) =>
+													updateSocialLink(index, {
+														label: (event.currentTarget as HTMLInputElement).value
+													})}
+												disabled={savingProfile || !isOnline}
+											/>
+										{/if}
+										<input
+											type="url"
+											aria-label={`${SOCIAL_KIND_METADATA[kind].label} URL`}
+											placeholder="https://"
+											value={socialLinksDraft[index].url}
+											oninput={(event) =>
+												updateSocialLink(index, {
+													url: (event.currentTarget as HTMLInputElement).value
+												})}
+											disabled={savingProfile || !isOnline}
+										/>
+										<label class="social-public">
+											<input
+												type="checkbox"
+												checked={socialLinksDraft[index].isPublic}
+												onchange={(event) =>
+													updateSocialLink(index, {
+														isPublic: (event.currentTarget as HTMLInputElement).checked
+													})}
+												disabled={savingProfile || !isOnline}
+											/>
+											Public
+										</label>
+										<button
+											type="button"
+											class="settings-link-btn"
+											onclick={() => removeSocialLink(index)}
+											disabled={savingProfile || !isOnline}
+										>
+											Remove
+										</button>
+									</div>
+								{/each}
+								<button
+									type="button"
+									class="settings-link-btn"
+									onclick={() => addSocialLink(kind)}
+									disabled={savingProfile ||
+										!isOnline ||
+										(kind !== 'website' &&
+											kind !== 'custom' &&
+											socialLinksDraft.some((link) => link.kind === kind))}
+								>
+									Add {SOCIAL_KIND_METADATA[kind].label}
+								</button>
+							</div>
+						{/each}
+					</div>
+
+					{#if hasPublicMessagingLink()}
+						<label class="credits-visibility disclosure">
+							<input
+								type="checkbox"
+								bind:checked={messagingDisclosureAcknowledgedDraft}
+								disabled={savingProfile || !isOnline}
+							/>
+							I understand public messaging links let visitors contact me.
+						</label>
+					{/if}
+					{#if !isOnline}
+						<EntityEditorMessage
+							variant="error"
+							message="Profile editing requires a connection. Cached account and security controls remain available."
+						/>
+					{/if}
+					{#if profileUrlDraft}
+						<EntityEditorFormField label="Legacy credit URL" inputId="account-profile-url">
+							{#snippet control()}
+								<input id="account-profile-url" value={profileUrlDraft} disabled />
+							{/snippet}
+						</EntityEditorFormField>
+					{/if}
 					{#if profileError}
 						<EntityEditorMessage variant="error" message={profileError} />
+					{/if}
+					{#if conflictProfile}
+						<EntityEditorSubmitButton
+							label="Reload server profile"
+							variant="secondary"
+							onclick={reloadConflict}
+						/>
 					{/if}
 					{#if profileSaved}
 						<EntityEditorMessage variant="success" message="Profile saved." />
@@ -507,13 +607,9 @@
 						label="Save profile"
 						savingLabel="Saving…"
 						saving={savingProfile}
-						disabled={displayNameDraft.trim() === profile.displayName &&
-							avatarUrlDraft.trim() === (profile.avatarUrl ?? '') &&
-							profileUrlDraft.trim() === (profile.profileUrl ?? '') &&
-							showInCreditsDraft === profile.showInCredits}
+						disabled={!isOnline || !contributorProfile || !profileChanged()}
 						onclick={saveProfile}
 					/>
-
 					<section class="contributions-section" aria-labelledby="my-contributions-heading">
 						<h4 id="my-contributions-heading">My contributions</h4>
 						{#if contributionsError}

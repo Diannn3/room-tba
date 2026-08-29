@@ -12,6 +12,11 @@
 	import ImageUpload from '$lib/components/editor/ImageUpload.svelte';
 	import './editor/entity-editor.css';
 	import { MediaQuery } from 'svelte/reactivity';
+	import {
+		SOCIAL_KIND_METADATA,
+		SOCIAL_KINDS,
+		type SocialKind
+	} from '$lib/utils/contributor-profile';
 
 	const reducedMotion = new MediaQuery('(prefers-reduced-motion: reduce)');
 
@@ -27,6 +32,32 @@
 		showInCredits: boolean;
 	};
 
+	type EditableProfile = {
+		displayName: string;
+		role: 'Admin' | 'Editor' | 'Contributor';
+		bio: string;
+		isPublic: boolean;
+		showInCredits: boolean;
+		avatarUrl: string | null;
+		version: number;
+		socialLinks: Array<{
+			id: number;
+			kind: SocialKind;
+			label: string | null;
+			url: string;
+			isPublic: boolean;
+			createdAt: string;
+			updatedAt: string;
+		}>;
+	};
+
+	type SocialDraft = {
+		kind: SocialKind;
+		label: string | null;
+		url: string;
+		isPublic: boolean;
+	};
+
 	type Contribution = {
 		id: number;
 		entityLabel: string;
@@ -35,17 +66,23 @@
 
 	let frameEl = $state<HTMLDivElement | null>(null);
 	let profile = $state<Profile | null>(null);
+	let contributorProfile = $state<EditableProfile | null>(null);
 	let loadError = $state<string | null>(null);
 	let contributions = $state<Contribution[]>([]);
 	let contributionsError = $state<string | null>(null);
+	let isOnline = $state(true);
 
-	let displayNameDraft = $state('');
 	let avatarUrlDraft = $state('');
 	let profileUrlDraft = $state('');
+	let bioDraft = $state('');
+	let isPublicDraft = $state(false);
 	let showInCreditsDraft = $state(true);
+	let socialLinksDraft = $state<SocialDraft[]>([]);
+	let messagingDisclosureAcknowledgedDraft = $state(false);
 	let savingProfile = $state(false);
 	let profileError = $state<string | null>(null);
 	let profileSaved = $state(false);
+	let conflictProfile = $state<EditableProfile | null>(null);
 
 	let newEmailDraft = $state('');
 	let showChangeEmail = $state(false);

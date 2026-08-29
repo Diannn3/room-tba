@@ -59,6 +59,91 @@
 	let rowError = $state<string | null>(null);
 	let savingUserId = $state<number | null>(null);
 
+	let moderationUserId = $state<number | null>(null);
+	let moderationReason = $state('');
+	let moderationSaving = $state(false);
+	let auditsByProfileId = $state<Record<number, ContributorAudits | null>>({});
+	let auditLoadingProfileId = $state<number | null>(null);
+
+	function openModeration(user: ManagedUser) {
+		moderationUserId = moderationUserId === user.id ? null : user.id;
+		moderationReason = '';
+		rowError = null;
+	}
+
+	async function moderate(
+		user: ManagedUser,
+		action: 'hide' | 'restore' | 'avatar' | 'link',
+		linkId?: number
+	) {
+		const profile = user.contributorProfile;
+		if (!profile) return;
+		const reason = moderationReason.trim();
+		if (action !== 'restore' && !reason) {
+			rowError = 'Enter a reason before applying moderation.';
+			return;
+		}
+		moderationSaving = true;
+		rowError = null;
+		const path =
+			action === 'hide'
+				? `/api/admin/contributors/${profile.id}/hide`
+				: action === 'restore'
+					? `/api/admin/contributors/${profile.id}/restore`
+					: action === 'link' && linkId !== undefined
+						? `/api/admin/contributors/${profile.id}/links/${linkId}`
+						: `/api/admin/contributors/${profile.id}/avatar`;
+		try {
+			const res = await fetch(path, {
+				method: action === 'avatar' || action === 'link' ? 'DELETE' : 'POST',
+				credentials: 'same-origin',
+				headers: action === 'restore' ? undefined : { 'Content-Type': 'application/json' },
+				body: action === 'restore' ? undefined : JSON.stringify({ reason })
+			});
+			const data = await res.json().catch(() => ({}) as { error?: string });
+			if (!res.ok) {
+				rowError = data.error ?? 'Could not apply moderation action.';
+				return;
+			}
+			moderationReason = '';
+			const auditWasOpen = Boolean(auditsByProfileId[profile.id]);
+			await loadUsers();
+			if (auditWasOpen) await loadAudits(profile.id);
+		} catch {
+			rowError = 'Network error. Try again.';
+		} finally {
+			moderationSaving = false;
+	}
+	}
+
+	async function loadAudits(profileId: number) {
+		auditLoadingProfileId = profileId;
+		rowError = null;
+		try {
+			const res = await fetch(`/api/admin/contributors/${profileId}/audits`, {
+				credentials: 'same-origin'
+			});
+			const data = (await res.json().catch(() => ({}))) as ContributorAudits & { error?: string };
+			if (!res.ok) {
+				rowError = data.error ?? 'Could not load audit history.';
+				return;
+			}
+			auditsByProfileId = { ...auditsByProfileId, [profileId]: data };
+		} catch {
+			rowError = 'Network error. Try again.';
+		} finally {
+			auditLoadingProfileId = null;
+		}
+	}
+
+	function toggleAudits(profileId: number) {
+		if (auditsByProfileId[profileId]) {
+			auditsByProfileId = { ...auditsByProfileId, [profileId]: null };
+			return;
+		}
+		void loadAudits(profileId);
+	}
+
 	let showCreateForm = $state(false);
 	let newUsername = $state('');
 	let newDisplayName = $state('');
@@ -221,6 +306,11 @@
 							<div class="user-row-info">
 								<strong>{user.displayName}</strong>
 								<small>{user.username}{user.email ? ` · ${user.email}` : ''}</small>
+								{#if user.contributorProfile}
+									<small class="profile-state">
+										{user.contributorProfile.isModeratorHidden ? 'Moderator hidden' : 'Profile visible'}
+									</small>
+								{/if}
 							</div>
 							<select
 								value={user.role}

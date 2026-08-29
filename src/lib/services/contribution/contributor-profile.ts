@@ -598,3 +598,153 @@ export async function replaceContributorProfile(
 					kind: link.kind,
 					label: link.label,
 					url: link.url,
+					isPublic: link.isPublic
+				}))
+			);
+		await tx
+			.update(adminUsersTable)
+			.set({ showInCredits: update.showInCredits })
+			.where(eq(adminUsersTable.id, userId));
+		const final = await loadProfileById(tx, userId);
+		if (!final) throw new ContributorProfileNotFoundError();
+		await appendAudit(
+			tx,
+			final.profile.id,
+			userId,
+			update.isPublic !== loaded.profile.isPublic ? 'publish' : 'update',
+			loaded.profile.version,
+			final.profile.version,
+			before,
+			snapshot(final.profile, final.user, final.links)
+		);
+		return toEditable(final.profile, final.user, final.links);
+	});
+}
+async function moderateProfile(
+	profileId: number,
+	actorUserId: number,
+	action: 'hide' | 'restore',
+	reason?: string
+): Promise<ContributorEditableProfile> {
+	const safeReason = action === 'hide' ? moderationReason(reason) : undefined;
+	return db.transaction(async (tx) => {
+		await assertAdmin(tx, actorUserId);
+		const [row] = await tx
+			.select({ profile: contributorProfilesTable, user: adminUsersTable })
+			.from(contributorProfilesTable)
+			.innerJoin(adminUsersTable, eq(adminUsersTable.id, contributorProfilesTable.userId))
+			.where(eq(contributorProfilesTable.id, profileId))
+			.limit(1);
+		if (!row) throw new ContributorProfileNotFoundError();
+		const links = await tx
+			.select()
+			.from(contributorSocialLinksTable)
+			.where(eq(contributorSocialLinksTable.profileId, profileId));
+		const before = snapshot(row.profile, row.user, links);
+		const [updated] = await tx
+			.update(contributorProfilesTable)
+			.set({
+				isModeratorHidden: action === 'hide',
+				version: sql`${contributorProfilesTable.version} + 1`,
+				updatedAt: sql`now()`
+			})
+			.where(eq(contributorProfilesTable.id, profileId))
+			.returning();
+		if (!updated) throw new ContributorProfileNotFoundError();
+		await appendAudit(
+			tx,
+			profileId,
+			actorUserId,
+			action,
+			row.profile.version,
+			updated.version,
+			before,
+			snapshot(updated, row.user, links, safeReason)
+		);
+		return toEditable(updated, row.user, links);
+	});
+}
+export function hideContributorProfile(
+	profileId: number,
+	actorUserId: number,
+	reason: string
+): Promise<ContributorEditableProfile> {
+	return moderateProfile(profileId, actorUserId, 'hide', reason);
+}
+export function restoreContributorProfile(
+	profileId: number,
+	actorUserId: number
+): Promise<ContributorEditableProfile> {
+	return moderateProfile(profileId, actorUserId, 'restore');
+}
+/** Remove one unsafe social link while retaining the audit trail. */
+export async function removeContributorSocialLink(
+	profileId: number,
+	linkId: number,
+	actorUserId: number,
+	reason: string
+): Promise<ContributorEditableProfile> {
+	const safeReason = moderationReason(reason);
+	return db.transaction(async (tx) => {
+		await assertAdmin(tx, actorUserId);
+		const [row] = await tx
+			.select({ profile: contributorProfilesTable, user: adminUsersTable })
+			.from(contributorProfilesTable)
+			.innerJoin(adminUsersTable, eq(adminUsersTable.id, contributorProfilesTable.userId))
+			.where(eq(contributorProfilesTable.id, profileId))
+			.limit(1);
+		if (!row) throw new ContributorProfileNotFoundError();
+		const links = await tx
+			.select()
+			.from(contributorSocialLinksTable)
+			.where(eq(contributorSocialLinksTable.profileId, profileId));
+		if (!links.some((link) => link.id === linkId))
+			throw new ContributorProfileNotFoundError('Social link not found.');
+		const before = snapshot(row.profile, row.user, links);
+		await tx
+			.delete(contributorSocialLinksTable)
+			.where(
+				and(
+					eq(contributorSocialLinksTable.id, linkId),
+					eq(contributorSocialLinksTable.profileId, profileId)
+				)
+			);
+		const [updated] = await tx
+			.update(contributorProfilesTable)
+			.set({ version: sql`${contributorProfilesTable.version} + 1`, updatedAt: sql`now()` })
+			.where(eq(contributorProfilesTable.id, profileId))
+			.returning();
+		if (!updated) throw new ContributorProfileNotFoundError();
+		await appendAudit(
+			tx,
+			profileId,
+			actorUserId,
+			'remove_link',
+			row.profile.version,
+			updated.version,
+			before,
+			snapshot(
+				updated,
+				row.user,
+				links.filter((link) => link.id !== linkId),
+				safeReason
+			)
+		);
+		return toEditable(
+			updated,
+			row.user,
+			links.filter((link) => link.id !== linkId)
+		);
+	});
+}
+/** Clear only admin_users.avatar_url. Object deletion is intentionally not attempted. */
+export async function removeContributorAvatarReference(
+	profileId: number,
+	actorUserId: number,
+	reason: string
+): Promise<ContributorEditableProfile> {
+	const safeReason = moderationReason(reason);
+	return db.transaction(async (tx) => {
+		await assertAdmin(tx, actorUserId);
+		const [row] = await tx
+			.select({ profile: contributorProfilesTable, user: adminUsersTable })

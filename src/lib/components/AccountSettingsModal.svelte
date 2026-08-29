@@ -880,6 +880,82 @@
 		outline: 2px solid hsl(5, 53%, 32%);
 		outline-offset: 1px;
 	}
+	.settings-body :global(.editor-field textarea) {
+		width: 100%;
+		box-sizing: border-box;
+		resize: vertical;
+		font: inherit;
+		line-height: 1.4;
+		padding: 0.5rem;
+		border: 1px solid hsl(0, 0%, 78%);
+		border-radius: 0.375rem;
+	}
+	.settings-body :global(.editor-field textarea:focus-visible),
+	.social-row input:focus-visible,
+	.settings-link-btn:focus-visible {
+		outline: 2px solid hsl(5, 53%, 32%);
+		outline-offset: 1px;
+	}
+	.social-links {
+		display: flex;
+		flex-direction: column;
+		gap: 0.625rem;
+	}
+	.social-links h4,
+	.social-kind-group h5 {
+		margin: 0;
+		font-size: 0.8125rem;
+	}
+	.social-kind-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.375rem;
+	}
+	.social-row {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		min-width: 0;
+		flex-wrap: wrap;
+	}
+	.social-row input[type='url'],
+	.social-row input[aria-label='Custom link label'] {
+		min-width: 0;
+		flex: 1 1 8rem;
+		box-sizing: border-box;
+		padding: 0.4rem;
+		border: 1px solid hsl(0, 0%, 78%);
+		border-radius: 0.375rem;
+		font: inherit;
+	}
+	.social-public {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		font-size: 0.75rem;
+		white-space: nowrap;
+	}
+	.social-row .settings-link-btn {
+		flex: 0 0 auto;
+	}
+	.disclosure {
+		padding: 0.5rem;
+		border: 1px solid hsl(35, 60%, 70%);
+		border-radius: 0.375rem;
+		background: hsl(45, 100%, 97%);
+	}
+	.settings-body :global(.editor-field input[type='url']) {
+		min-width: 0;
+		max-width: 100%;
+	}
+	@media (max-width: 20rem) {
+		.settings-overlay {
+			padding: 0.5rem;
+		}
+		.settings-body {
+			padding: 0.75rem;
+		}
+	}
 	.settings-section h3 {
 		margin: 0 0 0.25rem;
 		font-size: 0.875rem;

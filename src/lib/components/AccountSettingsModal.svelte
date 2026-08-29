@@ -265,9 +265,30 @@
 				profileError = data.error ?? 'Profile changed on the server. Reload to continue.';
 				return;
 			}
+			if (!res.ok || !data) {
+				profileError = data?.error ?? 'Could not save profile.';
+				return;
+			}
+			const accountAvatarChanged = avatarUrlDraft.trim() !== (profile.avatarUrl ?? '');
+			if (accountAvatarChanged) {
+				const accountRes = await fetch('/api/account/me', {
+					method: 'PATCH',
+					credentials: 'same-origin',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						displayName: profile.displayName,
+						avatarUrl: avatarUrlDraft.trim() || null
+					})
+				});
+				if (!accountRes.ok) {
+					const accountData = (await accountRes.json().catch(() => ({}))) as { error?: string };
+					profileError = accountData.error ?? 'Profile saved, but account photo could not be saved.';
+					return;
+				}
+			}
+			setProfileDraft(data as EditableProfile);
 			profile = {
 				...profile,
-				displayName: displayNameDraft.trim(),
 				avatarUrl: avatarUrlDraft.trim() || null,
 				profileUrl: profileUrlDraft.trim() || null,
 				showInCredits: showInCreditsDraft
@@ -447,11 +468,7 @@
 					</EntityEditorFormField>
 					<EntityEditorFormField label="Display name" inputId="account-display-name">
 						{#snippet control()}
-							<input
-								id="account-display-name"
-								bind:value={displayNameDraft}
-								disabled={savingProfile}
-							/>
+							<input id="account-display-name" value={profile?.displayName ?? ''} disabled />
 						{/snippet}
 					</EntityEditorFormField>
 					<ImageUpload
@@ -459,40 +476,25 @@
 						label="Profile photo"
 						endpoint="/api/account/avatar"
 						bind:value={avatarUrlDraft}
-						disabled={savingProfile}
+						disabled={savingProfile || !isOnline}
 					/>
-					<EntityEditorFormField
-						label="Avatar URL"
-						inputId="account-avatar-url"
-						hint="Optional HTTPS image URL shown in public credits. Uploading a profile photo fills this field."
-					>
+					<EntityEditorFormField label="Bio" inputId="contributor-bio" hint="Up to 280 characters.">
 						{#snippet control()}
-							<input
-								id="account-avatar-url"
-								type="url"
-								placeholder="https://example.com/avatar.png"
-								bind:value={avatarUrlDraft}
-								disabled={savingProfile}
-							/>
-						{/snippet}
-					</EntityEditorFormField>
-					<EntityEditorFormField
-						label="Profile URL"
-						inputId="account-profile-url"
-						hint="Optional HTTPS link shown from your public credit."
-					>
-						{#snippet control()}
-							<input
-								id="account-profile-url"
-								type="url"
-								placeholder="https://example.com"
-								bind:value={profileUrlDraft}
-								disabled={savingProfile}
-							/>
+							<textarea
+								id="contributor-bio"
+								rows="4"
+								maxlength="280"
+								bind:value={bioDraft}
+								disabled={savingProfile || !isOnline}
+							></textarea>
 						{/snippet}
 					</EntityEditorFormField>
 					<label class="credits-visibility">
-						<input type="checkbox" bind:checked={showInCreditsDraft} disabled={savingProfile} />
+						<input type="checkbox" bind:checked={isPublicDraft} disabled={savingProfile || !isOnline} />
+						Make my contributor profile public
+					</label>
+					<label class="credits-visibility">
+						<input type="checkbox" bind:checked={showInCreditsDraft} disabled={savingProfile || !isOnline} />
 						Show my contributions in public credits
 					</label>
 					{#if profileError}

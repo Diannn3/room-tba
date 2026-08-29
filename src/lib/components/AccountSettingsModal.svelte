@@ -104,29 +104,94 @@
 	let deleting = $state(false);
 	let deleteError = $state<string | null>(null);
 
+	function setProfileDraft(next: EditableProfile) {
+		contributorProfile = next;
+		avatarUrlDraft = next.avatarUrl ?? '';
+		bioDraft = next.bio;
+		isPublicDraft = next.isPublic;
+		showInCreditsDraft = next.showInCredits;
+		socialLinksDraft = next.socialLinks.map(({ kind, label, url, isPublic }) => ({
+			kind,
+			label,
+			url,
+			isPublic
+		}));
+		messagingDisclosureAcknowledgedDraft = false;
+	}
+
+	function addSocialLink(kind: SocialKind) {
+		if (kind !== 'website' && kind !== 'custom' && socialLinksDraft.some((link) => link.kind === kind)) return;
+		socialLinksDraft = [
+			...socialLinksDraft,
+			{
+				kind,
+				label: kind === 'custom' ? '' : null,
+				url: '',
+				isPublic: SOCIAL_KIND_METADATA[kind].defaultPublic
+			}
+		];
+	}
+
+	function removeSocialLink(index: number) {
+		socialLinksDraft = socialLinksDraft.filter((_, linkIndex) => linkIndex !== index);
+	}
+
+	function updateSocialLink(index: number, patch: Partial<SocialDraft>) {
+		socialLinksDraft = socialLinksDraft.map((link, linkIndex) =>
+			linkIndex === index ? { ...link, ...patch } : link
+		);
+	}
+
+	function socialIndices(kind: SocialKind) {
+		return socialLinksDraft
+			.map((link, index) => (link.kind === kind ? index : -1))
+			.filter((index) => index >= 0);
+	}
+
+	function hasPublicMessagingLink() {
+		return socialLinksDraft.some(
+			(link) => (link.kind === 'messenger' || link.kind === 'discord') && link.isPublic
+		);
+	}
+
+	function profileChanged() {
+		if (!contributorProfile) return false;
+		const currentLinks = contributorProfile.socialLinks.map(({ kind, label, url, isPublic }) => ({
+			kind,
+			label,
+			url,
+			isPublic
+		}));
+		return (
+			bioDraft.trim() !== contributorProfile.bio ||
+			isPublicDraft !== contributorProfile.isPublic ||
+			showInCreditsDraft !== contributorProfile.showInCredits ||
+			JSON.stringify(socialLinksDraft) !== JSON.stringify(currentLinks) ||
+			avatarUrlDraft.trim() !== (contributorProfile.avatarUrl ?? '')
+		);
+	}
+
 	async function loadProfile() {
 		loadError = null;
 		contributionsError = null;
 		contributions = [];
 		try {
-			const res = await fetch('/api/account/me', { credentials: 'same-origin' });
-			if (!res.ok) {
+			const [accountRes, contributorRes, contributionsRes] = await Promise.all([
+				fetch('/api/account/me', { credentials: 'same-origin' }),
+				fetch('/api/contributors/me', { credentials: 'same-origin' }),
+				fetch('/api/contributions/mine', { credentials: 'same-origin' })
+			]);
+			if (!accountRes.ok || !contributorRes.ok) {
 				loadError = 'Could not load your account.';
 				return;
 			}
-			profile = (await res.json()) as Profile;
-			displayNameDraft = profile.displayName;
-			avatarUrlDraft = profile.avatarUrl ?? '';
+			profile = (await accountRes.json()) as Profile;
+			const contributor = (await contributorRes.json()) as EditableProfile;
+			avatarUrlDraft = contributor.avatarUrl ?? '';
 			profileUrlDraft = profile.profileUrl ?? '';
-			showInCreditsDraft = profile.showInCredits;
-
-			const contributionsRes = await fetch('/api/contributions/mine', {
-				credentials: 'same-origin'
-			});
+			setProfileDraft(contributor);
 			if (contributionsRes.ok) {
-				const data = (await contributionsRes.json()) as {
-					contributions?: Contribution[];
-				};
+				const data = (await contributionsRes.json()) as { contributions?: Contribution[] };
 				contributions = data.contributions ?? [];
 			} else {
 				contributionsError = 'Could not load your contributions.';
@@ -138,6 +203,18 @@
 
 	$effect(() => {
 		if (adminAuthStore.accountSettingsOpen) void loadProfile();
+	});
+
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		const updateOnlineState = () => (isOnline = navigator.onLine);
+		updateOnlineState();
+		window.addEventListener('online', updateOnlineState);
+		window.addEventListener('offline', updateOnlineState);
+		return () => {
+			window.removeEventListener('online', updateOnlineState);
+			window.removeEventListener('offline', updateOnlineState);
+		};
 	});
 
 	function close() {
@@ -153,26 +230,39 @@
 		return trapFocus(frameEl, { onEscape: close });
 	});
 
+	function reloadConflict() {
+		if (!conflictProfile) return;
+		setProfileDraft(conflictProfile);
+		conflictProfile = null;
+		profileError = null;
+	}
+
 	async function saveProfile() {
-		if (!profile) return;
+		if (!profile || !contributorProfile || !isOnline || savingProfile) return;
 		savingProfile = true;
 		profileError = null;
 		profileSaved = false;
+		conflictProfile = null;
 		try {
-			const res = await fetch('/api/account/me', {
-				method: 'PATCH',
+			const res = await fetch('/api/contributors/me', {
+				method: 'PUT',
 				credentials: 'same-origin',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					displayName: displayNameDraft,
-					avatarUrl: avatarUrlDraft,
-					profileUrl: profileUrlDraft,
-					showInCredits: showInCreditsDraft
+					version: contributorProfile.version,
+					bio: bioDraft,
+					isPublic: isPublicDraft,
+					showInCredits: showInCreditsDraft,
+					messagingDisclosureAcknowledged: messagingDisclosureAcknowledgedDraft,
+					socialLinks: socialLinksDraft
 				})
 			});
-			const data = await res.json().catch(() => ({}) as { error?: string });
-			if (!res.ok) {
-				profileError = data.error ?? 'Could not save profile.';
+			const data = (await res.json().catch(() => null)) as
+				| (EditableProfile & { error?: string; profile?: EditableProfile })
+				| null;
+			if (res.status === 409 && data?.profile) {
+				conflictProfile = data.profile;
+				profileError = data.error ?? 'Profile changed on the server. Reload to continue.';
 				return;
 			}
 			profile = {

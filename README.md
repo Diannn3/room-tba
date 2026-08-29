@@ -25,14 +25,17 @@ _Schedules, buildings, jeepney routes, and "where is PSLH 1?" on one campus map.
 
 No account needed to browse. Editors and contributors fix data in the same app (login popup on the map, not a separate admin site).
 
+Under the hood it is a campus platform, not a UPLB-only app: the engine (map UI, search, schedules, offline cache, editor, planner) is separated from campus data behind one config file, and independent forks run it at [other universities](#running-at-other-campuses).
+
 ## By the numbers
 
 - **58 buildings** and their rooms mapped, searchable, and routable on one campus map
 - **94,000+ class sections** imported across **9 academic terms** (AY 2023 to present)
-- **~21,000 page views** in the 30 days to Aug 2026, measured during term break (Vercel Analytics; peaks land in enlistment and exam weeks)
+- **50,000+ page views** in the 30 days to late Aug 2026 as the term starts, ~21,000/30d during term break (Vercel Analytics; peaks land in enlistment and exam weeks)
 - **20 contributors**, 30+ tagged releases, and a [good-first-issue queue](https://github.com/uplbtools/room-tba/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) for student developers
 - Campus map data published as **open data** under [CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/)
 - Serving [UPLB](https://uplb.edu.ph), a campus of roughly 12,000 students, and built to be [forked for other campuses](#fork-this-for-your-campus)
+- **Independent campus forks** at UP Visayas, UP Baguio, and Bulacan State University, [all active](#running-at-other-campuses)
 
 > **Data note:** Room and class listings are updated each term by volunteers. The active term follows the academic calendar (midyear Jun–Jul, 2nd sem Jan–May, etc.). **Class search** lists lecture, lab, thesis, special problem, and similar sections; ones without a room in AMIS show as unassigned. **Room schedules** list only lecture and lab sections with assigned rooms. Wrong schedule? [Open an issue](https://github.com/uplbtools/room-tba/issues/new/choose).
 
@@ -281,6 +284,17 @@ Room TBA is funded by curated campus-relevant sponsors and one-time donations. R
 ## Fork this for your campus
 
 MIT lets you fork this and run it for a different school. This is not a "swap the logo and ship" fork — a lot of the app is UPLB data and UPLB-specific glue. You keep the engine (map UI, search, offline cache, editor, planner, the Drizzle schema) and replace the UPLB parts.
+
+### Running at other campuses
+
+Community forks, maintained by their own campuses:
+
+| Campus | Fork |
+| --- | --- |
+| UP Visayas | [andrianllmm/upv-room-tba](https://github.com/andrianllmm/upv-room-tba) |
+| UP Baguio | [UPB-Tools/room-tba](https://github.com/UPB-Tools/room-tba) |
+| Bulacan State University (Malolos) | [bulsutools/room-tba](https://github.com/bulsutools/room-tba) |
+| UP Diliman | [uplbtools/room-tba-upd](https://github.com/uplbtools/room-tba-upd) (our own port, in progress) |
 
 Full guide with every file path and the painful parts: **[Fork this for your campus](https://room-tba.uplb.tools/wiki/fork-for-your-campus)** in the wiki. For the config file, start with the **[fork wizard](https://room-tba.uplb.tools/fork)** — point a map at your campus and it generates `src/campus.config.ts` plus a Vercel deploy link.
 

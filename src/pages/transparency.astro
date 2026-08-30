@@ -1,0 +1,372 @@
+---
+export const prerender = true;
+import Layout from "@layouts/Layout.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+---
+
+<Layout
+  title="Transparency | Room TBA"
+  description="Monthly money report for Room TBA and UPLB Tools: every donation in, every expense out, with receipts."
+  canonicalPath="/transparency"
+  showAppLoadingShell={false}
+>
+  <main class="transparency-page">
+    <a href="/" class="back-link">
+      <span aria-hidden="true">←</span> Back to Room TBA
+    </a>
+
+    <header class="hero">
+      <h1>Transparency report</h1>
+      <p class="lede">
+        Room TBA runs on donations. This page lists every peso in and every
+        peso out, month by month, with receipts. Sponsorship money follows the
+        40/30/30 split on the <a href="/sponsors">sponsors page</a>; this
+        month all of it went to hosting and tools.
+      </p>
+    </header>
+
+    <section class="month" aria-labelledby="aug-2026">
+      <h2 id="aug-2026">August 2026</h2>
+
+      <div class="summary">
+        <div class="summary-item">
+          <span class="summary-label">Income</span>
+          <span class="summary-value">₱1,790.35</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-label">Expenses</span>
+          <span class="summary-value">₱2,198.33</span>
+        </div>
+        <div class="summary-item summary-net">
+          <span class="summary-label">Net</span>
+          <span class="summary-value">−₱407.98</span>
+        </div>
+      </div>
+
+      <h3>Money in</h3>
+      <ul class="ledger">
+        <li>
+          <div class="ledger-what">
+            13 donations through <a href="/donate">/donate</a>, Aug 3 to 9,
+            after PayMongo fees
+          </div>
+          <div class="ledger-amount">₱1,290.35</div>
+        </li>
+        <li>
+          <div class="ledger-what">
+            Donation from the UPLB Student Help Desk, sent by GCash
+          </div>
+          <div class="ledger-amount">₱500.00</div>
+        </li>
+        <li class="ledger-total">
+          <div class="ledger-what">Total in</div>
+          <div class="ledger-amount">₱1,790.35</div>
+        </li>
+      </ul>
+
+      <h3>Money out</h3>
+      <ul class="ledger">
+        <li>
+          <div class="ledger-what">
+            Vercel Pro hosting, July cycle, paid Aug 2
+            (<a href="/transparency/2026-08-vercel-pro.png">receipt</a>)
+          </div>
+          <div class="ledger-amount">₱1,264.14 ($20.00)</div>
+        </li>
+        <li>
+          <div class="ledger-what">
+            uplb.tools domain, one year, paid Jul 13
+            (<a href="/transparency/2026-07-porkbun-domain.png">receipt</a>)
+          </div>
+          <div class="ledger-amount">₱618.16 ($9.78)</div>
+        </li>
+        <li>
+          <div class="ledger-what">
+            OpenCode Go subscription for maintenance tooling, paid Aug 10
+            (<a href="/transparency/2026-08-opencode-go.png">receipt</a>)
+          </div>
+          <div class="ledger-amount">₱316.03 ($5.00)</div>
+        </li>
+        <li class="ledger-total">
+          <div class="ledger-what">Total out</div>
+          <div class="ledger-amount">₱2,198.33</div>
+        </li>
+      </ul>
+
+      <h3>Receipts</h3>
+      <div class="receipts">
+        <figure>
+          <a href="/transparency/2026-08-vercel-pro.png">
+            <img
+              src="/transparency/2026-08-vercel-pro.png"
+              alt="Vercel invoice 67F77D49-0004, July 2026 Pro plan, $20.00, paid August 2, 2026"
+              loading="lazy"
+              width="751"
+              height="545"
+            />
+          </a>
+          <figcaption>Vercel Pro, invoice 67F77D49-0004</figcaption>
+        </figure>
+        <figure>
+          <a href="/transparency/2026-07-porkbun-domain.png">
+            <img
+              src="/transparency/2026-07-porkbun-domain.png"
+              alt="Porkbun invoice 10981073, uplb.tools domain registration, $9.78, buyer details redacted"
+              loading="lazy"
+              width="850"
+              height="390"
+            />
+          </a>
+          <figcaption>uplb.tools domain, Porkbun invoice 10981073</figcaption>
+        </figure>
+        <figure>
+          <a href="/transparency/2026-08-opencode-go.png">
+            <img
+              src="/transparency/2026-08-opencode-go.png"
+              alt="Stripe receipt 2138-9554 from Anomaly, OpenCode Go, $5.00, charged ₱316.03 at 63.2069 PHP per USD"
+              loading="lazy"
+              width="405"
+              height="680"
+            />
+          </a>
+          <figcaption>OpenCode Go, Stripe receipt 2138-9554</figcaption>
+        </figure>
+      </div>
+      <p class="receipt-note">Buyer names and addresses are redacted.</p>
+
+      <h3>Notes</h3>
+      <p>
+        The maintainers covered the ₱407.98 gap out of pocket. All 13 site
+        donations came in during enlistment week (Aug 3 to 9) and none after;
+        donations follow campus foot traffic.
+      </p>
+      <p>
+        The OpenCode receipt shows the real card charge: ₱316.03 at 63.2069
+        pesos per dollar. The Vercel and Porkbun peso figures use that same
+        rate, since all three were paid on the same card in the same period.
+        The domain was charged Jul 13 and is counted here because this is the
+        first report; from September on, expenses count in the month the card
+        was charged.
+      </p>
+      <p>
+        No contributor payouts this month. Income was below the operating
+        floor, so everything went to operations.
+      </p>
+    </section>
+
+    <section class="donate-line">
+      <p>
+        If Room TBA is useful to you, <a href="/donate">a donation</a> covers
+        next month's bill.
+      </p>
+    </section>
+
+    <SiteFooter />
+  </main>
+</Layout>
+
+<style>
+  /* Hallmark · macrostructure: ledger document · theme: house (Raleway · maroon · light paper) · enrichment: receipt scans · tone: plain */
+  .transparency-page {
+    max-width: 42rem;
+    margin: 0 auto;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 1.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    background: hsl(5 53% 32% / 0.08);
+    border: 1px solid hsl(5 53% 32% / 0.25);
+    text-decoration: none;
+    color: hsl(5, 53%, 32%);
+    font-weight: 600;
+    font-size: 0.9375rem;
+  }
+
+  .back-link:hover {
+    background: hsl(5 53% 32% / 0.14);
+  }
+
+  .hero {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 2.75rem);
+    line-height: 1.05;
+    margin: 0;
+  }
+
+  .lede {
+    margin: 0;
+    max-width: 38rem;
+    color: hsl(0, 0%, 28%);
+    line-height: 1.6;
+  }
+
+  .lede a,
+  .receipt-note a,
+  .donate-line a,
+  .ledger a {
+    color: hsl(5, 53%, 32%);
+    font-weight: 600;
+  }
+
+  .month {
+    margin-bottom: 2.5rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin: 0 0 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid hsl(5 53% 32% / 0.2);
+  }
+
+  h3 {
+    font-size: 1.0625rem;
+    margin: 1.75rem 0 0.625rem;
+  }
+
+  .summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.875rem 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid hsl(5 30% 88%);
+    background: hsl(5 20% 98%);
+  }
+
+  .summary-net {
+    border-color: hsl(5 53% 32% / 0.35);
+  }
+
+  .summary-label {
+    font-size: 0.875rem;
+    color: hsl(0, 0%, 35%);
+  }
+
+  .summary-value {
+    font-size: 1.375rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ledger {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .ledger li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.625rem 0;
+    border-bottom: 1px solid hsl(5 30% 90%);
+    line-height: 1.5;
+  }
+
+  .ledger-what {
+    color: hsl(0, 0%, 20%);
+  }
+
+  .ledger-amount {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+
+  .ledger-total {
+    border-bottom: none;
+  }
+
+  .ledger-total .ledger-what,
+  .ledger-total .ledger-amount {
+    font-weight: 700;
+  }
+
+  .receipts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .receipts figure {
+    margin: 0;
+  }
+
+  .receipts img {
+    width: 100%;
+    height: auto;
+    border: 1px solid hsl(5 30% 88%);
+    border-radius: 0.5rem;
+    background: white;
+  }
+
+  .receipts figcaption {
+    margin-top: 0.375rem;
+    font-size: 0.875rem;
+    color: hsl(0, 0%, 35%);
+  }
+
+  .receipt-note {
+    margin: 0.75rem 0 0;
+    font-size: 0.875rem;
+    color: hsl(0, 0%, 35%);
+    line-height: 1.5;
+  }
+
+  .month p {
+    margin: 0 0 0.75rem;
+    color: hsl(0, 0%, 28%);
+    line-height: 1.6;
+  }
+
+  .donate-line p {
+    margin: 0;
+    padding: 1rem 1.25rem;
+    border-radius: 0.75rem;
+    border: 1px solid hsl(5 30% 88%);
+    background: hsl(5 20% 98%);
+    color: hsl(0, 0%, 28%);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+
+  .back-link:focus-visible,
+  .ledger a:focus-visible,
+  .receipts a:focus-visible,
+  .donate-line a:focus-visible {
+    outline: 2px solid hsl(5, 53%, 32%);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 540px) {
+    .summary,
+    .receipts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .ledger li {
+      flex-direction: column;
+      gap: 0.125rem;
+    }
+  }
+</style>

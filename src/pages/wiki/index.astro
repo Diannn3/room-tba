@@ -55,12 +55,12 @@ const articles = [
     sourcePath: "src/pages/wiki/section-times.astro",
   },
   {
-    href: "/wiki/transparency",
+    href: "/transparency",
     kicker: "Money · 3 min read",
-    title: "Transparency reports",
+    title: "Transparency report",
     blurb:
-      "Where donation and sponsor money goes: monthly ledgers of funds received, expenses, and reimbursements, published instead of raw transaction slips.",
-    sourcePath: "src/pages/wiki/transparency.astro",
+      "Where donation and sponsor money goes: monthly ledger of money in, money out, and receipts.",
+    sourcePath: "src/pages/transparency.astro",
   },
 ].map((article) => {
   const { authors, lastEdited } = wikiProvenance(article.sourcePath);

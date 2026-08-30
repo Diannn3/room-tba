@@ -65,6 +65,7 @@ export default defineConfig({
           /^\/changelog(\/|\?|$)/,
           /^\/sponsors(\/|\?|$)/,
           /^\/donate(\/|\?|$)/,
+          /^\/transparency(\/|\?|$)/,
           /^\/wiki(\/|\?|$)/,
           // Server-rendered per pair; the offline app shell would replace the
           // directions with an empty map.
@@ -190,6 +191,7 @@ export default defineConfig({
 
   redirects: {
     "/contribute": "/?contribute=1",
+    "/wiki/transparency": "/transparency",
     "/discord": campusCommunity.discordUrl,
     "/messenger": MESSENGER_CONTRIBUTE_TARGET,
     "/messenger/contribute": MESSENGER_CONTRIBUTE_TARGET,

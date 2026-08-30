@@ -54,6 +54,14 @@ const articles = [
       "Exhaustive glossary: letter ladders, NSTP/HK/GI/residency, MS/PhD numbers, every AMIS type, plus oldest→newest term trends (what moved vs what only looks bigger in Room TBA).",
     sourcePath: "src/pages/wiki/section-times.astro",
   },
+  {
+    href: "/transparency",
+    kicker: "Money · 3 min read",
+    title: "Transparency report",
+    blurb:
+      "Where donation and sponsor money goes: monthly ledger of money in, money out, and receipts.",
+    sourcePath: "src/pages/transparency.astro",
+  },
 ].map((article) => {
   const { authors, lastEdited } = wikiProvenance(article.sourcePath);
   return {

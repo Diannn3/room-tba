@@ -155,9 +155,6 @@ export const campusCommunity = {
   /** Messenger group chat invites (targets for redirect workers). */
   messengerContributeTarget: "",
   messengerMaintainTarget: "",
-  /** Short links on a community subdomain (Cloudflare Worker). Delete if unused. */
-  messengerShortContributeUrl: "",
-  messengerShortMaintainUrl: "",
 } as const;
 `;
 }

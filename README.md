@@ -237,7 +237,7 @@ See **[CONTRIBUTING.md](CONTRIBUTING.md)** for how to help:
 - **Write code:** branch off `staging`, PR to `staging` ([developer guide](docs/developer-guide.md))
 - **Maintainers / agents:** [AGENTS.md](AGENTS.md) · [agent tooling](docs/agent-tooling.md) (`bun run install:agent-tooling` + `install:agent-plugins` once per machine)
 
-[Good first issues](https://github.com/uplbtools/room-tba/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) · **Data:** label `data` · **QA:** label `qa` · **Chat with the team:** [Messenger](https://messenger.uplbtools.me/contribute)
+[Good first issues](https://github.com/uplbtools/room-tba/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) · **Data:** label `data` · **QA:** label `qa` · **Chat with the team:** [Messenger](https://room-tba.uplb.tools/messenger/contribute)
 
 Implementers: [issue hygiene](docs/issue-hygiene.md) · [PR QA process](docs/agentic-qa-process.md)
 
@@ -272,9 +272,16 @@ Org: [uplbtools](https://github.com/uplbtools) · Campus tool, not an official U
 
 ## Sponsors
 
-Room TBA is funded by curated campus-relevant sponsors and one-time donations. Revenue supports core team incentives (40%), contributor payouts (30%), and operational expenses (30%).
+Room TBA is funded by curated campus-relevant sponsors and one-time donations. Revenue covers operational expenses first (hosting, database, domains, promotion), including retroactive reimbursement of costs maintainers paid personally; the remainder funds contributor payouts and core team incentives. Every peso is tracked in public transparency reports.
 
 **[Donate](https://room-tba.uplb.tools/donate)** · **[Become a sponsor](https://room-tba.uplb.tools/sponsors)** · [Funding model](docs/funding-model.md) · [Ad policy](docs/ad-policy.md)
+
+**Transparency policy:**
+
+- Donations are anonymous by default. The app stores only the amount and an optional message, never donor identity. Donors who want public credit can ask on Discord or Messenger.
+- We publish a transparency report (totals received, itemized expenses, payout status, running balance) instead of raw transaction slips, which carry donor and account details.
+- Original PayMongo and GCash records are retained privately as the audit trail. Redacted copies are available on request. Expense receipts (hosting, domain) may be published with personal details cropped.
+- Contributor payouts are made via GCash and QR Ph, points-based per the [funding model](docs/funding-model.md).
 
 ---
 

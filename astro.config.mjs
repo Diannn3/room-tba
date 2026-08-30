@@ -191,6 +191,7 @@ export default defineConfig({
 
   redirects: {
     "/contribute": "/?contribute=1",
+    "/wiki/transparency": "/transparency",
     "/discord": campusCommunity.discordUrl,
     "/messenger": MESSENGER_CONTRIBUTE_TARGET,
     "/messenger/contribute": MESSENGER_CONTRIBUTE_TARGET,

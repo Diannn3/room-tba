@@ -21,12 +21,6 @@ export const MESSENGER_CONTRIBUTE_TARGET =
 export const MESSENGER_MAINTAIN_TARGET =
   campusCommunity.messengerMaintainTarget;
 
-/** Short links on a community subdomain (Cloudflare Worker). */
-export const MESSENGER_SHORT_CONTRIBUTE_URL =
-  campusCommunity.messengerShortContributeUrl;
-export const MESSENGER_SHORT_MAINTAIN_URL =
-  campusCommunity.messengerShortMaintainUrl;
-
 /** App-stable redirect URLs on room-tba (avoids messenger subdomain DNS cache misses). */
 export const MESSENGER_CONTRIBUTE_URL = `${ROOM_TBA_SITE_URL}/messenger/contribute`;
 export const MESSENGER_MAINTAIN_URL = `${ROOM_TBA_SITE_URL}/messenger/maintain`;

@@ -89,14 +89,11 @@ export const campusTestFixtures = {
 export const campusCommunity = {
   orgUrl: "https://uplb.tools",
   githubUrl: "https://github.com/uplbtools/room-tba",
-  discordUrl: "https://discord.uplbtools.me",
+  discordUrl: "https://discord.gg/SrVDgfcrVt",
   facebookUrl: "https://facebook.com/uplb.tools",
   instagramUrl: "https://instagram.com/uplb.tools",
   osaOrganizationsUrl: "https://uplbosa.org/orgs",
   /** Messenger group chat invites (targets for redirect workers). */
   messengerContributeTarget: "https://m.me/j/Aba1V0prvQyLrafZ/",
   messengerMaintainTarget: "https://m.me/j/AbZtqMU8UUTiwQfn/",
-  /** Short links on a community subdomain (Cloudflare Worker). Delete if unused. */
-  messengerShortContributeUrl: "https://messenger.uplbtools.me/contribute",
-  messengerShortMaintainUrl: "https://messenger.uplbtools.me/maintain",
 } as const;

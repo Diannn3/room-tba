@@ -8,7 +8,6 @@ import {
   MESSENGER_CONTRIBUTE_URL,
   MESSENGER_MAINTAIN_TARGET,
   MESSENGER_MAINTAIN_URL,
-  MESSENGER_SHORT_CONTRIBUTE_URL,
   MESSENGER_URL,
 } from "./community-links.ts";
 
@@ -21,9 +20,6 @@ describe("community-links", () => {
     expect(MESSENGER_MAINTAIN_URL).toBe(
       "https://room-tba.uplb.tools/messenger/maintain",
     );
-    expect(MESSENGER_SHORT_CONTRIBUTE_URL).toBe(
-      "https://messenger.uplbtools.me/contribute",
-    );
   });
 
   test("Messenger targets are m.me group invites", () => {
@@ -33,7 +29,7 @@ describe("community-links", () => {
   });
 
   test("Discord short link unchanged", () => {
-    expect(DISCORD_URL).toBe("https://discord.uplbtools.me");
+    expect(DISCORD_URL).toBe("https://discord.gg/SrVDgfcrVt");
   });
   test("UPLB Tools socials are listed for the footer", () => {
     expect(FACEBOOK_URL).toBe("https://facebook.com/uplb.tools");

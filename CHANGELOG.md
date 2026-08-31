@@ -1,3 +1,10 @@
+# [2.28.0](https://github.com/uplbtools/room-tba/compare/v2.27.0...v2.28.0) (2026-08-31)
+
+
+### Features
+
+* **transparency:** note ad-window traffic and donation numbers ([74ce451](https://github.com/uplbtools/room-tba/commit/74ce45183ed3080a1a8e4d9984825f66fb712295))
+
 # [2.24.0](https://github.com/uplbtools/room-tba/compare/v2.23.1...v2.24.0) (2026-08-31)
 
 

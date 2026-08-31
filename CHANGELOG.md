@@ -1,3 +1,10 @@
+## [2.23.1](https://github.com/uplbtools/room-tba/compare/v2.23.0...v2.23.1) (2026-08-31)
+
+
+### Bug Fixes
+
+* **transparency:** first report covers July to August 2026 ([a4d5361](https://github.com/uplbtools/room-tba/commit/a4d536177ecc4b66b24851eca288d7ce88c21eda))
+
 ## [2.20.1](https://github.com/uplbtools/room-tba/compare/v2.20.0...v2.20.1) (2026-08-15)
 
 

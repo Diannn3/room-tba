@@ -240,6 +240,76 @@ import SiteFooter from "../components/SiteFooter.astro";
         fits inside the plan's included credit and the bill is just the
         ₱1,264.14 seat, which is where the current cycle is tracking so far.
       </p>
+      <figure class="chart">
+        <figcaption>Daily page views, Jul 27 to Aug 10. Ads started Aug 3.</figcaption>
+        <svg viewBox="0 0 640 150" role="img" aria-label="Line chart of daily page views. Baseline around 1,500 a day, peak 10,068 on Aug 4 after ads started Aug 3, back near 1,000 by Aug 6.">
+          <line x1="46" y1="128" x2="634" y2="128" stroke="#e8e2e1" />
+          <line x1="46" y1="70.9" x2="634" y2="70.9" stroke="#e8e2e1" />
+          <line x1="46" y1="13.7" x2="634" y2="13.7" stroke="#e8e2e1" />
+          <text x="42" y="131" class="tick" text-anchor="end">0</text>
+          <text x="42" y="74" class="tick" text-anchor="end">5k</text>
+          <text x="42" y="17" class="tick" text-anchor="end">10k</text>
+          <line x1="340" y1="10" x2="340" y2="128" stroke="#8a8a8a" stroke-dasharray="3 3" />
+          <text x="336" y="20" class="tick" text-anchor="end">ads start</text>
+          <path d="M46,128.0 L46.0,91.1 L88.0,105.2 L130.0,108.0 L172.0,112.1 L214.0,114.2 L256.0,111.2 L298.0,95.5 L340.0,36.8 L382.0,12.9 L424.0,57.3 L466.0,118.1 L508.0,116.9 L550.0,116.6 L592.0,123.1 L634.0,120.4 L634.0,128.0 Z" fill="#A63D33" opacity="0.12" />
+          <polyline points="46.0,91.1 88.0,105.2 130.0,108.0 172.0,112.1 214.0,114.2 256.0,111.2 298.0,95.5 340.0,36.8 382.0,12.9 424.0,57.3 466.0,118.1 508.0,116.9 550.0,116.6 592.0,123.1 634.0,120.4" fill="none" stroke="#A63D33" stroke-width="2" />
+          <circle cx="382" cy="12.9" r="3.5" fill="#A63D33" />
+          <text x="374" y="11" class="dlabel" text-anchor="end">10,068</text>
+          <text x="46" y="145" class="tick">Jul 27</text>
+          <text x="256" y="145" class="tick" text-anchor="middle">Aug 1</text>
+          <text x="340" y="145" class="tick" text-anchor="middle">3</text>
+          <text x="424" y="145" class="tick" text-anchor="middle">5</text>
+          <text x="508" y="145" class="tick" text-anchor="middle">7</text>
+          <text x="634" y="145" class="tick" text-anchor="end">10</text>
+        </svg>
+      </figure>
+
+      <figure class="chart">
+        <figcaption>Donations per day, net of fees. All 13 landed Aug 3 to 9.</figcaption>
+        <svg viewBox="0 0 640 150" role="img" aria-label="Bar chart of daily donations. Aug 3 peak of 591 pesos, tapering to about 49 pesos by Aug 9, nothing outside Aug 3 to 9.">
+          <line x1="46" y1="128" x2="634" y2="128" stroke="#e8e2e1" />
+          <line x1="46" y1="72.6" x2="634" y2="72.6" stroke="#e8e2e1" />
+          <line x1="46" y1="17.2" x2="634" y2="17.2" stroke="#e8e2e1" />
+          <text x="42" y="131" class="tick" text-anchor="end">0</text>
+          <text x="42" y="76" class="tick" text-anchor="end">300</text>
+          <text x="42" y="21" class="tick" text-anchor="end">600</text>
+          <rect x="331" y="18.9" width="18" height="109.1" rx="3" fill="#2F6BB0"><title>Aug 3, ₱591.00</title></rect>
+          <rect x="373" y="82.5" width="18" height="45.5" rx="3" fill="#2F6BB0"><title>Aug 4, ₱246.25</title></rect>
+          <rect x="415" y="118.9" width="18" height="9.1" rx="3" fill="#2F6BB0"><title>Aug 5, ₱49.25</title></rect>
+          <rect x="457" y="124.4" width="18" height="3.6" rx="2" fill="#2F6BB0"><title>Aug 6, ₱19.70</title></rect>
+          <rect x="499" y="111.6" width="18" height="16.4" rx="3" fill="#2F6BB0"><title>Aug 7, ₱88.65</title></rect>
+          <rect x="541" y="82.5" width="18" height="45.5" rx="3" fill="#2F6BB0"><title>Aug 8, ₱246.25</title></rect>
+          <rect x="583" y="118.9" width="18" height="9.1" rx="3" fill="#2F6BB0"><title>Aug 9, ₱49.25</title></rect>
+          <text x="340" y="14" class="dlabel" text-anchor="middle">₱591</text>
+          <text x="46" y="145" class="tick">Jul 27</text>
+          <text x="256" y="145" class="tick" text-anchor="middle">Aug 1</text>
+          <text x="340" y="145" class="tick" text-anchor="middle">3</text>
+          <text x="424" y="145" class="tick" text-anchor="middle">5</text>
+          <text x="508" y="145" class="tick" text-anchor="middle">7</text>
+          <text x="634" y="145" class="tick" text-anchor="end">10</text>
+        </svg>
+      </figure>
+
+      <figure class="chart chart-narrow">
+        <figcaption>The peak Vercel invoice against a quiet month.</figcaption>
+        <svg viewBox="0 0 640 170" role="img" aria-label="Stacked bar chart. The July cycle invoice is 2,779.84 pesos, a 1,264.14 peso seat plus 1,515.70 pesos of surge usage. A quiet month is the seat alone.">
+          <line x1="46" y1="146" x2="634" y2="146" stroke="#e8e2e1" />
+          <line x1="46" y1="98.4" x2="634" y2="98.4" stroke="#e8e2e1" />
+          <line x1="46" y1="50.8" x2="634" y2="50.8" stroke="#e8e2e1" />
+          <text x="42" y="149" class="tick" text-anchor="end">0</text>
+          <text x="42" y="102" class="tick" text-anchor="end">1k</text>
+          <text x="42" y="54" class="tick" text-anchor="end">2k</text>
+          <rect x="150" y="85.8" width="90" height="60.2" rx="3" fill="#A63D33"><title>Pro seat, ₱1,264.14</title></rect>
+          <rect x="150" y="13.7" width="90" height="70.1" rx="3" fill="#2F6BB0"><title>Usage from the surge, ₱1,515.70</title></rect>
+          <text x="250" y="55" class="dlabel">usage ₱1,515.70</text>
+          <text x="250" y="120" class="dlabel">seat ₱1,264.14</text>
+          <text x="150" y="164" class="tick">July cycle invoice, ₱2,779.84</text>
+          <rect x="420" y="85.8" width="90" height="60.2" rx="3" fill="#A63D33"><title>Pro seat, ₱1,264.14</title></rect>
+          <text x="520" y="120" class="dlabel">seat ₱1,264.14</text>
+          <text x="420" y="164" class="tick">Quiet month, ₱1,264.14</text>
+        </svg>
+      </figure>
+
       <p>
         No contributor payouts this month. Income was below the operating
         floor, so everything went to operations.
@@ -461,6 +531,35 @@ import SiteFooter from "../components/SiteFooter.astro";
     font-size: 0.875rem;
     color: hsl(0, 0%, 35%);
     line-height: 1.5;
+  }
+
+  .chart {
+    margin: 1.25rem 0 0;
+  }
+
+  .chart svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .chart figcaption {
+    font-size: 0.875rem;
+    color: hsl(0, 0%, 35%);
+    margin-bottom: 0.375rem;
+  }
+
+  .chart .tick {
+    font-size: 11px;
+    fill: hsl(0, 0%, 45%);
+    font-family: inherit;
+  }
+
+  .chart .dlabel {
+    font-size: 11px;
+    font-weight: 600;
+    fill: hsl(0, 0%, 25%);
+    font-family: inherit;
   }
 
   .month p {

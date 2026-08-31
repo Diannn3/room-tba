@@ -45,6 +45,7 @@ import SiteFooter from "../components/SiteFooter.astro";
 
       <h3>Money in</h3>
       <ul class="ledger">
+        <li class="ledger-month">August</li>
         <li>
           <div class="ledger-what">
             13 donations through <a href="/donate">/donate</a>, Aug 3 to 9,
@@ -66,9 +67,18 @@ import SiteFooter from "../components/SiteFooter.astro";
 
       <h3>Money out</h3>
       <p class="ledger-intro">
-        Recurring costs first, yearly ones last.
+        Grouped by month paid, recurring costs first.
       </p>
       <ul class="ledger">
+        <li class="ledger-month">July</li>
+        <li>
+          <div class="ledger-what">
+            uplb.tools domain, paid Jul 13 <span class="recur">yearly</span>
+            (<a href="/transparency/2026-07-porkbun-domain.png">receipt</a>)
+          </div>
+          <div class="ledger-amount">₱618.16 ($9.78)</div>
+        </li>
+        <li class="ledger-month">August</li>
         <li>
           <div class="ledger-what">
             Vercel Pro hosting, July cycle, paid Aug 2 <span class="recur">monthly</span>
@@ -107,13 +117,6 @@ import SiteFooter from "../components/SiteFooter.astro";
             (<a href="/transparency/2026-08-meta-ads.png">receipt</a>)
           </div>
           <div class="ledger-amount">₱1,006.86</div>
-        </li>
-        <li>
-          <div class="ledger-what">
-            uplb.tools domain, paid Jul 13 <span class="recur">yearly</span>
-            (<a href="/transparency/2026-07-porkbun-domain.png">receipt</a>)
-          </div>
-          <div class="ledger-amount">₱618.16 ($9.78)</div>
         </li>
         <li class="ledger-total">
           <div class="ledger-what">Total out</div>
@@ -379,6 +382,12 @@ import SiteFooter from "../components/SiteFooter.astro";
 
   .ledger-total {
     border-bottom: none;
+  }
+
+  .ledger-month {
+    font-weight: 700;
+    font-size: 0.875rem;
+    padding-top: 0.875rem;
   }
 
   .ledger-intro {

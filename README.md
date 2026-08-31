@@ -300,7 +300,7 @@ Community forks, maintained by their own campuses:
 | --- | --- |
 | UP Visayas | [andrianllmm/upv-room-tba](https://github.com/andrianllmm/upv-room-tba) |
 | UP Baguio | [UPB-Tools/room-tba](https://github.com/UPB-Tools/room-tba) |
-| Bulacan State University (Malolos) | [bulsutools/room-tba](https://github.com/bulsutools/room-tba) |
+| Bulacan State University (Malolos) | [bulsutools/room-tba](https://github.com/bulsutools/room-tba), live at [bulsu-room-tba.vercel.app](https://bulsu-room-tba.vercel.app) |
 | UP Diliman | [uplbtools/room-tba-upd](https://github.com/uplbtools/room-tba-upd) (our own port, in progress) |
 
 Full guide with every file path and the painful parts: **[Fork this for your campus](https://room-tba.uplb.tools/wiki/fork-for-your-campus)** in the wiki. For the config file, start with the **[fork wizard](https://room-tba.uplb.tools/fork)** — point a map at your campus and it generates `src/campus.config.ts` plus a Vercel deploy link.

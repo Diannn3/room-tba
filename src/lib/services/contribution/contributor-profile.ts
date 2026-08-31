@@ -842,6 +842,7 @@ export async function resolveContributorAttribution(
 		.limit(1);
 	if (!row) return null;
 	const name = row.user.displayName ?? row.user.username;
+	if (!row.user.showInCredits) return { name, avatarUrl: null, href: null };
 	const managedAvatarUrl = profileAvatar(row.user.avatarUrl);
 	if (
 		row.profile &&

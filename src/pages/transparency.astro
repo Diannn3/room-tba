@@ -65,44 +65,55 @@ import SiteFooter from "../components/SiteFooter.astro";
       </ul>
 
       <h3>Money out</h3>
+      <p class="ledger-intro">
+        Recurring costs first, yearly ones last.
+      </p>
       <ul class="ledger">
         <li>
           <div class="ledger-what">
-            Vercel Pro hosting, July cycle, paid Aug 2
+            Vercel Pro hosting, July cycle, paid Aug 2 <span class="recur">monthly</span>
             (<a href="/transparency/2026-08-vercel-pro.png">receipt</a>)
           </div>
           <div class="ledger-amount">₱1,264.14 ($20.00)</div>
         </li>
         <li>
           <div class="ledger-what">
-            uplb.tools domain, one year, paid Jul 13
-            (<a href="/transparency/2026-07-porkbun-domain.png">receipt</a>)
+            Vercel platform and usage, invoice 67F77D49-0006, issued Aug 22
+            <span class="recur">monthly, usage varies</span>
+            <ul class="sublines">
+              <li>Pro seat ₱1,264.14 ($20.00)</li>
+              <li>Build minutes ₱836.86 ($13.24)</li>
+              <li>Observability ₱324.25 ($5.13)</li>
+              <li>Serverless compute ₱185.83 ($2.94)</li>
+              <li>Bandwidth ₱67.63 ($1.07)</li>
+              <li>Web analytics ₱53.09 ($0.84)</li>
+              <li>Functions and image tools ₱48.04 ($0.76)</li>
+            </ul>
           </div>
-          <div class="ledger-amount">₱618.16 ($9.78)</div>
+          <div class="ledger-amount">₱2,779.84 ($43.98)</div>
         </li>
         <li>
           <div class="ledger-what">
             OpenCode Go subscription for maintenance tooling, paid Aug 10
+            <span class="recur">monthly</span>
             (<a href="/transparency/2026-08-opencode-go.png">receipt</a>)
           </div>
           <div class="ledger-amount">₱316.03 ($5.00)</div>
         </li>
         <li>
           <div class="ledger-what">
-            Vercel platform and usage, invoice 67F77D49-0006, issued Aug 22.
-            Pro seat ₱1,264.14 ($20.00), build minutes ₱836.86 ($13.24),
-            observability ₱324.25 ($5.13), serverless compute ₱185.83 ($2.94),
-            bandwidth ₱67.63 ($1.07), web analytics ₱53.09 ($0.84), functions
-            and image tools ₱48.04 ($0.76)
-          </div>
-          <div class="ledger-amount">₱2,779.84 ($43.98)</div>
-        </li>
-        <li>
-          <div class="ledger-what">
             Meta ads promoting Room TBA, six charges Aug 3 to 31
+            <span class="recur">one-time</span>
             (<a href="/transparency/2026-08-meta-ads.png">receipt</a>)
           </div>
           <div class="ledger-amount">₱1,006.86</div>
+        </li>
+        <li>
+          <div class="ledger-what">
+            uplb.tools domain, paid Jul 13 <span class="recur">yearly</span>
+            (<a href="/transparency/2026-07-porkbun-domain.png">receipt</a>)
+          </div>
+          <div class="ledger-amount">₱618.16 ($9.78)</div>
         </li>
         <li class="ledger-total">
           <div class="ledger-what">Total out</div>
@@ -326,6 +337,31 @@ import SiteFooter from "../components/SiteFooter.astro";
 
   .ledger-total {
     border-bottom: none;
+  }
+
+  .ledger-intro {
+    margin: 0 0 0.375rem;
+    font-size: 0.875rem;
+    color: hsl(0, 0%, 35%);
+  }
+
+  .recur {
+    font-size: 0.8125rem;
+    color: hsl(0, 0%, 42%);
+  }
+
+  .sublines {
+    list-style: none;
+    margin: 0.375rem 0 0;
+    padding: 0;
+    font-size: 0.875rem;
+    color: hsl(0, 0%, 35%);
+  }
+
+  .sublines li {
+    display: block;
+    border-bottom: none;
+    padding: 0.125rem 0;
   }
 
   .ledger-total .ledger-what,

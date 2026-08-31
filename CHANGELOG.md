@@ -1,3 +1,10 @@
+# [2.24.0](https://github.com/uplbtools/room-tba/compare/v2.23.1...v2.24.0) (2026-08-31)
+
+
+### Features
+
+* **transparency:** add Meta ads spend with redacted billing report ([0bb6120](https://github.com/uplbtools/room-tba/commit/0bb61208c5550f08c5586d1edebf0773e0c5d611))
+
 ## [2.23.1](https://github.com/uplbtools/room-tba/compare/v2.23.0...v2.23.1) (2026-08-31)
 
 

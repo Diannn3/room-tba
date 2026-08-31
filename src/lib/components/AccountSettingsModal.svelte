@@ -269,15 +269,20 @@
 				profileError = data?.error ?? 'Could not save profile.';
 				return;
 			}
-			const accountAvatarChanged = avatarUrlDraft.trim() !== (profile.avatarUrl ?? '');
+			const nextAvatarUrl = avatarUrlDraft.trim() || null;
+			const accountAvatarChanged = nextAvatarUrl !== profile.avatarUrl;
+			const savedContributorProfile = data as EditableProfile;
+			setProfileDraft(savedContributorProfile);
 			if (accountAvatarChanged) {
+				// Keep pending account avatar change intact while contributor state advances.
+				avatarUrlDraft = nextAvatarUrl ?? '';
 				const accountRes = await fetch('/api/account/me', {
 					method: 'PATCH',
 					credentials: 'same-origin',
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({
 						displayName: profile.displayName,
-						avatarUrl: avatarUrlDraft.trim() || null
+						avatarUrl: nextAvatarUrl
 					})
 				});
 				if (!accountRes.ok) {
@@ -285,11 +290,11 @@
 					profileError = accountData.error ?? 'Profile saved, but account photo could not be saved.';
 					return;
 				}
+				setProfileDraft({ ...savedContributorProfile, avatarUrl: nextAvatarUrl });
 			}
-			setProfileDraft(data as EditableProfile);
 			profile = {
 				...profile,
-				avatarUrl: avatarUrlDraft.trim() || null,
+				avatarUrl: nextAvatarUrl,
 				profileUrl: profileUrlDraft.trim() || null,
 				showInCredits: showInCreditsDraft
 			};

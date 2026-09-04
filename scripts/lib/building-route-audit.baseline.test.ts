@@ -1,5 +1,15 @@
 import { describe, expect, test } from "bun:test";
-import { ENDPOINT_SNAP_TOLERANCE_METERS } from "../../src/constants/travel-modes";
+import {
+  ENDPOINT_SNAP_TOLERANCE_METERS,
+} from "../../src/constants/travel-modes";
+import {
+  buildTravelGraph,
+  type WalkGraphData,
+} from "../../src/lib/travel-graph/engine";
+import {
+  snapBuildingEndpoint,
+  type BuildingRouteEndpoint,
+} from "../../src/lib/travel-graph/building-route";
 import {
   auditBuildingEndpoints,
   type AuditBuilding,
@@ -33,36 +43,76 @@ function loadBaseline() {
 }
 
 describe("building route audit baseline", () => {
-  test("audits the complete checked-in building export without invalid coordinates", async () => {
-    const { buildings, graph, report } = await loadBaseline();
+  test(
+    "audits the complete building export without invalid coordinates",
+    async () => {
+      const { buildings, graph, report } = await loadBaseline();
 
-    expect(buildings.length).toBe(52);
-    expect(graph.nodes.length).toBe(1014);
-    expect(graph.edges.length).toBe(1468);
-    expect(report.summary.buildingCount).toBe(buildings.length);
-    expect(report.summary.invalidCoordinateCount).toBe(0);
-    expect(
-      report.summary.supportedCount +
-        report.summary.reviewCount +
-        report.summary.unsupportedCount,
-    ).toBe(buildings.length);
-  });
+      expect(buildings.length).toBe(52);
+      expect(graph.nodes.length).toBe(1014);
+      expect(graph.edges.length).toBe(1468);
+      expect(report.summary.buildingCount).toBe(buildings.length);
+      expect(report.summary.invalidCoordinateCount).toBe(0);
+      expect(
+        report.summary.supportedCount +
+          report.summary.reviewCount +
+          report.summary.unsupportedCount,
+      ).toBe(buildings.length);
+    },
+  );
 
-  test("keeps known off-campus teaching sites outside ordinary campus routing", async () => {
-    const { report } = await loadBaseline();
-    const byName = new Map(
-      report.buildings.map((building) => [building.buildingName.trim(), building]),
-    );
-
-    for (const name of ["UPRHS Building", "Veterinary Teaching Hospital"]) {
-      const building = byName.get(name);
-      expect(building, `${name} must exist in the checked-in export`).toBeDefined();
-      expect(building?.status).toBe("unsupported");
-      expect(building?.snapMeters ?? 0).toBeGreaterThan(
-        ENDPOINT_SNAP_TOLERANCE_METERS,
+  test(
+    "audit snapping stays in parity with the runtime route core",
+    async () => {
+      const { buildings, graph, report } = await loadBaseline();
+      const runtimeGraph = buildTravelGraph(graph as unknown as WalkGraphData);
+      const auditById = new Map(
+        report.buildings.map((building) => [building.buildingId, building]),
       );
-    }
-  });
+
+      for (const building of buildings) {
+        if (building.lat === null || building.lon === null) continue;
+        const runtimeSnap = snapBuildingEndpoint(runtimeGraph, {
+          ...(building as BuildingRouteEndpoint),
+          lat: building.lat,
+          lon: building.lon,
+        });
+        const audited = auditById.get(building.id);
+        expect(audited, building.buildingName).toBeDefined();
+        expect(audited?.nodeIndex, building.buildingName).toBe(
+          runtimeSnap.nodeIndex,
+        );
+        expect(audited?.snapMeters, building.buildingName).toBe(
+          Math.round(runtimeSnap.snapMeters * 100) / 100,
+        );
+      }
+    },
+  );
+
+  test(
+    "keeps known off-campus teaching sites outside ordinary campus routing",
+    async () => {
+      const { report } = await loadBaseline();
+      const byName = new Map(
+        report.buildings.map((building) => [
+          building.buildingName.trim(),
+          building,
+        ]),
+      );
+
+      for (const name of ["UPRHS Building", "Veterinary Teaching Hospital"]) {
+        const building = byName.get(name);
+        expect(
+          building,
+          `${name} must exist in the checked-in export`,
+        ).toBeDefined();
+        expect(building?.status).toBe("unsupported");
+        expect(building?.snapMeters ?? 0).toBeGreaterThan(
+          ENDPOINT_SNAP_TOLERANCE_METERS,
+        );
+      }
+    },
+  );
 
   test("derives the review threshold from current building pins", async () => {
     const { report } = await loadBaseline();

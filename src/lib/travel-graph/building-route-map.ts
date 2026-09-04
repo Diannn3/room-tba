@@ -8,16 +8,23 @@ export function buildingRouteGeoJson(route: BuildingWalkRoute): {
   return {
     graph: {
       type: "FeatureCollection",
-      features: [
-        {
-          type: "Feature",
-          properties: {},
-          geometry: {
-            type: "LineString",
-            coordinates: route.graphCoordinates,
-          },
-        },
-      ],
+      // GeoJSON LineString requires at least two positions. Different building
+      // pins can legitimately snap to the same graph node, in which case the
+      // authoritative graph segment is zero-length and the route consists only
+      // of the two connector legs. Emit no invalid one-point LineString.
+      features:
+        route.graphCoordinates.length >= 2
+          ? [
+              {
+                type: "Feature",
+                properties: {},
+                geometry: {
+                  type: "LineString",
+                  coordinates: route.graphCoordinates,
+                },
+              },
+            ]
+          : [],
     },
     connectors: {
       type: "FeatureCollection",
@@ -42,4 +49,11 @@ export function buildingRouteFitCoordinates(
     ...route.graphCoordinates,
     ...route.destinationConnectorCoordinates,
   ];
+}
+
+export function buildingRouteCameraAnimationOptions(reducedMotion: boolean) {
+  return {
+    animate: !reducedMotion,
+    duration: reducedMotion ? 0 : 650,
+  } as const;
 }

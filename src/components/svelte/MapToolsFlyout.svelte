@@ -11,11 +11,11 @@
   import {
     directionsStore,
     mapToolsStore,
+    buildingRouteStore,
     measureRouteStore,
     travelTimeStore,
     type MapToolsSection,
   } from "@lib/store.svelte";
-  import { buildingRouteStore } from "@lib/stores/building-route-store.svelte";
   import { panelFadeIn, panelFadeOut } from "@lib/motion";
   import MapViewControls from "@ui/MapViewControls.svelte";
   import WaybackImageryControl from "@ui/WaybackImageryControl.svelte";
@@ -82,7 +82,18 @@
 
   $effect(() => {
     if (!mapToolsStore.open || !panelEl) return;
-    return trapFocus(panelEl, { onEscape: () => mapToolsStore.close() });
+    return trapFocus(panelEl, {
+      onEscape: () => mapToolsStore.close(),
+      shouldHandleEscape: (event) => {
+        const target = event.target;
+        return !(
+          target instanceof HTMLInputElement &&
+          target.closest(".building-router") &&
+          target.getAttribute("role") === "combobox" &&
+          target.getAttribute("aria-expanded") === "true"
+        );
+      },
+    });
   });
 
   $effect(() => {
@@ -138,7 +149,9 @@
         >
           <Footprints size={18} aria-hidden="true" />
           <span class="map-tools-flyout__tool-copy">
-            <span class="map-tools-flyout__tool-label">Walk between buildings</span>
+            <span class="map-tools-flyout__tool-label">
+              Walk between buildings
+            </span>
             <span class="map-tools-flyout__tool-description">
               {buildingRouteStore.active
                 ? "On — choose a start and destination below"
@@ -251,7 +264,8 @@
     min-width: 0;
   }
 
-  /* Desktop: panel overlays below the trigger without growing the camera stack. */
+  /* Desktop: panel overlays below the trigger without growing the camera
+     stack. */
   :global(.desktop) .map-tools-flyout {
     z-index: 1;
   }

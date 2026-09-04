@@ -2,8 +2,11 @@
   import CornerRightUp from "@lucide/svelte/icons/corner-right-up";
   import Plus from "@lucide/svelte/icons/plus";
   import MapChromeActionChip from "@ui/map-chrome/MapChromeActionChip.svelte";
-  import { directionsStore, locationStore } from "@lib/store.svelte";
-  import { buildingRouteStore } from "@lib/stores/building-route-store.svelte";
+  import {
+    buildingRouteStore,
+    directionsStore,
+    locationStore,
+  } from "@lib/store.svelte";
 
   type Props = {
     lat: number;

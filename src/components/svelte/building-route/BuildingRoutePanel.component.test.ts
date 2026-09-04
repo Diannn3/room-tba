@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/svelte";
+import { fireEvent, render, screen, waitFor } from "@testing-library/svelte";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import {
   expectNoHorizontalOverflow,
@@ -46,19 +46,21 @@ describe("BuildingRoutePanel", () => {
     mountAtWidth(width);
     buildingRouteStore.open();
     const { container } = render(BuildingRoutePanel);
-    expect(screen.getByLabelText("From")).toBeVisible();
-    expect(screen.getByLabelText("To")).toBeVisible();
+    expect(screen.getByLabelText("From building")).toBeVisible();
+    expect(screen.getByLabelText("To building")).toBeVisible();
     expectNoHorizontalOverflow(container as HTMLElement);
   });
 
   test("search suggestions contain buildings only", async () => {
     buildingRouteStore.open();
     render(BuildingRoutePanel);
-    const from = screen.getByLabelText("From");
+    const from = screen.getByLabelText("From building");
     await fireEvent.input(from, { target: { value: "math" } });
-    expect(
-      screen.getByRole("option", { name: "New Math Building" }),
-    ).toBeVisible();
+    const option = screen.getByRole("option", { name: "New Math Building" });
+    expect(option).toBeVisible();
+    // aria-activedescendant keeps DOM focus on the editable combobox. Options
+    // must not become extra Tab stops.
+    expect(option).toHaveAttribute("tabindex", "-1");
     expect(screen.queryByText("room")).toBeNull();
   });
 
@@ -78,8 +80,10 @@ describe("BuildingRoutePanel", () => {
     };
 
     render(BuildingRoutePanel);
-    expect(screen.getByLabelText("From")).toHaveValue("New Math Building");
-    expect(screen.getByLabelText("To")).toHaveValue(
+    expect(screen.getByLabelText("From building")).toHaveValue(
+      "New Math Building",
+    );
+    expect(screen.getByLabelText("To building")).toHaveValue(
       "Physical Sciences Building",
     );
   });
@@ -87,18 +91,56 @@ describe("BuildingRoutePanel", () => {
   test("keyboard selection chooses a building without requiring a pointer", async () => {
     buildingRouteStore.open();
     render(BuildingRoutePanel);
-    const from = screen.getByLabelText("From");
+    const from = screen.getByLabelText("From building");
     await fireEvent.input(from, { target: { value: "math" } });
     await fireEvent.keyDown(from, { key: "Enter" });
 
     expect(buildingRouteStore.origin?.id).toBe(31);
     expect(from).toHaveValue("New Math Building");
+    await waitFor(() =>
+      expect(screen.getByLabelText("To building")).toHaveFocus(),
+    );
+  });
+
+  test("Escape dismisses suggestions without clearing the router session", async () => {
+    buildingRouteStore.open();
+    render(BuildingRoutePanel);
+    const from = screen.getByLabelText("From building");
+    from.focus();
+    await fireEvent.input(from, { target: { value: "math" } });
+    expect(screen.getByRole("listbox")).toBeVisible();
+
+    await fireEvent.keyDown(from, { key: "Escape" });
+
+    expect(screen.queryByRole("listbox")).toBeNull();
+    expect(buildingRouteStore.active).toBe(true);
+    expect(from).toHaveFocus();
+
+    // Reopening with ArrowDown should start at the first result rather than
+    // skipping it because index 0 happened to be retained while closed.
+    await fireEvent.keyDown(from, { key: "ArrowDown" });
+    expect(screen.getByRole("listbox")).toBeVisible();
+    expect(from).toHaveAttribute(
+      "aria-activedescendant",
+      "building-route-origin-0",
+    );
+  });
+
+  test("announces route calculation as a busy status", () => {
+    buildingRouteStore.open();
+    buildingRouteStore.phase = "planning";
+    render(BuildingRoutePanel);
+
+    expect(
+      screen.getByRole("region", { name: "Walk between buildings" }),
+    ).toHaveAttribute("aria-busy", "true");
+    expect(screen.getByText("Finding walking route…")).toBeVisible();
   });
 
   test("empty suggestions stay safe under arrow-key navigation", async () => {
     buildingRouteStore.open();
     render(BuildingRoutePanel);
-    const from = screen.getByLabelText("From");
+    const from = screen.getByLabelText("From building");
     await fireEvent.input(from, { target: { value: "not-a-building" } });
     await fireEvent.keyDown(from, { key: "ArrowDown" });
 
@@ -171,5 +213,32 @@ describe("BuildingRoutePanel", () => {
     expect(screen.getByText("About 4 min walk")).toBeVisible();
     expect(screen.getByText("300 m")).toBeVisible();
     expect(screen.getByText(/approximate connectors/i)).toBeVisible();
+  });
+
+  test("same-building selection reports an explicit outdoor non-route state", () => {
+    buildingRouteStore.open();
+    buildingRouteStore.phase = "ready";
+    buildingRouteStore.origin = {
+      id: 31,
+      buildingName: "New Math Building",
+      lat: 14.1646268,
+      lon: 121.2436644,
+    };
+    buildingRouteStore.destination = { ...buildingRouteStore.origin };
+    buildingRouteStore.result = {
+      status: "same-building",
+      originBuildingId: 31,
+      destinationBuildingId: 31,
+      maxSnapMeters: 250,
+      walkingSpeedKph: 4.5,
+      originSnap: null,
+      destinationSnap: null,
+      route: null,
+    };
+
+    render(BuildingRoutePanel);
+    expect(
+      screen.getByText("Same building — no outdoor walking route needed."),
+    ).toBeVisible();
   });
 });

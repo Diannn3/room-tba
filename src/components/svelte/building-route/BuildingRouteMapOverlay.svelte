@@ -5,9 +5,9 @@
     type GeoJSONSource,
     type MapLibreMap,
   } from "maplibre-gl";
-  import { mapStore } from "@lib/store.svelte";
-  import { buildingRouteStore } from "@lib/stores/building-route-store.svelte";
+  import { buildingRouteStore, mapStore } from "@lib/store.svelte";
   import {
+    buildingRouteCameraAnimationOptions,
     buildingRouteFitCoordinates,
     buildingRouteGeoJson,
   } from "@lib/travel-graph/building-route-map";
@@ -108,7 +108,11 @@
     const destination = buildingRouteStore.destination;
     if (!route || !origin || !destination) return;
 
-    const key = `${origin.id}:${destination.id}:${route.totalMeters.toFixed(1)}`;
+    const key = [
+      origin.id,
+      destination.id,
+      route.totalMeters.toFixed(1),
+    ].join(":");
     if (key === lastFitKey) return;
     lastFitKey = key;
 
@@ -118,10 +122,13 @@
     }
     if (bounds.isEmpty()) return;
 
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     map.fitBounds(bounds, {
       padding: routeFitPadding(map),
       maxZoom: 18,
-      duration: 650,
+      ...buildingRouteCameraAnimationOptions(reducedMotion),
     });
   }
 
@@ -137,10 +144,14 @@
     };
 
     sync();
-    map.on("styledata", sync);
+    // Restore our app-owned sources only after a replacement style is fully
+    // loaded. `styledata` fires during intermediate style mutations as well;
+    // `style.load` is the stable seam documented by MapLibre for a completed
+    // style change.
+    map.on("style.load", sync);
 
     return () => {
-      map.off("styledata", sync);
+      map.off("style.load", sync);
       if (map.isStyleLoaded()) removeRouteLayers(map);
     };
   });

@@ -1,9 +1,15 @@
 import { describe, expect, test } from "bun:test";
 import { WALK_KPH } from "@constants/travel-modes";
 import { distanceMeters } from "../campus-route";
-import { buildTravelGraph, type WalkGraphData } from "./engine";
 import {
+  buildTravelGraph,
+  type TravelGraph,
+  type WalkGraphData,
+} from "./engine";
+import {
+  isMainWalkComponentNode,
   isValidBuildingRouteCoordinate,
+  mainWalkComponentMask,
   routeBuildingToBuilding,
   snapBuildingEndpoint,
   type BuildingRouteEndpoint,
@@ -41,17 +47,35 @@ describe("building route endpoint validation", () => {
     expect(
       isValidBuildingRouteCoordinate(building(1, "A", 14.16, 121.24)),
     ).toBe(true);
-    expect(
-      isValidBuildingRouteCoordinate(building(1, "A", null, 121.24)),
-    ).toBe(false);
+    expect(isValidBuildingRouteCoordinate(building(1, "A", null, 121.24))).toBe(
+      false,
+    );
     expect(
       isValidBuildingRouteCoordinate(building(1, "A", Number.NaN, 121.24)),
     ).toBe(false);
-    expect(
-      isValidBuildingRouteCoordinate(building(1, "A", 91, 121.24)),
-    ).toBe(false);
+    expect(isValidBuildingRouteCoordinate(building(1, "A", 91, 121.24))).toBe(
+      false,
+    );
     expect(isValidBuildingRouteCoordinate(building(1, "A", 14.16, 181))).toBe(
       false,
+    );
+  });
+
+  test("fails closed when graph topology is structurally invalid", () => {
+    const mismatched = {
+      ...lineGraph,
+      lng: new Float64Array([121, 121.001]),
+    };
+    expect(() => mainWalkComponentMask(mismatched)).toThrow(
+      /coordinate arrays have different lengths/i,
+    );
+
+    const invalidEdge = {
+      ...lineGraph,
+      edges: [[0, 99, 100, "footway", null, []]] as WalkGraphData["edges"],
+    };
+    expect(() => mainWalkComponentMask(invalidEdge)).toThrow(
+      /out-of-range edge/i,
     );
   });
 
@@ -71,26 +95,23 @@ describe("building route endpoint validation", () => {
 });
 
 describe("routeBuildingToBuilding", () => {
-  test(
-    "uses graph-only metrics when both building pins are exact graph nodes",
-    () => {
-      const result = routeBuildingToBuilding({
-        graph: lineGraph,
-        origin: building(1, "A", 14, 121),
-        destination: building(2, "B", 14, 121.002),
-        maxSnapMeters: 100,
-      });
+  test("uses graph-only metrics when both building pins are exact graph nodes", () => {
+    const result = routeBuildingToBuilding({
+      graph: lineGraph,
+      origin: building(1, "A", 14, 121),
+      destination: building(2, "B", 14, 121.002),
+      maxSnapMeters: 100,
+    });
 
-      expect(result.status).toBe("ok");
-      if (result.status !== "ok") return;
-      expect(result.originSnap.snapMeters).toBeCloseTo(0, 9);
-      expect(result.destinationSnap.snapMeters).toBeCloseTo(0, 9);
-      expect(result.route.graphMeters).toBe(200);
-      expect(result.route.totalMeters).toBeCloseTo(200, 9);
-      expect(result.route.graphSeconds).toBeCloseTo(200 / WALK_MPS, 9);
-      expect(result.route.totalSeconds).toBeCloseTo(200 / WALK_MPS, 9);
-    },
-  );
+    expect(result.status).toBe("ok");
+    if (result.status !== "ok") return;
+    expect(result.originSnap.snapMeters).toBeCloseTo(0, 9);
+    expect(result.destinationSnap.snapMeters).toBeCloseTo(0, 9);
+    expect(result.route.graphMeters).toBe(200);
+    expect(result.route.totalMeters).toBeCloseTo(200, 9);
+    expect(result.route.graphSeconds).toBeCloseTo(200 / WALK_MPS, 9);
+    expect(result.route.totalSeconds).toBeCloseTo(200 / WALK_MPS, 9);
+  });
 
   test("adds both endpoint connectors to canonical distance and ETA", () => {
     const originLat = 14 - 30 / METERS_PER_DEGREE;
@@ -127,53 +148,45 @@ describe("routeBuildingToBuilding", () => {
     ]);
   });
 
-  test(
-    "same snapped node still charges both connectors for different buildings",
-    () => {
-      const result = routeBuildingToBuilding({
-        graph: lineGraph,
-        origin: building(1, "A", 14 - 10 / METERS_PER_DEGREE, 121),
-        destination: building(2, "B", 14 + 15 / METERS_PER_DEGREE, 121),
-        maxSnapMeters: 50,
-      });
+  test("same snapped node still charges both connectors for different buildings", () => {
+    const result = routeBuildingToBuilding({
+      graph: lineGraph,
+      origin: building(1, "A", 14 - 10 / METERS_PER_DEGREE, 121),
+      destination: building(2, "B", 14 + 15 / METERS_PER_DEGREE, 121),
+      maxSnapMeters: 50,
+    });
 
-      expect(result.status).toBe("ok");
-      if (result.status !== "ok") return;
-      expect(result.originSnap.nodeIndex).toBe(
-        result.destinationSnap.nodeIndex,
-      );
-      expect(result.route.graphMeters).toBe(0);
-      expect(result.route.graphSeconds).toBe(0);
-      expect(result.route.totalMeters).toBeCloseTo(25, 6);
-      expect(result.route.totalSeconds).toBeCloseTo(25 / WALK_MPS, 6);
-    },
-  );
+    expect(result.status).toBe("ok");
+    if (result.status !== "ok") return;
+    expect(result.originSnap.nodeIndex).toBe(result.destinationSnap.nodeIndex);
+    expect(result.route.graphMeters).toBe(0);
+    expect(result.route.graphSeconds).toBe(0);
+    expect(result.route.totalMeters).toBeCloseTo(25, 6);
+    expect(result.route.totalSeconds).toBeCloseTo(25 / WALK_MPS, 6);
+  });
 
-  test(
-    "same building is an explicit non-route state keyed by id, not name",
-    () => {
-      const same = routeBuildingToBuilding({
-        graph: lineGraph,
-        origin: building(7, "Old name", null, null),
-        destination: building(7, "Renamed building", 14, 121),
-        maxSnapMeters: 100,
-      });
-      expect(same).toMatchObject({
-        status: "same-building",
-        originBuildingId: 7,
-        destinationBuildingId: 7,
-        route: null,
-      });
+  test("same building is an explicit non-route state keyed by id, not name", () => {
+    const same = routeBuildingToBuilding({
+      graph: lineGraph,
+      origin: building(7, "Old name", null, null),
+      destination: building(7, "Renamed building", 14, 121),
+      maxSnapMeters: 100,
+    });
+    expect(same).toMatchObject({
+      status: "same-building",
+      originBuildingId: 7,
+      destinationBuildingId: 7,
+      route: null,
+    });
 
-      const sameLabelDifferentIds = routeBuildingToBuilding({
-        graph: lineGraph,
-        origin: building(7, "Shared label", 14, 121),
-        destination: building(8, "Shared label", 14, 121.002),
-        maxSnapMeters: 100,
-      });
-      expect(sameLabelDifferentIds.status).toBe("ok");
-    },
-  );
+    const sameLabelDifferentIds = routeBuildingToBuilding({
+      graph: lineGraph,
+      origin: building(7, "Shared label", 14, 121),
+      destination: building(8, "Shared label", 14, 121.002),
+      maxSnapMeters: 100,
+    });
+    expect(sameLabelDifferentIds.status).toBe("ok");
+  });
 
   test("invalid coordinates fail before nearest-node routing", () => {
     const badOrigin = routeBuildingToBuilding({
@@ -193,88 +206,93 @@ describe("routeBuildingToBuilding", () => {
     expect(badDestination.status).toBe("destination-invalid");
   });
 
-  test(
-    "snap ceiling is inclusive and fails closed immediately above it",
-    () => {
-      const origin = building(1, "A", 14 - 40 / METERS_PER_DEGREE, 121);
-      const exactSnapMeters = distanceMeters(
-        { lat: origin.lat as number, lon: origin.lon as number },
-        { lat: 14, lon: 121 },
+  test("snap ceiling is inclusive and fails closed immediately above it", () => {
+    const origin = building(1, "A", 14 - 40 / METERS_PER_DEGREE, 121);
+    const exactSnapMeters = distanceMeters(
+      { lat: origin.lat as number, lon: origin.lon as number },
+      { lat: 14, lon: 121 },
+    );
+
+    const onBoundary = routeBuildingToBuilding({
+      graph: lineGraph,
+      origin,
+      destination: building(2, "B", 14, 121.002),
+      maxSnapMeters: exactSnapMeters,
+    });
+    expect(onBoundary.status).toBe("ok");
+
+    const overBoundary = routeBuildingToBuilding({
+      graph: lineGraph,
+      origin,
+      destination: building(2, "B", 14, 121.002),
+      maxSnapMeters: exactSnapMeters - 0.001,
+    });
+    expect(overBoundary.status).toBe("origin-off-network");
+    if (overBoundary.status === "origin-off-network") {
+      expect(overBoundary.originSnap.snapMeters).toBeCloseTo(
+        exactSnapMeters,
+        9,
       );
+      expect(overBoundary.route).toBeNull();
+    }
+  });
 
-      const onBoundary = routeBuildingToBuilding({
-        graph: lineGraph,
-        origin,
-        destination: building(2, "B", 14, 121.002),
-        maxSnapMeters: exactSnapMeters,
-      });
-      expect(onBoundary.status).toBe("ok");
+  test("destination off-network preserves audited origin snap but returns no ETA", () => {
+    const result = routeBuildingToBuilding({
+      graph: lineGraph,
+      origin: building(1, "A", 14, 121),
+      destination: building(2, "Far B", 14 + 500 / METERS_PER_DEGREE, 121.002),
+      maxSnapMeters: 100,
+    });
 
-      const overBoundary = routeBuildingToBuilding({
-        graph: lineGraph,
-        origin,
-        destination: building(2, "B", 14, 121.002),
-        maxSnapMeters: exactSnapMeters - 0.001,
-      });
-      expect(overBoundary.status).toBe("origin-off-network");
-      if (overBoundary.status === "origin-off-network") {
-        expect(overBoundary.originSnap.snapMeters).toBeCloseTo(
-          exactSnapMeters,
-          9,
-        );
-        expect(overBoundary.route).toBeNull();
-      }
-    },
-  );
+    expect(result.status).toBe("destination-off-network");
+    if (result.status !== "destination-off-network") return;
+    expect(result.originSnap.nodeIndex).toBe(0);
+    expect(result.destinationSnap.snapMeters).toBeGreaterThan(100);
+    expect(result.route).toBeNull();
+  });
 
-  test(
-    "destination off-network preserves audited origin snap but returns no ETA",
-    () => {
-      const result = routeBuildingToBuilding({
-        graph: lineGraph,
-        origin: building(1, "A", 14, 121),
-        destination: building(
-          2,
-          "Far B",
-          14 + 500 / METERS_PER_DEGREE,
-          121.002,
-        ),
-        maxSnapMeters: 100,
-      });
+  test("nodes outside the largest weak component are off-network even at zero snap", () => {
+    const withIsland = buildTravelGraph({
+      meta: { coordScale: 1e6, nodeCount: 5, edgeCount: 3 },
+      nodes: [
+        [1, 14, 121],
+        [2, 14, 121.001],
+        [3, 14, 121.002],
+        [4, 14.01, 121],
+        [5, 14.01, 121.001],
+      ],
+      edges: [
+        [0, 1, 100, "footway", null, []],
+        [1, 2, 100, "footway", null, []],
+        [3, 4, 100, "footway", null, []],
+      ],
+    });
 
-      expect(result.status).toBe("destination-off-network");
-      if (result.status !== "destination-off-network") return;
-      expect(result.originSnap.nodeIndex).toBe(0);
-      expect(result.destinationSnap.snapMeters).toBeGreaterThan(100);
-      expect(result.route).toBeNull();
-    },
-  );
+    expect(Array.from(mainWalkComponentMask(withIsland))).toEqual([
+      1, 1, 1, 0, 0,
+    ]);
+    expect(isMainWalkComponentNode(withIsland, 3)).toBe(false);
 
-  test(
-    "disconnected nodes return no-route with no straight-line fallback",
-    () => {
-      const disconnected = buildTravelGraph({
-        meta: { coordScale: 1e6, nodeCount: 2, edgeCount: 0 },
-        nodes: [
-          [1, 14, 121],
-          [2, 14, 121.001],
-        ],
-        edges: [],
-      });
-      const result = routeBuildingToBuilding({
-        graph: disconnected,
-        origin: building(1, "A", 14, 121),
-        destination: building(2, "B", 14, 121.001),
-        maxSnapMeters: 10,
-      });
+    const destinationIsland = routeBuildingToBuilding({
+      graph: withIsland,
+      origin: building(1, "A", 14, 121),
+      destination: building(2, "Island B", 14.01, 121),
+      maxSnapMeters: 10,
+    });
+    expect(destinationIsland.status).toBe("destination-off-network");
+    if (destinationIsland.status !== "destination-off-network") return;
+    expect(destinationIsland.destinationSnap.snapMeters).toBeCloseTo(0, 9);
+    expect(destinationIsland.route).toBeNull();
 
-      expect(result.status).toBe("no-route");
-      if (result.status !== "no-route") return;
-      expect(result.route).toBeNull();
-      expect(result.originSnap.snapMeters).toBeCloseTo(0, 9);
-      expect(result.destinationSnap.snapMeters).toBeCloseTo(0, 9);
-    },
-  );
+    const originIsland = routeBuildingToBuilding({
+      graph: withIsland,
+      origin: building(2, "Island B", 14.01, 121),
+      destination: building(1, "A", 14, 121),
+      maxSnapMeters: 10,
+    });
+    expect(originIsland.status).toBe("origin-off-network");
+  });
 
   test("preserves one-way graph direction instead of assuming symmetry", () => {
     const oneWay = buildTravelGraph({
@@ -321,36 +339,46 @@ describe("routeBuildingToBuilding", () => {
     ).toThrow("travel graph has no nodes");
   });
 
-  test(
-    "rejects invalid policy values instead of silently changing routing policy",
-    () => {
-      for (const maxSnapMeters of [-1, Number.NaN, Number.POSITIVE_INFINITY]) {
-        expect(() =>
-          routeBuildingToBuilding({
-            graph: lineGraph,
-            origin: building(1, "A", 14, 121),
-            destination: building(2, "B", 14, 121.002),
-            maxSnapMeters,
-          }),
-        ).toThrow("maxSnapMeters");
-      }
-    },
-  );
+  test("rejects malformed graph coordinates instead of snapping through them", () => {
+    const malformed: TravelGraph = {
+      ...lineGraph,
+      lat: new Float64Array([Number.NaN, 14, 14]),
+    };
 
-  test(
-    "positive very-short routes retain positive exact seconds for UI rounding",
-    () => {
-      const result = routeBuildingToBuilding({
-        graph: lineGraph,
-        origin: building(1, "A", 14 - 1 / METERS_PER_DEGREE, 121),
-        destination: building(2, "B", 14 + 1 / METERS_PER_DEGREE, 121),
+    expect(() =>
+      routeBuildingToBuilding({
+        graph: malformed,
+        origin: building(1, "A", 14, 121),
+        destination: building(2, "B", 14, 121.002),
         maxSnapMeters: 10,
-      });
-      expect(result.status).toBe("ok");
-      if (result.status !== "ok") return;
-      expect(result.route.totalMeters).toBeCloseTo(2, 6);
-      expect(result.route.totalSeconds).toBeGreaterThan(0);
-      expect(result.route.totalSeconds).toBeLessThan(60);
-    },
-  );
+      }),
+    ).toThrow("invalid coordinates");
+  });
+
+  test("rejects invalid policy values instead of silently changing routing policy", () => {
+    for (const maxSnapMeters of [-1, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(() =>
+        routeBuildingToBuilding({
+          graph: lineGraph,
+          origin: building(1, "A", 14, 121),
+          destination: building(2, "B", 14, 121.002),
+          maxSnapMeters,
+        }),
+      ).toThrow("maxSnapMeters");
+    }
+  });
+
+  test("positive very-short routes retain positive exact seconds for UI rounding", () => {
+    const result = routeBuildingToBuilding({
+      graph: lineGraph,
+      origin: building(1, "A", 14 - 1 / METERS_PER_DEGREE, 121),
+      destination: building(2, "B", 14 + 1 / METERS_PER_DEGREE, 121),
+      maxSnapMeters: 10,
+    });
+    expect(result.status).toBe("ok");
+    if (result.status !== "ok") return;
+    expect(result.route.totalMeters).toBeCloseTo(2, 6);
+    expect(result.route.totalSeconds).toBeGreaterThan(0);
+    expect(result.route.totalSeconds).toBeLessThan(60);
+  });
 });

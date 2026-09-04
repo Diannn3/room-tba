@@ -1,15 +1,16 @@
 import type { APIRoute } from "astro";
 import { standaloneCachedJson } from "@lib/api/standalone-campus";
-import {
-  getActiveEvents,
-  getAllEvents,
-  getUpcomingEvents,
-} from "@lib/services/event-service";
 
 export const prerender = false;
 
 export const GET: APIRoute = async ({ url }) => {
   try {
+    const {
+      getActiveEvents,
+      getAllEvents,
+      getUpcomingEvents,
+    } = await import("@lib/services/event-service");
+
     const activeOnly = url.searchParams.get("active") === "1";
     const upcomingOnly = url.searchParams.get("upcoming") === "1";
 
@@ -30,7 +31,7 @@ export const GET: APIRoute = async ({ url }) => {
     });
   } catch (error) {
     console.error(
-      "[standalone fallback] events database read failed; serving empty event list",
+      "[standalone fallback] events database module/read failed; serving empty event list",
       error,
     );
     return standaloneCachedJson([]);

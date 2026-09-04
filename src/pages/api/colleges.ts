@@ -3,13 +3,15 @@ import {
   cachedJsonWithStandaloneFallback,
   standaloneColleges,
 } from "@lib/api/standalone-campus";
-import { getAllColleges } from "@lib/services/map-data-service";
 
 export const prerender = false;
 
 export const GET = (async () =>
   cachedJsonWithStandaloneFallback(
     "colleges",
-    getAllColleges,
+    async () => {
+      const { getAllColleges } = await import("@lib/services/map-data-service");
+      return getAllColleges();
+    },
     standaloneColleges,
   )) satisfies APIRoute;

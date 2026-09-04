@@ -1,16 +1,22 @@
 import type { APIRoute } from "astro";
-import { listPublishedAnnouncements } from "@lib/services/announcement-service";
+import { standaloneCachedJson } from "@lib/api/standalone-campus";
 
 export const prerender = false;
 
-export const GET = (async (_) => {
+export const GET = (async () => {
   try {
+    const { listPublishedAnnouncements } = await import(
+      "@lib/services/announcement-service"
+    );
     const data = await listPublishedAnnouncements();
-    return new Response(JSON.stringify(data));
+    return new Response(JSON.stringify(data), {
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error) {
-    // Degrade to empty so the app still boots before the table exists on a
-    // given environment (AGENTS.md: migrations are hand-applied).
-    console.error("Failed to load announcements:", error);
-    return new Response(JSON.stringify([]));
+    console.error(
+      "[standalone fallback] announcements database module/read failed; serving empty list",
+      error,
+    );
+    return standaloneCachedJson([]);
   }
 }) satisfies APIRoute;

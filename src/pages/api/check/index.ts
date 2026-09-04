@@ -1,6 +1,4 @@
 import type { APIRoute } from "astro";
-import { db } from "@lib/db";
-import { updateTable } from "@drizzle/schema";
 import {
   standaloneCachedJson,
   standaloneSyncKeys,
@@ -14,12 +12,24 @@ export const prerender = false;
  * client bootstrap path alive instead of trapping it on an empty PGlite cache.
  */
 export const GET = (async () => {
-  let rows: (typeof updateTable.$inferSelect)[];
   try {
-    rows = await db.select().from(updateTable);
+    const [{ db }, { updateTable }] = await Promise.all([
+      import("@lib/db"),
+      import("@drizzle/schema"),
+    ]);
+    const rows = await db.select().from(updateTable);
+
+    const data: Record<string, string | null> = {};
+    for (const row of rows) {
+      if (row.tableName) data[row.tableName] = row.syncKey;
+    }
+
+    return new Response(JSON.stringify({ success: true, error: null, data }), {
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error(
-      "[standalone fallback] sync registry unavailable; serving vendored sync keys",
+      "[standalone fallback] sync registry module/read unavailable; serving vendored sync keys",
       error,
     );
     return standaloneCachedJson({
@@ -28,13 +38,4 @@ export const GET = (async () => {
       data: standaloneSyncKeys,
     });
   }
-
-  const data: Record<string, string | null> = {};
-  for (const row of rows) {
-    if (row.tableName) data[row.tableName] = row.syncKey;
-  }
-
-  return new Response(JSON.stringify({ success: true, error: null, data }), {
-    headers: { "Content-Type": "application/json" },
-  });
 }) satisfies APIRoute;

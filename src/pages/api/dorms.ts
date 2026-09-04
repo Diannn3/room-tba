@@ -3,9 +3,15 @@ import {
   cachedJsonWithStandaloneFallback,
   standaloneDorms,
 } from "@lib/api/standalone-campus";
-import { getAllDorms } from "@lib/services/map-data-service";
 
 export const prerender = false;
 
 export const GET = (async () =>
-  cachedJsonWithStandaloneFallback("dorms", getAllDorms, standaloneDorms)) satisfies APIRoute;
+  cachedJsonWithStandaloneFallback(
+    "dorms",
+    async () => {
+      const { getAllDorms } = await import("@lib/services/map-data-service");
+      return getAllDorms();
+    },
+    standaloneDorms,
+  )) satisfies APIRoute;

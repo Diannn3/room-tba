@@ -2,10 +2,14 @@ import type { APIRoute } from "astro";
 import { roomsTable } from "@drizzle/schema";
 import { count, isNotNull } from "drizzle-orm";
 import { db } from "@lib/db";
+import {
+  standaloneCachedJson,
+  standaloneRoomCounts,
+} from "@lib/api/standalone-campus";
 
 export const prerender = false;
 
-export const GET = (async (_) => {
+export const GET = (async () => {
   try {
     // @ts-expect-error drizzle returns count as a scalar row here.
     const [{ count: directionCount }] = await db
@@ -18,12 +22,14 @@ export const GET = (async (_) => {
       .select({ count: count() })
       .from(roomsTable);
 
-    return new Response(JSON.stringify({ directionCount, totalRooms }));
-  } catch (error) {
-    console.error("[rooms-update] count failed:", error);
-    return new Response(JSON.stringify({ directionCount: 0, totalRooms: 0 }), {
-      status: 503,
+    return new Response(JSON.stringify({ directionCount, totalRooms }), {
       headers: { "Content-Type": "application/json" },
     });
+  } catch (error) {
+    console.error(
+      "[standalone fallback] room counts database read failed; serving vendored counts",
+      error,
+    );
+    return standaloneCachedJson(standaloneRoomCounts);
   }
 }) satisfies APIRoute;

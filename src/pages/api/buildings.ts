@@ -1,10 +1,15 @@
 import type { APIRoute } from "astro";
-import { cachedJson } from "@lib/api/json";
+import {
+  cachedJsonWithStandaloneFallback,
+  standaloneBuildings,
+} from "@lib/api/standalone-campus";
 import { getAllBuildings } from "@lib/services/map-data-service";
 
 export const prerender = false;
 
-export const GET = (async (_) => {
-  const data = await getAllBuildings();
-  return cachedJson(data);
-}) satisfies APIRoute;
+export const GET = (async () =>
+  cachedJsonWithStandaloneFallback(
+    "buildings",
+    getAllBuildings,
+    standaloneBuildings,
+  )) satisfies APIRoute;

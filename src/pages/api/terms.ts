@@ -1,10 +1,8 @@
 import type { APIRoute } from "astro";
-import { cachedJson } from "@lib/api/json";
+import { cachedJsonWithStandaloneFallback } from "@lib/api/standalone-campus";
 import { getAllTerms } from "@lib/services/term-service";
 
 export const prerender = false;
 
-export const GET = (async () => {
-  const data = await getAllTerms();
-  return cachedJson(data);
-}) satisfies APIRoute;
+export const GET = (async () =>
+  cachedJsonWithStandaloneFallback("terms", getAllTerms, [])) satisfies APIRoute;

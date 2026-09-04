@@ -1,4 +1,5 @@
 import type { APIRoute } from "astro";
+import { standaloneCachedJson } from "@lib/api/standalone-campus";
 import {
   getActiveEvents,
   getAllEvents,
@@ -28,10 +29,10 @@ export const GET: APIRoute = async ({ url }) => {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Failed to load events:", error);
-    return new Response(JSON.stringify({ error: "Failed to load events" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    console.error(
+      "[standalone fallback] events database read failed; serving empty event list",
+      error,
+    );
+    return standaloneCachedJson([]);
   }
 };

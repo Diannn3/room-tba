@@ -15,11 +15,7 @@
 
 import { WALK_KPH } from "@constants/travel-modes";
 import { distanceMeters } from "../campus-route";
-import {
-  nearestNodeIndex,
-  shortestPath,
-  type TravelGraph,
-} from "./engine";
+import { nearestNodeIndex, shortestPath, type TravelGraph } from "./engine";
 
 export type BuildingRouteEndpoint = {
   id: number;
@@ -36,10 +32,7 @@ export type BuildingEndpointSnap = {
   snapMeters: number;
   nodeCoordinate: BuildingRouteCoordinate;
   /** Always endpoint pin -> snapped graph node. */
-  endpointToNodeCoordinates: [
-    BuildingRouteCoordinate,
-    BuildingRouteCoordinate,
-  ];
+  endpointToNodeCoordinates: [BuildingRouteCoordinate, BuildingRouteCoordinate];
 };
 
 export type BuildingWalkRoute = {
@@ -77,7 +70,7 @@ export type BuildingRouteStatus =
 type BuildingRouteBase = {
   originBuildingId: number;
   destinationBuildingId: number;
-  /** The evidence-backed hard ceiling supplied by the caller/Pass 0 policy. */
+  /** The evidence-backed hard ceiling supplied by the endpoint-audit policy. */
   maxSnapMeters: number;
   /**
    * Captured for debugging/provenance; display copy should stay approximate.
@@ -131,6 +124,97 @@ export type RouteBuildingToBuildingInput = {
 
 const WALK_MPS = WALK_KPH / 3.6;
 
+const mainComponentCache = new WeakMap<TravelGraph, Uint8Array>();
+
+/**
+ * Weak-component eligibility shared with the endpoint-audit semantics.
+ *
+ * The walk graph may contain tiny disconnected islands. A building snapped to
+ * one of those islands is not a usable campus-routing endpoint even when the
+ * pin is physically close to that island. Treat only the largest weak
+ * component as the canonical campus network and cache the mask per immutable
+ * graph instance. Edges are considered undirected here intentionally: route
+ * directionality is still enforced later by shortestPath().
+ */
+export function mainWalkComponentMask(graph: TravelGraph): Uint8Array {
+  const cached = mainComponentCache.get(graph);
+  if (cached) return cached;
+
+  const nodeCount = graph.lat.length;
+  if (graph.lng.length !== nodeCount) {
+    throw new Error(
+      "building route: graph coordinate arrays have different lengths",
+    );
+  }
+
+  const neighbors: number[][] = Array.from({ length: nodeCount }, () => []);
+  for (const edge of graph.edges) {
+    const from = edge[0];
+    const to = edge[1];
+    if (
+      !Number.isInteger(from) ||
+      !Number.isInteger(to) ||
+      from < 0 ||
+      to < 0 ||
+      from >= nodeCount ||
+      to >= nodeCount
+    ) {
+      throw new Error("building route: graph contains an out-of-range edge");
+    }
+    neighbors[from]?.push(to);
+    neighbors[to]?.push(from);
+  }
+
+  const component = new Int32Array(nodeCount).fill(-1);
+  const sizes: number[] = [];
+  let componentId = 0;
+  for (let start = 0; start < nodeCount; start++) {
+    if (component[start] !== -1) continue;
+    const stack = [start];
+    component[start] = componentId;
+    let size = 0;
+    while (stack.length > 0) {
+      const node = stack.pop();
+      if (node === undefined) break;
+      size += 1;
+      for (const next of neighbors[node] ?? []) {
+        if (component[next] !== -1) continue;
+        component[next] = componentId;
+        stack.push(next);
+      }
+    }
+    sizes.push(size);
+    componentId += 1;
+  }
+
+  let mainComponentId = -1;
+  let mainSize = -1;
+  for (let id = 0; id < sizes.length; id++) {
+    const size = sizes[id] ?? 0;
+    // Strictly greater preserves the audit's first-component tie behaviour.
+    if (size > mainSize) {
+      mainSize = size;
+      mainComponentId = id;
+    }
+  }
+
+  const mask = new Uint8Array(nodeCount);
+  if (mainComponentId >= 0) {
+    for (let i = 0; i < nodeCount; i++) {
+      if (component[i] === mainComponentId) mask[i] = 1;
+    }
+  }
+  mainComponentCache.set(graph, mask);
+  return mask;
+}
+
+export function isMainWalkComponentNode(
+  graph: TravelGraph,
+  nodeIndex: number,
+): boolean {
+  return mainWalkComponentMask(graph)[nodeIndex] === 1;
+}
+
 export function isValidBuildingRouteCoordinate(
   endpoint: Pick<BuildingRouteEndpoint, "lat" | "lon">,
 ): endpoint is { lat: number; lon: number } {
@@ -158,6 +242,29 @@ function assertMaxSnapMeters(maxSnapMeters: number): void {
 function assertGraphHasNodes(graph: TravelGraph): void {
   if (graph.lat.length === 0 || graph.lng.length === 0) {
     throw new Error("building route: travel graph has no nodes");
+  }
+  if (graph.lat.length !== graph.lng.length) {
+    throw new Error(
+      "building route: graph coordinate arrays have different lengths",
+    );
+  }
+  for (let i = 0; i < graph.lat.length; i++) {
+    const lat = graph.lat[i];
+    const lng = graph.lng[i];
+    if (
+      lat === undefined ||
+      lng === undefined ||
+      !Number.isFinite(lat) ||
+      !Number.isFinite(lng) ||
+      lat < -90 ||
+      lat > 90 ||
+      lng < -180 ||
+      lng > 180
+    ) {
+      throw new Error(
+        `building route: graph node ${i} has invalid coordinates`,
+      );
+    }
   }
 }
 
@@ -247,7 +354,10 @@ export function routeBuildingToBuilding({
   }
 
   const originSnap = snapBuildingEndpoint(graph, origin);
-  if (originSnap.snapMeters > maxSnapMeters) {
+  if (
+    originSnap.snapMeters > maxSnapMeters ||
+    !isMainWalkComponentNode(graph, originSnap.nodeIndex)
+  ) {
     return {
       ...base,
       status: "origin-off-network",
@@ -258,7 +368,10 @@ export function routeBuildingToBuilding({
   }
 
   const destinationSnap = snapBuildingEndpoint(graph, destination);
-  if (destinationSnap.snapMeters > maxSnapMeters) {
+  if (
+    destinationSnap.snapMeters > maxSnapMeters ||
+    !isMainWalkComponentNode(graph, destinationSnap.nodeIndex)
+  ) {
     return {
       ...base,
       status: "destination-off-network",

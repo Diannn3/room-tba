@@ -6,7 +6,7 @@
   import { formatDistance, formatDuration } from "@lib/campus-route";
   import { getAppData } from "@lib/context";
   import { buildBuildingSuggestions } from "@lib/search-suggestions";
-  import { buildingRouteStore } from "@lib/stores/building-route-store.svelte";
+  import { buildingRouteStore } from "@lib/store.svelte";
   import type { BuildingData } from "@lib/types";
 
   const data = getAppData();
@@ -21,6 +21,8 @@
   let destinationOpen = $state(false);
   let originActive = $state(0);
   let destinationActive = $state(0);
+  let originInput = $state<HTMLInputElement | null>(null);
+  let destinationInput = $state<HTMLInputElement | null>(null);
 
   const originSuggestions = $derived(
     buildBuildingSuggestions(originQuery, buildings),
@@ -40,18 +42,21 @@
     };
   }
 
-  async function chooseOrigin(building: BuildingData) {
+  function chooseOrigin(building: BuildingData) {
     originQuery = building.buildingName;
     originOpen = false;
     originActive = 0;
-    await buildingRouteStore.setOrigin(endpoint(building));
+    // Selection itself is synchronous; do not make keyboard focus wait for a
+    // lazy graph import or route calculation before handing off to "To".
+    void buildingRouteStore.setOrigin(endpoint(building));
+    destinationInput?.focus();
   }
 
-  async function chooseDestination(building: BuildingData) {
+  function chooseDestination(building: BuildingData) {
     destinationQuery = building.buildingName;
     destinationOpen = false;
     destinationActive = 0;
-    await buildingRouteStore.setDestination(endpoint(building));
+    void buildingRouteStore.setDestination(endpoint(building));
   }
 
   function clearOrigin() {
@@ -59,6 +64,7 @@
     originOpen = false;
     originActive = 0;
     buildingRouteStore.clearOrigin();
+    originInput?.focus();
   }
 
   function clearDestination() {
@@ -66,6 +72,7 @@
     destinationOpen = false;
     destinationActive = 0;
     buildingRouteStore.clearDestination();
+    destinationInput?.focus();
   }
 
   async function swap() {
@@ -91,22 +98,42 @@
     }, 0);
   }
 
+  function revealActiveOption(id: string) {
+    const reveal = () => {
+      const option = document.getElementById(id);
+      if (option && typeof option.scrollIntoView === "function") {
+        option.scrollIntoView({ block: "nearest" });
+      }
+    };
+    if (typeof requestAnimationFrame === "function") {
+      requestAnimationFrame(reveal);
+    } else {
+      setTimeout(reveal, 0);
+    }
+  }
+
   function onOriginKeydown(event: KeyboardEvent) {
     if (event.key === "ArrowDown") {
       if (originSuggestions.length === 0) return;
       event.preventDefault();
+      originActive = originOpen
+        ? Math.min(originActive + 1, originSuggestions.length - 1)
+        : 0;
       originOpen = true;
-      originActive = Math.min(originActive + 1, originSuggestions.length - 1);
+      revealActiveOption(`building-route-origin-${originActive}`);
     } else if (event.key === "ArrowUp") {
       if (originSuggestions.length === 0) return;
       event.preventDefault();
+      originActive = originOpen
+        ? Math.max(originActive - 1, 0)
+        : originSuggestions.length - 1;
       originOpen = true;
-      originActive = Math.max(originActive - 1, 0);
+      revealActiveOption(`building-route-origin-${originActive}`);
     } else if (event.key === "Enter" && originOpen) {
       const selected = originSuggestions[originActive];
       if (selected) {
         event.preventDefault();
-        void chooseOrigin(selected);
+        chooseOrigin(selected);
       }
     } else if (event.key === "Escape") {
       originOpen = false;
@@ -117,21 +144,24 @@
     if (event.key === "ArrowDown") {
       if (destinationSuggestions.length === 0) return;
       event.preventDefault();
+      destinationActive = destinationOpen
+        ? Math.min(destinationActive + 1, destinationSuggestions.length - 1)
+        : 0;
       destinationOpen = true;
-      destinationActive = Math.min(
-        destinationActive + 1,
-        destinationSuggestions.length - 1,
-      );
+      revealActiveOption(`building-route-destination-${destinationActive}`);
     } else if (event.key === "ArrowUp") {
       if (destinationSuggestions.length === 0) return;
       event.preventDefault();
+      destinationActive = destinationOpen
+        ? Math.max(destinationActive - 1, 0)
+        : destinationSuggestions.length - 1;
       destinationOpen = true;
-      destinationActive = Math.max(destinationActive - 1, 0);
+      revealActiveOption(`building-route-destination-${destinationActive}`);
     } else if (event.key === "Enter" && destinationOpen) {
       const selected = destinationSuggestions[destinationActive];
       if (selected) {
         event.preventDefault();
-        void chooseDestination(selected);
+        chooseDestination(selected);
       }
     } else if (event.key === "Escape") {
       destinationOpen = false;
@@ -143,9 +173,14 @@
       return "Finding walking route…";
     }
     if (buildingRouteStore.phase === "error") {
-      return "Could not load the campus path map. Try again when it is available.";
+      return (
+        "Could not load the campus path map. " +
+        "Try again when it is available."
+      );
     }
-    if (status === "same-building") return "Choose two different buildings.";
+    if (status === "same-building") {
+      return "Same building — no outdoor walking route needed.";
+    }
     if (status === "origin-invalid") {
       return "The starting building has no valid map pin.";
     }
@@ -153,7 +188,9 @@
       return "The destination building has no valid map pin.";
     }
     if (status === "origin-off-network") {
-      return "The starting building is outside the mapped campus walking network.";
+      return (
+        "The starting building is outside the mapped campus walking network."
+      );
     }
     if (status === "destination-off-network") {
       return "The destination is outside the mapped campus walking network.";
@@ -165,14 +202,20 @@
   }
 </script>
 
-<section class="building-router" aria-label="Walk between buildings">
+<section
+  class="building-router"
+  aria-label="Walk between buildings"
+  aria-busy={buildingRouteStore.phase === "planning"}
+>
   <div class="building-router__heading">
     <span class="building-router__heading-icon" aria-hidden="true">
       <Footprints size={18} />
     </span>
     <div>
       <h3>Walk between buildings</h3>
-      <p>Pick two buildings to see the mapped walking path and estimated time.</p>
+      <p>
+        Pick two buildings to see the mapped walking path and estimated time.
+      </p>
     </div>
   </div>
 
@@ -184,6 +227,8 @@
           id="building-route-origin"
           type="text"
           role="combobox"
+          aria-label="From building"
+          bind:this={originInput}
           autocomplete="off"
           aria-autocomplete="list"
           aria-expanded={originOpen && originSuggestions.length > 0}
@@ -219,30 +264,31 @@
       </div>
 
       {#if originOpen && originSuggestions.length > 0}
-        <ul
+        <div
           id="building-route-origin-list"
           role="listbox"
           aria-label="Starting building suggestions"
           class="building-router__list"
         >
           {#each originSuggestions as building, index (building.id)}
-            <li>
-              <button
-                id={`building-route-origin-${index}`}
-                type="button"
-                role="option"
-                aria-selected={index === originActive}
-                class:active={index === originActive}
-                onmousedown={(event) => event.preventDefault()}
-                onclick={() => void chooseOrigin(building)}
-              >
-                {building.buildingName}
-              </button>
-            </li>
+            <button
+              id={`building-route-origin-${index}`}
+              type="button"
+              role="option"
+              tabindex="-1"
+              aria-selected={index === originActive}
+              class:active={index === originActive}
+              onmousedown={(event) => event.preventDefault()}
+              onclick={() => chooseOrigin(building)}
+            >
+              {building.buildingName}
+            </button>
           {/each}
-        </ul>
+        </div>
       {:else if originOpen && originQuery.trim()}
-        <p class="building-router__empty" role="status">No matching buildings.</p>
+        <p class="building-router__empty" role="status">
+          No matching buildings.
+        </p>
       {/if}
     </div>
 
@@ -264,6 +310,8 @@
           id="building-route-destination"
           type="text"
           role="combobox"
+          aria-label="To building"
+          bind:this={destinationInput}
           autocomplete="off"
           aria-autocomplete="list"
           aria-expanded={destinationOpen && destinationSuggestions.length > 0}
@@ -301,30 +349,31 @@
       </div>
 
       {#if destinationOpen && destinationSuggestions.length > 0}
-        <ul
+        <div
           id="building-route-destination-list"
           role="listbox"
           aria-label="Destination building suggestions"
           class="building-router__list"
         >
           {#each destinationSuggestions as building, index (building.id)}
-            <li>
-              <button
-                id={`building-route-destination-${index}`}
-                type="button"
-                role="option"
-                aria-selected={index === destinationActive}
-                class:active={index === destinationActive}
-                onmousedown={(event) => event.preventDefault()}
-                onclick={() => void chooseDestination(building)}
-              >
-                {building.buildingName}
-              </button>
-            </li>
+            <button
+              id={`building-route-destination-${index}`}
+              type="button"
+              role="option"
+              tabindex="-1"
+              aria-selected={index === destinationActive}
+              class:active={index === destinationActive}
+              onmousedown={(event) => event.preventDefault()}
+              onclick={() => chooseDestination(building)}
+            >
+              {building.buildingName}
+            </button>
           {/each}
-        </ul>
+        </div>
       {:else if destinationOpen && destinationQuery.trim()}
-        <p class="building-router__empty" role="status">No matching buildings.</p>
+        <p class="building-router__empty" role="status">
+          No matching buildings.
+        </p>
       {/if}
     </div>
   </div>

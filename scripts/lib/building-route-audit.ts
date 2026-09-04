@@ -105,9 +105,15 @@ function assertGraph(graph: AuditWalkGraph): void {
     throw new Error("building route audit: walk graph edges are missing");
   }
   for (let i = 0; i < graph.nodes.length; i++) {
-    const [, lat, lon] = graph.nodes[i];
+    const node = graph.nodes[i];
+    if (!node) {
+      throw new Error(`building route audit: graph node ${i} is missing`);
+    }
+    const [, lat, lon] = node;
     if (!isFiniteCoordinate(lat, lon)) {
-      throw new Error(`building route audit: graph node ${i} has invalid coordinates`);
+      throw new Error(
+        `building route audit: graph node ${i} has invalid coordinates`,
+      );
     }
   }
 }
@@ -133,14 +139,17 @@ export function percentile(sortedValues: number[], p: number): number {
     throw new Error("percentile requires at least one value");
   }
   if (p < 0 || p > 1) throw new Error("percentile p must be between 0 and 1");
-  if (sortedValues.length === 1) return sortedValues[0];
+  if (sortedValues.length === 1) return sortedValues[0] as number;
 
   const position = (sortedValues.length - 1) * p;
   const lower = Math.floor(position);
   const upper = Math.ceil(position);
-  if (lower === upper) return sortedValues[lower];
+  if (lower === upper) return sortedValues[lower] as number;
   const fraction = position - lower;
-  return sortedValues[lower] * (1 - fraction) + sortedValues[upper] * fraction;
+  return (
+    (sortedValues[lower] as number) * (1 - fraction) +
+    (sortedValues[upper] as number) * fraction
+  );
 }
 
 export function distributionStats(values: number[]): DistributionStats | null {
@@ -151,7 +160,7 @@ export function distributionStats(values: number[]): DistributionStats | null {
   const iqr = q3 - q1;
   return {
     count: sorted.length,
-    min: sorted[0],
+    min: sorted[0] as number,
     mean: sorted.reduce((sum, value) => sum + value, 0) / sorted.length,
     median: percentile(sorted, 0.5),
     p75: q3,
@@ -180,9 +189,11 @@ export function graphComponents(graph: AuditWalkGraph): Components {
 
   const find = (node: number): number => {
     let root = node;
-    while (parent[root] !== root) root = parent[root];
-    while (parent[node] !== node) {
-      const next = parent[node];
+    while ((parent[root] as number) !== root) {
+      root = parent[root] as number;
+    }
+    while ((parent[node] as number) !== node) {
+      const next = parent[node] as number;
       parent[node] = root;
       node = next;
     }
@@ -193,9 +204,13 @@ export function graphComponents(graph: AuditWalkGraph): Components {
     let rootA = find(a);
     let rootB = find(b);
     if (rootA === rootB) return;
-    if (rank[rootA] < rank[rootB]) [rootA, rootB] = [rootB, rootA];
+    if ((rank[rootA] as number) < (rank[rootB] as number)) {
+      [rootA, rootB] = [rootB, rootA];
+    }
     parent[rootB] = rootA;
-    if (rank[rootA] === rank[rootB]) rank[rootA]++;
+    if ((rank[rootA] as number) === (rank[rootB] as number)) {
+      rank[rootA] = (rank[rootA] as number) + 1;
+    }
   };
 
   for (let edgeIndex = 0; edgeIndex < graph.edges.length; edgeIndex++) {
@@ -203,6 +218,8 @@ export function graphComponents(graph: AuditWalkGraph): Components {
     const u = edge?.[0];
     const v = edge?.[1];
     if (
+      typeof u !== "number" ||
+      typeof v !== "number" ||
       !Number.isInteger(u) ||
       !Number.isInteger(v) ||
       u < 0 ||
@@ -210,7 +227,9 @@ export function graphComponents(graph: AuditWalkGraph): Components {
       u >= graph.nodes.length ||
       v >= graph.nodes.length
     ) {
-      throw new Error(`building route audit: edge ${edgeIndex} references an invalid node`);
+      throw new Error(
+        `building route audit: edge ${edgeIndex} references an invalid node`,
+      );
     }
     union(u, v);
   }
@@ -227,7 +246,10 @@ export function graphComponents(graph: AuditWalkGraph): Components {
       rootToComponent.set(root, componentId);
     }
     componentByNode[node] = componentId;
-    sizeByComponent.set(componentId, (sizeByComponent.get(componentId) ?? 0) + 1);
+    sizeByComponent.set(
+      componentId,
+      (sizeByComponent.get(componentId) ?? 0) + 1,
+    );
   }
 
   let mainComponentId = 0;
@@ -254,7 +276,13 @@ function nearestGraphNodeUnchecked(
   let bestIndex = 0;
   let bestMeters = Number.POSITIVE_INFINITY;
   for (let nodeIndex = 0; nodeIndex < graph.nodes.length; nodeIndex++) {
-    const [, lat, lon] = graph.nodes[nodeIndex];
+    const node = graph.nodes[nodeIndex];
+    if (!node) {
+      throw new Error(
+        `building route audit: graph node ${nodeIndex} is missing`,
+      );
+    }
+    const [, lat, lon] = node;
     const meters = distanceMeters(point, { lat, lon });
     if (meters < bestMeters) {
       bestMeters = meters;
@@ -309,7 +337,9 @@ export function auditBuildingEndpoints(
     !Number.isFinite(options.hardSnapLimitMeters) ||
     options.hardSnapLimitMeters <= 0
   ) {
-    throw new Error("building route audit: hardSnapLimitMeters must be positive");
+    throw new Error(
+      "building route audit: hardSnapLimitMeters must be positive",
+    );
   }
 
   const components = graphComponents(graph);
@@ -327,6 +357,11 @@ export function auditBuildingEndpoints(
     const lon = building.lon as number;
     const nearest = nearestGraphNodeUnchecked(graph, { lat, lon });
     const componentId = components.componentByNode[nearest.nodeIndex];
+    if (componentId === undefined) {
+      throw new Error(
+        `building route audit: component missing for node ${nearest.nodeIndex}`,
+      );
+    }
     return {
       building,
       nodeIndex: nearest.nodeIndex,
@@ -371,7 +406,13 @@ export function auditBuildingEndpoints(
       };
     }
 
-    const [osmId, nodeLat, nodeLon] = graph.nodes[nodeIndex];
+    const graphNode = graph.nodes[nodeIndex];
+    if (!graphNode) {
+      throw new Error(
+        `building route audit: snapped node ${nodeIndex} is missing`,
+      );
+    }
+    const [osmId, nodeLat, nodeLon] = graphNode;
     let status: BuildingEndpointStatus = "supported";
     let reason: BuildingEndpointAuditRow["reason"] = "within-baseline";
     if (snapMeters > options.hardSnapLimitMeters) {
@@ -407,7 +448,10 @@ export function auditBuildingEndpoints(
       return a.buildingName.localeCompare(b.buildingName);
     if (a.snapMeters === null) return -1;
     if (b.snapMeters === null) return 1;
-    return b.snapMeters - a.snapMeters || a.buildingName.localeCompare(b.buildingName);
+    return (
+      b.snapMeters - a.snapMeters ||
+      a.buildingName.localeCompare(b.buildingName)
+    );
   });
 
   const count = (status: BuildingEndpointStatus) =>
